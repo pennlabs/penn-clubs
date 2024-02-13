@@ -160,7 +160,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
-        "drf_renderer_xlsx.renderers.XLSXRenderer",
+        "drf_excel.renderers.XLSXRenderer",
     ),
     "DEFAULT_SCHEMA_CLASS": "pennclubs.doc_settings.CustomAutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": [

@@ -1,7 +1,8 @@
-import { Form, Formik } from 'formik'
+import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { ALLBIRDS_GRAY, CLUBS_BLUE, MD, mediaMaxWidth, SNOW } from '~/constants'
@@ -17,11 +18,18 @@ import {
   ApplicationSubmission,
   Club,
 } from '~/types'
-import { doApiRequest, getApiUrl } from '~/utils'
+import { doApiRequest, getApiUrl, getSemesterFromDate } from '~/utils'
 
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
+import {
+  CheckboxField,
+  DateTimeField,
+  SelectField,
+  TextField,
+} from '../FormComponents'
+import ModelForm from '../ModelForm'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -45,6 +53,22 @@ const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
       margin-top: 20px;
     }
   }
+`
+
+const TableWrapper = styled.div`
+transform:rotateX(180deg);
+-ms-transform:rotateX(180deg); /* IE 9 */
+-webkit-transform:rotateX(180deg);
+font-size: 14px;
+over
+`
+
+const ScrollWrapper = styled.div`
+  transform: rotateX(180deg);
+  -ms-transform: rotateX(180deg); /* IE 9 */
+  -webkit-transform: rotateX(180deg);
+  overflow-y: auto;
+  margin-top: 1rem;
 `
 
 const FormWrapper = styled.div`
@@ -71,11 +95,11 @@ export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [
   },
   {
     value: ApplicationStatusType.RejectedWritten,
-    label: 'Rejected after interview(s)',
+    label: 'Rejected after written application',
   },
   {
     value: ApplicationStatusType.RejectedInterview,
-    label: 'Rejected after written application',
+    label: 'Rejected after interview(s)',
   },
 ]
 
@@ -96,11 +120,14 @@ const SubmissionSelect = (props: any) => {
 type Application = {
   id: number
   name: string
+  cycle: string
+  application_end_time: string
 }
 
 const ModalContainer = styled.div`
   text-align: left;
   padding: 20px;
+  height: 100%;
 `
 
 const SubmissionModal = (props: {
@@ -167,6 +194,195 @@ const SubmissionModal = (props: {
           </Form>
         )}
       </Formik>
+      <div className="mt-2 mb-2 notification is-info is-light">
+        Current decision reason: {submission !== null && submission.reason}
+      </div>
+      <div className="mt-2 mb-2 notification is-info is-light">
+        Current notification status:{' '}
+        {submission !== null && submission.notified
+          ? 'notified'
+          : 'not notified'}
+      </div>
+    </ModalContainer>
+  )
+}
+const NotificationModal = (props: {
+  submissions: Array<ApplicationSubmission>
+  club: string
+  application: Application | null
+  updateSubmissions: (arr: Array<ApplicationSubmission>) => void
+}): ReactElement => {
+  const { submissions, club, application, updateSubmissions } = props
+  const initialValues = { dry_run: true }
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
+  const options = [
+    { value: 'acceptance', label: 'Acceptance' },
+    { value: 'rejection', label: 'Rejection' },
+  ]
+  return (
+    <ModalContainer>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={(data: any) => {
+          if (data.email_type.id === 'acceptance' && !data.dry_run) {
+            const relevant = submissions.filter(
+              (sub) =>
+                (data.allow_resend || !sub.notified) &&
+                sub.status === 'Accepted' &&
+                sub.reason,
+            )
+            updateSubmissions(relevant)
+          } else if (data.email_type.id === 'rejection' && !data.dry_run) {
+            const relevant = submissions.filter(
+              (sub) =>
+                (data.allow_resend || !sub.notified) &&
+                sub.status.startsWith('Rejected') &&
+                sub.reason,
+            )
+            updateSubmissions(relevant)
+          }
+          doApiRequest(
+            `/clubs/${club}/applications/${
+              application!.id
+            }/send_emails/?format=json`,
+            {
+              method: 'POST',
+              body: data,
+            },
+          ).then((response) => {
+            response.json().then((data) => {
+              setSubmitMessage(data.detail)
+            })
+          })
+        }}
+      >
+        {(props) => (
+          <Form>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Send application update
+            </StyledHeader>
+            <Text>
+              Send acceptance or rejection emails. This may take a while...
+            </Text>
+            <Field
+              name="email_type"
+              required={true}
+              as={SelectField}
+              choices={options}
+              label="Template"
+              helpText="Choose from the following templates"
+            />
+
+            <Field
+              name="dry_run"
+              as={CheckboxField}
+              label="Dry Run"
+              helpText="If selected, will return the number of emails the script would have sent out"
+            />
+            <Field
+              name="allow_resend"
+              as={CheckboxField}
+              label="Resend Emails"
+              onClick={(e) => {
+                if (e.target.checked) {
+                  toast.warning(
+                    'Resending emails will send emails to all applicants, even if they have already been notified.',
+                  )
+                }
+              }}
+              helpText={
+                <strong>
+                  If selected, will resend notifications to all applicants
+                </strong>
+              }
+            />
+            <button type="submit" className="button">
+              Submit
+            </button>
+
+            {submitMessage !== null && (
+              <div className="mt-2 mb-2 notification is-info is-light">
+                {submitMessage}
+              </div>
+            )}
+          </Form>
+        )}
+      </Formik>
+    </ModalContainer>
+  )
+}
+
+const ReasonModal = (props: {
+  submissions: Array<ApplicationSubmission> | null
+  club: string
+  application: Application | null
+  updateSubmissions: (s: { name: string }) => void
+}): ReactElement => {
+  const { submissions, club, application, updateSubmissions } = props
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
+  const initialValues = {}
+  return (
+    <ModalContainer>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={(data: { name: string }) => {
+          const data_: { id: number; reason: string }[] = []
+          for (const [key, value] of Object.entries(data)) {
+            data_.push({ id: Number(key), reason: value })
+          }
+          updateSubmissions(data)
+          doApiRequest(
+            `/clubs/${club}/applications/${application?.id}/submissions/reason/?format=json`,
+            {
+              method: 'POST',
+              body: { submissions: data_ },
+            },
+          ).then((response) => {
+            response.json().then((data) => {
+              setSubmitMessage(data.detail)
+            })
+          })
+        }}
+      >
+        {(props) => (
+          <Form>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Update reasons for selected{' '}
+              {submissions != null && submissions[0] != null
+                ? submissions[0].status
+                : null}{' '}
+              applicants
+            </StyledHeader>
+            {submissions != null
+              ? submissions.map((data) => {
+                  return (
+                    data != null && (
+                      <div>
+                        <Field
+                          name={data.pk}
+                          label={`Reason for ${data.first_name} ${data.last_name} (committee ${data.committee})`}
+                          as={TextField}
+                        />
+                      </div>
+                    )
+                  )
+                })
+              : null}
+            <button type="submit" className="button">
+              Submit
+            </button>
+            {submitMessage !== null && (
+              <div className="mt-2 mb-2 notification is-info is-light">
+                {submitMessage}
+              </div>
+            )}
+          </Form>
+        )}
+      </Formik>
     </ModalContainer>
   )
 }
@@ -185,12 +401,17 @@ export default function ApplicationsPage({
     [key: number]: Array<ApplicationSubmission>
   }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
+  const [showNotifModal, setShowNotifModal] = useState<boolean>(false)
+  const [showReasonModal, setShowReasonModal] = useState<boolean>(false)
   const [
     currentSubmission,
     setCurrentSubmission,
   ] = useState<ApplicationSubmission | null>(null)
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [statusToggle, setStatusToggle] = useState<boolean>(false)
+  const [categoriesSelectAll, setCategoriesSelectAll] = useState<Array<string>>(
+    [],
+  )
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -200,7 +421,10 @@ export default function ApplicationsPage({
       .then((applications) => {
         if (applications.length !== 0) {
           setApplications(applications)
-          setCurrentApplication(applications[0])
+          setCurrentApplication({
+            ...applications[0],
+            name: format_app_name(applications[0]),
+          })
         }
       })
   }, [])
@@ -241,6 +465,11 @@ export default function ApplicationsPage({
   const [selectedSubmissions, setSelectedSubmissions] = useState<Array<number>>(
     [],
   )
+
+  const [submitMessage, setSubmitMessage] = useState<
+    string | ReactElement | null
+  >(null)
+
   const [status, setStatus] = useState<ApplicationStatusType>(
     ApplicationStatusType.Pending,
   )
@@ -266,10 +495,17 @@ export default function ApplicationsPage({
     { label: 'First Name', name: 'first_name' },
     { label: 'Last Name', name: 'last_name' },
     { label: 'Email', name: 'email' },
-    { label: 'Graduation Year', name: 'graduation_year' },
     { label: 'Committee', name: 'committee' },
-    { label: 'Submitted', name: 'created_at' },
     { label: 'Status', name: 'status' },
+    { label: 'Graduation Year', name: 'graduation_year' },
+  ]
+
+  const extensionTableFields = [
+    { label: 'First Name', name: 'first_name' },
+    { label: 'Last Name', name: 'last_name' },
+    { label: 'Username', name: 'username' },
+    { label: 'Graduation Year', name: 'graduation_year' },
+    { label: 'Extension End Time', name: 'end_time' },
   ]
 
   const columns = useMemo(
@@ -279,6 +515,16 @@ export default function ApplicationsPage({
         accessor: name,
       })),
     [responseTableFields],
+  )
+
+  const format_app_name: (application: Application) => any = (application) => (
+    <span>
+      {application.name} {' - '}
+      <span className="has-text-weight-semibold">
+        {application.cycle ||
+          getSemesterFromDate(application.application_end_time)}
+      </span>
+    </span>
   )
 
   return (
@@ -291,22 +537,31 @@ export default function ApplicationsPage({
       </Text>
       <Select
         options={applications.map((application) => {
-          return { value: application.id, label: application.name }
+          return {
+            ...application,
+            value: application.id,
+            label: format_app_name(application),
+          }
         })}
         value={
           currentApplication != null
             ? {
+                ...currentApplication,
                 value: currentApplication.id,
                 label: currentApplication.name,
               }
             : null
         }
-        onChange={(v: { value: number; label: string } | null) =>
+        onChange={(
+          v: {
+            value: number
+            label: string
+            cycle: string
+            application_end_time: string
+          } | null,
+        ) =>
           v != null &&
-          setCurrentApplication({
-            id: v.value,
-            name: v.label,
-          })
+          setCurrentApplication({ ...v, id: v.value, name: v.label })
         }
       />
       <br></br>
@@ -345,7 +600,6 @@ export default function ApplicationsPage({
                           }
                         })
                         setSubmissions(obj)
-                        setSelectedSubmissions([])
                       }
                       doApiRequest(
                         `/clubs/${club.code}/applications/${currentApplication.id}/submissions/status/?format=json`,
@@ -356,28 +610,61 @@ export default function ApplicationsPage({
                             submissions: selectedSubmissions,
                           },
                         },
-                      )
+                      ).then((response) => {
+                        response.json().then((data) => {
+                          setSubmitMessage(data.detail)
+                        })
+                      })
+
+                      setShowReasonModal(true)
                     }}
                   >
                     <Icon name="check" /> Update Status
                   </button>
                   <button
+                    className="button is-link mr-3"
+                    onClick={(event) => {
+                      setShowNotifModal(true)
+                    }}
+                  >
+                    Send Updates
+                  </button>
+                  <button
                     className="button is-primary"
                     onClick={() => {
+                      const statusLabel = APPLICATION_STATUS.find(
+                        (x) => x?.value === status,
+                      )?.label
+                      const deselecting =
+                        statusLabel != null &&
+                        categoriesSelectAll.includes(statusLabel)
+
+                      if (deselecting) {
+                        const newCategoriesSelectAll = categoriesSelectAll.filter(
+                          (e) => e !== statusLabel,
+                        )
+                        setCategoriesSelectAll(newCategoriesSelectAll)
+                      } else {
+                        const newCategoriesSelectAll = categoriesSelectAll
+                        statusLabel != null &&
+                          newCategoriesSelectAll.push(statusLabel)
+                        setCategoriesSelectAll(newCategoriesSelectAll)
+                      }
                       const newSelectedSubmissions: number[] = []
                       submissions[currentApplication.id].forEach(
                         (submission) => {
                           if (selectedSubmissions.includes(submission.pk)) {
                             if (
-                              !statusToggle ||
-                              submission.status !== 'Pending'
+                              deselecting &&
+                              submission.status !== statusLabel
                             ) {
-                              // do not add pending values when we are deselecting
+                              newSelectedSubmissions.push(submission.pk)
+                            } else if (!deselecting) {
                               newSelectedSubmissions.push(submission.pk)
                             }
                           } else if (
-                            !statusToggle &&
-                            submission.status === 'Pending'
+                            !deselecting &&
+                            submission.status === statusLabel
                           ) {
                             // add pending values when we are selecting
                             newSelectedSubmissions.push(submission.pk)
@@ -388,10 +675,20 @@ export default function ApplicationsPage({
                       setSelectedSubmissions(newSelectedSubmissions)
                     }}
                   >
-                    {statusToggle ? 'Des' : 'S'}
-                    elect All Pending
+                    {categoriesSelectAll.includes(
+                      APPLICATION_STATUS.find((x) => x?.value === status)
+                        ?.label || '',
+                    )
+                      ? 'Deselect All '
+                      : 'Select All '}
+                    {APPLICATION_STATUS.find((x) => x?.value === status)?.label}
                   </button>
                 </div>
+                {submitMessage !== null && (
+                  <div className="mt-2 mb-2 notification is-info is-light">
+                    {submitMessage}
+                  </div>
+                )}
                 <small>
                   Check the checkboxes next to submissions whose status you
                   would like to update. Once submissions have been checked, you
@@ -405,34 +702,86 @@ export default function ApplicationsPage({
                 </small>
               </div>
               {submissions[currentApplication.id].length > 0 ? (
-                <Table
-                  data={submissions[currentApplication.id].map((item, index) =>
-                    item.pk ? { ...item, id: item.pk } : { ...item, id: index },
-                  )}
-                  columns={responseTableFields}
-                  searchableColumns={['name']}
-                  filterOptions={[]}
-                  focusable={true}
-                  initialPage={pageIndex}
-                  setInitialPage={setPageIndex}
-                  initialPageSize={600}
-                  onClick={(row, event) => {
-                    if (
-                      event.target?.type === 'checkbox' ||
-                      event.target.tagName === 'svg' ||
-                      event.target.tagName === 'path'
-                    ) {
-                      // manually prevent the propagation here
-                      return
-                    }
-                    setShowModal(true)
-                    const submission =
-                      submissions[currentApplication.id].find(
-                        (submission) => submission.pk === row.original.pk,
-                      ) ?? null
-                    setCurrentSubmission(submission)
-                  }}
-                />
+                <ScrollWrapper>
+                  <TableWrapper>
+                    <Table
+                      data={submissions[
+                        currentApplication.id
+                      ].map((item, index) =>
+                        item.pk
+                          ? { ...item, id: item.pk }
+                          : { ...item, id: index },
+                      )}
+                      columns={responseTableFields}
+                      searchableColumns={['name']}
+                      filterOptions={[
+                        {
+                          label: 'notified',
+                          options: [
+                            { key: false, label: 'False' },
+                            { key: true, label: 'True' },
+                          ],
+                          filterFunction: (selection, object) =>
+                            object.notified === selection,
+                        },
+                        {
+                          label: 'reason',
+                          options: [
+                            { key: false, label: 'Set' },
+                            { key: true, label: 'Unset' },
+                          ],
+                          filterFunction: (selection, object) =>
+                            selection
+                              ? object.reason === ''
+                              : object.reason !== '',
+                        },
+                        {
+                          label: 'status',
+                          options: [
+                            {
+                              key: 'Pending',
+                              label: 'Pending',
+                            },
+                            {
+                              key: 'Accepted',
+                              label: 'Accepted',
+                            },
+                            {
+                              key: 'Rejected after written application',
+                              label: 'Rejected after written application',
+                            },
+                            {
+                              key: 'Rejected after interview(s)',
+                              label: 'Rejected after interview(s)',
+                            },
+                          ],
+                          filterFunction: (selection, object) =>
+                            object.status === selection,
+                        },
+                      ]}
+                      focusable={true}
+                      initialPage={pageIndex}
+                      setInitialPage={setPageIndex}
+                      initialPageSize={600}
+                      onClick={(row, event) => {
+                        if (
+                          event.target?.type === 'checkbox' ||
+                          event.target.tagName === 'svg' ||
+                          event.target.tagName === 'path'
+                        ) {
+                          // manually prevent the propagation here
+                          return
+                        }
+                        setShowModal(true)
+                        const submission =
+                          submissions[currentApplication.id].find(
+                            (submission) => submission.pk === row.original.pk,
+                          ) ?? null
+                        setCurrentSubmission(submission)
+                      }}
+                    />
+                  </TableWrapper>
+                </ScrollWrapper>
               ) : (
                 <>
                   <br></br>
@@ -457,7 +806,7 @@ export default function ApplicationsPage({
               href={
                 currentApplication != null
                   ? getApiUrl(
-                      `/clubs/${club.code}/applications/${currentApplication.id}/submissions/?format=xlsx`,
+                      `/clubs/${club.code}/applications/${currentApplication.id}/submissions/export`,
                     )
                   : '#'
               }
@@ -467,6 +816,42 @@ export default function ApplicationsPage({
             </a>
           </div>
         )}
+      <br></br>
+      <div>
+        {currentApplication != null ? (
+          <>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Extensions
+            </StyledHeader>
+            <ModelForm
+              key={currentApplication.id}
+              baseUrl={`/clubs/${club.code}/applications/${currentApplication.id}/extensions/`}
+              fields={
+                <>
+                  <Field
+                    name="username"
+                    as={TextField}
+                    required={true}
+                    helpText="The username (PennKey) of the applicant to be granted an extension."
+                  />
+                  <Field
+                    name="end_time"
+                    as={DateTimeField}
+                    required={true}
+                    helpText="The extended end time for this applicant's application."
+                  />
+                </>
+              }
+              tableFields={extensionTableFields}
+              confirmDeletion
+              searchableColumns={['username']}
+              noun="Extension"
+            />
+          </>
+        ) : (
+          <Loading />
+        )}
+      </div>
       {showModal && (
         <Modal
           show={showModal}
@@ -478,6 +863,66 @@ export default function ApplicationsPage({
             club={club.code}
             application={currentApplication}
             submission={currentSubmission}
+          />
+        </Modal>
+      )}
+      {showNotifModal && (
+        <Modal
+          show={showNotifModal}
+          closeModal={() => setShowNotifModal(false)}
+          width="80%"
+          marginBottom={false}
+        >
+          <NotificationModal
+            club={club.code}
+            application={currentApplication}
+            submissions={submissions[currentApplication!.id]}
+            updateSubmissions={(arr: Array<ApplicationSubmission>) => {
+              if (currentApplication != null) {
+                for (const submission of arr) {
+                  const item = submissions[currentApplication.id].find(
+                    (sub) => sub.pk === submission.pk,
+                  )!
+                  const idx = submissions[currentApplication.id].indexOf(item)
+                  submissions[currentApplication.id][idx].notified = true
+                }
+                setSubmissions(submissions)
+              }
+            }}
+          />
+        </Modal>
+      )}
+      {showReasonModal && (
+        <Modal
+          show={showReasonModal}
+          closeModal={() => {
+            setShowReasonModal(false)
+            setSelectedSubmissions([])
+          }}
+          width="80%"
+          marginBottom={false}
+        >
+          <ReasonModal
+            club={club.code}
+            application={currentApplication}
+            updateSubmissions={(s: { name: string }) => {
+              if (currentApplication != null) {
+                for (const [id, value] of Object.entries(s)) {
+                  const item = submissions[currentApplication.id].find(
+                    (sub) => sub.pk === Number(id),
+                  )!
+                  const idx = submissions[currentApplication.id].indexOf(item)
+                  submissions[currentApplication.id][idx].reason = value
+                }
+                setSubmissions(submissions)
+              }
+            }}
+            submissions={selectedSubmissions.map(
+              (i) =>
+                submissions[currentApplication!.id].find(
+                  (sub) => sub.pk === i,
+                )!,
+            )}
           />
         </Modal>
       )}
