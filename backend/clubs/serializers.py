@@ -2595,7 +2595,7 @@ class WhartonApplicationStatusSerializer(serializers.Serializer):
         Return the status string of the status associated with the submission
         """
         status_string = ApplicationSubmission.STATUS_TYPES[0][1]
-        for (status, name) in ApplicationSubmission.STATUS_TYPES:
+        for status, name in ApplicationSubmission.STATUS_TYPES:
             if obj["status"] == status:
                 status_string = name
         return status_string
@@ -2746,12 +2746,6 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def validate(self, data):
         acceptance_template = data.get("acceptance_email", "")
         rejection_template = data.get("rejection_email", "")
-        request = self.context["request"].data
-
-        if "committees" in request and data["application_start_time"] < timezone.now():
-            raise serializers.ValidationError(
-                "You cannot edit committees once the application is open"
-            )
 
         if not ClubApplication.validate_template(
             acceptance_template
@@ -2790,19 +2784,24 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         # manually create committee objects as Django does
         # not support nested serializers out of the box
         request = self.context["request"].data
-
         # only allow modifications to committees if the application is not yet open
         now = timezone.now()
-        if "committees" in request and application_obj.application_start_time > now:
-            committees = map(
+        prev_committees = ApplicationCommittee.objects.filter(
+            application=application_obj
+        )
+        prev_committee_names = list(map(lambda x: x.name, prev_committees))
+        committees = list(
+            map(
                 lambda x: x["value"] if "value" in x else x["name"],
                 request["committees"],
             )
-            prev_committees = ApplicationCommittee.objects.filter(
-                application=application_obj
-            )
+        )
+        if prev_committee_names != committees:
+            if application_obj.application_start_time > now:
+                raise serializers.ValidationError(
+                    "You cannot edit committees once the application is open"
+                )
             # nasty hack for idempotency
-            prev_committee_names = prev_committees.values("name")
             for prev_committee in prev_committees:
                 if prev_committee.name not in committees:
                     prev_committee.delete()
