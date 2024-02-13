@@ -2794,7 +2794,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             list(
                 map(
                     lambda x: x["value"] if "value" in x else x["name"],
-                    request["committees"],
+                    request["committees"] if "committees" in request else [],
                 )
             )
         )
