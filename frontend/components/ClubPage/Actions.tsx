@@ -284,26 +284,25 @@ const Actions = ({
       <div className={className} style={style}>
         <Wrapper>
           {SHOW_MEMBERSHIP_REQUEST &&
-            !inClub &&
             club.members.length > 0 &&
-            (isMembershipOpen
-              ? club.accepting_members && (
-                  <RequestMembershipButton
-                    club={club}
-                    updateRequests={updateRequests}
-                  />
-                )
-              : SHOW_APPLICATIONS && (
-                  <Link
-                    href={CLUB_APPLY_ROUTE()}
-                    as={CLUB_APPLY_ROUTE(code)}
-                    passHref
-                  >
-                    <ActionButton className="button is-success">
-                      <Icon name="edit" /> Apply
-                    </ActionButton>
-                  </Link>
-                ))}
+            isMembershipOpen &&
+            club.accepting_members && (
+              <RequestMembershipButton
+                club={club}
+                updateRequests={updateRequests}
+              />
+            )}
+          {SHOW_APPLICATIONS && !isMembershipOpen && club.accepting_members && (
+            <Link
+              href={CLUB_APPLY_ROUTE()}
+              as={CLUB_APPLY_ROUTE(code)}
+              passHref
+            >
+              <ActionButton className="button is-success">
+                <Icon name="edit" /> Apply
+              </ActionButton>
+            </Link>
+          )}
           {canEdit && (
             <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
               <ActionButton className="button is-success">

@@ -425,6 +425,10 @@ export function getSemesterFromDate(date: Date | string): string {
     date = new Date(date)
   }
 
+  if (date == null) {
+    return ''
+  }
+
   const year = date.getFullYear()
   const sem = date.getMonth() >= 6 ? 'Fall' : 'Spring'
   return `${sem} ${year}`

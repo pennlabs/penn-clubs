@@ -72,6 +72,8 @@ export interface ClubApplication {
   name: string
   application_start_time: string
   application_end_time: string
+  application_end_time_exception: boolean
+  cycle: string
   result_release_time: string
   external_url: string
 }
@@ -164,9 +166,14 @@ export interface Club {
   is_member: MembershipRank | false
   is_request: boolean
   is_subscribe: boolean
+  is_wharton: boolean
   linkedin: string
   listserv: string
   members: Membership[]
+  /**
+   * @deprecated
+   * use `members.length` instead
+   */
   membership_count: number
   name: string
   recruiting_cycle: ClubRecruitingCycle
@@ -296,6 +303,8 @@ export type Application = {
   description: string
   application_start_time: string
   application_end_time: string
+  acceptance_email: string
+  rejection_email: string
   result_release_time: string
   updated_at: string
   external_url: string | null
@@ -366,10 +375,14 @@ export type ApplicationSubmission = {
   application: number
   committee: string | null
   created_at: string
+  first_name: string
+  last_name: string
   status: string
   responses: Array<ApplicationResponse>
   club: string
   code: string
+  notified: boolean
+  reason: string
   application_link: string
 }
 
