@@ -323,7 +323,7 @@ class IsSuperuser(permissions.BasePermission):
 
 class WhartonApplicationPermission(permissions.BasePermission):
     """
-    Grants permission is the user is an officer of Wharton Council
+    Grants permission if the user is an officer of Wharton Council
     """
 
     WHARTON_COUNCIL_CLUB_CODE = "wharton-council"

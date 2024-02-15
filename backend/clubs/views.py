@@ -29,6 +29,8 @@ from django.core.management import call_command, get_commands, load_command_clas
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
 from django.db.models import (
+    Case,
+    CharField,
     Count,
     DurationField,
     ExpressionWrapper,
@@ -37,6 +39,7 @@ from django.db.models import (
     Q,
     TextField,
     Value,
+    When,
 )
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
@@ -2424,11 +2427,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             .prefetch_related(
                 Prefetch(
                     "club__badges",
-                    queryset=Badge.objects.filter(
-                        fair__id=self.request.query_params.get("fair")
-                    )
-                    if "fair" in self.request.query_params
-                    else Badge.objects.filter(visible=True),
+                    queryset=(
+                        Badge.objects.filter(
+                            fair__id=self.request.query_params.get("fair")
+                        )
+                        if "fair" in self.request.query_params
+                        else Badge.objects.filter(visible=True)
+                    ),
                 )
             )
             .order_by("start_time")
@@ -4069,12 +4074,14 @@ class MeetingZoomAPIView(APIView):
             return Response(
                 {
                     "success": out.ok,
-                    "detail": "Your Zoom meeting has been updated. "
-                    "The following accounts have been made hosts:"
-                    f" {', '.join(alt_hosts)}"
-                    if out.ok
-                    else "Your Zoom meeting has not been updated. "
-                    "Are you the owner of the meeting?",
+                    "detail": (
+                        "Your Zoom meeting has been updated. "
+                        "The following accounts have been made hosts:"
+                        f" {', '.join(alt_hosts)}"
+                        if out.ok
+                        else "Your Zoom meeting has not been updated. "
+                        "Are you the owner of the meeting?"
+                    ),
                 }
             )
 
@@ -4186,9 +4193,11 @@ class UserZoomAPIView(APIView):
         return Response(
             {
                 "success": response.ok,
-                "detail": "Your user settings have been updated on Zoom."
-                if response.ok
-                else "Failed to update Zoom user settings.",
+                "detail": (
+                    "Your user settings have been updated on Zoom."
+                    if response.ok
+                    else "Failed to update Zoom user settings."
+                ),
             }
         )
 
@@ -4858,6 +4867,7 @@ class WhartonCyclesView(viewsets.ModelViewSet):
     patch: Update application cycle and WC applications with cycle
     clubs: list clubs with cycle
     add_clubs: add clubs to cycle
+    applications: list application submissions for cycle
     remove_clubs_from_all: remove clubs from all cycles
     """
 
@@ -5104,6 +5114,60 @@ class WhartonCyclesView(viewsets.ModelViewSet):
             apps, ["application_end_time", "application_end_time_exception"],
         )
         return Response([])
+
+    @action(detail=True, methods=["GET"])
+    def applications(self, *args, **kwargs):
+        """
+        Retrieve applications for given cycle
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        cycle = self.get_object()
+        data = (
+            ApplicationSubmission.objects.filter(
+                application__is_wharton_council=True,
+                application__application_cycle=cycle,
+            )
+            .select_related(
+                "user__profile", "application", "application__application_cycle"
+            )
+            .annotate(
+                annotated_name=F("application__name"),
+                annotated_committee=F("committee__name"),
+                annotated_club=F("application__club__name"),
+                annotated_grad_year=F("user__profile__graduation_year"),
+                annotated_school=F("user__profile__school__name"),
+                status_name=Case(
+                    When(status=1, then=Value("Pending")),
+                    When(status=2, then=Value("Rejected after written application")),
+                    When(status=3, then=Value("Rejected after interview(s)")),
+                    When(status=4, then=Value("Accepted")),
+                    default=Value("Unknown"),
+                    output_field=CharField(),
+                ),
+            )
+            .values(
+                "annotated_name",
+                "application",
+                "annotated_committee",
+                "annotated_club",
+                "annotated_grad_year",
+                "annotated_school",
+                "status_name",
+                "user",
+            )
+        )
+        df = pd.DataFrame(data)
+        resp = HttpResponse(
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment;filename=submissions.csv"},
+        )
+        df.to_csv(index=True, path_or_buf=resp)
+        return resp
 
 
 class WhartonApplicationAPIView(viewsets.ModelViewSet):
@@ -5793,11 +5857,13 @@ class LoggingArgumentParser(argparse.ArgumentParser):
         default = kwargs.get("default")
         typ = kwargs.get(
             "type",
-            bool
-            if kwargs.get("action") == "store_true"
-            else type(default)
-            if default is not None
-            else str,
+            (
+                bool
+                if kwargs.get("action") == "store_true"
+                else type(default)
+                if default is not None
+                else str
+            ),
         )
         pos = -1
         if not args[0].startswith("-"):
