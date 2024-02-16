@@ -5129,7 +5129,8 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         cycle = self.get_object()
         data = (
             ApplicationSubmission.objects.filter(
-                application__is_wharton_council=True,
+                Q(application__is_wharton_council=True)
+                | Q(application__club__name__icontains="Wharton"),
                 application__application_cycle=cycle,
             )
             .select_related(
@@ -5141,6 +5142,7 @@ class WhartonCyclesView(viewsets.ModelViewSet):
                 annotated_club=F("application__club__name"),
                 annotated_grad_year=F("user__profile__graduation_year"),
                 annotated_school=F("user__profile__school__name"),
+                annotated_wc=F("application__is_wharton_council"),
                 status_name=Case(
                     When(status=1, then=Value("Pending")),
                     When(status=2, then=Value("Rejected after written application")),
@@ -5157,6 +5159,7 @@ class WhartonCyclesView(viewsets.ModelViewSet):
                 "annotated_club",
                 "annotated_grad_year",
                 "annotated_school",
+                "annotated_wc",
                 "status_name",
                 "user",
             )
