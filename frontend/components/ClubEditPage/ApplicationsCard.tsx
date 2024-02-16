@@ -11,7 +11,6 @@ import {
 } from '../../utils/branding'
 import { Icon, Modal, Text } from '../common'
 import {
-  ApplicationUpdateTextField,
   CheckboxField,
   CreatableMultipleSelectField,
   DateTimeField,
@@ -263,23 +262,14 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
         ))}
       </ul>
 
-      {!club.is_wharton && (
-        <Text>
-          <b>TIP</b>: To copy over your application from last semester, please
-          click <b> duplicate </b> on the application from the season that you
-          would like to copy over and refresh the page. You can then edit this
-          application as you please.
-        </Text>
-      )}
-
       <Text>
-        If your club is affiliated with the Wharton Council Centralised
-        Application, please note that editable applications will be provisioned
-        by the system administrator.{' '}
+        <b>TIP</b>: To copy over your application from last semester, please
+        click <b> duplicate </b> on the application from the season that you
+        would like to copy over and refresh the page. You can then edit this
+        application as you please.
       </Text>
 
       <ModelForm
-        allowCreation={!club.is_wharton}
         baseUrl={`/clubs/${club.code}/applications/`}
         defaultObject={{ name: `${club.name} Application` }}
         onChange={(data) => {
@@ -326,25 +316,19 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               name="application_start_time"
               as={DateTimeField}
               required={true}
-              helpText={`The date when your application opens. ${
-                club.is_wharton ? 'Read-only.' : ''
-              }`}
+              helpText="The date when your application opens."
             />
             <Field
               name="application_end_time"
               as={DateTimeField}
               required={true}
-              helpText={`The date when your application closes. ${
-                club.is_wharton ? 'Read-only.' : ''
-              }`}
+              helpText="The date when your application closes."
             />
             <Field
               name="result_release_time"
               as={DateTimeField}
               required={true}
-              helpText={`The latest date that your ${OBJECT_NAME_SINGULAR} will be releasing admission results. ${
-                club.is_wharton ? 'Read-only.' : ''
-              }`}
+              helpText={`The latest date that your ${OBJECT_NAME_SINGULAR} will be releasing admission results.`}
             />
             <Field
               name="external_url"
@@ -358,28 +342,12 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               initialValues={committees}
               helpText={`If your ${OBJECT_NAME_SINGULAR} has multiple committees to which students can apply, list them here. NOTE: you won't be able to edit this field after applications open.`}
             />
-            <Field
-              name="acceptance_email"
-              as={ApplicationUpdateTextField}
-              initialValues={
-                "<html> <body> <p> Congratulations {{ name }}! You've been accepted to {{ committee }} because {{reason}}! </p> </body> </html>"
-              }
-              helpText={`Acceptance email for your ${OBJECT_NAME_SINGULAR}.`}
-            />
-            <Field
-              name="rejection_email"
-              as={ApplicationUpdateTextField}
-              initialValues={
-                "<html> <body> <p> Sorry {{ name }}, You've been rejected because {{ reason }}! </p> </body> </html>"
-              }
-              helpText={`Rejection email for your ${OBJECT_NAME_SINGULAR}.`}
-            />
           </>
         }
         confirmDeletion={true}
         tableFields={[
           { name: 'name', label: 'Name' },
-          { name: 'cycle', label: 'Cycle' },
+          { name: 'season', label: 'Season' },
           {
             name: 'id',
             label: 'Edit',
@@ -397,16 +365,14 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
                       Questions
                     </button>
                   ) : (
-                    !club.is_wharton && (
-                      <button
-                        className="button is-primary is-small"
-                        onClick={() => {
-                          duplicateApplicationCurrent(id, 1)
-                        }}
-                      >
-                        Duplicate
-                      </button>
-                    )
+                    <button
+                      className="button is-primary is-small"
+                      onClick={() => {
+                        duplicateApplicationCurrent(id, 1)
+                      }}
+                    >
+                      Duplicate
+                    </button>
                   )}
                   <a href={`/club/${club.code}/application/${id}`}>
                     <button className="button is-primary is-small ml-3">

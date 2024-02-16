@@ -147,8 +147,7 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
                 <Subtitle>
                   {app.name}{' '}
                   <span className="has-text-grey">
-                    for{' '}
-                    {app.cycle || getSemesterFromDate(app.application_end_time)}
+                    for {getSemesterFromDate(app.application_end_time)}
                   </span>
                 </Subtitle>
                 <div>
@@ -195,10 +194,7 @@ ApplyPage.getInitialProps = async ({ query, req }: NextPageContext) => {
   }
   const [clubReq, appReq] = await Promise.all([
     doApiRequest(`/clubs/${query.club}/?format=json`, data),
-    doApiRequest(
-      `/clubs/${query.club}/applications/current/?format=json`,
-      data,
-    ),
+    doApiRequest(`/clubs/${query.club}/applications/?format=json`, data),
   ])
   const clubRes = await clubReq.json()
   const appRes = await appReq.json()

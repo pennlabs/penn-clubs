@@ -203,7 +203,6 @@ const Table = ({
     {
       columns: memoColumns,
       data: tableData,
-      autoResetSortBy: false,
       filterTypes,
       initialState: { pageIndex: initialPage, pageSize: initialPageSize },
     },

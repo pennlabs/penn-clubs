@@ -1,4 +1,4 @@
-FROM pennlabs/django-base:9c4f31bf1af44219d0f9019271a0033a222291c2-3.8.5
+FROM pennlabs/django-base:a142aa6975ee293bbc8a09ef0b81998ce7063dd3
 
 LABEL maintainer="Penn Labs"
 

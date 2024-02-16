@@ -4,12 +4,11 @@ repos:
     hooks:
       - id: black
         name: black
-        entry: bash -c "export PIPENV_IGNORE_VIRTUALENVS=1 && cd backend && pipenv run black ."
+        entry: cd backend && pipenv run black
         language: python
         types: [python]
         require_serial: true
         files: ^backend/
-        pass_filenames: false
       - id: isort
         name: isort
         entry: isort
@@ -27,7 +26,7 @@ repos:
         args: [--config, backend/setup.cfg]
       - id: frontend
         name: Yarn Linter
-        entry: bash -c "cd frontend && yarn lint"
+        entry: yarn --cwd frontend lint
         language: system
         files: ^frontend/
         require_serial: false

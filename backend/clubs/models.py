@@ -22,9 +22,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.functional import cached_property
 from ics import Calendar
-from jinja2 import Environment, meta
 from model_clone.models import CloneModel
 from phonenumber_field.modelfields import PhoneNumberField
 from simple_history.models import HistoricalRecords
@@ -325,13 +323,6 @@ class Club(models.Model):
     appointment_needed = models.BooleanField(default=False)
     signature_events = models.TextField(blank=True)  # html
 
-    # cache club aggregation counts
-    favorite_count = models.IntegerField(default=0)
-    membership_count = models.IntegerField(default=0)
-
-    # cache club rankings
-    rank = models.IntegerField(default=0)
-
     # cache club rankings
     rank = models.IntegerField(default=0)
 
@@ -346,11 +337,6 @@ class Club(models.Model):
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 200)
-
-    @cached_property
-    def is_wharton(self):
-        wc_badge = Badge.objects.filter(label="Wharton Council").first()
-        return wc_badge in self.badges.all()
 
     def add_ics_events(self):
         """
@@ -1540,43 +1526,22 @@ class Profile(models.Model):
         return self.user.username
 
 
-class ApplicationCycle(models.Model):
-    """
-    Represents an application cycle attached to club applications
-    """
-
-    name = models.CharField(max_length=255)
-    start_date = models.DateTimeField(null=True)
-    end_date = models.DateTimeField(null=True)
-    release_date = models.DateTimeField(null=True)
-
-    def __str__(self):
-        return self.name
-
-
 class ClubApplication(CloneModel):
     """
     Represents custom club application.
     """
 
     DEFAULT_COMMITTEE = "General Member"
-    VALID_TEMPLATE_TOKENS = {"name", "reason", "committee"}
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
-    application_end_time_exception = models.BooleanField(default=False, blank=True)
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
-    application_cycle = models.ForeignKey(
-        ApplicationCycle, on_delete=models.SET_NULL, null=True
-    )
     external_url = models.URLField(blank=True)
     is_active = models.BooleanField(default=False, blank=True)
     is_wharton_council = models.BooleanField(default=False, blank=True)
-    acceptance_email = models.TextField(blank=True)
-    rejection_email = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1594,52 +1559,11 @@ class ClubApplication(CloneModel):
             self.application_end_time,
         )
 
-    @cached_property
+    @property
     def season(self):
-        semester = "Fall" if 8 <= self.application_start_time.month <= 12 else "Spring"
+        semester = "Fall" if 8 <= self.application_start_time.month <= 11 else "Spring"
         year = str(self.application_start_time.year)
         return f"{semester} {year}"
-
-    @classmethod
-    def validate_template(cls, template):
-        environment = Environment()
-        j2_template = environment.parse(template)
-        tokens = meta.find_undeclared_variables(j2_template)
-        return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
-
-
-class ApplicationExtension(models.Model):
-    """
-    Represents an individual club application extension.
-    """
-
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    application = models.ForeignKey(
-        ClubApplication, related_name="extensions", on_delete=models.CASCADE
-    )
-    end_time = models.DateTimeField()
-
-    def send_extension_mail(self):
-        context = {
-            "name": self.user.first_name,
-            "application_name": self.application.name,
-            "end_time": self.end_time,
-            "club": self.application.club.name,
-            "url": (
-                f"https://pennclubs.com/club/{self.application.club.code}"
-                f"/application/{self.application.pk}/"
-            ),
-        }
-
-        send_mail_helper(
-            name="application_extension",
-            subject=f"Application Extension for {self.application.name}",
-            emails=[self.user.email],
-            context=context,
-        )
-
-    class Meta:
-        unique_together = (("user", "application"),)
 
 
 class ApplicationCommittee(models.Model):
@@ -1724,7 +1648,6 @@ class ApplicationSubmission(models.Model):
     )
     status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
-    reason = models.TextField(blank=True)
     application = models.ForeignKey(
         ClubApplication,
         related_name="submissions",
@@ -1737,15 +1660,9 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    notified = models.BooleanField(default=False)
+    archived = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.first_name}: {self.application.name}"
-
-    class Meta:
-        unique_together = (("user", "application", "committee"),)
 
 
 class ApplicationQuestionResponse(models.Model):
@@ -1774,9 +1691,6 @@ class ApplicationQuestionResponse(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = (("question", "submission"),)
 
 
 class QuestionResponse(models.Model):

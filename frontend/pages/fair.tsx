@@ -9,12 +9,21 @@ import moment from 'moment-timezone'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
 import { ClubFair } from 'types'
 import { cache, doApiRequest, useSetting } from 'utils'
-import { FAIR_NAME } from 'utils/branding'
+import {
+  FAIR_NAME,
+  OBJECT_NAME_LONG_PLURAL,
+  OBJECT_NAME_PLURAL,
+  OBJECT_NAME_SINGULAR,
+  OBJECT_NAME_TITLE,
+  OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
+} from 'utils/branding'
 
-import { CLUB_ROUTE, SNOW } from '~/constants'
+import { CLUB_ROUTE, LIVE_EVENTS, SNOW } from '~/constants'
 
 type FairPageProps = {
   isOverride: boolean
@@ -76,32 +85,85 @@ const FairPage = ({
             an error, please contact <Contact />.
           </div>
         )}
-
         <p>
-          The 2023 Fall Activities Fair sponsored by the Student Activities
-          Council(SAC), will be held from August 29th to August 31st! This event
-          will showcase various student-run clubs, with each day dedicated to
-          highlighting different club categories. The fair will take place on
-          College Green from 12p-4p each day.
+          <b>Hi there! Welcome to {SITE_NAME}!</b> We are the official platform
+          for {OBJECT_NAME_LONG_PLURAL} on campus, and we are excited to get you
+          connected to {OBJECT_NAME_PLURAL} on our platform this year. In
+          collaboration with {fairOrgName}, we will be hosting the fair for this
+          semester. Below is some important information that will set you up for
+          a successful experience.
         </p>
         <p>
-          To participate, sign-up will be facilitated through Penn Clubs and
-          will coincide with the annual club registration process. Only
-          returning undergraduate student-run groups that were registered in
-          Penn Clubs last year are eligible to sign-up for the Fall Activities
-          Fair.
+          <b>How the {fairName} will be run:</b>
         </p>
+        <ul>
+          <li>
+            The {fairName} will be held on <b>{fairTime}</b>.
+          </li>
+          <li>
+            You can visit each {OBJECT_NAME_SINGULAR}'s individual page. Each{' '}
+            {OBJECT_NAME_SINGULAR}'s page has a description, contact
+            information, and a FAQ feature that {OBJECT_NAME_SINGULAR} officers
+            will be monitoring throughout the fair that you can use to ask
+            questions. Questions can be submitted anonymously.
+          </li>
+          <li>
+            To keep track of {OBJECT_NAME_PLURAL} you are interested in, we
+            encourage you to use some of the tools on our platform!
+            <ul>
+              <li>
+                The{' '}
+                <b>
+                  <Icon name="bookmark" /> Bookmark
+                </b>{' '}
+                button will allow you to save a {OBJECT_NAME_SINGULAR} for later
+                for your own personal reference. {OBJECT_NAME_TITLE} will not be
+                able to see your contact information unless you have allowed it.
+              </li>
+              <li>
+                The{' '}
+                <b>
+                  <Icon name="bell" /> Subscribe
+                </b>{' '}
+                button will put your name on a {OBJECT_NAME_SINGULAR}'s mailing
+                list. {OBJECT_NAME_TITLE_SINGULAR}
+                officers can use this list to send you updates on their upcoming
+                events, newsletters, information, and more.
+              </li>
+            </ul>
+          </li>
+        </ul>
         <p>
-          To secure your club’s spot, be sure to register before the deadline on
-          August 22nd. Once the registration process is complete, registered
-          clubs will receive information about their scheduled day for the Fair
-          by August 24th.
+          <b>Contact:</b>
         </p>
-        <p>
-          For any inquiries or clarifications about the Fair, don't hesitate to
-          reach out to SAC at fair@sacfunded.net. We look forward to seeing you
-          there!
-        </p>
+        <ul>
+          <li>
+            If you have any questions or concerns regarding the {fairName},
+            please contact <Contact email={fairContact as string} />.
+          </li>
+          <li>
+            If you have any questions or concerns regarding the {SITE_NAME}{' '}
+            platform, please contact <Contact />.
+          </li>
+        </ul>
+        {fairAdditionalInfo && !!(fairAdditionalInfo as string).length && (
+          <p>
+            <div
+              dangerouslySetInnerHTML={{ __html: fairAdditionalInfo as string }}
+            />
+          </p>
+        )}
+        {isFairOpen ? (
+          <Link href={LIVE_EVENTS} as={LIVE_EVENTS}>
+            <a className="button is-primary">
+              <Icon name="chevrons-right" /> Go to events
+            </a>
+          </Link>
+        ) : (
+          <p>
+            The <b>{fairName}</b> opens <TimeAgo date={fair?.start_time} />.
+          </p>
+        )}
         <div className="columns mt-3">
           {events.map(
             ({ start_time, end_time, events }, i): ReactElement => {

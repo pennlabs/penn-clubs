@@ -31,6 +31,7 @@ import {
   APPROVAL_AUTHORITY,
   APPROVAL_AUTHORITY_URL,
   MEMBERSHIP_ROLE_NAMES,
+  OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   SCHOOL_NAME,
@@ -250,43 +251,40 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
           )}
           <TextInfoBox>
             <p>
-              The annual club registration process is a procedure conducted by
-              the{' '}
+              Every year, the{' '}
               <a target="_blank" href={APPROVAL_AUTHORITY_URL}>
                 {APPROVAL_AUTHORITY}
               </a>{' '}
-              to ensure that student-run clubs are officially registered and
-              permitted to operate on campus for the upcoming academic year.
-              During this process, clubs are required to submit update their
-              club officers and membership roster information; if applicable,
-              update primary contact information fulfill any other requirements
-              set by the University.
+              requires clubs to renew their approval status to ensure that the{' '}
+              {APPROVAL_AUTHORITY} has the <b>most up to date information</b>{' '}
+              and that club members are <b>aware of university policies</b>.
+              This process must be performed once a year by the current
+              leadership of the club.
             </p>
             <p>
-              The purpose of the annual club registration process is to maintain
-              a well-organized and vibrant campus community, allowing students
-              to explore various interests and engage in extracurricular
-              activities. By registering each year, clubs reaffirm their
-              commitment to following school policies, uphold their mission, and
-              demonstrate their ongoing relevance to the student body.
+              You must fill out this approval form by <b>August 24, {year}</b>{' '}
+              in order to have your {OBJECT_NAME_SINGULAR} shown during the New
+              Student Orientation. Late submissions will be accepted, but we
+              cannot guarantee that they will be processed in time for New
+              Student Orientation.
             </p>
             <p>
-              Benefits of club registration include access to funding
-              opportunities, the ability to reserve campus facilities for
-              events, eligibility to participate in campus-wide events like the
-              annual activities’ fairs, and access to resources and support from
-              the student affairs office or other university departments.
+              During this process, you will review your {OBJECT_NAME_SINGULAR}{' '}
+              information, update your {OBJECT_NAME_SINGULAR} constitution, and
+              agree to the latest policies governing student organizations at
+              the {SCHOOL_NAME}.
             </p>
             <p>
-              Overall, the annual club registration process plays a crucial role
-              in fostering a diverse and active campus life, enriching the
-              educational experience of students, and promoting a sense of
-              community and belonging.
+              Starting from Fall 2020, all {OBJECT_NAME_PLURAL} will perform
+              this process using the {SITE_NAME} website. We hope to make the
+              process as easy as possible, and would love your feedback on how
+              we're doing. If you run into technical difficulties or have
+              feedback on the renewal process, please contact <Contact />.
             </p>
             <p>
-              If you have any questions about the club registration process,
-              please contact the Office of Student Affairs at
-              vpul-pennosa@pobox.upenn.edu.
+              If you have any questions about the {OBJECT_NAME_SINGULAR} renewal
+              process, please contact the {APPROVAL_AUTHORITY} at{' '}
+              <Contact point="osa" />.
             </p>
           </TextInfoBox>
         </>

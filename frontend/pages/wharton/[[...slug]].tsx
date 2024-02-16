@@ -8,7 +8,6 @@ import renderPage from 'renderPage'
 import { Application, ApplicationStatus } from 'types'
 import { doBulkLookup } from 'utils'
 
-import WhartonApplicationCycles from '~/components/Settings/WhartonApplicationCycles'
 import WhartonApplicationStatus from '~/components/Settings/WhartonApplicationStatus'
 import WhartonApplicationTab from '~/components/Settings/WhartonApplicationTab'
 import { BG_GRADIENT, WHARTON_ROUTE, WHITE } from '~/constants'
@@ -36,11 +35,6 @@ function WhartonDashboard({
       name: 'status',
       label: 'Status',
       content: () => <WhartonApplicationStatus statuses={statuses} />,
-    },
-    {
-      name: 'cycle',
-      label: 'Cycles',
-      content: () => <WhartonApplicationCycles />,
     },
   ]
 

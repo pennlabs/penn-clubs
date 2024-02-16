@@ -148,7 +148,7 @@ class XLSXFormatterMixin(object):
         if hasattr(serializer_class, "get_xlsx_column_name"):
             val = serializer_class.get_xlsx_column_name(key)
         if val is None:
-            val = key.replace("_", " ")
+            val = key.replace("_", " ").title()
         self._column_cache[key] = val
         return val
 

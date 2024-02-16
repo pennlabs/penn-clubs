@@ -7,7 +7,6 @@ Official React-based website for Penn Labs' club directory and events listings.
 The REST API written in Django for Penn Clubs infrastructure.
 
 ## Installation
-
 You will need to start both the backend and the frontend to do Penn Clubs development.
 
 Questions? Check out our [extended guide](https://github.com/pennlabs/penn-clubs/wiki/Development-Guide#windows-development) for FAQs for both Mac and Windows.
@@ -17,7 +16,6 @@ Questions? Check out our [extended guide](https://github.com/pennlabs/penn-clubs
 Running the backend requires [Python 3](https://www.python.org/downloads/).
 
 In production, you will need to set the following environment variables:
-
 - `NEXT_PUBLIC_SITE_NAME` (optional, defaults to `clubs`)
 - `SECRET_KEY`
 - `SENTRY_URL`
@@ -29,7 +27,6 @@ In production, you will need to set the following environment variables:
 - `LABS_CLIENT_SECRET` (from Platform)
 
 To run the server, `cd` to the folder where you cloned `penn-clubs`. Then run:
-
 - `cd backend`
 
 Setting up `psycopg2` (this is necessary if you want to be able to modify
@@ -45,14 +42,14 @@ dependencies, you can revisit later if not)
 - Windows
   - `$ apt-get install gcc python3-dev libpq-dev`
 
-Now, you can run
+Now, you can run 
 
 - `$ pipenv install` to install Python dependencies. This may take a few
   minutes. Optionally include the `--dev` argument if you are installing locally
   for development. If you skipped installing `psycopg2` earlier, you might see
   an error with locking -- this is expected!
 - `$ pipenv shell`
-- `$ pre-commit install`
+- `$ pre-commit install` 
 - `$ ./manage.py migrate` OR `$ python3 manage.py migrate`
 - `$ ./manage.py populate` OR `$ python3 manage.py populate` (in development,
   to populate the database with dummy data)
@@ -60,14 +57,9 @@ Now, you can run
 
 ### Frontend
 
-Running the frontend requires [Node.js](https://nodejs.org/en/) and
-[Yarn](https://yarnpkg.com/getting-started/install).
-
-**Please ensure you are using Node 14**. Our codebase does not support other
-versions of Node (v14.21.3 is stable).
+Running the frontend requires [Node.js](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com/getting-started/install).
 
 You will need to set the following environment variables on the frontend:
-
 - `NEXT_PUBLIC_GOOGLE_API_KEY`
 - `NEXT_PUBLIC_SITE_NAME` (Optional)
   - Specify `clubs` to show Penn Clubs and `fyh` to show Hub@Penn.

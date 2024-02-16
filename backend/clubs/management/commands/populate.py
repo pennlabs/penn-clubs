@@ -226,7 +226,7 @@ fair_registration_text = """
     members and to answer questions.
 </p>
 <p>
-    If you would like to particpate in the SAC fair, check
+    If you would like to particpate in the Fall 2020 SAC fair, check
     the box below. If you check the box below, your club information
     will be shared with the Student Activites Council and more details
     will be sent to you at a later date.
@@ -396,12 +396,6 @@ class Command(BaseCommand):
         tag_undergrad, _ = Tag.objects.get_or_create(name="Undergraduate")
         tag_generic, _ = Tag.objects.get_or_create(name="Generic")
 
-        wharton_badge, _ = Badge.objects.get_or_create(
-            label="Wharton Council",
-            purpose="Dummy badge to mock Wharton-affiliated clubs",
-            visible=True,
-        )
-
         for i in range(1, 50):
             club, created = Club.objects.get_or_create(
                 code="z-club-{}".format(i),
@@ -413,10 +407,6 @@ class Command(BaseCommand):
                     "email": "example@example.com",
                 },
             )
-
-            if 10 <= i <= 15:
-                # Make some clubs Wharton-affiliated
-                club.badges.add(wharton_badge)
 
             if created:
                 club.available_virtually = i % 2 == 0

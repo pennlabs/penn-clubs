@@ -10,7 +10,6 @@ import {
   WHITE_ALPHA,
 } from '../constants/colors'
 import { BODY_FONT } from '../constants/styles'
-import { isSummer } from '../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -70,18 +69,16 @@ const DisplayButtons = ({
     >
       <Icon name="list" alt="list icon" style={iconStyles} />
     </button>
-    {!isSummer() && (
-      <Link href="/create">
-        <a className="button is-small is-primary">
-          <Icon
-            name="plus"
-            alt={`create ${OBJECT_NAME_SINGULAR}`}
-            style={iconStylesDark}
-          />
-          Add {OBJECT_NAME_TITLE_SINGULAR}
-        </a>
-      </Link>
-    )}
+    <Link href="/create">
+      <a className="button is-small is-primary">
+        <Icon
+          name="plus"
+          alt={`create ${OBJECT_NAME_SINGULAR}`}
+          style={iconStylesDark}
+        />
+        Add {OBJECT_NAME_TITLE_SINGULAR}
+      </a>
+    </Link>
   </DisplayButtonsTag>
 )
 
