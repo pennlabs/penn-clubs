@@ -35,7 +35,7 @@ qrcode = "*"
 python-dateutil = "*"
 psycopg2 = "*"
 django-simple-history = "*"
-channels = "*"
+channels = {extras = ["daphne"], version = "*"}
 django-runtime-options = "*"
 social-auth-app-django = "*"
 django-redis = "*"
@@ -58,8 +58,6 @@ pandas = "*"
 drf-excel = "*"
 numpy = "*"
 coverage = "*"
-daphne = "*"
-tatsu = "==5.8.3"
 
 [requires]
 python_version = "3.11"

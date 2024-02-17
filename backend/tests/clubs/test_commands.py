@@ -46,7 +46,7 @@ def mocked_requests_get(time):
     def fake_request(url, *args):
         class MockResponse:
             def __init__(self, content, status_code):
-                self.text = str(content)
+                self.text = content.serialize()
                 self.status_code = status_code
 
             def text(self):
