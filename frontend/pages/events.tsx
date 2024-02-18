@@ -279,9 +279,7 @@ const CalendarHeader = ({
   return (
     <StyledHeader>
       <div className="info">
-        <Title className="title" style={{ color: CLUBS_GREY, margin: 0 }}>
-          Events
-        </Title>
+        <Title style={{ color: CLUBS_GREY, margin: 0 }}>Events</Title>
         <div>{label}</div>
       </div>
       <div className="tools">

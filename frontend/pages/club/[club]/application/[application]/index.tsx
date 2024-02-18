@@ -152,7 +152,9 @@ const ApplicationPage = ({
       <ClubMetadata club={club} />
       <Container paddingTop>
         <div className="is-clearfix">
-          <Title className="is-pulled-left">{application.name}</Title>
+          <div className="is-pulled-left">
+            <Title>{application.name}</Title>
+          </div>
         </div>
         {application.description != null && application.description !== '' && (
           <>

@@ -123,7 +123,7 @@ const UserProfilePage = ({
           />
         </div>
         <div className="is-pulled-left">
-          <Title className="mb-2">{profile.name}</Title>
+          <Title>{profile.name}</Title>
           <div className="tags mb-0">
             {profile.school
               .sort((a, b) => a.name.localeCompare(b.name))

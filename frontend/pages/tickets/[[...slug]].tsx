@@ -15,6 +15,19 @@ import {
   SM,
 } from '../../constants/measurements'
 
+/*
+Ticket.getInitialProps = async ({ query }): Promise<any> => {
+ const id = query.slug[0]
+ return doApiRequest(`/events/${id}/tickets?format=json`, {
+   method: 'GET',
+ })
+   .then((resp) => resp.json())
+   .then((res) => {
+     console.log(res)
+   })
+}
+*/
+
 type CardProps = {
   readonly hovering?: boolean
   className?: string
@@ -168,7 +181,7 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
   }
   try {
     if (!query || !query.slug) {
-      return { home: true }
+      return { home: true, tickets: {}, event: {}, buyers: [] }
     }
     const id = query && query.slug ? query.slug[0] : -1
     const [ticketsReq, eventReq, buyersReq] = await Promise.all([
@@ -186,23 +199,15 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
     // console.log('buyersRes', buyersRes)
     // console.log('buyersRes.buyers', buyersRes.buyers)
 
-    return { tickets: ticketsRes, event: eventRes, buyers: buyersRes.buyers }
+    return {
+      home: false,
+      tickets: ticketsRes,
+      event: eventRes,
+      buyers: buyersRes.buyers,
+    }
   } catch (err) {
     // console.log(err)
   }
 }
-
-/*
-Ticket.getInitialProps = async ({ query }): Promise<any> => {
- const id = query.slug[0]
- return doApiRequest(`/events/${id}/tickets?format=json`, {
-   method: 'GET',
- })
-   .then((resp) => resp.json())
-   .then((res) => {
-     console.log(res)
-   })
-}
-*/
 
 export default renderPage(Ticket)
