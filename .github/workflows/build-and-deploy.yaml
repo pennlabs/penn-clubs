@@ -20,6 +20,7 @@ jobs:
     uses: pennlabs/shared-actions/.github/workflows/react-check.yaml@v0.1
     with:
       path: frontend
+      nodeVersion: 16.20.2
 
   build-backend:
     name: Build backend
