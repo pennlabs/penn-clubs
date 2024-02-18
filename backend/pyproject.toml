@@ -1,11 +1,10 @@
 [tool.ruff]
-exclude = [
-    ".venv",
-    "migrations",
-]
-lint.ignore = ["E203"]
+exclude = [".venv", "migrations"]
 line-length = 88
-lint.select = [
+
+[tool.ruff.lint]
+ignore = ["E203"]
+select = [
     "E",
     "F",
     "Q",

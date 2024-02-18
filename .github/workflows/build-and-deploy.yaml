@@ -8,13 +8,14 @@ on: push
 jobs:
   backend-check:
     name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@8785a7d7b9158d8d5705a0202f5695db2c0beb97
+    uses: pennlabs/shared-actions/.github/workflows/django.yaml@820cdfdf539ef3226566b5c9177e7d4b0b33e37d
     with:
       projectName: pennclubs
       path: backend
       pythonVersion: 3.11-bookworm
-      flake: true
-      black: true
+      flake: false
+      black: false
+      ruff: true
 
   frontend-check:
     name: "Frontend Check"
