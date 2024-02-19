@@ -291,7 +291,7 @@ function renderPage<T>(
     const originalPageProps = async () => {
       let pageProps = {}
       if (Page.getInitialProps) {
-        pageProps = await Page.getInitialProps(ctx)
+        pageProps = (await Page.getInitialProps(ctx)) || {}
       }
       const perms = await fetchPermissions()
       return [pageProps, perms]
