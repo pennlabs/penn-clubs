@@ -63,6 +63,12 @@ STORAGES = {
     },
 }
 
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_ACCESS_SECRET_ID = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_QUERYSTRING_AUTH = False
+AWS_DEFAULT_ACL = "public-read"
+
 # Redis settings
 REDIS_HOST = os.getenv("REDIS_HOST")
 
