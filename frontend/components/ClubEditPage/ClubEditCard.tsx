@@ -850,6 +850,7 @@ export default function ClubEditCard({
                           key={i}
                           as={
                             {
+                              text: TextField,
                               checkbox: CheckboxField,
                               html: RichTextField,
                               multiselect: SelectField,

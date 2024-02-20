@@ -316,12 +316,12 @@ export const DateTimeField = useFieldWrapper(
     return (
       <DatePickerWrapper>
         <DatePicker
-          className="input"
           showTimeSelect
           dateFormat="MMMM d, yyyy h:mm aa"
           selected={Date.parse(value) || value}
           placeholderText={placeholder}
           {...other}
+          className="input"
           onChange={(val) => {
             setFieldValue(name, val)
           }}
@@ -618,11 +618,11 @@ export const TextField = useFieldWrapper(
 
     return (
       <input
-        className={`input ${isError ? 'is-danger' : ''}`}
         type={actualType}
         value={value != null ? value.toString() : ''}
         readOnly={readOnly ?? false}
         {...other}
+        className={`input ${isError ? 'is-danger' : ''}`}
       />
     )
   },
