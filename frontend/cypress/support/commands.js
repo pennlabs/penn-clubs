@@ -25,6 +25,7 @@ Cypress.Commands.add('logout', () => {
           },
           url: '/api/admin/logout/',
         }).then(() => {
+          cy.visit('/api/admin/')
           cy.contains('Clubs Backend Admin')
         })
       })
