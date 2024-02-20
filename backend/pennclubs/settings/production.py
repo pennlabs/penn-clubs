@@ -48,8 +48,6 @@ STORAGES = {
             "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
             "default_acl": "public-read",
             "querystring_auth": False,
-            "signature_version": "s3v4",
-            "region_name": "us-east-1",
         },
     },
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
