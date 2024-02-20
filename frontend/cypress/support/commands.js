@@ -11,8 +11,12 @@
 //
 // -- This is a parent command --
 Cypress.Commands.add('logout', () => {
-  cy.visit('/api/admin/logout/')
-  cy.contains('Clubs Backend Admin')
+  cy.request({
+    method: 'POST',
+    url: '/api/admin/logout/',
+  }).then(() => {
+    cy.contains('Clubs Backend Admin')
+  })
 })
 
 Cypress.Commands.add('login', (username, password) => {
