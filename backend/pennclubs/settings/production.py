@@ -52,6 +52,7 @@ STORAGES = {
             "region_name": "us-east-1",
         },
     },
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
 # Redis settings
