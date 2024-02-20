@@ -12,10 +12,22 @@
 // -- This is a parent command --
 Cypress.Commands.add('logout', () => {
   cy.request({
-    method: 'POST',
-    url: '/api/admin/logout/',
+    method: 'GET',
+    url: '/api/admin/',
   }).then(() => {
-    cy.contains('Clubs Backend Admin')
+    cy.getCookie('csrftoken')
+      .its('value')
+      .then((token) => {
+        cy.request({
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': token,
+          },
+          url: '/api/admin/logout/',
+        }).then(() => {
+          cy.contains('Clubs Backend Admin')
+        })
+      })
   })
 })
 
