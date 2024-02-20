@@ -8,7 +8,8 @@ on: push
 jobs:
   backend-check:
     name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@e6edf59024578b2ddbe6d5b79fa49a7137a63d36
+    uses: pennlabs/shared-actions/.github/workflows/django.yaml@507f4cf1cc88259fc8625fb3a35bd3f18fc91cd5
+    secrets: inherit
     with:
       projectName: pennclubs
       path: backend

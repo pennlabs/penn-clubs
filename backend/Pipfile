@@ -8,6 +8,7 @@ unittest-xml-reporting = ">=3.0.2"
 django-debug-toolbar = "*"
 django-extensions = "*"
 ruff = "*"
+coverage = "*"
 
 [packages]
 dj-database-url = "*"
@@ -52,7 +53,6 @@ jinja2 = "*"
 pandas = "*"
 drf-excel = "*"
 numpy = "*"
-coverage = "*"
 
 [requires]
 python_version = "3.11"
