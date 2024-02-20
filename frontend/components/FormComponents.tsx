@@ -584,9 +584,9 @@ export const TextField = useFieldWrapper(
     if (type === 'textarea') {
       return (
         <textarea
-          className={`textarea ${isError ? 'is-danger' : ''}`}
           value={value ?? ''}
           {...other}
+          className={`textarea ${isError ? 'is-danger' : ''}`}
           readOnly={readOnly ?? false}
         ></textarea>
       )

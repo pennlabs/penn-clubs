@@ -77,7 +77,7 @@ const DisplayButtons = ({
           alt={`create ${OBJECT_NAME_SINGULAR}`}
           style={iconStylesDark}
         />
-        Add{OBJECT_NAME_TITLE_SINGULAR}
+        Add {OBJECT_NAME_TITLE_SINGULAR}
       </Link>
     )}
   </DisplayButtonsTag>
