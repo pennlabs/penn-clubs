@@ -38,33 +38,21 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_USE_TLS = True
 
 # Upload file storage
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
         "OPTIONS": {
-            # "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
-            # "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
             "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
             "default_acl": "public-read",
             "querystring_auth": False,
             "signature_version": "s3v4",
-        },
-    },
-    "staticfiles": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-        "OPTIONS": {
-            # "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
-            # "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
-            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
-            "default_acl": "public-read",
-            "querystring_auth": False,
-            "signature_version": "s3v4",
+            "region_name": "us-east-1",
         },
     },
 }
-
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 # Redis settings
 REDIS_HOST = os.getenv("REDIS_HOST")
