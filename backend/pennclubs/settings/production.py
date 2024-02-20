@@ -47,6 +47,7 @@ STORAGES = {
             "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
             "default_acl": "public-read",
             "querystring_auth": False,
+            "signature_version": "s3v4",
         },
     },
     "staticfiles": {
@@ -57,6 +58,7 @@ STORAGES = {
             "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
             "default_acl": "public-read",
             "querystring_auth": False,
+            "signature_version": "s3v4",
         },
     },
 }
