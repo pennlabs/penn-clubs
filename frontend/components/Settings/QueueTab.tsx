@@ -195,7 +195,7 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
 }
 
 const ClubLink = ({ code, name }: Club) => (
-  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+  <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
     <a target="_blank">{name}</a>
   </Link>
 )

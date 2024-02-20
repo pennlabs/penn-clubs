@@ -196,7 +196,7 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
           If you're an administrator of a {OBJECT_NAME_SINGULAR} and it{' '}
           <b>does not exist</b> on {SITE_NAME}, you can add your{' '}
           {OBJECT_NAME_SINGULAR} using the form found{' '}
-          <Link href={CREATE_ROUTE} as={CREATE_ROUTE}>
+          <Link legacyBehavior href={CREATE_ROUTE} as={CREATE_ROUTE}>
             <a>here</a>
           </Link>
           .
@@ -232,7 +232,7 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
         title={`How are ${OBJECT_NAME_PLURAL} ordered on ${SITE_NAME}?`}
       >
         Click{' '}
-        <Link href="/rank">
+        <Link legacyBehavior href="/rank">
           <a>here</a>
         </Link>{' '}
         for details about our {OBJECT_NAME_SINGULAR} recommendation algorithm.

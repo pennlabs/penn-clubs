@@ -39,7 +39,7 @@ const ReportsTab = ({
         {SITE_NAME} database.
       </Text>
       <div className="buttons">
-        <Link href={REPORT_CREATE_ROUTE}>
+        <Link legacyBehavior href={REPORT_CREATE_ROUTE}>
           <a className="button is-link is-small">
             <Icon name="plus" alt="plus" /> Create New Report
           </a>

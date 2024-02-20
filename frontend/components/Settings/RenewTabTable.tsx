@@ -36,7 +36,7 @@ const RenewTabTable = ({
       {memberships.map(({ club, role }) => (
         <tr key={club.code}>
           <td>
-            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+            <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
               <a>{club.name}</a>
             </Link>
           </td>
@@ -44,6 +44,7 @@ const RenewTabTable = ({
             {!club.active ? (
               role <= MembershipRank.Officer ? (
                 <Link
+                  legacyBehavior
                   href={CLUB_RENEW_ROUTE()}
                   as={CLUB_RENEW_ROUTE(club.code)}
                 >

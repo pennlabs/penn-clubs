@@ -359,6 +359,7 @@ export const DateTimeField = useFieldWrapper(
 /**
  * Field that allows users to add new multi-select items
  */
+
 export const CreatableMultipleSelectField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const {
@@ -372,37 +373,43 @@ export const CreatableMultipleSelectField = useFieldWrapper(
     } = props
     const { setFieldValue } = useFormikContext()
 
+    const handleChange = (
+      val: Array<{ label: string; value: string; _isNew?: boolean }>,
+      _action: any,
+    ) => {
+      const serializedValue = serialize ? serialize(val) : val
+      setFieldValue(name, serializedValue)
+    }
+
+    const formatOptions = (choices: any) => {
+      return (
+        choices &&
+        choices.map((choice) => ({
+          label: choice.label,
+          value: choice.value,
+        }))
+      )
+    }
+
+    const formattedValue =
+      initialValues || value
+        ? deserialize
+          ? deserialize(initialValues || value)
+          : initialValues || value
+        : undefined
+
     return (
       <CreatableSelect
         name={name}
-        as={SelectField}
-        onChange={(
-          val: [{ label: string; value: string; _isNew: boolean }],
-          _action: any,
-        ) => {
-          // TODO: types are good but this is not particularly modular, might
-          // be best to make this more generalizable
-          serialize != null
-            ? setFieldValue(name, serialize(val))
-            : setFieldValue(name, val)
-        }}
+        onChange={handleChange}
         isMulti
-        creatable
-        value={
-          initialValues != null
-            ? deserialize != null
-              ? deserialize(initialValues)
-              : initialValues
-            : deserialize != null
-            ? deserialize(value)
-            : value
-        }
-        options={choices}
+        placeholder={placeholder}
+        value={formattedValue}
+        options={formatOptions(choices)}
       />
     )
   },
 )
-
 /**
  * A field that allows the user to enter an arbitrary line of text.
  */
@@ -791,7 +798,6 @@ export const SelectField = useFieldWrapper(
     deserialize,
     valueDeserialize,
     isMulti,
-    creatable,
     formatOptionLabel,
     customHandleChange,
   }: BasicFormField &
@@ -850,7 +856,6 @@ export const SelectField = useFieldWrapper(
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
-        creatable={creatable}
         value={(valueDeserialize ?? actualDeserialize)(value)}
         options={
           actualDeserialize(choices) as {

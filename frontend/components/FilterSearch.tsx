@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js'
 import { ReactElement, useEffect, useState } from 'react'
-import { OptionsType, Styles } from 'react-select'
+import { Options, StylesConfig } from 'react-select'
 import Select from 'react-select/async'
 import styled from 'styled-components'
 
@@ -39,7 +39,7 @@ const SubLabel = styled.div`
   }
 `
 
-const ColorPreview = styled.div<{ color: string }>`
+const ColorPreview = styled.div<{ $color: string }>`
   display: inline-block;
   width: 1em;
   height: 1em;
@@ -93,7 +93,7 @@ const Search = ({
   clearTags,
 }: SearchProps): ReactElement => {
   // Custom styles for the react-select
-  const styles: Styles<FuseTag, true> = {
+  const styles: StylesConfig<FuseTag, true> = {
     control: ({ background, ...base }, { isFocused }) => {
       const isEmphasized = isFocused
       return {
@@ -148,10 +148,7 @@ const Search = ({
       )
     },
     MultiValueLabel: ({ data: { label } }) => label,
-    MultiValueRemove: ({
-      data,
-      innerProps: { onClick, onTouchEnd, onMouseDown },
-    }) => {
+    MultiValueRemove: ({ data, innerProps }) => {
       const removeGenerator = (func) => {
         return (e) => {
           func(e)
@@ -161,9 +158,10 @@ const Search = ({
       return (
         <button
           className="delete is-small"
-          onClick={removeGenerator(onClick)}
-          onTouchEnd={removeGenerator(onTouchEnd)}
-          onMouseDown={removeGenerator(onMouseDown)}
+          onClick={removeGenerator(innerProps.onClick)}
+          onTouchEnd={removeGenerator(innerProps.onTouchEnd)}
+          onMouseDown={removeGenerator(innerProps.onMouseDown)}
+          {...innerProps}
         />
       )
     },
@@ -185,7 +183,7 @@ const Search = ({
         defaultOptions={recommendedTags}
         value={selected}
         backspaceRemovesValue
-        onChange={(value: OptionsType<FuseTag>, selectEvent): void => {
+        onChange={(value: Options<FuseTag>, selectEvent): void => {
           const { action } = selectEvent
           if (action === 'select-option' || action === 'pop-value') {
             const currentSet = new Set(selected.map(({ value }) => value))
@@ -243,7 +241,7 @@ const Filter = ({
       text: label as string,
       label: (
         <>
-          {color != null && <ColorPreview color={color} />}
+          {color != null && <ColorPreview $color={color} />}
           {`${label}${count != null ? ` (${count})` : ''}`}
           {!!description && <SubLabel>{description}</SubLabel>}
         </>

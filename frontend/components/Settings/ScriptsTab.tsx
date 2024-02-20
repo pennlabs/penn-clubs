@@ -80,8 +80,8 @@ const ScriptBox = ({ script, useWs }): ReactElement => {
                   script.arguments[arg].choices != null
                     ? SelectField
                     : script.arguments[arg].type === 'bool'
-                    ? CheckboxField
-                    : TextField
+                      ? CheckboxField
+                      : TextField
                 }
                 name={arg}
                 label={titleize(arg)}

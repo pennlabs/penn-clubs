@@ -97,7 +97,7 @@ function StatusCard({
 
   return (
     <>
-      <Card className="mb-4" bordered background={WHITE}>
+      <Card className="mb-4" $bordered $background={WHITE}>
         <CardHeader>
           <CardTitle className="is-size-3">{application}</CardTitle>
         </CardHeader>
@@ -110,8 +110,8 @@ function StatusCard({
               left === 'Total'
                 ? -10
                 : right === 'Total'
-                ? -10
-                : left.localeCompare(right),
+                  ? -10
+                  : left.localeCompare(right),
             )
             .map((committee) => (
               <div

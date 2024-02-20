@@ -36,7 +36,7 @@ const Error = ({
       <p className="is-size-5" style={{ marginBottom: '1rem' }}>
         {message}
       </p>
-      <Link href={HOME_ROUTE}>
+      <Link legacyBehavior href={HOME_ROUTE}>
         <a className="button is-medium is-primary">Back to home</a>
       </Link>
     </Center>

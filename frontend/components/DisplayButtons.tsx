@@ -71,7 +71,7 @@ const DisplayButtons = ({
       <Icon name="list" alt="list icon" style={iconStyles} />
     </button>
     {!isSummer() && (
-      <Link href="/create">
+      <Link legacyBehavior href="/create">
         <a className="button is-small is-primary">
           <Icon
             name="plus"

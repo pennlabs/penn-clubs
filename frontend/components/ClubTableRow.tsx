@@ -79,7 +79,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
 
     return (
       <Row>
-        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+        <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
           <a target="_blank">
             <div className="columns is-gapless is-mobile">
               <div className="column">

@@ -20,18 +20,18 @@ Cypress.Commands.add('login', (username, password) => {
     cy.visit('/')
     cy.contains('Login')
       .invoke('attr', 'href')
-      .then(href => {
+      .then((href) => {
         cy.request({
           method: 'GET',
           url: href,
-        }).then(data => {
+        }).then((data) => {
           cy.log('Processing platform auth flow')
-          cy.window().then(win => {
+          cy.window().then((win) => {
             const ele = win.document.createElement('div')
             ele.innerHTML = data.body
             const form = new win.FormData(ele.querySelector('form'))
             const formattedData = {}
-            Array.from(form.entries()).forEach(a => {
+            Array.from(form.entries()).forEach((a) => {
               formattedData[a[0]] = a[1]
             })
             formattedData.allow = 'Authorize'

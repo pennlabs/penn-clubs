@@ -1,7 +1,8 @@
 import { useRouter } from 'next/router'
 import React, { ReactElement, ReactPortal, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
-import styled, { Keyframes, keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
+import { Keyframes } from 'styled-components/dist/types'
 
 import { CLUBS_BLUE, CLUBS_RED, LONG_ANIMATION_DURATION } from '~/constants'
 
@@ -57,13 +58,14 @@ const keyframeForState = (state: RouteProgressState): Keyframes => {
 }
 
 type ProgressBarProps = {
-  state: RouteProgressState | null
+  $state: RouteProgressState | null
 }
 
 const ProgressBar = styled.div<ProgressBarProps>`
   position: absolute;
   height: 100%;
-  animation-name: ${({ state }) => (state ? keyframeForState(state) : 'none')};
+  animation-name: ${({ $state }) =>
+    $state ? keyframeForState($state) : 'none'};
   animation-duration: ${LONG_ANIMATION_DURATION};
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
@@ -80,6 +82,14 @@ const ProgressBarContainer = styled.div`
 type RouteProgressBarProps = {
   fireThreshold?: number
 }
+
+type RouterState =
+  | 'routeChangeStart'
+  | 'routeChangeComplete'
+  | 'routeChangeError'
+  | 'beforeHistoryChange'
+  | 'hashChangeStart'
+  | 'hashChangeComplete'
 
 const RouteProgressBar = ({
   fireThreshold = 250,
@@ -108,11 +118,15 @@ const RouteProgressBar = ({
       routeChangeError: genHandler(RouteProgressState.ROUTE_CHANGE_ERROR),
     }
     for (const key in handlers) {
-      router.events.on(key, handlers[key])
+      if (
+        key in ['routeChangeStart', 'routeChangeComplete', 'routeChangeError']
+      ) {
+        router.events.on(key as RouterState, handlers[key])
+      }
     }
     return () => {
       for (const key in handlers) {
-        router.events.off(key, handlers[key])
+        router.events.off(key as RouterState, handlers[key])
       }
     }
   }, [])
@@ -120,13 +134,13 @@ const RouteProgressBar = ({
   return container ? (
     ReactDOM.createPortal(
       <ProgressBarContainer>
-        <ProgressBar state={state} />
+        <ProgressBar $state={state} />
       </ProgressBarContainer>,
       container,
     )
   ) : (
     <ProgressBarContainer>
-      <ProgressBar state={null} />
+      <ProgressBar $state={null} />
     </ProgressBarContainer>
   )
 }

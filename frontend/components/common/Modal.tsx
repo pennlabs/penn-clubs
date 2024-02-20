@@ -12,30 +12,30 @@ import {
 import { Icon } from './Icon'
 import Shade from './Shade'
 
-const ModalWrapper = styled.div<{ show?: boolean; width?: string }>`
+const ModalWrapper = styled.div<{ $show?: boolean; $width?: string }>`
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
-  width: ${({ width }) => width || '100%'};
+  width: ${({ $width }) => $width || '100%'};
   overflow-x: hidden;
   overflow-y: auto;
   z-index: 1002;
   text-align: center;
-  animation-name: ${({ show }) => (show ? fadeIn : fadeOut)};
+  animation-name: ${({ $show }) => ($show ? fadeIn : fadeOut)};
   animation-duration: ${LONG_ANIMATION_DURATION};
 `
 
-const ModalCard = styled.div<{ width?: string }>`
+const ModalCard = styled.div<{ $width?: string }>`
   border-radius: ${BORDER_RADIUS_LG};
   border: 0 !important;
   box-shadow: none !important;
   height: auto;
   overflow: auto;
-  width: ${({ width }) => width ?? '35%'};
+  width: ${({ $width }) => $width ?? '35%'};
 
-  ${({ width }) =>
-    width
+  ${({ $width }) =>
+    $width
       ? `
   ${mediaMaxWidth(MD)} {
     width: 50%;
@@ -48,9 +48,9 @@ const ModalCard = styled.div<{ width?: string }>`
       : ''}
 `
 
-export const ModalContentWrapper = styled.div<{ marginBottom?: boolean }>`
+export const ModalContentWrapper = styled.div<{ $marginBottom?: boolean }>`
   margin: auto;
-  ${({ marginBottom }) => (marginBottom ? 'margin-bottom: 10%;' : '')}
+  ${({ $marginBottom }) => ($marginBottom ? 'margin-bottom: 10%;' : '')}
 `
 
 const CloseModalIcon = styled(Icon)<{ onClick?: () => void }>`
@@ -99,12 +99,12 @@ export const Modal = ({
       onKeyPress={handleKeyPress}
       onKeyDown={handleKeyPress}
       tabIndex={0}
-      show={show}
+      $show={show}
     >
       <Shade className="modal-background" onClick={closeModal} show={show} />
-      <ModalCard className="card" onClick={noop} width={width}>
+      <ModalCard className="card" onClick={noop} $width={width}>
         <CloseModalIcon name="x" alt="&#215;" onClick={closeModal} />
-        <ModalContentWrapper marginBottom={marginBottom}>
+        <ModalContentWrapper $marginBottom={marginBottom}>
           {children}
         </ModalContentWrapper>
       </ModalCard>

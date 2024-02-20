@@ -67,13 +67,17 @@ const OrgChild = (tree: OrgTree): ReactElement => {
           </>
         )}
         {!isParent ? (
-          <Link href={CLUB_ORG_ROUTE()} as={CLUB_ORG_ROUTE(code)}>
+          <Link
+            legacyBehavior
+            href={CLUB_ORG_ROUTE()}
+            as={CLUB_ORG_ROUTE(code)}
+          >
             <a>{name}</a>
           </Link>
         ) : (
           name
         )}
-        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+        <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
           <a target="_blank" className="is-pulled-right">
             <Icon name="external-link" alt="view" />
           </a>
@@ -114,7 +118,7 @@ const OrganizationPage = ({ club }: Props): ReactElement => {
           <div className="is-pulled-left">
             <Title>{club.name}</Title>
           </div>
-          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+          <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
             <a className="button is-pulled-right is-secondary is-medium">
               Back
             </a>

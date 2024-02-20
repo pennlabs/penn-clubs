@@ -53,7 +53,7 @@ const MainInfo = styled.div`
   flex-direction: row;
 `
 type CardProps = {
-  readonly hovering?: boolean
+  readonly $hovering?: boolean
   className?: string
 }
 
@@ -63,7 +63,7 @@ const Card = styled.div<CardProps>`
   transition: all ${ANIMATION_DURATION}ms ease;
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 0 0 ${WHITE};
-  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
+  background-color: ${({ $hovering }) => ($hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: auto;
@@ -105,7 +105,7 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
         {whartonapplications != null && whartonapplications.length > 0 ? (
           whartonapplications.map((application) => (
             <CardWrapper className={'column is-half-desktop'}>
-              <Link href={application.external_url}>
+              <Link legacyBehavior href={application.external_url}>
                 <a target="_blank">
                   <Card className="card">
                     <MainInfo>
@@ -125,13 +125,14 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
                           )}
                       </div>
                     </MainInfo>
-                    {application.description && application.description.length && (
-                      <DescriptionWrapper
-                        dangerouslySetInnerHTML={{
-                          __html: application.description,
-                        }}
-                      ></DescriptionWrapper>
-                    )}
+                    {application.description &&
+                      application.description.length && (
+                        <DescriptionWrapper
+                          dangerouslySetInnerHTML={{
+                            __html: application.description,
+                          }}
+                        ></DescriptionWrapper>
+                      )}
                   </Card>
                 </a>
               </Link>

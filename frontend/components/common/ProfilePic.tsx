@@ -19,10 +19,11 @@ const [DEFAULT_BG_COLOR] = PROPIC_BACKGROUND
 const [DEFAULT_TXT_COLOR] = PROPIC_TEXT
 
 const Placeholder = styled.div<{
-  fontSize?: string
-  isRound?: boolean
-  backgroundColor?: string
-  textColor?: string
+  $fontSize?: string
+  $isRound?: boolean
+  $backgroundColor?: string
+  $textColor?: string
+  $style?: CSSProperties
 }>`
   width: 100%;
   height: 100%;
@@ -30,11 +31,11 @@ const Placeholder = styled.div<{
   justify-content: center;
   align-items: center;
 
-  font-size: ${({ fontSize }) => fontSize || '1.5em'};
-  ${({ isRound }) => (isRound ? 'border-radius: 9999px;' : '')};
-  background-color: ${({ backgroundColor }) =>
-    backgroundColor || DEFAULT_BG_COLOR};
-  color: ${({ textColor }) => textColor || DEFAULT_TXT_COLOR};
+  font-size: ${({ $fontSize }) => $fontSize || '1.5em'};
+  ${({ $isRound }) => ($isRound ? 'border-radius: 9999px;' : '')};
+  background-color: ${({ $backgroundColor }) =>
+    $backgroundColor || DEFAULT_BG_COLOR};
+  color: ${({ $textColor }) => $textColor || DEFAULT_TXT_COLOR};
 `
 
 const Avatar = styled.img<{ isRound?: boolean }>`
@@ -48,13 +49,13 @@ const Avatar = styled.img<{ isRound?: boolean }>`
   ${({ isRound }) => isRound && 'border-radius: 50%;'}
 `
 
-const AvatarWrapper = styled.div<{ isCentered?: boolean }>`
+const AvatarWrapper = styled.div<{ $isCentered?: boolean }>`
   border-radius: 50%;
   ${mediaMinWidth(PHONE)} {
     margin: 5px 15px;
   }
-  ${({ isCentered }) =>
-    isCentered
+  ${({ $isCentered }) =>
+    $isCentered
       ? `
     ${mediaMinWidth(PHONE)} {
       margin: 0 auto;
@@ -86,7 +87,7 @@ export const ProfilePic = ({
   if (image)
     return (
       <AvatarWrapper
-        isCentered={isCentered}
+        $isCentered={isCentered}
         className={`has-background-light image ${size}`}
       >
         <Avatar src={image} isRound={isRound} />
@@ -100,16 +101,16 @@ export const ProfilePic = ({
   const initials = name.replace(/[a-z]|\s/g, '')
   return (
     <AvatarWrapper
-      isCentered={isCentered}
+      $isCentered={isCentered}
       className={`has-background-light image ${size}`}
     >
       <Placeholder
-        style={style}
+        $style={style}
         className={className}
-        isRound={isRound}
-        fontSize={fontSize}
-        backgroundColor={backgroundColor}
-        textColor={textColor}
+        $isRound={isRound}
+        $fontSize={fontSize}
+        $backgroundColor={backgroundColor}
+        $textColor={textColor}
       >
         {initials}
       </Placeholder>

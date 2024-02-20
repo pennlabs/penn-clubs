@@ -30,12 +30,12 @@ const ListRenewalDialog = (): ReactElement => {
           this process, you will also have the option to register for upcoming{' '}
           {OBJECT_NAME_SINGULAR} fairs. For a complete list of{' '}
           {OBJECT_NAME_PLURAL}, see{' '}
-          <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
+          <Link legacyBehavior href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
             <a>this page</a>
           </Link>
           .
         </p>
-        <Link href={USER_RENEWAL} as={USER_RENEWAL}>
+        <Link legacyBehavior href={USER_RENEWAL} as={USER_RENEWAL}>
           <a className="button is-info is-light">Renew {OBJECT_NAME_TITLE}</a>
         </Link>
       </div>

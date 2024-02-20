@@ -116,7 +116,11 @@ const ResourceCreationPage = ({
                 not need to fill out this form, but any changes you make here
                 will be reflected on your {OBJECT_NAME_SINGULAR}.
                 <div className="mt-3">
-                  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+                  <Link
+                    legacyBehavior
+                    href={CLUB_ROUTE()}
+                    as={CLUB_ROUTE(club.code)}
+                  >
                     <a className="button is-success is-light">
                       Back to {OBJECT_NAME_TITLE_SINGULAR}
                     </a>
@@ -148,7 +152,7 @@ const ResourceCreationPage = ({
           <Text>
             Before creating your {OBJECT_NAME_SINGULAR}, please check to see if
             it already exists on the{' '}
-            <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
+            <Link legacyBehavior href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
               <a>directory page</a>
             </Link>
             . If your {OBJECT_NAME_SINGULAR} already exists on {SITE_NAME},
@@ -361,7 +365,7 @@ const ResourceCreationPage = ({
           </button>
         ) : (
           club !== null && (
-            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+            <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
               <a className="button is-primary">
                 <Icon name="chevrons-right" />
                 Continue to {OBJECT_NAME_TITLE_SINGULAR}

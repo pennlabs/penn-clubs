@@ -11,12 +11,16 @@ describe('Membership request tests', () => {
     cy.contains('Position')
 
     // remove membership if exists
-    cy.window().then(win => {
-      win.document.querySelectorAll("table tr").forEach((item) => {
-        if (item.textContent.indexOf("Penn Pre-Professional Juggling Organization") !== -1) {
-          item.querySelector(".button").click()
+    cy.window().then((win) => {
+      win.document.querySelectorAll('table tr').forEach((item) => {
+        if (
+          item.textContent.indexOf(
+            'Penn Pre-Professional Juggling Organization',
+          ) !== -1
+        ) {
+          item.querySelector('.button').click()
           cy.contains('Leave Club').click()
-          cy.log("Removed membership")
+          cy.log('Removed membership')
           cy.wait(1000)
         }
       })
@@ -39,7 +43,7 @@ describe('Membership request tests', () => {
     // approve membership
     cy.visit('/club/pppjo/edit/member')
     cy.contains('Membership Requests').should('be.visible')
-    
+
     cy.contains('.button:visible', 'Accept').click()
   })
 
@@ -48,6 +52,9 @@ describe('Membership request tests', () => {
     cy.login('jmadison', 'test')
 
     cy.visit('/settings')
-    cy.get('table > tbody').contains('tr', 'Penn Pre-Professional Juggling Organization').contains('Leave').click()
+    cy.get('table > tbody')
+      .contains('tr', 'Penn Pre-Professional Juggling Organization')
+      .contains('Leave')
+      .click()
   })
 })

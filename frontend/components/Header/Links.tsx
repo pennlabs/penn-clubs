@@ -37,7 +37,8 @@ const LoginButton = styled.a`
   margin-bottom: ${LOGIN_MARGIN};
   opacity: ${LOGIN_OPACITY};
   color: ${WHITE_ALPHA(0.8)} !important;
-  transition: color ${SHORT_ANIMATION_DURATION}ms ease,
+  transition:
+    color ${SHORT_ANIMATION_DURATION}ms ease,
     background ${SHORT_ANIMATION_DURATION}ms ease;
 
   &:hover,
@@ -68,15 +69,15 @@ const StyledLinkAnchor = styled.a`
 
 const StyledLink = (props): ReactElement => {
   return (
-    <Link href={props.href}>
+    <Link legacyBehavior href={props.href}>
       <StyledLinkAnchor {...props} />
     </Link>
   )
 }
 
-const Menu = styled.div<{ show?: boolean }>`
+const Menu = styled.div<{ $show?: boolean }>`
   ${mediaMaxWidth(MD)} {
-    ${({ show }) => show && 'display: block;'}
+    ${({ $show }) => $show && 'display: block;'}
   }
 
   background-color: ${BANNER_BG};
@@ -95,7 +96,7 @@ type Props = {
 const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
   const router = useRouter()
   return (
-    <Menu className="navbar-menu" show={show}>
+    <Menu className="navbar-menu" $show={show}>
       <div className="navbar-end" style={{ padding: '0 1rem' }}>
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
           Events

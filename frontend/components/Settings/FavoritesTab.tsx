@@ -40,7 +40,7 @@ const FavoritesTab = ({ keyword }: FavoritesTabProps): ReactElement => {
         <Center>
           <Text color={CLUBS_GREY_LIGHT}>
             No {keyword}s yet! Browse {OBJECT_NAME_PLURAL}{' '}
-            <Link href={HOME_ROUTE}>
+            <Link legacyBehavior href={HOME_ROUTE}>
               <a>here</a>
             </Link>
             .

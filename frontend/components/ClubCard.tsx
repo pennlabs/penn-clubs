@@ -36,7 +36,7 @@ const Description = styled.p`
 `
 
 type CardProps = {
-  readonly hovering?: boolean
+  readonly $hovering?: boolean
   className?: string
 }
 
@@ -46,7 +46,7 @@ const Card = styled.div<CardProps>`
   transition: all ${ANIMATION_DURATION}ms ease;
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 0 0 ${WHITE};
-  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
+  background-color: ${({ $hovering }) => ($hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: auto;
@@ -97,21 +97,14 @@ type ClubCardProps = {
 }
 
 const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
-  const {
-    name,
-    active,
-    approved,
-    subtitle,
-    tags,
-    enables_subscription,
-    code,
-  } = club
+  const { name, active, approved, subtitle, tags, enables_subscription, code } =
+    club
   const img = club.image_url
   const textDescription = shorten(subtitle || 'This club has no description.')
 
   return (
     <CardWrapper className={fullWidth ? '' : 'column is-half-desktop'}>
-      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+      <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
         <a target="_blank">
           <Card className="card">
             <div style={{ display: 'flex' }}>
