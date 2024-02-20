@@ -672,7 +672,10 @@ class Command(BaseCommand):
                 status_counter % len(ApplicationSubmission.STATUS_TYPES)
             ][0]
             ApplicationSubmission.objects.create(
-                status=status, user=user, application=application, committee=None,
+                status=status,
+                user=user,
+                application=application,
+                committee=None,
             )
             status_counter += 1
             for committee in application.committees.all():

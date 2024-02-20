@@ -14,7 +14,6 @@ def forwards_func(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0037_auto_20200826_1006"),
     ]

@@ -6,7 +6,6 @@ import clubs.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0075_searchquery"),
     ]
