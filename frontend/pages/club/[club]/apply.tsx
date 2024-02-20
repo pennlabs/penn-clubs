@@ -74,10 +74,12 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
           <div className="is-pulled-left">
             <Title>{club.name} Application</Title>
           </div>
-          <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-            <a className="button is-pulled-right is-secondary is-medium">
-              Back
-            </a>
+          <Link
+            href={CLUB_ROUTE()}
+            as={CLUB_ROUTE(club.code)}
+            className="button is-pulled-right is-secondary is-medium"
+          >
+            Back
           </Link>
         </div>
         <hr />

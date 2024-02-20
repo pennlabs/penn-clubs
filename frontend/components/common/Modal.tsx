@@ -101,7 +101,7 @@ export const Modal = ({
       tabIndex={0}
       $show={show}
     >
-      <Shade className="modal-background" onClick={closeModal} show={show} />
+      <Shade className="modal-background" onClick={closeModal} $show={show} />
       <ModalCard className="card" onClick={noop} $width={width}>
         <CloseModalIcon name="x" alt="&#215;" onClick={closeModal} />
         <ModalContentWrapper $marginBottom={marginBottom}>

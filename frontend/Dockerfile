@@ -1,4 +1,4 @@
-FROM node:18.19.1-buster-slim
+FROM node:20.11.1-buster-slim
 
 LABEL maintainer="Penn Labs"
 

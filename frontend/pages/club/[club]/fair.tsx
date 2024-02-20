@@ -161,8 +161,12 @@ const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
         <Text>
           <div dangerouslySetInnerHTML={{ __html: club.description }} />
         </Text>
-        <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-          <a className="button is-danger is-large">See more details</a>
+        <Link
+          href={CLUB_ROUTE()}
+          as={CLUB_ROUTE(club.code)}
+          className="button is-danger is-large"
+        >
+          See more details
         </Link>
       </Center>
     </PhoneContainer>

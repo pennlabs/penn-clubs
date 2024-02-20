@@ -180,7 +180,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
       >
         <div className="navbar-brand">
           {LOGO_BACKGROUND_IMAGE != null && <FadingLogoBackground />}
-          <Link legacyBehavior href={HOME_ROUTE} passHref>
+          <Link href={HOME_ROUTE} passHref legacyBehavior>
             <LogoItem className="navbar-item" $isHub={isHub}>
               <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
               <Title>{SITE_NAME}</Title>

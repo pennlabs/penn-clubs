@@ -171,8 +171,8 @@ const Invite = ({
           >
             <b>{inviter.name}</b> has invited you, <b>{inviter.email}</b>, to
             join{' '}
-            <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
-              <a>{name}</a>
+            <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+              {name}
             </Link>
             .
           </div>

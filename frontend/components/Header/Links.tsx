@@ -69,7 +69,7 @@ const StyledLinkAnchor = styled.a`
 
 const StyledLink = (props): ReactElement => {
   return (
-    <Link legacyBehavior href={props.href}>
+    <Link href={props.href} legacyBehavior>
       <StyledLinkAnchor {...props} />
     </Link>
   )

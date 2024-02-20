@@ -4,7 +4,7 @@ import { fadeIn, fadeOut } from '../../constants/animations'
 import { BLACK_ALPHA } from '../../constants/colors'
 import { LONG_ANIMATION_DURATION } from '../../constants/measurements'
 
-export const Shade = styled.div<{ isNewlyMounted?: boolean; show: boolean }>`
+export const Shade = styled.div<{ $isNewlyMounted?: boolean; $show: boolean }>`
   position: fixed;
   width: 100vw;
   height: 100vh;
@@ -15,14 +15,14 @@ export const Shade = styled.div<{ isNewlyMounted?: boolean; show: boolean }>`
   overflow: hidden;
   background: ${BLACK_ALPHA(0.5)};
   text-align: center;
-  animation-name: ${({ isNewlyMounted, show }) => {
-    if (isNewlyMounted) {
+  animation-name: ${({ $isNewlyMounted, $show }) => {
+    if ($isNewlyMounted) {
       return ''
     }
-    return show ? fadeIn : fadeOut
+    return $show ? fadeIn : fadeOut
   }};
   animation-duration: ${LONG_ANIMATION_DURATION};
-  opacity: ${({ show }) => (show ? '1' : '0')};
+  opacity: ${({ $show }) => ($show ? '1' : '0')};
 `
 
 export default Shade

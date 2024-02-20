@@ -31,7 +31,7 @@ const ClubList = ({ club }: ClubListProps): ReactElement => {
   const img = club.image_url || getDefaultClubImageURL()
 
   return (
-    <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+    <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} legacyBehavior>
       <Card>
         <div className="columns is-vcentered is-gapless is-mobile">
           <div className="column">

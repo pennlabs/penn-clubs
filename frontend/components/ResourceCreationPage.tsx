@@ -152,8 +152,8 @@ const ResourceCreationPage = ({
           <Text>
             Before creating your {OBJECT_NAME_SINGULAR}, please check to see if
             it already exists on the{' '}
-            <Link legacyBehavior href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-              <a>directory page</a>
+            <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
+              directory page
             </Link>
             . If your {OBJECT_NAME_SINGULAR} already exists on {SITE_NAME},
             please email <Contact /> to gain access instead of filling out this
@@ -365,11 +365,13 @@ const ResourceCreationPage = ({
           </button>
         ) : (
           club !== null && (
-            <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-              <a className="button is-primary">
-                <Icon name="chevrons-right" />
-                Continue to {OBJECT_NAME_TITLE_SINGULAR}
-              </a>
+            <Link
+              href={CLUB_ROUTE()}
+              as={CLUB_ROUTE(club.code)}
+              className="button is-primary"
+            >
+              <Icon name="chevrons-right" />
+              Continue to{OBJECT_NAME_TITLE_SINGULAR}
             </Link>
           )
         )}

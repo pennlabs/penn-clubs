@@ -71,7 +71,7 @@ const OptionalProfileLink = ({
 
   if (username != null) {
     return (
-      <Link legacyBehavior href={PROFILE_ROUTE()} as={PROFILE_ROUTE(username)}>
+      <Link href={PROFILE_ROUTE()} as={PROFILE_ROUTE(username)} legacyBehavior>
         <ClickableBox
           onKeyPress={(e) => {
             if (e.code === 'Space' || e.code === 'Enter') {

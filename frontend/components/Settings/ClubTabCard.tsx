@@ -117,7 +117,7 @@ const ClubTabCard = ({
   return (
     <Card className="card">
       <CardRow>
-        <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} legacyBehavior>
           <CardTitle>{name}</CardTitle>
         </Link>
         {canManage ? (

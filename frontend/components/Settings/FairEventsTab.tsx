@@ -113,11 +113,12 @@ const FairEventsTab = ({
                 Preview Info Page
               </a>
             </Link>
-            <Link legacyBehavior href={`${LIVE_EVENTS}?fair=${selectedFair}`}>
-              <a className="button is-link is-small">
-                <Icon name="eye" />
-                Preview Events Page
-              </a>
+            <Link
+              href={`${LIVE_EVENTS}?fair=${selectedFair}`}
+              className="button is-link is-small"
+            >
+              <Icon name="eye" />
+              Preview Events Page
             </Link>
           </div>
           <Text>

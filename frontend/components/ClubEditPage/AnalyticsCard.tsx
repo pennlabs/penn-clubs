@@ -1,5 +1,4 @@
 import moment from 'moment'
-import Head from 'next/head'
 import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
@@ -242,18 +241,6 @@ export default function AnalyticsCard({
 
   return (
     <>
-      <Head>
-        <link
-          href="/static/css/style-react-vis.css"
-          rel="stylesheet"
-          key="editor-css"
-        />
-        <link
-          href="/static/css/react-datepicker.css"
-          rel="stylesheet"
-          key="datepicker-css"
-        />
-      </Head>
       <BaseCard title="Time Series Analytics">
         <Text>
           Analyze the traffic that your {OBJECT_NAME_SINGULAR} has received on a

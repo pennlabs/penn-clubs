@@ -79,27 +79,25 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
 
     return (
       <Row>
-        <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
-          <a target="_blank">
-            <div className="columns is-gapless is-mobile">
-              <div className="column">
-                <div className="columns is-gapless">
-                  <div className="column is-4-desktop is-12-mobile">
-                    <Name>{name}</Name>
-                    <div>
-                      <TagGroup tags={tags} />
-                    </div>
+        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} target="_blank">
+          <div className="columns is-gapless is-mobile">
+            <div className="column">
+              <div className="columns is-gapless">
+                <div className="column is-4-desktop is-12-mobile">
+                  <Name>{name}</Name>
+                  <div>
+                    <TagGroup tags={tags} />
                   </div>
-                  <div className="column is-8-desktop is-12-mobile">
-                    <Content>
-                      <Subtitle>{this.getSubtitle()}</Subtitle>
-                      <ClubDetails club={club} />
-                    </Content>
-                  </div>
+                </div>
+                <div className="column is-8-desktop is-12-mobile">
+                  <Content>
+                    <Subtitle>{this.getSubtitle()}</Subtitle>
+                    <ClubDetails club={club} />
+                  </Content>
                 </div>
               </div>
             </div>
-          </a>
+          </div>
         </Link>
       </Row>
     )

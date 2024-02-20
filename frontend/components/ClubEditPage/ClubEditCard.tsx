@@ -551,11 +551,8 @@ export default function ClubEditCard({
       description: SHOW_RANK_ALGORITHM ? (
         <Text>
           Some of these fields will be used to adjust {OBJECT_NAME_SINGULAR}{' '}
-          ordering on the home page. Click{' '}
-          <Link legacyBehavior href="/rank">
-            <a>here</a>
-          </Link>{' '}
-          for more details.
+          ordering on the home page. Click <Link href="/rank">here</Link> for
+          more details.
         </Text>
       ) : (
         <Text>

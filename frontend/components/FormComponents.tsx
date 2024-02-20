@@ -3,7 +3,6 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { ContentState, convertToRaw, EditorState } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
 import { useField, useFormikContext } from 'formik'
-import Head from 'next/head'
 import React, {
   ReactElement,
   ReactNode,
@@ -181,18 +180,6 @@ export const RichTextField = useFieldWrapper(
 
     return (
       <div>
-        <Head>
-          <link
-            href="/static/css/react-draft-wysiwyg.css"
-            rel="stylesheet"
-            key="editor-css"
-          />
-          <link
-            href="/static/css/react-datepicker.css"
-            rel="stylesheet"
-            key="datepicker-css"
-          />
-        </Head>
         {Editor != null && (
           <Editor
             editorState={editorState}
@@ -266,18 +253,6 @@ export const ApplicationUpdateTextField = useFieldWrapper(
 
     return (
       <div>
-        <Head>
-          <link
-            href="/static/css/react-draft-wysiwyg.css"
-            rel="stylesheet"
-            key="editor-css"
-          />
-          <link
-            href="/static/css/react-datepicker.css"
-            rel="stylesheet"
-            key="datepicker-css"
-          />
-        </Head>
         {Editor != null && (
           <Editor
             editorState={editorState}

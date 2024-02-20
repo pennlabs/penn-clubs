@@ -104,41 +104,39 @@ const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
 
   return (
     <CardWrapper className={fullWidth ? '' : 'column is-half-desktop'}>
-      <Link legacyBehavior href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
-        <a target="_blank">
-          <Card className="card">
-            <div style={{ display: 'flex' }}>
-              <div style={{ flex: 1 }}>
-                <div>
-                  <CardHeader>
-                    <CardTitle className="is-size-5">{name}</CardTitle>
-                  </CardHeader>
-                </div>
-                {!active && (
-                  <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
-                )}
-                {approved === null && (
-                  <InactiveTag className="tag is-rounded">
-                    Pending Approval
-                  </InactiveTag>
-                )}
-                {approved === false && (
-                  <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
-                )}
-                <TagGroup tags={tags} />
+      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} target="_blank">
+        <Card className="card">
+          <div style={{ display: 'flex' }}>
+            <div style={{ flex: 1 }}>
+              <div>
+                <CardHeader>
+                  <CardTitle className="is-size-5">{name}</CardTitle>
+                </CardHeader>
               </div>
-              {img && (
-                <LazyLoad height={62} offset={800}>
-                  <Image src={img} alt={`${name} Logo`} />
-                </LazyLoad>
+              {!active && (
+                <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
               )}
+              {approved === null && (
+                <InactiveTag className="tag is-rounded">
+                  Pending Approval
+                </InactiveTag>
+              )}
+              {approved === false && (
+                <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
+              )}
+              <TagGroup tags={tags} />
             </div>
+            {img && (
+              <LazyLoad height={62} offset={800}>
+                <Image src={img} alt={`${name} Logo`} />
+              </LazyLoad>
+            )}
+          </div>
 
-            <Description>{textDescription}</Description>
+          <Description>{textDescription}</Description>
 
-            <ClubDetails club={club} />
-          </Card>
-        </a>
+          <ClubDetails club={club} />
+        </Card>
       </Link>
     </CardWrapper>
   )

@@ -26,8 +26,8 @@ const GuideListPage = ({ guides }: GuideListPageProps): ReactElement => {
         <ul>
           {guides.map((item) => (
             <li>
-              <Link legacyBehavior href={GUIDE_ROUTE()} as={GUIDE_ROUTE(item)}>
-                <a>{item}</a>
+              <Link href={GUIDE_ROUTE()} as={GUIDE_ROUTE(item)}>
+                {item}
               </Link>
             </li>
           ))}
