@@ -11,8 +11,25 @@
 //
 // -- This is a parent command --
 Cypress.Commands.add('logout', () => {
-  cy.visit('/api/admin/logout/')
-  cy.contains('Clubs Backend Admin')
+  cy.request({
+    method: 'GET',
+    url: '/api/admin/',
+  }).then(() => {
+    cy.getCookie('csrftoken')
+      .its('value')
+      .then((token) => {
+        cy.request({
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': token,
+          },
+          url: '/api/admin/logout/',
+        }).then(() => {
+          cy.visit('/api/admin/')
+          cy.contains('Clubs Backend Admin')
+        })
+      })
+  })
 })
 
 Cypress.Commands.add('login', (username, password) => {

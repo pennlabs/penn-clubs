@@ -10,7 +10,6 @@ def set_sac_defaults(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0033_auto_20200822_0855"),
     ]

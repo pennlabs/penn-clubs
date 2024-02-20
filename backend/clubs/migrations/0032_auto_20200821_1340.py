@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0031_auto_20200818_1945"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="club", name="rank", field=models.IntegerField(default=0),
+            model_name="club",
+            name="rank",
+            field=models.IntegerField(default=0),
         ),
         migrations.AddField(
             model_name="historicalclub",

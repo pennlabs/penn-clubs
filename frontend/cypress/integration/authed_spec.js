@@ -68,7 +68,7 @@ describe('Authenticated user tests', () => {
 
   it('Visits the fair page', () => {
     cy.visit('/fair')
-    cy.contains('Welcome to Penn Clubs!')
+    cy.contains('Sample Fair – Student Guide')
   })
 
   it('Visits the zoom page', () => {

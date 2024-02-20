@@ -53,7 +53,7 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
-from ics import parse as ICSParse
+from ics.grammar import parse as ICSParse
 from jinja2 import Template
 from options.models import Option
 from rest_framework import filters, generics, parsers, serializers, status, viewsets
@@ -1078,7 +1078,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             self.request.user, get_user_model()
         ):
             SearchQuery(
-                person=self.request.user, query=self.request.query_params.get("search"),
+                person=self.request.user,
+                query=self.request.query_params.get("search"),
             ).save()
 
         # select subset of clubs if requested
@@ -1673,7 +1674,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             query = (
                 Club.objects.filter(badges=badge, archived=False)
                 .order_by(Lower("name"))
-                .prefetch_related(Prefetch("asset_set", to_attr="prefetch_asset_set"),)
+                .prefetch_related(
+                    Prefetch("asset_set", to_attr="prefetch_asset_set"),
+                )
             )
             if request.user.is_authenticated:
                 query = query.prefetch_related(
@@ -3005,7 +3008,9 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user, withdrew=False, club__archived=False,
+            person=self.request.user,
+            withdrew=False,
+            club__archived=False,
         )
 
 
@@ -4130,7 +4135,9 @@ class UserZoomAPIView(APIView):
 
         try:
             response = zoom_api_call(
-                request.user, "GET", "https://api.zoom.us/v2/users/{uid}/settings",
+                request.user,
+                "GET",
+                "https://api.zoom.us/v2/users/{uid}/settings",
             )
         except requests.exceptions.HTTPError as e:
             raise DRFValidationError(
@@ -4253,7 +4260,9 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         user = self.request.user
         prefetch_related_objects(
-            [user], "profile__school", "profile__major",
+            [user],
+            "profile__school",
+            "profile__major",
         )
         return user
 
@@ -4488,7 +4497,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 }
             )
         submission, _ = ApplicationSubmission.objects.get_or_create(
-            user=self.request.user, application=application, committee=committee,
+            user=self.request.user,
+            application=application,
+            committee=committee,
         )
 
         key = f"applicationsubmissions:{application.id}"
@@ -4597,7 +4608,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
         response = (
             ApplicationQuestionResponse.objects.filter(
-                question=question, submission__user=self.request.user,
+                question=question,
+                submission__user=self.request.user,
             )
             .select_related("submission", "multiple_choice", "question")
             .prefetch_related("question__committees", "question__multiple_choice")
@@ -4853,10 +4865,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            ClubApplication.objects.filter(club__code=self.kwargs["club_code"],)
+            ClubApplication.objects.filter(
+                club__code=self.kwargs["club_code"],
+            )
             .select_related("application_cycle", "club")
             .prefetch_related(
-                "questions__multiple_choice", "questions__committees", "committees",
+                "questions__multiple_choice",
+                "questions__committees",
+                "committees",
             )
         )
 
@@ -5081,7 +5097,8 @@ class WhartonCyclesView(viewsets.ModelViewSet):
             app.application_end_time = club["end_date"]
             app.application_end_time_exception = True
         ClubApplication.objects.bulk_update(
-            apps, ["application_end_time", "application_end_time_exception"],
+            apps,
+            ["application_end_time", "application_end_time_exception"],
         )
         return Response([])
 
@@ -5111,7 +5128,8 @@ class WhartonCyclesView(viewsets.ModelViewSet):
             app.application_end_time_exception = False
             app.application_end_time = app.application_cycle.end_date
         ClubApplication.objects.bulk_update(
-            apps, ["application_end_time", "application_end_time_exception"],
+            apps,
+            ["application_end_time", "application_end_time_exception"],
         )
         return Response([])
 

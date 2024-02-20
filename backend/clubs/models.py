@@ -1643,7 +1643,9 @@ class ApplicationCommittee(models.Model):
 
     name = models.TextField(blank=True)
     application = models.ForeignKey(
-        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+        ClubApplication,
+        related_name="committees",
+        on_delete=models.CASCADE,
     )
 
     def get_word_limit(self):
@@ -1695,7 +1697,9 @@ class ApplicationMultipleChoice(models.Model):
 
     value = models.TextField(blank=True)
     question = models.ForeignKey(
-        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+        ApplicationQuestion,
+        related_name="multiple_choice",
+        on_delete=models.CASCADE,
     )
 
 
