@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Script from 'next/script'
 import { ReactElement } from 'react'
 
 import {
@@ -81,7 +82,7 @@ export const Metadata = ({
     <meta property="twitter:card" content={twitterCardType} />
 
     <link rel="shortcut icon" href={SITE_FAVICON} />
-    <script
+    <Script
       src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
       integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
       crossOrigin="anonymous"
