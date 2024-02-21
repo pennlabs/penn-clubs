@@ -219,7 +219,7 @@ function renderPage<T>(
               <ToastContainer
                 limit={3}
                 position="bottom-center"
-                autoClose={2000}
+                autoClose={3000}
                 hideProgressBar={true}
               />
             </ToastStyle>
