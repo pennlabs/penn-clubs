@@ -38,7 +38,7 @@
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-big-calendar": "^1.10.2",
-    "react-datepicker": "^6.1.0",
+    "react-datepicker": "3.8.0",
     "react-dom": "^18.2.0",
     "react-draft-wysiwyg": "^1.15.0",
     "react-ga": "^3.3.1",

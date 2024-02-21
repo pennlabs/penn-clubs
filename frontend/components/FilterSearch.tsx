@@ -157,10 +157,10 @@ const Search = ({
       }
       return (
         <button
+          {...innerProps}
           onClick={removeGenerator(innerProps.onClick)}
           onTouchEnd={removeGenerator(innerProps.onTouchEnd)}
           onMouseDown={removeGenerator(innerProps.onMouseDown)}
-          {...innerProps}
           className="delete is-small"
         />
       )
