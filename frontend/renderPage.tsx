@@ -216,7 +216,12 @@ function renderPage<T>(
               </AuthCheckContext.Provider>
             </OptionsContext.Provider>
             <ToastStyle>
-              <ToastContainer position="bottom-center" hideProgressBar={true} />
+              <ToastContainer
+                limit={3}
+                position="bottom-center"
+                autoClose={3000}
+                hideProgressBar={true}
+              />
             </ToastStyle>
             <GlobalStyle />
           </>
