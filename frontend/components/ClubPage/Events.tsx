@@ -6,14 +6,14 @@ import { DARK_BLUE, HOVER_GRAY, PURPLE, WHITE } from '../../constants/colors'
 import { M2, M3 } from '../../constants/measurements'
 import { ClubEvent, ClubEventType } from '../../types'
 import { Card, Icon, StrongText } from '../common'
-import Modal from '../common/Modal'
-import EventModal from '../EventPage/EventModal'
+// import Modal from '../common/Modal'
+// import EventModal from '../EventPage/EventModal'
 
 type EventsProps = {
   data: ClubEvent[]
 }
 
-const StyledCard = styled(Card)`
+export const StyledCard = styled(Card)`
   background-color: ${WHITE};
   margin-bottom: ${M3};
   padding-left: ${M2};
@@ -31,14 +31,15 @@ const Wrapper = styled.div`
   margin-bottom: 0.5rem;
   display: flex;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 8px;
+  padding: 2px;
 
   &:hover {
     background-color: ${HOVER_GRAY};
   }
 `
 
-const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
+export const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
   const [show, setShow] = useState(false)
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)
@@ -70,11 +71,11 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
           </SmallParagraph>
         </div>
       </Wrapper>
-      {show && (
+      {/* show && (
         <Modal show={show} closeModal={hideModal} marginBottom={false}>
           <EventModal event={entry} showDetailsButton={false} />
         </Modal>
-      )}
+      ) */}
     </>
   )
 }
