@@ -55,7 +55,7 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
           alt="Calendar icon"
         />
         <div>
-          <BigParagraph>
+          <BigParagraph suppressHydrationWarning>
             {new Intl.DateTimeFormat('en-US', {
               year: 'numeric',
               month: 'long',
