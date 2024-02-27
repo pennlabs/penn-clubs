@@ -2,14 +2,23 @@ FROM node:20.11.1-buster-slim
 
 LABEL maintainer="Penn Labs"
 
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y curl unzip openssl ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install bun
+RUN curl -fsSL https://bun.sh/install | bash && \
+    ln -s ~/.bun/bin/bun /usr/local/bin/bun
+
 WORKDIR /app/
 
 # Copy project dependencies
 COPY package.json /app/
-COPY yarn.lock /app/
+COPY bun.lockb /app/
 
 # Install project dependencies
-RUN yarn install --frozen-lockfile --production=false
+RUN bun install --frozen-lockfile
 
 # Copy project files
 COPY . /app/
@@ -18,6 +27,6 @@ COPY . /app/
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build project
-RUN yarn build
+RUN bun run build
 
-CMD ["yarn", "start"]
+CMD ["bun", "start"]
