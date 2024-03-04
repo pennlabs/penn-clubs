@@ -9,7 +9,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
 } from '../../utils/branding'
-import { Icon, Modal, Text } from '../common'
+import { Checkbox, CheckboxLabel, Icon, Modal, Text } from '../common'
 import {
   ApplicationUpdateTextField,
   CheckboxField,
@@ -203,6 +203,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
   const [show, setShow] = useState(false)
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)
+  const [isExternal, setIsExternal] = useState(false)
   const [applicationName, setApplicationName] = useState('')
   const [committees, setCommittees] = useState<{
     label: string
@@ -347,33 +348,63 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               }`}
             />
             <Field
-              name="external_url"
-              as={TextField}
-              type="url"
-              helpText={`The external URL where students can apply for your ${OBJECT_NAME_SINGULAR}.`}
-            />
-            <Field
               name="committees"
               as={CreatableMultipleSelectField}
               initialValues={committees}
               helpText={`If your ${OBJECT_NAME_SINGULAR} has multiple committees to which students can apply, list them here. NOTE: you won't be able to edit this field after applications open.`}
             />
-            <Field
-              name="acceptance_email"
-              as={ApplicationUpdateTextField}
-              initialValues={
-                "<html> <body> <p> Congratulations {{ name }}! You've been accepted to {{ committee }} because {{reason}}! </p> </body> </html>"
-              }
-              helpText={`Acceptance email for your ${OBJECT_NAME_SINGULAR}.`}
-            />
-            <Field
-              name="rejection_email"
-              as={ApplicationUpdateTextField}
-              initialValues={
-                "<html> <body> <p> Sorry {{ name }}, You've been rejected because {{ reason }}! </p> </body> </html>"
-              }
-              helpText={`Rejection email for your ${OBJECT_NAME_SINGULAR}.`}
-            />
+
+            <div className="field is-horizontal">
+              <div className="field-label">
+                <label className="label">Use External Application?</label>
+              </div>
+              <div className="field-body">
+                <div className="field">
+                  <div className="control">
+                    <Checkbox
+                      id="is_external"
+                      checked={isExternal}
+                      onChange={() => setIsExternal(!isExternal)}
+                    />
+                    <CheckboxLabel
+                      htmlFor="is_external"
+                      style={{
+                        marginLeft: '8px',
+                      }}
+                    >
+                      Make this an external application
+                    </CheckboxLabel>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {isExternal ? (
+              <Field
+                name="external_url"
+                as={TextField}
+                type="url"
+                helpText={`The external URL where students can apply for your ${OBJECT_NAME_SINGULAR}.`}
+              />
+            ) : (
+              <>
+                <Field
+                  name="acceptance_email"
+                  as={ApplicationUpdateTextField}
+                  initialValues={
+                    "<html> <body> <p> Congratulations {{ name }}! You've been accepted to {{ committee }} because {{reason}}! </p> </body> </html>"
+                  }
+                  helpText={`Acceptance email for your ${OBJECT_NAME_SINGULAR}.`}
+                />
+                <Field
+                  name="rejection_email"
+                  as={ApplicationUpdateTextField}
+                  initialValues={
+                    "<html> <body> <p> Sorry {{ name }}, You've been rejected because {{ reason }}! </p> </body> </html>"
+                  }
+                  helpText={`Rejection email for your ${OBJECT_NAME_SINGULAR}.`}
+                />
+              </>
+            )}
           </>
         }
         confirmDeletion={true}
