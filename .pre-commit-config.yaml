@@ -18,8 +18,8 @@ repos:
         require_serial: true
         files: ^backend/
       - id: frontend
-        name: Yarn Linter
-        entry: bash -c "cd frontend && yarn lint"
+        name: Bun Linter
+        entry: bash -c "cd frontend && bun lint"
         language: system
         files: ^frontend/
         require_serial: false

@@ -31,16 +31,6 @@ app
   .then(() => {
     const server = express()
 
-    // Set up the development proxy to the backend
-    if (dev && devProxy) {
-      const { createProxyMiddleware } = require('http-proxy-middleware')
-      Object.keys(devProxy).forEach(function (context) {
-        const proxy = createProxyMiddleware(context, devProxy[context])
-        server.use(context, proxy)
-        console.log(`-> Using proxy middleware for route ${context}`)
-      })
-    }
-
     // Default catch-all handler to allow Next.js to handle all other routes
     server.all('*', (req, res) => handle(req, res))
 
