@@ -12,7 +12,7 @@ import {
   OBJECT_EVENT_TYPES,
   OBJECT_NAME_SINGULAR,
 } from '../../utils/branding'
-import { Device, Icon, Text } from '../common'
+import { Device, Icon, Line, Modal, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import {
   DateTimeField,
@@ -23,6 +23,7 @@ import {
 } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
+import TicketsModal from './TicketsModal'
 
 const EventBox = styled.div<{ type: 'ios' | 'android' }>`
   text-align: left;
@@ -394,6 +395,49 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
   </EventPreviewContainer>
 )
 
+const CreateContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const CreateTickets = ({ event }: { event: ClubEvent }) => {
+  const [show, setShow] = useState(false)
+  const showModal = () => setShow(true)
+  const hideModal = () => setShow(false)
+
+  return (
+    <CreateContainer>
+      <div className="is-pulled-left">
+        <Text style={{ padding: 0, margin: 0 }}>
+          Create ticket offerings for this event
+        </Text>
+      </div>
+      <div className="is-pulled-right">
+        <button
+          onClick={() => {
+            showModal()
+          }}
+          disabled={!event.name}
+          className="button is-primary"
+        >
+          Create
+        </button>
+      </div>
+      {show && (
+        <Modal
+          width="50vw"
+          show={show}
+          closeModal={hideModal}
+          marginBottom={false}
+        >
+          <TicketsModal event={event} />
+        </Modal>
+      )}
+    </CreateContainer>
+  )
+}
+
 export default function EventsCard({ club }: EventsCardProps): ReactElement {
   const [deviceContents, setDeviceContents] = useState<any>({})
 
@@ -424,6 +468,9 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
           setDeviceContents(obj)
         }}
       />
+      <Line />
+      <CreateTickets event={event} />
+      <Line />
       <EventPreview event={event} />
     </BaseCard>
   )

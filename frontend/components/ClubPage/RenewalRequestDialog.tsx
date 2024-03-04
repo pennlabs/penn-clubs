@@ -29,8 +29,8 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
     clubs: {
       TITLE: (
         <>
-          <b>{club.name}</b> needs to be re-registered for the 2020-2021
-          academic year.
+          <b>{club.name}</b> needs to be re-registered for the current academic
+          year.
         </>
       ),
       PROCESS_ACTION: 'start the renewal process',

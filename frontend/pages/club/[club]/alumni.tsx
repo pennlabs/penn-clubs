@@ -20,7 +20,9 @@ const AlumniPage = ({ club, alumni }: AlumniPageProps): ReactElement => {
       <ClubMetadata club={club} />
       <Container paddingTop>
         <div className="is-clearfix">
-          <Title className="is-pulled-left">{club.name} Alumni</Title>
+          <div className="is-pulled-left">
+            <Title>{club.name} Alumni</Title>
+          </div>
           <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
             <a className="button is-pulled-right is-secondary is-medium">
               Back

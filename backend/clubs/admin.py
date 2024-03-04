@@ -14,6 +14,8 @@ from clubs.models import (
     AdminNote,
     Advisor,
     ApplicationCommittee,
+    ApplicationCycle,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -406,12 +408,18 @@ class ZoomMeetingVisitAdmin(admin.ModelAdmin):
     list_filter = (("leave_time", admin.EmptyFieldListFilter),)
 
 
+class ApplicationSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("user", "id", "created_at", "status", "archived")
+    list_filter = ("archived",)
+
+
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
+admin.site.register(ApplicationExtension)
 admin.site.register(ApplicationMultipleChoice)
 admin.site.register(ApplicationQuestion)
 admin.site.register(ApplicationQuestionResponse)
-admin.site.register(ApplicationSubmission)
+admin.site.register(ApplicationSubmission, ApplicationSubmissionAdmin)
 admin.site.register(Advisor, AdvisorAdmin)
 admin.site.register(Club, ClubAdmin)
 admin.site.register(ClubFair, ClubFairAdmin)
@@ -447,3 +455,4 @@ admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
 admin.site.register(AdminNote)
 admin.site.register(Ticket)
 admin.site.register(Cart)
+admin.site.register(ApplicationCycle)

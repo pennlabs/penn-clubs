@@ -152,7 +152,9 @@ const ApplicationPage = ({
       <ClubMetadata club={club} />
       <Container paddingTop>
         <div className="is-clearfix">
-          <Title className="is-pulled-left">{application.name}</Title>
+          <div className="is-pulled-left">
+            <Title>{application.name}</Title>
+          </div>
         </div>
         {application.description != null && application.description !== '' && (
           <>
@@ -192,28 +194,6 @@ const ApplicationPage = ({
               ) {
                 submitErrors = 'One of your responses exceeds the word limit!'
               }
-            }
-
-            // committee error check
-            // if (
-            //   committees !== null &&
-            //   committees.length > 0 &&
-            //   currentCommittee === null
-            // ) {
-            //   submitErrors =
-            //     'Please select a committee before submitting (you can apply to more than one committee)'
-            // }
-
-            // submissions open error check (disabled for now to test)
-            const applicationStartTime = moment.tz(
-              application.application_start_time,
-              'America/New_York',
-            )
-            const currentTime = moment.tz('America/New_York')
-            if (currentTime.valueOf() < applicationStartTime.valueOf()) {
-              submitErrors = `This application has not opened for submission yet. You can submit on ${applicationStartTime.format(
-                'MMMM Do YYYY, h:mm:ss a',
-              )} EST.`
             }
 
             if (submitErrors === null) {
@@ -257,13 +237,24 @@ const ApplicationPage = ({
                   method: 'POST',
                   body,
                 })
-                  .then((resp) => resp.json())
-                  .then((data) => {
-                    if (data.success === false) {
-                      setSaved(false)
-                      setErrors(data.detail)
+                  .then((resp) => {
+                    if (resp.status === 200) {
+                      return resp.json()
                     } else {
-                      setSaved(true)
+                      setSaved(false)
+                      setErrors(
+                        `Unknown error. Refresh and/or login. ${resp.status}`,
+                      )
+                    }
+                  })
+                  .then((data) => {
+                    if (data != null) {
+                      if (data.success === false) {
+                        setSaved(false)
+                        setErrors(data.detail)
+                      } else {
+                        setSaved(true)
+                      }
                     }
                   })
               }

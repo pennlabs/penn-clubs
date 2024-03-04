@@ -71,7 +71,9 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
       <ClubMetadata club={club} />
       <Container paddingTop>
         <div className="is-clearfix">
-          <Title className="is-pulled-left">{club.name} Application</Title>
+          <div className="is-pulled-left">
+            <Title>{club.name} Application</Title>
+          </div>
           <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
             <a className="button is-pulled-right is-secondary is-medium">
               Back
@@ -147,7 +149,8 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
                 <Subtitle>
                   {app.name}{' '}
                   <span className="has-text-grey">
-                    for {getSemesterFromDate(app.application_end_time)}
+                    for{' '}
+                    {app.cycle || getSemesterFromDate(app.application_end_time)}
                   </span>
                 </Subtitle>
                 <div>
@@ -194,7 +197,10 @@ ApplyPage.getInitialProps = async ({ query, req }: NextPageContext) => {
   }
   const [clubReq, appReq] = await Promise.all([
     doApiRequest(`/clubs/${query.club}/?format=json`, data),
-    doApiRequest(`/clubs/${query.club}/applications/?format=json`, data),
+    doApiRequest(
+      `/clubs/${query.club}/applications/current/?format=json`,
+      data,
+    ),
   ])
   const clubRes = await clubReq.json()
   const appRes = await appReq.json()

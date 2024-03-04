@@ -18,7 +18,7 @@ import {
   MD,
   mediaMaxWidth,
 } from '../../constants/measurements'
-import { SETTINGS_ROUTE } from '../../constants/routes'
+import { CART_ROUTE, SETTINGS_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
@@ -100,6 +100,14 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
           Events
         </StyledLink>
+        <StyledLink
+          href="https://penncfa.com/"
+          onClick={() => logEvent('cfa redirect', 'click')}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Funding
+        </StyledLink>
         <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
           FAQ
         </StyledLink>
@@ -116,6 +124,12 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
           <StyledLink href={SETTINGS_ROUTE}>
             <StyledIcon name="user" alt="settings" />
             {userInfo.name || userInfo.username}
+          </StyledLink>
+        )}
+        {authenticated === true && (
+          <StyledLink href={CART_ROUTE}>
+            <StyledIcon name="shopping-cart" alt="settings" />
+            Cart
           </StyledLink>
         )}
       </div>

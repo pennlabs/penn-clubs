@@ -16,44 +16,57 @@ export class MyChart extends PennLabsChart {
     const clubsSecret = 'penn-clubs';
     const clubsDomain = 'pennclubs.com';
 
-    new RedisApplication(this, 'redis', {});
+    /** Ingress HTTPS Enforcer */
+    const ingressProps = {
+      annotations: {
+        ["ingress.kubernetes.io/protocol"]: "https",
+        ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redirect-http@kubernetescrd"
+      }
+    }
 
-    new DjangoApplication(this, 'django-asgi', {
-      deployment: {
-        image: backendImage,
-        cmd: ['/usr/local/bin/asgi-run'],
-        replicas: 2,
-        secret: clubsSecret,
-        env: [
-          { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
-        ],
-      },
-      djangoSettingsModule: 'pennclubs.settings.production',
-      domains: [{ host: clubsDomain, paths: ['/api/ws'] }],
+    new RedisApplication(this, 'redis', {
+      persistData: true,
     });
 
     new DjangoApplication(this, 'django-wsgi', {
       deployment: {
         image: backendImage,
-        replicas: 5,
+        replicas: 7,
         secret: clubsSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
         ],
       },
+      ingressProps,
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api'] }],
+    });
+
+    new DjangoApplication(this, 'django-asgi', {
+      deployment: {
+        image: backendImage,
+        cmd: ['/usr/local/bin/asgi-run'],
+        replicas: 1,
+        secret: clubsSecret,
+        env: [
+          { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
+        ],
+      },
+      ingressProps,
+      djangoSettingsModule: 'pennclubs.settings.production',
+      domains: [{ host: clubsDomain, paths: ['/api/ws'] }],
     });
 
     new ReactApplication(this, 'react', {
       deployment: {
         image: frontendImage,
-        replicas: 2,
+        replicas: 3,
       },
       domain: { host: clubsDomain, paths: ['/'] },
-      portEnv: '80',
+      port: 80,
+      ingressProps,
     });
-    
+
     /** FYH */
     const fyhSecret = 'hub-at-penn';
     const fyhDomain = 'hub.provost.upenn.edu';
@@ -64,26 +77,18 @@ export class MyChart extends PennLabsChart {
       deployment: {
         image: backendImage,
         cmd: ['/usr/local/bin/asgi-run'],
-        replicas: 2,
+        replicas: 1,
         secret: fyhSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-hub-redis' },
           { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
         ],
       },
-      djangoSettingsModule: 'pennclubs.settings.production',
-      domains: [{ host: fyhDomain, paths: ['/api/ws'] }],
-    });
-
-    new DjangoApplication(this, 'hub-django-wsgi', {
-      deployment: {
-        image: backendImage,
-        replicas: 3,
-        secret: fyhSecret,
-        env: [
-          { name: 'REDIS_HOST', value: 'penn-clubs-hub-redis' },
-          { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
-        ],
+      ingressProps: {
+        annotations: {
+          ["ingress.kubernetes.io/protocol"]: "https",
+          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
+        }
       },
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: fyhDomain, paths: ['/api'] }],
@@ -92,13 +97,14 @@ export class MyChart extends PennLabsChart {
     new ReactApplication(this, 'hub-react', {
       deployment: {
         image: frontendImage,
-        replicas: 2,
+        replicas: 1,
         env: [
           { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
         ],
       },
       domain: { host: fyhDomain, paths: ['/'] },
-      portEnv: '80',
+      ingressProps,
+      port: 80,
     });
 
     /** Cronjobs **/

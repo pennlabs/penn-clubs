@@ -12,6 +12,7 @@ import styled from 'styled-components'
 import { UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
+import TicketsTab from '~/components/Settings/TicketsTab'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
 import { BORDER_RADIUS } from '~/constants/measurements'
 
@@ -72,6 +73,11 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
       icon: 'user-check',
       content: <MembershipRequestsTab />,
       disabled: !SHOW_MEMBERSHIP_REQUEST,
+    },
+    {
+      name: 'Tickets',
+      icon: 'empty_cart',
+      content: <TicketsTab userInfo={userInfo} />,
     },
     {
       name: 'Profile',
