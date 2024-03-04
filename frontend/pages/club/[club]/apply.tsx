@@ -155,12 +155,12 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
                     {app.cycle || getSemesterFromDate(app.application_end_time)}
                   </span>
                 </Subtitle>
-                <div>
+                <div suppressHydrationWarning>
                   <b>Open Time:</b>{' '}
                   {new Date(app.application_start_time).toLocaleString()} (
                   <TimeAgo date={app.application_start_time} />)
                 </div>
-                <div>
+                <div suppressHydrationWarning>
                   <b>Close Time:</b>{' '}
                   {new Date(app.application_end_time).toLocaleString()} (
                   <TimeAgo date={app.application_end_time} />)
