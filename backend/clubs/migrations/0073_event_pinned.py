@@ -4,13 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0072_zoommeetingvisit"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="event", name="pinned", field=models.BooleanField(default=False),
+            model_name="event",
+            name="pinned",
+            field=models.BooleanField(default=False),
         ),
     ]

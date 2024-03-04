@@ -6,7 +6,6 @@ import clubs.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0041_auto_20200912_1056"),
     ]

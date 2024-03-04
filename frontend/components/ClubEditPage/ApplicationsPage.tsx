@@ -393,20 +393,16 @@ export default function ApplicationsPage({
   club: Club
 }): ReactElement {
   const [applications, setApplications] = useState<Array<Application>>([])
-  const [
-    currentApplication,
-    setCurrentApplication,
-  ] = useState<Application | null>(null)
+  const [currentApplication, setCurrentApplication] =
+    useState<Application | null>(null)
   const [submissions, setSubmissions] = useState<{
     [key: number]: Array<ApplicationSubmission>
   }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [showNotifModal, setShowNotifModal] = useState<boolean>(false)
   const [showReasonModal, setShowReasonModal] = useState<boolean>(false)
-  const [
-    currentSubmission,
-    setCurrentSubmission,
-  ] = useState<ApplicationSubmission | null>(null)
+  const [currentSubmission, setCurrentSubmission] =
+    useState<ApplicationSubmission | null>(null)
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [statusToggle, setStatusToggle] = useState<boolean>(false)
   const [categoriesSelectAll, setCategoriesSelectAll] = useState<Array<string>>(
@@ -640,9 +636,8 @@ export default function ApplicationsPage({
                         categoriesSelectAll.includes(statusLabel)
 
                       if (deselecting) {
-                        const newCategoriesSelectAll = categoriesSelectAll.filter(
-                          (e) => e !== statusLabel,
-                        )
+                        const newCategoriesSelectAll =
+                          categoriesSelectAll.filter((e) => e !== statusLabel)
                         setCategoriesSelectAll(newCategoriesSelectAll)
                       } else {
                         const newCategoriesSelectAll = categoriesSelectAll
@@ -705,12 +700,11 @@ export default function ApplicationsPage({
                 <ScrollWrapper>
                   <TableWrapper>
                     <Table
-                      data={submissions[
-                        currentApplication.id
-                      ].map((item, index) =>
-                        item.pk
-                          ? { ...item, id: item.pk }
-                          : { ...item, id: index },
+                      data={submissions[currentApplication.id].map(
+                        (item, index) =>
+                          item.pk
+                            ? { ...item, id: item.pk }
+                            : { ...item, id: index },
                       )}
                       columns={responseTableFields}
                       searchableColumns={['name']}

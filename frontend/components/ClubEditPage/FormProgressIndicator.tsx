@@ -24,9 +24,9 @@ const StepText = styled.span`
   line-height: 0.9em;
 `
 
-const StepBubble = styled.div<{ passed: boolean }>`
-  background-color: ${({ passed }) =>
-    passed ? PROGRESS_INDICATOR_PRIMARY : PROGRESS_INDICATOR_SECONDARY};
+const StepBubble = styled.div<{ $passed: boolean }>`
+  background-color: ${({ $passed }) =>
+    $passed ? PROGRESS_INDICATOR_PRIMARY : PROGRESS_INDICATOR_SECONDARY};
   color: ${PROGRESS_INDICATOR_TEXT};
   width: 48px;
   height: 48px;
@@ -35,7 +35,7 @@ const StepBubble = styled.div<{ passed: boolean }>`
   line-height: 48px;
   border-radius: 24px;
   margin: 5px auto;
-  cursor: ${({ passed }) => (passed ? 'pointer' : 'default')};
+  cursor: ${({ $passed }) => ($passed ? 'pointer' : 'default')};
 `
 
 const StepArrow = styled.span`
@@ -62,7 +62,7 @@ const FormProgressIndicator = ({
       {steps.map(({ name }, i) => (
         <React.Fragment key={i}>
           <StepBubbleContainer onClick={() => onStepClick(i)} key={i}>
-            <StepBubble passed={i <= step}>{i + 1}</StepBubble>
+            <StepBubble $passed={i <= step}>{i + 1}</StepBubble>
             <StepText>{name}</StepText>
           </StepBubbleContainer>
           {i < steps.length - 1 && <StepArrow />}

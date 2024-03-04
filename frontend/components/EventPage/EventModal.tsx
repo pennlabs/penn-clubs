@@ -143,8 +143,8 @@ const ActionButtons = ({
               {ticketCount === 0 && !userHasTickets
                 ? ' SOLD OUT'
                 : userHasTickets
-                ? ' View Tickets'
-                : ' Get Tickets'}{' '}
+                  ? ' View Tickets'
+                  : ' Get Tickets'}{' '}
               <Icon name="credit-card" className="ml-2" />
             </button>
           </Link>
@@ -310,16 +310,12 @@ const EventModal = (props: {
         {showDetailsButton !== false && event.club != null && (
           <div className="is-clearfix">
             <div className="buttons is-pulled-right">
-              {club != null && (
-                <ActionButtons
-                  club={club}
-                  isTicketEvent={ticketed}
-                  setDisplayTicketModal={setDisplayTicketModal}
-                  ticketCount={ticketCount}
-                  userHasTickets={userHasTickets}
-                />
-              )}
-              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+              {club != null && <ActionButtons club={club} />}
+              <Link
+                legacyBehavior
+                href={CLUB_ROUTE()}
+                as={CLUB_ROUTE(event.club)}
+              >
                 <a
                   className="button is-link is-small"
                   onClick={(e) => {

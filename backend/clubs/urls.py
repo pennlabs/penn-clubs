@@ -74,7 +74,7 @@ router.register(r"tickets", TicketViewSet, basename="tickets")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
-router.register(r"student_types", StudentTypeViewSet, basename="student_types"),
+router.register(r"student_types", StudentTypeViewSet, basename="student_types")
 router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
 router.register(r"users", UserViewSet, basename="users")
@@ -82,10 +82,14 @@ router.register(
     r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
 )
 router.register(
-    r"cycles", WhartonCyclesView, basename="wharton-applications-create",
+    r"cycles",
+    WhartonCyclesView,
+    basename="wharton-applications-create",
 )
 router.register(
-    r"whartonapplications", WhartonApplicationAPIView, basename="wharton",
+    r"whartonapplications",
+    WhartonApplicationAPIView,
+    basename="wharton",
 )
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 

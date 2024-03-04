@@ -64,16 +64,12 @@ const ApplicationModal = (props: {
     committeeChoices,
   } = props
   // TODO: I'm positive that this is something that Formik should do for me
-  const [
-    questionType,
-    setQuestionType,
-  ] = useState<ApplicationQuestionType | null>()
-  const [multipleChoices, setMultipleChoices] = useState<
-    [{ label: string; value: string }]
-  >()
-  const [committees, setCommittees] = useState<
-    [{ label: string; value: string }]
-  >()
+  const [questionType, setQuestionType] =
+    useState<ApplicationQuestionType | null>()
+  const [multipleChoices, setMultipleChoices] =
+    useState<[{ label: string; value: string }]>()
+  const [committees, setCommittees] =
+    useState<[{ label: string; value: string }]>()
   const [committeeQuestion, setCommitteeQuestion] = useState<boolean>()
 
   const validateWordCount = (value) => {

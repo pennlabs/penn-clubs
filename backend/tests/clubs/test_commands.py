@@ -46,7 +46,7 @@ def mocked_requests_get(time):
     def fake_request(url, *args):
         class MockResponse:
             def __init__(self, content, status_code):
-                self.text = str(content)
+                self.text = content.serialize()
                 self.status_code = status_code
 
             def text(self):
@@ -351,7 +351,7 @@ class SendInvitesTestCase(TestCase):
         for usr in [user2, user3, user4]:
             Subscribe.objects.create(club=self.club1, person=usr)
 
-        now = datetime.datetime(2021, 1, 5, 12, tzinfo=timezone.utc)
+        now = datetime.datetime(2021, 1, 5, 12, tzinfo=datetime.timezone.utc)
 
         ClubApplication.objects.create(
             name="Test Application",
@@ -370,7 +370,8 @@ class SendInvitesTestCase(TestCase):
         # ensure test runs on a weekday
         errors = io.StringIO()
         with mock.patch(
-            "django.utils.timezone.now", return_value=now,
+            "django.utils.timezone.now",
+            return_value=now,
         ):
             call_command("daily_notifications", stderr=errors)
 

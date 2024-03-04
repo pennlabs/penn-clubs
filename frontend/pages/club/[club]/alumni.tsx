@@ -11,7 +11,9 @@ import { CLUB_ROUTE, PROFILE_ROUTE } from '~/constants'
 
 type AlumniPageProps = {
   club: Club
-  alumni: { [year: string]: { name: string; username: string | null }[] }
+  alumni:
+    | { [year: string]: { name: string; username: string | null }[] }
+    | { detail: string }
 }
 
 const AlumniPage = ({ club, alumni }: AlumniPageProps): ReactElement => {
@@ -27,6 +29,16 @@ const AlumniPage = ({ club, alumni }: AlumniPageProps): ReactElement => {
             <a className="button is-pulled-right is-secondary is-medium">
               Back
             </a>
+            <div className="is-pulled-left">
+              <Title>{club.name} Alumni</Title>
+            </div>
+            <Link
+              href={CLUB_ROUTE()}
+              as={CLUB_ROUTE(club.code)}
+              className="button is-pulled-right is-secondary is-medium"
+            >
+              Back
+            </Link>
           </Link>
         </div>
         <Text>
@@ -34,7 +46,7 @@ const AlumniPage = ({ club, alumni }: AlumniPageProps): ReactElement => {
           to make their membership public.
         </Text>
         <hr />
-        {'detail' in alumni ? (
+        {'detail' in alumni && typeof alumni.detail === 'string' ? (
           <Text>{alumni.detail}</Text>
         ) : (
           <>
@@ -54,6 +66,7 @@ const AlumniPage = ({ club, alumni }: AlumniPageProps): ReactElement => {
                         <li>
                           {user.username ? (
                             <Link
+                              legacyBehavior
                               href={PROFILE_ROUTE()}
                               as={PROFILE_ROUTE(user.username)}
                             >

@@ -8,18 +8,22 @@ on: push
 jobs:
   backend-check:
     name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@8785a7d7b9158d8d5705a0202f5695db2c0beb97
+    uses: pennlabs/shared-actions/.github/workflows/django.yaml@507f4cf1cc88259fc8625fb3a35bd3f18fc91cd5
+    secrets: inherit
     with:
       projectName: pennclubs
       path: backend
-      flake: true
-      black: true
+      pythonVersion: 3.11-bookworm
+      flake: false
+      black: false
+      ruff: true
 
   frontend-check:
     name: "Frontend Check"
     uses: pennlabs/shared-actions/.github/workflows/react-check.yaml@v0.1
     with:
       path: frontend
+      nodeVersion: 20.11.1
 
   build-backend:
     name: Build backend

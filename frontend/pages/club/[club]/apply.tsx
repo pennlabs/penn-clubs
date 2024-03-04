@@ -74,10 +74,12 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
           <div className="is-pulled-left">
             <Title>{club.name} Application</Title>
           </div>
-          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-            <a className="button is-pulled-right is-secondary is-medium">
-              Back
-            </a>
+          <Link
+            href={CLUB_ROUTE()}
+            as={CLUB_ROUTE(club.code)}
+            className="button is-pulled-right is-secondary is-medium"
+          >
+            Back
           </Link>
         </div>
         <hr />
@@ -153,12 +155,12 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
                     {app.cycle || getSemesterFromDate(app.application_end_time)}
                   </span>
                 </Subtitle>
-                <div>
+                <div suppressHydrationWarning>
                   <b>Open Time:</b>{' '}
                   {new Date(app.application_start_time).toLocaleString()} (
                   <TimeAgo date={app.application_start_time} />)
                 </div>
-                <div>
+                <div suppressHydrationWarning>
                   <b>Close Time:</b>{' '}
                   {new Date(app.application_end_time).toLocaleString()} (
                   <TimeAgo date={app.application_end_time} />)

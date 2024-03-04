@@ -5,16 +5,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0077_auto_20210219_2014"),
     ]
 
     operations = [
-        migrations.RemoveField(model_name="club", name="student_types",),
-        migrations.RemoveField(model_name="club", name="target_majors",),
-        migrations.RemoveField(model_name="club", name="target_schools",),
-        migrations.RemoveField(model_name="club", name="target_years",),
+        migrations.RemoveField(
+            model_name="club",
+            name="student_types",
+        ),
+        migrations.RemoveField(
+            model_name="club",
+            name="target_majors",
+        ),
+        migrations.RemoveField(
+            model_name="club",
+            name="target_schools",
+        ),
+        migrations.RemoveField(
+            model_name="club",
+            name="target_years",
+        ),
         migrations.CreateModel(
             name="TargetYear",
             fields=[

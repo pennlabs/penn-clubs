@@ -325,6 +325,13 @@ class Club(models.Model):
     appointment_needed = models.BooleanField(default=False)
     signature_events = models.TextField(blank=True)  # html
 
+    # cache club aggregation counts
+    favorite_count = models.IntegerField(default=0)
+    membership_count = models.IntegerField(default=0)
+
+    # cache club rankings
+    rank = models.IntegerField(default=0)
+
     # cache club rankings
     rank = models.IntegerField(default=0)
 
@@ -1643,7 +1650,9 @@ class ApplicationCommittee(models.Model):
 
     name = models.TextField(blank=True)
     application = models.ForeignKey(
-        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+        ClubApplication,
+        related_name="committees",
+        on_delete=models.CASCADE,
     )
 
     def get_word_limit(self):
@@ -1695,7 +1704,9 @@ class ApplicationMultipleChoice(models.Model):
 
     value = models.TextField(blank=True)
     question = models.ForeignKey(
-        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+        ApplicationQuestion,
+        related_name="multiple_choice",
+        on_delete=models.CASCADE,
     )
 
 
@@ -1730,7 +1741,6 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    archived = models.BooleanField(default=False)
     notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1793,7 +1803,6 @@ class Cart(models.Model):
 
 
 class TicketManager(models.Manager):
-
     # Update holds for all tickets
     def update_holds(self):
         expired_tickets = self.select_for_update().filter(

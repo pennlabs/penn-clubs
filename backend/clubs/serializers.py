@@ -1752,7 +1752,6 @@ class UserMembershipSerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
-
     """
     Used to return a ticket object
     """
@@ -2036,7 +2035,9 @@ class UserProfileSerializer(MinimalUserProfileSerializer):
         # hide non public memberships if not superuser
         if user is None or not user.has_perm("clubs.manage_club"):
             queryset = queryset.filter(
-                membership__person=obj, membership__public=True, approved=True,
+                membership__person=obj,
+                membership__public=True,
+                approved=True,
             )
 
         serializer = MembershipClubListSerializer(
@@ -2311,14 +2312,14 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
         now = timezone.now()
         for fair in ClubFair.objects.filter(end_time__gte=now):
             fields[f"Is participating in {fair.name}"] = f"custom_fair_{fair.id}_reg"
-            fields[
-                f"Registration time for {fair.name}"
-            ] = f"custom_fair_{fair.id}_reg_time"
+            fields[f"Registration time for {fair.name}"] = (
+                f"custom_fair_{fair.id}_reg_time"
+            )
             fields[f"Contact email for {fair.name}"] = f"custom_fair_{fair.id}_email"
             for i, question in enumerate(json.loads(fair.questions)):
-                fields[
-                    f"[{fair.name}] {question['label']}"
-                ] = f"custom_fair_{fair.id}_q_{i}"
+                fields[f"[{fair.name}] {question['label']}"] = (
+                    f"custom_fair_{fair.id}_q_{i}"
+                )
         return {"virtual_fair": fields}
 
     @staticmethod
@@ -2438,7 +2439,8 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             ApplicationMultipleChoice.objects.filter(question=question_obj).delete()
             for choice in multiple_choice:
                 ApplicationMultipleChoice.objects.create(
-                    value=choice["value"], question=question_obj,
+                    value=choice["value"],
+                    question=question_obj,
                 )
 
         # manually create committee choices as Django does not
@@ -2618,7 +2620,7 @@ class WhartonApplicationStatusSerializer(serializers.Serializer):
         Return the status string of the status associated with the submission
         """
         status_string = ApplicationSubmission.STATUS_TYPES[0][1]
-        for (status, name) in ApplicationSubmission.STATUS_TYPES:
+        for status, name in ApplicationSubmission.STATUS_TYPES:
             if obj["status"] == status:
                 status_string = name
         return status_string
@@ -2769,12 +2771,6 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
     def validate(self, data):
         acceptance_template = data.get("acceptance_email", "")
         rejection_template = data.get("rejection_email", "")
-        request = self.context["request"].data
-
-        if "committees" in request and data["application_start_time"] < timezone.now():
-            raise serializers.ValidationError(
-                "You cannot edit committees once the application is open"
-            )
 
         if not ClubApplication.validate_template(
             acceptance_template
@@ -2813,17 +2809,25 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         # manually create committee objects as Django does
         # not support nested serializers out of the box
         request = self.context["request"].data
-
         # only allow modifications to committees if the application is not yet open
         now = timezone.now()
-        if "committees" in request and application_obj.application_start_time > now:
-            committees = map(
-                lambda x: x["value"] if "value" in x else x["name"],
-                request["committees"],
+        prev_committees = ApplicationCommittee.objects.filter(
+            application=application_obj
+        )
+        prev_committee_names = sorted(list(map(lambda x: x.name, prev_committees)))
+        committees = sorted(
+            list(
+                map(
+                    lambda x: x["value"] if "value" in x else x["name"],
+                    request["committees"] if "committees" in request else [],
+                )
             )
-            prev_committees = ApplicationCommittee.objects.filter(
-                application=application_obj
-            )
+        )
+        if prev_committee_names != committees:
+            if application_obj.application_start_time < now:
+                raise serializers.ValidationError(
+                    "You cannot edit committees once the application is open"
+                )
             # nasty hack for idempotency
             prev_committee_names = prev_committees.values("name")
             for prev_committee in prev_committees:
@@ -2833,7 +2837,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             for name in committees:
                 if name not in prev_committee_names:
                     ApplicationCommittee.objects.create(
-                        name=name, application=application_obj,
+                        name=name,
+                        application=application_obj,
                     )
             cache.delete(f"clubapplication:{application_obj.id}")
 

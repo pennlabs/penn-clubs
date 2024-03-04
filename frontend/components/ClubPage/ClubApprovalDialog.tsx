@@ -324,22 +324,23 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
             {club.name} has the following status for these{' '}
             {OBJECT_NAME_SINGULAR} activity fairs:
           </p>
-          {fairs.map((fair) => {
-            const inFair = club.fairs.indexOf(fair.id) !== -1
-            return (
-              <li key={fair.id}>
-                <span
-                  className={inFair ? 'has-text-success' : 'has-text-danger'}
-                >
-                  <Icon
-                    name={inFair ? 'check' : 'x'}
-                    alt={inFair ? 'registered' : 'not registered'}
-                  />{' '}
-                  {fair.name}
-                </span>
-              </li>
-            )
-          })}
+          {club.fairs &&
+            fairs.map((fair) => {
+              const inFair = club.fairs.indexOf(fair.id) !== -1
+              return (
+                <li key={fair.id}>
+                  <span
+                    className={inFair ? 'has-text-success' : 'has-text-danger'}
+                  >
+                    <Icon
+                      name={inFair ? 'check' : 'x'}
+                      alt={inFair ? 'registered' : 'not registered'}
+                    />{' '}
+                    {fair.name}
+                  </span>
+                </li>
+              )
+            })}
           <p>
             You can register {club.name} for activities fairs{' '}
             <b>

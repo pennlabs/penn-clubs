@@ -41,44 +41,44 @@ const sites = {
         OBJECT_TAB_FILES_DESCRIPTION:
             'You can upload club constitutions here. Please upload your club constitution in pdf or docx format.',
 
-        CONTACT_EMAIL: 'contact@pennclubs.com',
-        SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
-        FEEDBACK_URL: 'https://airtable.com/appFRa4NQvNMEbWsA/shrZdY76Bauj77H90',
+    CONTACT_EMAIL: 'contact@pennclubs.com',
+    SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
+    FEEDBACK_URL: 'https://airtable.com/appFRa4NQvNMEbWsA/shrZdY76Bauj77H90',
 
-        CLUB_FIELDS: [
-            'accepting_members',
-            'application_required',
-            'badges',
-            'email_public',
-            'founded',
-            'github',
-            'linkedin',
-            'listserv',
-            'recruiting_cycle',
-            'size',
-            'target_majors',
-            'target_schools',
-        ],
-        // enable showing members for each club
-        SHOW_MEMBERS: false,
-        // enable the membership request feature
-        SHOW_MEMBERSHIP_REQUEST: false,
-        // show the links to the ranking algorithm from various parts of the site
-        SHOW_RANK_ALGORITHM: true,
-        // show the link to the Penn accessibility help page at the bottom of each page
-        SHOW_ACCESSIBILITY: false,
-        // show the additional links section on each club
-        SHOW_ADDITIONAL_LINKS: true,
-        // prompt the user to set inactive instead of leaving the club
-        SHOW_LEAVE_CONFIRMATION: true,
-        // show the searchbar at the top of the page instead of the sidebar
-        SHOW_SEARCHBAR_TOP: false,
-        // show applications
-        SHOW_APPLICATIONS: true,
-        // show organization and badge management
-        SHOW_ORG_MANAGEMENT: true,
-        // show feedback icon on bottom right
-        SHOW_FEEDBACK: true,
+    CLUB_FIELDS: [
+      'accepting_members',
+      'application_required',
+      'badges',
+      'email_public',
+      'founded',
+      'github',
+      'linkedin',
+      'listserv',
+      'recruiting_cycle',
+      'size',
+      'target_majors',
+      'target_schools',
+    ],
+    // enable showing members for each club
+    SHOW_MEMBERS: false,
+    // enable the membership request feature
+    SHOW_MEMBERSHIP_REQUEST: true,
+    // show the links to the ranking algorithm from various parts of the site
+    SHOW_RANK_ALGORITHM: true,
+    // show the link to the Penn accessibility help page at the bottom of each page
+    SHOW_ACCESSIBILITY: false,
+    // show the additional links section on each club
+    SHOW_ADDITIONAL_LINKS: true,
+    // prompt the user to set inactive instead of leaving the club
+    SHOW_LEAVE_CONFIRMATION: true,
+    // show the searchbar at the top of the page instead of the sidebar
+    SHOW_SEARCHBAR_TOP: false,
+    // show applications
+    SHOW_APPLICATIONS: true,
+    // show organization and badge management
+    SHOW_ORG_MANAGEMENT: true,
+    // show feedback icon on bottom right
+    SHOW_FEEDBACK: true,
 
         MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
         OBJECT_MEMBERSHIP_LABEL: 'Members',
@@ -183,9 +183,9 @@ const sites = {
             ClubEventType.OTHER,
         ],
 
-        CONTACT_EMAIL: 'hub.provost@upenn.edu',
-        SUPPORT_EMAIL: 'hubcommunications@lists.upenn.edu',
-        FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
+    CONTACT_EMAIL: 'hub.provost@upenn.edu',
+    SUPPORT_EMAIL: 'hubcommunications@lists.upenn.edu',
+    FEEDBACK_URL: 'https://airtable.com/shrv4RfYIddU1i9o6',
 
         CLUB_FIELDS: [
             'appointment_needed',

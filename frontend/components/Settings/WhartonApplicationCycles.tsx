@@ -5,7 +5,7 @@ import Select from 'react-select'
 import styled from 'styled-components'
 
 import { ClubApplication } from '~/types'
-import { doApiRequest } from '~/utils'
+import { doApiRequest, getApiUrl } from '~/utils'
 
 import { Checkbox, Icon, Loading, Modal, Subtitle, Text } from '../common'
 import { DateTimeField, TextField } from '../FormComponents'
@@ -207,6 +207,12 @@ const WhartonApplicationCycles = (): ReactElement => {
             >
               Extensions
             </button>
+            <a
+              href={getApiUrl(`/cycles/${object.id}/applications`)}
+              className="button is-info is-small"
+            >
+              Export Applications
+            </a>
           </>
         )}
       />

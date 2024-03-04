@@ -409,8 +409,8 @@ class ZoomMeetingVisitAdmin(admin.ModelAdmin):
 
 
 class ApplicationSubmissionAdmin(admin.ModelAdmin):
-    list_display = ("user", "id", "created_at", "status", "archived")
-    list_filter = ("archived",)
+    search_fields = ("user__username",)
+    list_display = ("user", "id", "created_at", "status")
 
 
 admin.site.register(Asset)

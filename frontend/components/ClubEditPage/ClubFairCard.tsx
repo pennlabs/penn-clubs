@@ -228,6 +228,7 @@ const ClubFairCard = ({
                             <td>{item.club.name}</td>
                             <td>
                               <Link
+                                legacyBehavior
                                 href={CLUB_EDIT_ROUTE()}
                                 as={
                                   CLUB_EDIT_ROUTE(item.club.code) + '/settings'

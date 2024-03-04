@@ -167,7 +167,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const disableSubmit = tickets.some(
     (ticket) =>
       typeof ticket.name !== 'string' ||
-      typeof ticket.count === null ||
+      ticket.count === null ||
       !Number.isInteger(parseInt(ticket.count || '0')),
   )
 
