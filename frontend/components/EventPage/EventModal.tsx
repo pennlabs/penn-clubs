@@ -310,7 +310,15 @@ const EventModal = (props: {
         {showDetailsButton !== false && event.club != null && (
           <div className="is-clearfix">
             <div className="buttons is-pulled-right">
-              {club != null && <ActionButtons club={club} />}
+              {club != null && (
+                <ActionButtons
+                  club={club}
+                  isTicketEvent={ticketed}
+                  setDisplayTicketModal={setDisplayTicketModal}
+                  ticketCount={ticketCount}
+                  userHasTickets={userHasTickets}
+                />
+              )}
               <Link
                 legacyBehavior
                 href={CLUB_ROUTE()}
