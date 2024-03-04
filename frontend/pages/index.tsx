@@ -251,7 +251,7 @@ const ScrollTopButton = (): ReactElement | null => {
 
   return (
     <ActionLink
-      offsetAddition={55}
+      $offsetAddition={55}
       onClick={(e) => {
         e.preventDefault()
         window.scrollTo(0, 0)
@@ -298,9 +298,8 @@ const Splash = (props: SplashProps): ReactElement => {
       }),
     })
   }
-  const [exclusiveClubs, setExclusiveClubs] = useState<
-    Maybe<PaginatedClubPage>
-  >()
+  const [exclusiveClubs, setExclusiveClubs] =
+    useState<Maybe<PaginatedClubPage>>()
 
   const [isLoading, setLoading] = useState<boolean>(false)
   const [searchInput, setSearchInput] = useState<SearchInput>({})

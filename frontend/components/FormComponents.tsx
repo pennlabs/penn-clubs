@@ -3,7 +3,6 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { ContentState, convertToRaw, EditorState } from 'draft-js'
 import draftToHtml from 'draftjs-to-html'
 import { useField, useFormikContext } from 'formik'
-import Head from 'next/head'
 import React, {
   ReactElement,
   ReactNode,
@@ -181,18 +180,6 @@ export const RichTextField = useFieldWrapper(
 
     return (
       <div>
-        <Head>
-          <link
-            href="/static/css/react-draft-wysiwyg.css"
-            rel="stylesheet"
-            key="editor-css"
-          />
-          <link
-            href="/static/css/react-datepicker.css"
-            rel="stylesheet"
-            key="datepicker-css"
-          />
-        </Head>
         {Editor != null && (
           <Editor
             editorState={editorState}
@@ -266,18 +253,6 @@ export const ApplicationUpdateTextField = useFieldWrapper(
 
     return (
       <div>
-        <Head>
-          <link
-            href="/static/css/react-draft-wysiwyg.css"
-            rel="stylesheet"
-            key="editor-css"
-          />
-          <link
-            href="/static/css/react-datepicker.css"
-            rel="stylesheet"
-            key="datepicker-css"
-          />
-        </Head>
         {Editor != null && (
           <Editor
             editorState={editorState}
@@ -341,12 +316,12 @@ export const DateTimeField = useFieldWrapper(
     return (
       <DatePickerWrapper>
         <DatePicker
-          className="input"
           showTimeSelect
           dateFormat="MMMM d, yyyy h:mm aa"
           selected={Date.parse(value) || value}
           placeholderText={placeholder}
           {...other}
+          className="input"
           onChange={(val) => {
             setFieldValue(name, val)
           }}
@@ -359,6 +334,7 @@ export const DateTimeField = useFieldWrapper(
 /**
  * Field that allows users to add new multi-select items
  */
+
 export const CreatableMultipleSelectField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement => {
     const {
@@ -372,37 +348,43 @@ export const CreatableMultipleSelectField = useFieldWrapper(
     } = props
     const { setFieldValue } = useFormikContext()
 
+    const handleChange = (
+      val: Array<{ label: string; value: string; _isNew?: boolean }>,
+      _action: any,
+    ) => {
+      const serializedValue = serialize ? serialize(val) : val
+      setFieldValue(name, serializedValue)
+    }
+
+    const formatOptions = (choices: any) => {
+      return (
+        choices &&
+        choices.map((choice) => ({
+          label: choice.label,
+          value: choice.value,
+        }))
+      )
+    }
+
+    const formattedValue =
+      initialValues || value
+        ? deserialize
+          ? deserialize(initialValues || value)
+          : initialValues || value
+        : undefined
+
     return (
       <CreatableSelect
         name={name}
-        as={SelectField}
-        onChange={(
-          val: [{ label: string; value: string; _isNew: boolean }],
-          _action: any,
-        ) => {
-          // TODO: types are good but this is not particularly modular, might
-          // be best to make this more generalizable
-          serialize != null
-            ? setFieldValue(name, serialize(val))
-            : setFieldValue(name, val)
-        }}
+        onChange={handleChange}
         isMulti
-        creatable
-        value={
-          initialValues != null
-            ? deserialize != null
-              ? deserialize(initialValues)
-              : initialValues
-            : deserialize != null
-            ? deserialize(value)
-            : value
-        }
-        options={choices}
+        placeholder={placeholder}
+        value={formattedValue}
+        options={formatOptions(choices)}
       />
     )
   },
 )
-
 /**
  * A field that allows the user to enter an arbitrary line of text.
  */
@@ -602,9 +584,9 @@ export const TextField = useFieldWrapper(
     if (type === 'textarea') {
       return (
         <textarea
-          className={`textarea ${isError ? 'is-danger' : ''}`}
           value={value ?? ''}
           {...other}
+          className={`textarea ${isError ? 'is-danger' : ''}`}
           readOnly={readOnly ?? false}
         ></textarea>
       )
@@ -636,11 +618,11 @@ export const TextField = useFieldWrapper(
 
     return (
       <input
-        className={`input ${isError ? 'is-danger' : ''}`}
         type={actualType}
         value={value != null ? value.toString() : ''}
         readOnly={readOnly ?? false}
         {...other}
+        className={`input ${isError ? 'is-danger' : ''}`}
       />
     )
   },
@@ -791,7 +773,6 @@ export const SelectField = useFieldWrapper(
     deserialize,
     valueDeserialize,
     isMulti,
-    creatable,
     formatOptionLabel,
     customHandleChange,
   }: BasicFormField &
@@ -850,7 +831,6 @@ export const SelectField = useFieldWrapper(
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
-        creatable={creatable}
         value={(valueDeserialize ?? actualDeserialize)(value)}
         options={
           actualDeserialize(choices) as {

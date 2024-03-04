@@ -1,8 +1,7 @@
 describe('Invitation tests', () => {
   before(() => {
-    cy.login('bfranklin', 'test') 
+    cy.login('bfranklin', 'test')
   })
-
 
   after(() => {
     // Remove James Madison (self) from the club
@@ -20,7 +19,7 @@ describe('Invitation tests', () => {
     cy.visit('/club/pppjo/edit/member')
     cy.contains('Invite Members').scrollIntoView()
     cy.get('textarea[placeholder="Enter email addresses here!"]').type(
-        'jmadison@seas.upenn.edu'
+      'jmadison@seas.upenn.edu',
     )
 
     cy.contains('.button', 'Send Invite').click()
@@ -46,7 +45,9 @@ describe('Invitation tests', () => {
 
   it('Accepts invitation using incorrect login credentials', () => {
     cy.contains('Accept Invitation').click()
-    cy.contains('This invitation was meant for jmadison, but you are logged in as bfranklin!')
+    cy.contains(
+      'This invitation was meant for jmadison, but you are logged in as bfranklin!',
+    )
     cy.logout()
   })
 
@@ -70,8 +71,8 @@ describe('Invitation tests', () => {
 
       // Redirect to club page
       cy.title().should('eq', 'Penn Pre-Professional Juggling Organization')
-      
-      // Accessing invitation link after accepting it leads to 404 
+
+      // Accessing invitation link after accepting it leads to 404
       cy.visit(`/invite/${invite['code']}/${invite['id']}/${invite['token']}`)
       cy.contains('404 Not Found')
     })

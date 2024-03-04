@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip'
 import styled from 'styled-components'
 
 import { DARK_GRAY } from '../../constants/colors'
@@ -42,7 +42,7 @@ export const ColumnTooltip = ({ tip }: { tip: string }): ReactElement => (
       alt="?"
       style={{ paddingLeft: 4 }}
     />
-    <ReactTooltip />
+    <Tooltip />
   </>
 )
 
@@ -89,7 +89,7 @@ const ClubTabTable = ({
         <tr key={club.code}>
           <td>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-              <a>{club.name}</a>
+              {club.name}
             </Link>
           </td>
           <td>{title}</td>
@@ -110,7 +110,11 @@ const ClubTabTable = ({
           </td>
           <td>
             {role <= MembershipRank.Officer ? (
-              <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(club.code)}>
+              <Link
+                legacyBehavior
+                href={CLUB_EDIT_ROUTE()}
+                as={CLUB_EDIT_ROUTE(club.code)}
+              >
                 <a className="button is-small">Manage</a>
               </Link>
             ) : (

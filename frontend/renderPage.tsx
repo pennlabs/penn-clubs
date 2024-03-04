@@ -161,9 +161,7 @@ type PageComponent<T> = React.ComponentType<
  * A wrapper that goes around any page that requires authentication.
  * Passes in useful properties with regard to authentication and global site variables.
  */
-function renderPage<T>(
-  Page: PageComponent<T>,
-): React.ComponentType & {
+function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
   getInitialProps?: (ctx: NextPageContext) => Promise<T & RenderPageProps>
 } {
   class RenderPage extends Component<RenderPageProps & T, RenderPageState> {
@@ -296,7 +294,7 @@ function renderPage<T>(
     const originalPageProps = async () => {
       let pageProps = {}
       if (Page.getInitialProps) {
-        pageProps = await Page.getInitialProps(ctx)
+        pageProps = (await Page.getInitialProps(ctx)) || {}
       }
       const perms = await fetchPermissions()
       return [pageProps, perms]

@@ -16,7 +16,7 @@ const getPadding = (percent) => {
 }
 
 type WrapperProps = {
-  fullHeight?: boolean
+  $fullHeight?: boolean
 }
 
 const Wrapper = styled.div<WrapperProps>`
@@ -38,8 +38,8 @@ const Wrapper = styled.div<WrapperProps>`
     ${getPadding(20)}
   }
 
-  ${({ fullHeight }) =>
-    fullHeight &&
+  ${({ $fullHeight }) =>
+    $fullHeight &&
     `
     min-height: calc(100vh - ${NAV_HEIGHT});
   `}
@@ -53,7 +53,7 @@ export const Container = ({
   children,
 }: ContainerProps): ReactElement => (
   <div style={{ background, paddingTop: paddingTop ? 46 : undefined }}>
-    <Wrapper fullHeight={fullHeight} style={style}>
+    <Wrapper $fullHeight={fullHeight} style={style}>
       {children}
     </Wrapper>
   </div>
@@ -86,7 +86,7 @@ export const WideContainer = ({
   children,
 }: ContainerProps): ReactElement => (
   <div style={{ background }}>
-    <WideWrapper fullHeight={fullHeight}>{children}</WideWrapper>
+    <WideWrapper $fullHeight={fullHeight}>{children}</WideWrapper>
   </div>
 )
 

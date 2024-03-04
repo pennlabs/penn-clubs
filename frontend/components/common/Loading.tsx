@@ -8,7 +8,7 @@ const THICKNESS = '0.25rem'
 const TIMER = '1.25s'
 
 type LoadingWrapperProps = {
-  hide: boolean
+  $hide: boolean
 }
 
 const LoadingWrapper = styled.div<LoadingWrapperProps>`
@@ -16,7 +16,7 @@ const LoadingWrapper = styled.div<LoadingWrapperProps>`
   padding: calc(1rem + 5vh) 0;
   text-align: center;
   transition: opacity 0.5s ease;
-  opacity: ${({ hide }) => (hide ? '0' : '1')};
+  opacity: ${({ $hide }) => ($hide ? '0' : '1')};
 `
 
 const spin = keyframes`
@@ -56,7 +56,7 @@ export const Loading = ({
   })
 
   return (
-    <LoadingWrapper hide={hidden}>
+    <LoadingWrapper $hide={hidden}>
       <LoadingCircle />
       {title && <p style={{ color: ALLBIRDS_GRAY }}>{title}</p>}
     </LoadingWrapper>

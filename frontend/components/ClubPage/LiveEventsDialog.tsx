@@ -101,6 +101,7 @@ const LiveEventsDialog = ({
     <LiveBanner>
       {isPreFair && (
         <Link
+          legacyBehavior
           href={FAIR_OFFICER_GUIDE_ROUTE}
           as={FAIR_OFFICER_GUIDE_ROUTE}
           passHref
@@ -111,11 +112,11 @@ const LiveEventsDialog = ({
         </Link>
       )}
       {isFair && (
-        <Link href={LIVE_EVENTS} as={LIVE_EVENTS} passHref>
+        <Link href={LIVE_EVENTS} as={LIVE_EVENTS} passHref legacyBehavior>
           <WhiteButton>See Live Events</WhiteButton>
         </Link>
       )}
-      <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE} passHref>
+      <Link href={FAIR_INFO_ROUTE} as={FAIR_INFO_ROUTE} passHref legacyBehavior>
         <WhiteButton>Fair Information</WhiteButton>
       </Link>
       <LiveTitle>{fairName}</LiveTitle>

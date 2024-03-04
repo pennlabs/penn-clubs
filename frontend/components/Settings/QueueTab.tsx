@@ -195,8 +195,8 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
 }
 
 const ClubLink = ({ code, name }: Club) => (
-  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
-    <a target="_blank">{name}</a>
+  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} target="_blank">
+    {name}
   </Link>
 )
 const QueueTableHeader = styled.div`

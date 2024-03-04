@@ -31,12 +31,16 @@ const ListRenewalDialog = (): ReactElement => {
           {OBJECT_NAME_SINGULAR} fairs. For a complete list of{' '}
           {OBJECT_NAME_PLURAL}, see{' '}
           <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-            <a>this page</a>
+            this page
           </Link>
           .
         </p>
-        <Link href={USER_RENEWAL} as={USER_RENEWAL}>
-          <a className="button is-info is-light">Renew {OBJECT_NAME_TITLE}</a>
+        <Link
+          href={USER_RENEWAL}
+          as={USER_RENEWAL}
+          className="button is-info is-light"
+        >
+          Renew{OBJECT_NAME_TITLE}
         </Link>
       </div>
     </div>

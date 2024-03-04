@@ -1,18 +1,12 @@
 {
-    "presets": [
-        "next/babel"
-    ],
-    "plugins": [
-        "istanbul"
-    ],
-    "env": {
-        "production": {
-            "plugins": [["styled-components", { "ssr": true }]]
-        },
-        "development": {
-            "plugins": [
-                "babel-plugin-styled-components"
-            ]
-        }
+  "presets": ["next/babel"],
+  "plugins": ["istanbul"],
+  "env": {
+    "production": {
+      "plugins": [["styled-components", { "ssr": true }]]
+    },
+    "development": {
+      "plugins": ["babel-plugin-styled-components"]
     }
+  }
 }

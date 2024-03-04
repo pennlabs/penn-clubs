@@ -4,9 +4,9 @@ Hi there! 👋
 
 Whether you want to upload files to pass down to your next set of board members, or uploading your club's constitution, follow the steps of this guide to be able to store important files right on Penn Clubs! **Please note that this guide will show you how to upload files that are only viewable to your club and Penn Clubs administrators**. If you are looking to upload a presentation or video for potential members to see, please follow the steps of [this guide](https://pennclubs.com/guides/media).
 
-## 👩‍👧‍👦 Getting Officer Access 
+## 👩‍👧‍👦 Getting Officer Access
 
-In order to upload files, you need to be listed as an officer for your club. To check whether or not you have officer status, click your name in the upper-right corner to view the clubs you are listed under. 
+In order to upload files, you need to be listed as an officer for your club. To check whether or not you have officer status, click your name in the upper-right corner to view the clubs you are listed under.
 
 ![Penn Clubs Dashboard Clicking on Profile Name](Dashboard.png)
 
