@@ -4679,7 +4679,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return Response(data)
 
     @action(detail=True, methods=["post"])
-    def send_emails(self, *args, **kwargs):
+    def send_emails(self, request, *args, **kwargs):
         """
         Send out acceptance/rejection emails for a particular application
 
@@ -4704,6 +4704,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                                         type: string
                                     name:
                                         type: string
+                            send_invites:
+                                type: boolean
         responses:
             "200":
                 content:
@@ -4726,6 +4728,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
+        send_invites = self.request.data.get("send_invites")
 
         if not dry_run:
             # Invalidate submission viewset cache
@@ -4743,6 +4746,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         rejection_template = Template(app.rejection_email)
 
         mass_emails = []
+        invites = []
         for submission in submissions:
             if (
                 (not allow_resend and submission.notified)
@@ -4756,6 +4760,15 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 and email_type == "acceptance"
             ):
                 template = acceptance_template
+
+                if send_invites and not dry_run:
+                    # Create a new membership invitation
+                    invite = MembershipInvite.objects.create(
+                        creator=request.user, club=app.club, email=submission.user.email
+                    )
+
+                    invites.append(invite)
+
             elif (
                 email_type == "rejection"
                 and submission.status != ApplicationSubmission.ACCEPTED
@@ -4793,6 +4806,11 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             with mail.get_connection() as conn:
                 conn.send_messages(mass_emails)
             ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
+
+            # Send out membership invites after sending acceptance emails
+            # If send_invites = False, invites is empty at this point
+            for invite in invites:
+                invite.send_mail(request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
         return Response(
