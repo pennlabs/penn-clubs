@@ -4679,7 +4679,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         return Response(data)
 
     @action(detail=True, methods=["post"])
-    def send_emails(self, request, *args, **kwargs):
+    def send_emails(self, *args, **kwargs):
         """
         Send out acceptance/rejection emails for a particular application
 
@@ -4764,7 +4764,9 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 if send_invites and not dry_run:
                     # Create a new membership invitation
                     invite = MembershipInvite.objects.create(
-                        creator=request.user, club=app.club, email=submission.user.email
+                        creator=self.request.user,
+                        club=app.club,
+                        email=submission.user.email,
                     )
 
                     invites.append(invite)
@@ -4810,7 +4812,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             # Send out membership invites after sending acceptance emails
             # If send_invites = False, invites is empty at this point
             for invite in invites:
-                invite.send_mail(request)
+                invite.send_mail(self.request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
         return Response(
