@@ -3,18 +3,18 @@
 [![Build and Deploy](https://github.com/pennlabs/penn-clubs/workflows/Build%20and%20Deploy/badge.svg)](https://github.com/pennlabs/penn-clubs/actions)
 [![Coverage Status](https://codecov.io/gh/pennlabs/penn-clubs/branch/master/graph/badge.svg)](https://codecov.io/gh/pennlabs/penn-clubs)
 
-Official React-based website for Penn Labs' club directory and events listings.
-The REST API written in Django for Penn Clubs infrastructure.
+Official platform for club discovery, recruitment, and events at Penn.
+React/Next.js frontend and Django-based REST API.
 
 ## Installation
 
-You will need to start both the backend and the frontend to do Penn Clubs development.
+You will need to start both the backend and the frontend to develop on Penn Clubs. Clubs supports Mac and Linux/WSL development.
 
-Questions? Check out our [extended guide](https://github.com/pennlabs/penn-clubs/wiki/Development-Guide#windows-development) for FAQs for both Mac and Windows.
+Questions? Check out our [extended guide](https://github.com/pennlabs/penn-clubs/wiki/Development-Guide) for FAQs.
 
 ### Backend
 
-Running the backend requires [Python 3](https://www.python.org/downloads/).
+Running the backend requires [Python 3.11](https://www.python.org/downloads/) and [Pipenv](https://pipenv.pypa.io/en/latest/).
 
 In production, you will need to set the following environment variables:
 
@@ -42,13 +42,13 @@ dependencies, you can revisit later if not)
   - `$ echo 'export PATH="/usr/local/opt/openssl@3/bin:$PATH"' >> ~/.zshrc`
   - `$ export LDFLAGS="-L/usr/local/opt/openssl@3/lib"`
   - `$ export CPPFLAGS="-I/usr/local/opt/openssl@3/include"`
-- Windows
+- Linux/WSL
   - `$ apt-get install gcc python3-dev libpq-dev`
 
 Now, you can run
 
 - `$ pipenv install` to install Python dependencies. This may take a few
-  minutes. Optionally include the `--dev` argument if you are installing locally
+  minutes. Include the `--dev` argument if you are installing locally
   for development. If you skipped installing `psycopg2` earlier, you might see
   an error with locking -- this is expected!
 - `$ pipenv shell`
