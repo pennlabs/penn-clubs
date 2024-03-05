@@ -1776,15 +1776,6 @@ class ApplicationQuestionResponse(models.Model):
         unique_together = (("question", "submission"),)
 
 
-class QuestionResponse(models.Model):
-    """
-    Represents a response to a question on a custom application
-    """
-
-    question = models.ForeignKey(ApplicationQuestion, on_delete=models.CASCADE)
-    response = models.TextField(blank=True)
-
-
 @receiver(models.signals.pre_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:
