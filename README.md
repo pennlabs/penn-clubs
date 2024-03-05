@@ -63,8 +63,8 @@ Now, you can run
 Running the frontend requires [Node.js](https://nodejs.org/en/) and
 [Yarn](https://yarnpkg.com/getting-started/install).
 
-**Please ensure you are using Node 14**. Our codebase does not support other
-versions of Node (v14.21.3 is stable).
+**Please ensure you are using Node 20**. Our codebase does not support other
+versions of Node (v20.11.1 is stable).
 
 You will need to set the following environment variables on the frontend:
 
