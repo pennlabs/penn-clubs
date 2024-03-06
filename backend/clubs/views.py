@@ -4746,7 +4746,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         rejection_template = Template(app.rejection_email)
 
         mass_emails = []
-        invites = []
+        invitee_emails = []
         for submission in submissions:
             if (
                 (not allow_resend and submission.notified)
@@ -4762,14 +4762,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 template = acceptance_template
 
                 if send_invites and not dry_run:
-                    # Create a new membership invitation
-                    invite = MembershipInvite.objects.create(
-                        creator=self.request.user,
-                        club=app.club,
-                        email=submission.user.email,
-                    )
-
-                    invites.append(invite)
+                    invitee_emails.append(submission.user.email)
 
             elif (
                 email_type == "rejection"
@@ -4810,7 +4803,19 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
 
             # Send out membership invites after sending acceptance emails
-            # If send_invites = False, invites is empty at this point
+            invites = [
+                MembershipInvite(
+                    creator=self.request.user,
+                    club=app.club,
+                    email=email,
+                )
+                for email in invitee_emails
+            ]
+
+            # Create all the membership invitations in the database
+            MembershipInvite.objects.bulk_create(invites)
+
+            # If send_invites = False, invites would be empty at this point
             for invite in invites:
                 invite.send_mail(self.request)
 
