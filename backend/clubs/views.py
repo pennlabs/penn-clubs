@@ -1663,7 +1663,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def constitutions(self, request, *args, **kwargs):
         """
-        A special endpoint for SAC affilaited clubs to check if
+        A special endpoint for SAC affiliated clubs to check if
         they have uploaded a club constitution.
         ---
         operationId: List Club Constitutions

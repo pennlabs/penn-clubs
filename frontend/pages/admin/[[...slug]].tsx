@@ -12,7 +12,7 @@ import { useRouter } from 'next/router'
 import React, { ReactElement } from 'react'
 import renderPage from 'renderPage'
 import { Badge, ClubFair, Report, Tag } from 'types'
-import { doBulkLookup } from 'utils'
+import { apiCheckPermission, doBulkLookup } from 'utils'
 
 import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
 
@@ -27,7 +27,10 @@ function AdminPage({
 }): ReactElement {
   if (!userInfo) {
     return <AuthPrompt />
-  } else if (!userInfo.is_superuser) {
+  } else if (
+    !apiCheckPermission(['clubs.approve_club', 'clubs.generate_reports']) &&
+    !userInfo.is_superuser
+  ) {
     return (
       <AuthPrompt title="Whoops!" hasLogin={false}>
         Admin permissions are required to access this page.
