@@ -4761,7 +4761,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             ):
                 template = acceptance_template
 
-                if send_invites and not dry_run:
+                if send_invites:
                     invitee_emails.append(submission.user.email)
 
             elif (
