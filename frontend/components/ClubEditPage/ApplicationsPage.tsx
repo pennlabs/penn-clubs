@@ -213,7 +213,7 @@ const NotificationModal = (props: {
   updateSubmissions: (arr: Array<ApplicationSubmission>) => void
 }): ReactElement => {
   const { submissions, club, application, updateSubmissions } = props
-  const initialValues = { dry_run: true }
+  const initialValues = { dry_run: true, send_invites: false, email_type: '' }
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement | null
   >(null)
@@ -281,6 +281,15 @@ const NotificationModal = (props: {
               label="Dry Run"
               helpText="If selected, will return the number of emails the script would have sent out"
             />
+            {props.values.email_type.id === 'acceptance' && (
+              <Field
+                name="send_invites"
+                as={CheckboxField}
+                label="Send Invites"
+                helpText="Uncheck Dry Run to enable. If selected, will send out invites to all accepted applicants"
+                disabled={props.values.dry_run} // disable if dry_run is checked
+              />
+            )}
             <Field
               name="allow_resend"
               as={CheckboxField}
