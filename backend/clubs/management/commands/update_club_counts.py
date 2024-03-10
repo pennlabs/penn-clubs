@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Count, Q
+from django.db.models import Count, OuterRef, Q, Subquery
 
 from clubs.models import Club
 
@@ -9,17 +9,23 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         try:
-            queryset = Club.objects.all().annotate(
-                temp_favorite_count=Count("favorite", distinct=True),
-                temp_membership_count=Count(
-                    "membership", distinct=True, filter=Q(active=True)
-                ),
+            favorite_count_subquery = (
+                Club.objects.filter(pk=OuterRef("pk"))
+                .annotate(count=Count("favorite", distinct=True))
+                .values("count")
+            )
+            membership_count_subquery = (
+                Club.objects.filter(pk=OuterRef("pk"))
+                .annotate(
+                    count=Count("membership", distinct=True, filter=Q(active=True))
+                )
+                .values("count")
             )
 
-            for club in queryset:
-                club.favorite_count = club.temp_favorite_count
-                club.membership_count = club.temp_membership_count
-            Club.objects.bulk_update(queryset, ["favorite_count", "membership_count"])
+            Club.objects.update(
+                favorite_count=Subquery(favorite_count_subquery),
+                membership_count=Subquery(membership_count_subquery),
+            )
 
             self.stdout.write(
                 self.style.SUCCESS(
