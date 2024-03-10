@@ -613,11 +613,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         ---
         """
         now = timezone.now()
-        start_time = now - datetime.timedelta(minutes=2)
-        end_time = now + datetime.timedelta(minutes=2)
         fair = ClubFair.objects.filter(
-            start_time__lte=start_time,
-            end_time__gte=end_time,
+            start_time__lte=now + datetime.timedelta(minutes=2),
+            end_time__gte=now - datetime.timedelta(minutes=2),
         ).first()
         if fair is None:
             return Response([])
@@ -5512,27 +5510,25 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         ---
         """
         submissions = self.request.data.get("submissions", [])
-        pks = list(map(lambda x: x["id"], submissions))
-        reasons = list(map(lambda x: x["reason"], submissions))
+        pks = [submission["id"] for submission in submissions]
+        reasons = {submission["id"]: submission["reason"] for submission in submissions}
 
         submission_objs = ApplicationSubmission.objects.filter(pk__in=pks)
 
         # Invalidate submission viewset cache
-        app_id = (
-            submission_objs.first().application.id if submission_objs.first() else None
-        )
-        if not app_id:
+        if (
+            not submission_objs.exists()
+            or submission_objs.first().application.id is None
+        ):
             return Response({"detail": "No submissions found"})
+        app_id = submission_objs.first().application.id
         key = f"applicationsubmissions:{app_id}"
         cache.delete(key)
 
-        for idx, pk in enumerate(pks):
-            obj = submission_objs.filter(pk=pk).first()
-            if obj:
-                obj.reason = reasons[idx]
-                obj.save()
-            else:
-                return Response({"detail": "Object not found"})
+        # Update reasons in a single query
+        for submission in submission_objs:
+            submission.reason = reasons[submission.pk]
+        ApplicationSubmission.objects.bulk_update(submission_objs, ["reason"])
 
         return Response({"detail": "Successfully updated submissions' reasons"})
 
