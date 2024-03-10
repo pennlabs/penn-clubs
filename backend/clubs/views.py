@@ -322,141 +322,143 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
     If model is not a Club, expects the model to have a club foreign key to Club.
     """
 
+    def parse_year(self, field, value, operation, queryset):
+        if value.isdigit():
+            suffix = ""
+            if operation in {"lt", "gt", "lte", "gte"}:
+                suffix = f"__{operation}"
+            return {f"{field}__year{suffix}": int(value)}
+        if value.lower() in {"none", "null"}:
+            return {f"{field}__isnull": True}
+        return {}
+
+    def parse_int(self, field, value, operation, queryset):
+        if operation == "in":
+            values = value.strip().split(",")
+            sizes = [int(size) for size in values if size]
+            return {f"{field}__in": sizes}
+
+        if "," in value:
+            values = [int(x.strip()) for x in value.split(",") if x]
+            if operation == "and":
+                for value in values:
+                    queryset = queryset.filter(**{field: value})
+                return queryset
+            return {f"{field}__in": values}
+
+        if value.isdigit():
+            suffix = ""
+            if operation in {"lt", "gt", "lte", "gte"}:
+                suffix = f"__{operation}"
+            return {f"{field}{suffix}": int(value)}
+        if value.lower() in {"none", "null"}:
+            return {f"{field}__isnull": True}
+        return {}
+
+    def parse_many_to_many(self, label, field, value, operation, queryset):
+        tags = value.strip().split(",")
+        if operation == "or":
+            if tags[0].isdigit():
+                tags = [int(tag) for tag in tags if tag]
+                return {f"{field}__id__in": tags}
+            else:
+                return {f"{field}__{label}__in": tags}
+
+        if tags[0].isdigit() or operation == "id":
+            tags = [int(tag) for tag in tags if tag]
+            if settings.BRANDING == "fyh":
+                queryset = queryset.filter(**{f"{field}__id__in": tags})
+            else:
+                queryset = queryset.filter(**{f"{field}__id__in": tags})
+                for tag in tags:
+                    queryset = queryset.filter(**{f"{field}__id": tag})
+        else:
+            for tag in tags:
+                queryset = queryset.filter(**{f"{field}__{label}": tag})
+
+        return queryset
+
+    def parse_badges(self, field, value, operation, queryset):
+        return self.parse_many_to_many("label", field, value, operation, queryset)
+
+    def parse_tags(self, field, value, operation, queryset):
+        return self.parse_many_to_many("name", field, value, operation, queryset)
+
+    def parse_boolean(self, field, value, operation, queryset):
+        value = value.strip().lower()
+
+        if operation == "in":
+            if set(value.split(",")) == {"true", "false"}:
+                return
+
+        if value in {"true", "yes"}:
+            boolval = True
+        elif value in {"false", "no"}:
+            boolval = False
+        elif value in {"null", "none"}:
+            boolval = None
+        else:
+            return
+
+        if boolval is None:
+            return {f"{field}__isnull": True}
+
+        return {f"{field}": boolval}
+
+    def parse_string(self, field, value, operation, queryset):
+        if operation == "in":
+            values = [x.strip() for x in value.split(",")]
+            values = [x for x in values if x]
+            return {f"{field}__in": values}
+        return {f"{field}": value}
+
+    def parse_datetime(self, field, value, operation, queryset):
+        try:
+            value = parse(value.strip())
+        except (ValueError, OverflowError):
+            return
+
+        if operation in {"gt", "lt", "gte", "lte"}:
+            return {f"{field}__{operation}": value}
+        return
+
+    def parse_fair(self, field, value, operation, queryset):
+        try:
+            value = int(value.strip())
+        except ValueError:
+            return
+
+        fair = ClubFair.objects.filter(id=value).first()
+        if fair:
+            return {
+                "start_time__gte": fair.start_time,
+                "end_time__lte": fair.end_time,
+            }
+
     def filter_queryset(self, request, queryset, view):
         params = request.GET.dict()
 
-        def parse_year(field, value, operation, queryset):
-            if value.isdigit():
-                suffix = ""
-                if operation in {"lt", "gt", "lte", "gte"}:
-                    suffix = f"__{operation}"
-                return {f"{field}__year{suffix}": int(value)}
-            if value.lower() in {"none", "null"}:
-                return {f"{field}__isnull": True}
-            return {}
-
-        def parse_int(field, value, operation, queryset):
-            if operation == "in":
-                values = value.strip().split(",")
-                sizes = [int(size) for size in values if size]
-                return {f"{field}__in": sizes}
-
-            if "," in value:
-                values = [int(x.strip()) for x in value.split(",") if x]
-                if operation == "and":
-                    for value in values:
-                        queryset = queryset.filter(**{field: value})
-                    return queryset
-                return {f"{field}__in": values}
-
-            if value.isdigit():
-                suffix = ""
-                if operation in {"lt", "gt", "lte", "gte"}:
-                    suffix = f"__{operation}"
-                return {f"{field}{suffix}": int(value)}
-            if value.lower() in {"none", "null"}:
-                return {f"{field}__isnull": True}
-            return {}
-
-        def parse_many_to_many(label, field, value, operation, queryset):
-            tags = value.strip().split(",")
-            if operation == "or":
-                if tags[0].isdigit():
-                    tags = [int(tag) for tag in tags if tag]
-                    return {f"{field}__id__in": tags}
-                else:
-                    return {f"{field}__{label}__in": tags}
-
-            if tags[0].isdigit() or operation == "id":
-                tags = [int(tag) for tag in tags if tag]
-                if settings.BRANDING == "fyh":
-                    queryset = queryset.filter(**{f"{field}__id__in": tags})
-                else:
-                    for tag in tags:
-                        queryset = queryset.filter(**{f"{field}__id": tag})
-            else:
-                for tag in tags:
-                    queryset = queryset.filter(**{f"{field}__{label}": tag})
-            return queryset
-
-        def parse_badges(field, value, operation, queryset):
-            return parse_many_to_many("label", field, value, operation, queryset)
-
-        def parse_tags(field, value, operation, queryset):
-            return parse_many_to_many("name", field, value, operation, queryset)
-
-        def parse_boolean(field, value, operation, queryset):
-            value = value.strip().lower()
-
-            if operation == "in":
-                if set(value.split(",")) == {"true", "false"}:
-                    return
-
-            if value in {"true", "yes"}:
-                boolval = True
-            elif value in {"false", "no"}:
-                boolval = False
-            elif value in {"null", "none"}:
-                boolval = None
-            else:
-                return
-
-            if boolval is None:
-                return {f"{field}__isnull": True}
-
-            return {f"{field}": boolval}
-
-        def parse_string(field, value, operation, queryset):
-            if operation == "in":
-                values = [x.strip() for x in value.split(",")]
-                values = [x for x in values if x]
-                return {f"{field}__in": values}
-            return {f"{field}": value}
-
-        def parse_datetime(field, value, operation, queryset):
-            try:
-                value = parse(value.strip())
-            except (ValueError, OverflowError):
-                return
-
-            if operation in {"gt", "lt", "gte", "lte"}:
-                return {f"{field}__{operation}": value}
-            return
-
         fields = {
-            "accepting_members": parse_boolean,
-            "active": parse_boolean,
-            "application_required": parse_int,
-            "appointment_needed": parse_boolean,
-            "approved": parse_boolean,
-            "available_virtually": parse_boolean,
-            "badges": parse_badges,
-            "code": parse_string,
-            "enables_subscription": parse_boolean,
-            "favorite_count": parse_int,
-            "founded": parse_year,
-            "recruiting_cycle": parse_int,
-            "size": parse_int,
-            "tags": parse_tags,
-            "target_majors": parse_tags,
-            "target_schools": parse_tags,
-            "target_years": parse_tags,
-            "target_students": parse_tags,
-            "student_types": parse_tags,
+            "accepting_members": self.parse_boolean,
+            "active": self.parse_boolean,
+            "application_required": self.parse_int,
+            "appointment_needed": self.parse_boolean,
+            "approved": self.parse_boolean,
+            "available_virtually": self.parse_boolean,
+            "badges": self.parse_badges,
+            "code": self.parse_string,
+            "enables_subscription": self.parse_boolean,
+            "favorite_count": self.parse_int,
+            "founded": self.parse_year,
+            "recruiting_cycle": self.parse_int,
+            "size": self.parse_int,
+            "tags": self.parse_tags,
+            "target_majors": self.parse_tags,
+            "target_schools": self.parse_tags,
+            "target_years": self.parse_tags,
+            "target_students": self.parse_tags,
+            "student_types": self.parse_tags,
         }
-
-        def parse_fair(field, value, operation, queryset):
-            try:
-                value = int(value.strip())
-            except ValueError:
-                return
-
-            fair = ClubFair.objects.filter(id=value).first()
-            if fair:
-                return {
-                    "start_time__gte": fair.start_time,
-                    "end_time__lte": fair.end_time,
-                }
 
         if not queryset.model == Club:
             fields = {f"club__{k}": v for k, v in fields.items()}
@@ -464,10 +466,10 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
         if queryset.model == Event:
             fields.update(
                 {
-                    "type": parse_int,
-                    "start_time": parse_datetime,
-                    "end_time": parse_datetime,
-                    "fair": parse_fair,
+                    "type": self.parse_int,
+                    "start_time": self.parse_datetime,
+                    "end_time": self.parse_datetime,
+                    "fair": self.parse_fair,
                 }
             )
 
@@ -1020,7 +1022,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Club.objects.all().prefetch_related("tags").order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
-    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
+
+    haha = ClubsSearchFilter()
+    filter_backends = [filters.SearchFilter, haha, ClubsOrderingFilter]
     search_fields = ["name", "subtitle", "code", "terms"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "featured"
