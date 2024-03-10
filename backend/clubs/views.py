@@ -613,9 +613,11 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         ---
         """
         now = timezone.now()
+        start_time = now - datetime.timedelta(minutes=2)
+        end_time = now + datetime.timedelta(minutes=2)
         fair = ClubFair.objects.filter(
-            start_time__lte=now + datetime.timedelta(minutes=2),
-            end_time__gte=now - datetime.timedelta(minutes=2),
+            start_time__lte=start_time,
+            end_time__gte=end_time,
         ).first()
         if fair is None:
             return Response([])
@@ -1023,8 +1025,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     )
     permission_classes = [ClubPermission | IsSuperuser]
 
-    haha = ClubsSearchFilter()
-    filter_backends = [filters.SearchFilter, haha, ClubsOrderingFilter]
+    filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "subtitle", "code", "terms"]
     ordering_fields = ["favorite_count", "name"]
     ordering = "featured"
