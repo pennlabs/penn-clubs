@@ -171,7 +171,7 @@ const ApplicationPage = ({
               <b>
                 Due:{' '}
                 {moment(application.application_end_time).format(
-                  'dddd, MMMM D, YYYY [at] h:mm A',
+                  'dddd, MMMM D, YYYY [at] h:mm A [ET]',
                 )}
               </b>
             </small>
