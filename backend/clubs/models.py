@@ -840,9 +840,8 @@ class ClubFair(models.Model):
             "code", flat=True
         )
 
-        new_events = []
-
         # Create new events in bulk
+        new_events = []
         for club in club_query:
             event_code = f"fair-{club.code}-{self.id}-{suffix}"
             if event_code not in existing_events:
@@ -856,7 +855,6 @@ class ClubFair(models.Model):
                         end_time=end_time,
                     )
                 )
-
         Event.objects.bulk_create(new_events)
 
         # Return all event objects
