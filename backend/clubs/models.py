@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Sum
 from django.dispatch import receiver
 from django.template.loader import render_to_string
@@ -833,21 +833,35 @@ class ClubFair(models.Model):
         club_query = self.participating_clubs.all()
         if filter is not None:
             club_query = club_query.filter(filter)
-        events = []
-        with transaction.atomic():
-            for club in club_query:
-                obj, _ = Event.objects.get_or_create(
-                    code=f"fair-{club.code}-{self.id}-{suffix}",
-                    club=club,
-                    type=Event.FAIR,
-                    defaults={
-                        "name": self.name,
-                        "start_time": start_time,
-                        "end_time": end_time,
-                    },
+
+        # Find events that already exist
+        event_codes = [f"fair-{club.code}-{self.id}-{suffix}" for club in club_query]
+        existing_events = Event.objects.filter(code__in=event_codes).values_list(
+            "code", flat=True
+        )
+
+        new_events = []
+
+        # Create new events in bulk
+        for club in club_query:
+            event_code = f"fair-{club.code}-{self.id}-{suffix}"
+            if event_code not in existing_events:
+                new_events.append(
+                    Event(
+                        code=event_code,
+                        club=club,
+                        type=Event.FAIR,
+                        name=self.name,
+                        start_time=start_time,
+                        end_time=end_time,
+                    )
                 )
-                events.append(obj)
-        return events
+
+        Event.objects.bulk_create(new_events)
+
+        # Return all event objects
+        events = Event.objects.filter(code__in=event_codes)
+        return list(events)
 
     def __str__(self):
         fmt = "%b %d, %Y"
