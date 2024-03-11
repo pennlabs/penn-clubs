@@ -5516,7 +5516,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         submission_objs = ApplicationSubmission.objects.filter(pk__in=pks)
 
         # Invalidate submission viewset cache
-        if submission_objs.exists():
+        if not submission_objs.exists():
             return Response({"detail": "No submissions found"})
         app_id = submission_objs.first().application.id
         key = f"applicationsubmissions:{app_id}"
