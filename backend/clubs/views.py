@@ -5452,28 +5452,29 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         submission_pks = self.request.data.get("submissions", [])
         status = self.request.data.get("status", None)
-        if len(submission_pks) > 0 and status in [
+
+        if len(submission_pks) == 0 or status not in [
             status_type[0] for status_type in ApplicationSubmission.STATUS_TYPES
         ]:
-            submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
-            if not submissions.exists():
-                return Response({"detail": "No submissions found"})
-
-            # Invalidate submission viewset cache
-            app_id = submissions.first().application.id
-            key = f"applicationsubmissions:{app_id}"
-            cache.delete(key)
-
-            submissions.update(status=status)
-
-            return Response(
-                {
-                    "detail": f"Successfully updated submissions' {submission_pks}"
-                    f"status {status}"
-                }
-            )
-        else:
             return Response({"detail": "Invalid request"})
+
+        submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
+        if not submissions.exists():
+            return Response({"detail": "No submissions found"})
+
+        # Invalidate submission viewset cache
+        app_id = submissions.first().application.id
+        key = f"applicationsubmissions:{app_id}"
+        cache.delete(key)
+
+        submissions.update(status=status)
+
+        return Response(
+            {
+                "detail": f"Successfully updated submissions' {submission_pks} "
+                f"status to {status}"
+            }
+        )
 
     @action(detail=False, methods=["post"])
     def reason(self, *args, **kwargs):
