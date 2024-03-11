@@ -5453,14 +5453,15 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         submission_pks = self.request.data.get("submissions", [])
         status = self.request.data.get("status", None)
         if (
-            status in map(lambda x: x[0], ApplicationSubmission.STATUS_TYPES)
+            status
+            in [status_type[0] for status_type in ApplicationSubmission.STATUS_TYPES]
             and len(submission_pks) > 0
         ):
             # Invalidate submission viewset cache
             submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
-            app_id = submissions.first().application.id if submissions.first() else None
-            if not app_id:
+            if not submissions.exists():
                 return Response({"detail": "No submissions found"})
+            app_id = submissions.first().application.id
             key = f"applicationsubmissions:{app_id}"
             cache.delete(key)
 
