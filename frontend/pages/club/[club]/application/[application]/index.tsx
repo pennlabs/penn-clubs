@@ -170,8 +170,10 @@ const ApplicationPage = ({
             <small className="is-block mt-2">
               <b>
                 Due:{' '}
-                {moment(application.application_end_time).format('dddd, MMMM D, YYYY [at] h:mm A')}
-                </b>
+                {moment(application.application_end_time).format(
+                  'dddd, MMMM D, YYYY [at] h:mm A',
+                )}
+              </b>
             </small>
           )}
         <hr />
