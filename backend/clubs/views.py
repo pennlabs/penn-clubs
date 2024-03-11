@@ -5452,15 +5452,14 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         submission_pks = self.request.data.get("submissions", [])
         status = self.request.data.get("status", None)
-        if (
-            status
-            in [status_type[0] for status_type in ApplicationSubmission.STATUS_TYPES]
-            and len(submission_pks) > 0
-        ):
-            # Invalidate submission viewset cache
+        if len(submission_pks) > 0 and status in [
+            status_type[0] for status_type in ApplicationSubmission.STATUS_TYPES
+        ]:
             submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
             if not submissions.exists():
                 return Response({"detail": "No submissions found"})
+
+            # Invalidate submission viewset cache
             app_id = submissions.first().application.id
             key = f"applicationsubmissions:{app_id}"
             cache.delete(key)
@@ -5524,7 +5523,6 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         key = f"applicationsubmissions:{app_id}"
         cache.delete(key)
 
-        # Update reasons in a single query
         for submission in submission_objs:
             submission.reason = reasons[submission.pk]
         ApplicationSubmission.objects.bulk_update(submission_objs, ["reason"])
