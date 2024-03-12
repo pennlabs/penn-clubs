@@ -2985,16 +2985,13 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         """
         If a membership request object already exists, reuse it.
         """
-        club = request.data.get("club", None)
-        obj = MembershipRequest.objects.filter(
-            club__code=club, person=request.user
-        ).first()
-        if obj is not None:
-            obj.withdrew = False
-            obj.save(update_fields=["withdrew"])
-            return Response(UserMembershipRequestSerializer(obj).data)
-
-        return super().create(request, *args, **kwargs)
+        club_code = request.data.get("club", None)
+        obj, _ = MembershipRequest.objects.update_or_create(
+            club__code=club_code,
+            person=request.user,
+            defaults={"withdrew": False},
+        )
+        return Response(UserMembershipRequestSerializer(obj).data)
 
     def destroy(self, request, *args, **kwargs):
         """
