@@ -4902,36 +4902,36 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         """
         Updates times for all applications with cycle
         """
-        applications = ClubApplication.objects.filter(
-            application_cycle=self.get_object()
-        )
-        str_start_date = self.request.data.get("start_date").replace("T", " ")
-        str_end_date = self.request.data.get("end_date").replace("T", " ")
-        str_release_date = self.request.data.get("release_date").replace("T", " ")
+        cycle = self.get_object()
+        applications = ClubApplication.objects.filter(application_cycle=cycle)
+
+        new_start = self.request.data.get("start_date").replace("T", " ")
+        new_end = self.request.data.get("end_date").replace("T", " ")
+        new_release = self.request.data.get("release_date").replace("T", " ")
+
         time_format = "%Y-%m-%d %H:%M:%S%z"
         start = (
-            datetime.datetime.strptime(str_start_date, time_format)
-            if str_start_date
-            else self.get_object().start_date
+            datetime.datetime.strptime(new_start, time_format)
+            if new_start
+            else cycle.start_date
         )
         end = (
-            datetime.datetime.strptime(str_end_date, time_format)
-            if str_end_date
-            else self.get_object().end_date
+            datetime.datetime.strptime(new_end, time_format)
+            if new_end
+            else cycle.end_date
         )
         release = (
-            datetime.datetime.strptime(str_release_date, time_format)
-            if str_release_date
-            else self.get_object().release_date
+            datetime.datetime.strptime(new_release, time_format)
+            if new_release
+            else cycle.release_date
         )
-        for app in applications:
-            app.application_start_time = start
-            if app.application_end_time_exception:
-                continue
-            app.application_end_time = end
-            app.result_release_time = release
-        f = ["application_start_time", "application_end_time", "result_release_time"]
-        ClubApplication.objects.bulk_update(applications, f)
+
+        applications.update(application_start_time=start)
+        # Exclude applications with an extension from end & release update
+        applications.filter(application_end_time_exception=False).update(
+            application_end_time=end, result_release_time=release
+        )
+
         return super().update(*args, **kwargs)
 
     @action(detail=True, methods=["GET"])
