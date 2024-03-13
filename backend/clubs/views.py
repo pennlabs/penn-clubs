@@ -190,19 +190,20 @@ from clubs.utils import fuzzy_lookup_club, html_to_text
 
 
 def file_upload_endpoint_helper(request, code):
-    obj = get_object_or_404(Club, code=code)
-    if "file" in request.data and isinstance(request.data["file"], UploadedFile):
-        asset = Asset.objects.create(
-            creator=request.user,
-            club=obj,
-            file=request.data["file"],
-            name=request.data["file"].name,
-        )
-    else:
+    club = get_object_or_404(Club, code=code)
+
+    if "file" not in request.data or not isinstance(request.data["file"], UploadedFile):
         return Response(
             {"detail": "No image file was uploaded!"},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    asset = Asset.objects.create(
+        creator=request.user,
+        club=club,
+        file=request.data["file"],
+        name=request.data["file"].name,
+    )
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
 
