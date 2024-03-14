@@ -543,6 +543,7 @@ class ClubsOrderingFilter(RandomOrderingFilter):
         if "featured" in ordering:
             if queryset.model == Club:
                 return queryset.order_by("-rank", "-favorite_count", "-id")
+
             return queryset.order_by(
                 "-club__rank", "-club__favorite_count", "-club__id"
             )
@@ -618,10 +619,11 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             start_time__lte=now + datetime.timedelta(minutes=2),
             end_time__gte=now - datetime.timedelta(minutes=2),
         ).first()
+
         if fair is None:
             return Response([])
-        else:
-            return Response([ClubFairSerializer(instance=fair).data])
+
+        return Response([ClubFairSerializer(instance=fair).data])
 
     @action(detail=True, methods=["get"])
     def live(self, *args, **kwargs):
