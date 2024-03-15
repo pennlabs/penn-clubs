@@ -11493,10 +11493,10 @@ react-motion@^0.5.2:
     prop-types "^15.5.8"
     raf "^3.1.0"
 
-react-multi-carousel@2.5.5:
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/react-multi-carousel/-/react-multi-carousel-2.5.5.tgz#f83aa1bd39d64ebbda08f724590ebe8994559fcd"
-  integrity sha512-yjRNA3KypwJHDQba1XUz1cVrcejZ9c+4cdY3ODPBj/FMVT+Vj7bE3V4wkWiHRzeYNzhaf902/pbO3cP2e9261A==
+react-multi-carousel@2.2.5:
+  version "2.2.5"
+  resolved "https://registry.yarnpkg.com/react-multi-carousel/-/react-multi-carousel-2.2.5.tgz#ba566ee96a8dad8119985220d5d675d1744fedfa"
+  integrity sha512-d7cUoWylHq9iQzabU9hUkVlb8/osvm2zKFZ8gFKznRG4YE8oL1m395ufukely7mJhadNF6oIw5E2GzoT9KOpvw==
 
 react-onclickoutside@^6.10.0:
   version "6.10.0"

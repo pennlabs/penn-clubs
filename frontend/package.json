@@ -43,7 +43,7 @@
     "react-ga": "^3.2.0",
     "react-lazy-load": "^3.1.13",
     "react-linkify": "^1.0.0-alpha",
-    "react-multi-carousel": "2.5.5",
+    "react-multi-carousel": "2.2.5",
     "react-places-autocomplete": "^7.3.0",
     "react-select": "^4.0.2",
     "react-table": "^7.6.3",

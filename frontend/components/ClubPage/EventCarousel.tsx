@@ -44,13 +44,16 @@ const CarouselWrapper = styled.div`
 `
 const EventWrapper = styled.div`
   @media only screen and (max-width: 580px) {
-    margin: 15px;
+    margin: 25px;
   }
-  @media only screen and (min-width: 580px, max-width: 1200px) {
+  @media only screen and (min-width: 580px) and (max-width: 900px) {
     margin: 8px;
   }
-  @media only screen and (min-width: 1200px) {
-    margin: 3px;
+  @media only screen and (min-width: 900px) and (max-width: 1400px) {
+    margin: 12px;
+  }
+  @media only screen and (min-width: 1400px) {
+    margin: 5px;
   }
 `
 
@@ -105,7 +108,6 @@ const EventCarousel = ({ data }: EventsProps): ReactElement | null => {
               responsive={responsive}
               showDots={false}
               draggable={true}
-              renderButtonGroupOutside={true}
               customLeftArrow={
                 <LeftArrow>
                   <Icon name="chevron-left" size={'2.2rem'} />
