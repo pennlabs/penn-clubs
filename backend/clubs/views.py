@@ -6150,11 +6150,8 @@ def email_preview(request):
 
 class ClubRankViewSet(viewsets.ModelViewSet):
     """
-    retrieve:
-    Return a single club with all information fields present.
-
     list:
-    Return a list of clubs with partial information for each club.
+    Return a list of clubs with their ranks.
     """
 
     queryset = Club.objects.all().order_by("-elo")
@@ -6163,7 +6160,7 @@ class ClubRankViewSet(viewsets.ModelViewSet):
     search_fields = ["name", "subtitle", "code", "terms"]
     serializer_class = ClubListRankSerializer
     lookup_field = "code"
-    http_method_names = ["get", "post", "put", "patch", "delete"]
+    http_method_names = ["get", "post"]
     pagination_class = RandomPageNumberPagination
 
     def get_queryset(self):
@@ -6215,12 +6212,25 @@ class ClubRankViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
+    def get_operation_id(self, **kwargs):
+        if kwargs.get("action") == "list":
+            return "List Ranked Clubs"
+        elif kwargs.get("action") == "retrieve":
+            return "Retrieve Ranked Club"
+        elif kwargs.get("action") == "create":
+            return "Create a Ranked Club (not allowed)"
+
+    def create(self, request):
+        return Response(
+            {"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
     @action(detail=False, methods=["get"])
     def get_match(self, *args, **kwargs):
-        # Docstring is wrong but this is an April Fool's joke lol
         """
         Pull two random (eligible) clubs for a match.
         ---
+        requestBody: {}
         responses:
             "200":
                 content:
@@ -6233,6 +6243,7 @@ class ClubRankViewSet(viewsets.ModelViewSet):
                                 club2:
                                     type: string
         """
+        # Docstring is wrong but this is an April Fool's joke lol
         person = self.request.user
         if not person.is_authenticated:
             return Response(
