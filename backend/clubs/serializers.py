@@ -1228,7 +1228,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    elo = serializers.FloatField()
+    elo = serializers.FloatField(required=False)
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
