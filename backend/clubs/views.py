@@ -40,8 +40,9 @@ from django.db.models import (
     TextField,
     Value,
     When,
+    Window,
 )
-from django.db.models.functions import SHA1, Concat, Lower, Trunc
+from django.db.models.functions import SHA1, Concat, Lower, Rank, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -51,6 +52,7 @@ from django.utils.decorators import method_decorator
 from django.utils.text import slugify
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_cookie
+from elosports.elo import Elo
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics.grammar import parse as ICSParse
@@ -93,6 +95,7 @@ from clubs.models import (
     MembershipInvite,
     MembershipRequest,
     Note,
+    Profile,
     QuestionAnswer,
     RecurringEvent,
     Report,
@@ -144,6 +147,7 @@ from clubs.serializers import (
     ClubBoothSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
+    ClubListRankSerializer,
     ClubListSerializer,
     ClubMembershipSerializer,
     ClubMinimalSerializer,
@@ -1039,16 +1043,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         if self.action in {"list", "retrieve"}:
             queryset = queryset.prefetch_related(
-                Prefetch(
-                    "favorite_set",
-                    queryset=Favorite.objects.filter(person=person),
-                    to_attr="user_favorite_set",
-                ),
-                Prefetch(
-                    "subscribe_set",
-                    queryset=Subscribe.objects.filter(person=person),
-                    to_attr="user_subscribe_set",
-                ),
                 Prefetch(
                     "membership_set",
                     queryset=Membership.objects.filter(person=person),
@@ -6152,3 +6146,166 @@ def email_preview(request):
             "variables": json.dumps(initial_context, indent=4),
         },
     )
+
+
+class ClubRankViewSet(viewsets.ModelViewSet):
+    """
+    retrieve:
+    Return a single club with all information fields present.
+
+    list:
+    Return a list of clubs with partial information for each club.
+    """
+
+    queryset = Club.objects.all().order_by("-elo")
+    permission_classes = [ClubPermission | IsSuperuser]
+    filter_backends = [filters.SearchFilter, ClubsSearchFilter]
+    search_fields = ["name", "subtitle", "code", "terms"]
+    serializer_class = ClubListRankSerializer
+    lookup_field = "code"
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+    pagination_class = RandomPageNumberPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # additional prefetch optimizations
+        person = self.request.user
+        if not person.is_authenticated:
+            person = None
+
+        # select subset of clubs if requested
+        subset = self.request.query_params.get("in", None)
+        if subset:
+            subset = [x.strip() for x in subset.strip().split(",")]
+            queryset = queryset.filter(code__in=subset)
+
+        # filter out archived clubs
+        queryset = queryset.filter(archived=False)
+
+        # filter by minimum member count
+        queryset = queryset.filter(membership_count__gte=0)
+
+        # filter by approved clubs
+        queryset = queryset.filter(Q(approved=True) | Q(ghost=True))
+
+        # Annotate each club with its rank based on elo
+        ranked_queryset = queryset.annotate(
+            rank_elo=Window(expression=Rank(), order_by=F("elo").desc())
+        )
+
+        # Annotate the "tier" field based on the rank
+        queryset_with_tier = ranked_queryset.annotate(
+            tier=Case(
+                When(rank_elo__lte=3, then=Value("S")),
+                When(rank_elo__lte=8, then=Value("A")),
+                When(rank_elo__lte=13, then=Value("B")),
+                When(rank_elo__lte=18, then=Value("C")),
+                When(rank_elo__lte=23, then=Value("D")),
+                When(rank_elo__lte=28, then=Value("E")),
+                When(rank_elo__lte=33, then=Value("F")),
+                default=Value(""),
+                output_field=CharField(),
+            ),
+            elo_rank=F("rank_elo"),
+        )
+
+        return queryset_with_tier
+
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=["get"])
+    def get_match(self, *args, **kwargs):
+        # Docstring is wrong but this is an April Fool's joke lol
+        """
+        Pull two random (eligible) clubs for a match.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                club1:
+                                    type: string
+                                club2:
+                                    type: string
+        """
+        person = self.request.user
+        if not person.is_authenticated:
+            return Response(
+                {"success": False, "message": "You must be logged in to rank clubs."}
+            )
+        # Select two random clubs from queryset
+        queryset = self.get_queryset()
+        ordering = queryset.order_by("?")
+        club1 = ordering.first()
+        club2 = ordering.exclude(code=club1.code).first()
+        serializer = self.get_serializer([club1, club2], many=True)
+
+        return Response({"club1": serializer.data[0], "club2": serializer.data[1]})
+
+    @action(detail=False, methods=["post"])
+    def rank(self, *args, **kwargs):
+        """
+        Submit match for two clubs.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: Whether or not match was recorded.
+                                message:
+                                    type: string
+                                    description: A success or error message.
+        ---
+        """
+        person = self.request.user
+        if not person.is_authenticated:
+            return Response(
+                {"success": False, "message": "You must be logged in to rank clubs."}
+            )
+        profile = Profile.objects.get(user=person)
+        # Check if time since vote is more than 3 seconds ago.
+        time_since_vote = profile.time_since_vote
+        if (
+            time_since_vote
+            and time_since_vote + datetime.timedelta(seconds=3) > timezone.now()
+        ):
+            return Response(
+                {
+                    "success": False,
+                    "message": "You must wait 3 seconds between votes.",
+                }
+            )
+        club1 = self.request.query_params.get("club1")
+        club2 = self.request.query_params.get("club2")
+        if not club1 or not club2:
+            return Response({"success": False, "message": "Missing club1 or club2"})
+        club1 = Club.objects.get(code=club1)
+        club2 = Club.objects.get(code=club2)
+        if club1 == club2:
+            return Response(
+                {"success": False, "message": "Club1 and Club2 cannot be the same"}
+            )
+        profile.time_since_vote = timezone.now()
+        profile.save()
+        eloLeague = Elo(k=10, homefield=0)
+        eloLeague.addPlayer(club1.code, club1.elo)
+        eloLeague.addPlayer(club2.code, club2.elo)
+        eloLeague.gameOver(winner=club1.code, loser=club2.code, winnerHome=None)
+        club1.elo, club2.elo = (
+            eloLeague.ratingDict[club1.code],
+            eloLeague.ratingDict[club2.code],
+        )
+        club1.save()
+        club2.save()
+        return Response({"success": True, "message": "Match recorded."})

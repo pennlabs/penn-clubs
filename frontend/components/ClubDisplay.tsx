@@ -20,12 +20,14 @@ type ClubDisplayProps = {
   display: 'cards' | 'list'
   onScroll?: () => void
   pageSize?: number
+  ranked?: boolean
 }
 
 const ClubDisplay = ({
   displayClubs,
   display,
   onScroll = () => undefined,
+  ranked,
 }: ClubDisplayProps): ReactElement | null => {
   const onWindowScroll = (): void => {
     const { innerHeight = 0, scrollY = 0 } = window
@@ -55,6 +57,71 @@ const ClubDisplay = ({
           <ClubCard key={club.code} club={club} />
         ))}
       </div>
+    )
+  }
+
+  if (ranked) {
+    // Separate clubs by tier property
+    const tieredClubs = displayClubs.reduce((acc, club) => {
+      const tier = club.tier || ' '
+      if (!acc[tier]) {
+        acc[tier] = []
+      }
+      acc[tier].push(club)
+      return acc
+    }, {})
+
+    const tierColors = {
+      S: 'salmon', // Paler light red
+      A: 'peachpuff', // Paler light orange
+      B: 'lightgoldenrodyellow', // Paler light yellow
+      C: 'palegreen', // Paler light green
+      D: 'powderblue', // Paler light turquoise
+      E: 'plum', // Paler light purple
+      F: 'mistyrose', // Paler light pink
+      ' ': '#CCCCCC',
+    }
+
+    return (
+      <ClubTableRowWrapper>
+        {Object.entries(tieredClubs).map(([tier, clubs]: [string, Club[]]) => (
+          <div
+            key={tier}
+            style={{
+              borderRadius: '10px',
+              backgroundColor: tierColors[tier],
+              position: 'relative',
+              marginTop: '20px',
+            }}
+          >
+            {tier !== ' ' && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '6px',
+                  backgroundColor: '#FFFFFF33',
+                  textAlign: 'center',
+                  verticalAlign: 'middle',
+                  lineHeight: '36px',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem',
+                }}
+              >
+                {`${tier}`}
+              </div>
+            )}
+            <div style={{ padding: '4px 16px 4px' }}>
+              {clubs.map((club: Club) => (
+                <ClubTableRow club={club} key={club.code} showElo />
+              ))}
+            </div>
+          </div>
+        ))}
+      </ClubTableRowWrapper>
     )
   }
 

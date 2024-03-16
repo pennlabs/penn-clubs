@@ -166,7 +166,7 @@ type CollapsibleProps = React.PropsWithChildren<{
   name: string
 }>
 
-const Collapsible = ({
+export const Collapsible = ({
   children,
   active,
   name,
