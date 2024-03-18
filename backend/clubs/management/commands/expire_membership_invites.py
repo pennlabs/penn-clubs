@@ -19,8 +19,7 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(
-                    "An error was encountered while expiring"
-                    + "stale membership invites!"
+                    "An error was encountered while expiring stale membership invites!"
                 )
             )
             self.stdout.write(e)
