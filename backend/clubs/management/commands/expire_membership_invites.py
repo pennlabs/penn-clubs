@@ -9,9 +9,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         try:
-            MembershipInvite.objects.filter(
-                active=True, expires_at__lte=timezone.now()
-            ).update(active=False)
+            now = timezone.now()
+            MembershipInvite.objects.filter(active=True, expires_at__lte=now).update(
+                active=False
+            )
 
             self.stdout.write(
                 self.style.SUCCESS("Successfully marked all stale invites as expired!")
