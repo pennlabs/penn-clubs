@@ -4808,6 +4808,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                     creator=self.request.user,
                     club=app.club,
                     email=email,
+                    # programmatically generated invites should expire after some time
+                    expires_at=timezone.now() + datetime.timedelta(days=5),
                 )
                 for email in invitee_emails
             ]
