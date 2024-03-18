@@ -5,15 +5,19 @@ import FavoritesTab from 'components/Settings/FavoritesTab'
 import MembershipRequestsTab from 'components/Settings/MembershipRequestsTab'
 import ProfileTab from 'components/Settings/ProfileTab'
 import HashTabView from 'components/TabView'
+import { NextPageContext } from 'next'
 import React, { ReactNode } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
-import { UserInfo } from 'types'
+import { ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
+import ApplicationsPage from '~/components/Applications'
+import SubmissionsPage from '~/components/Submissions'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
 import { BORDER_RADIUS } from '~/constants/measurements'
+import { doBulkLookup } from '~/utils'
 
 const Notification = styled.span`
   border-radius: ${BORDER_RADIUS};
@@ -34,7 +38,12 @@ type SettingsProps = {
   authenticated: boolean | null
 }
 
-const Settings = ({ userInfo, authenticated }: SettingsProps) => {
+const Settings = ({
+  userInfo,
+  authenticated,
+  whartonapplications,
+  submissions,
+}) => {
   /**
    * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
@@ -78,6 +87,18 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
       icon: 'user',
       content: <ProfileTab defaults={userInfo} />,
     },
+    {
+      name: 'applications',
+      label: 'Applications',
+      content: () => (
+        <ApplicationsPage whartonapplications={whartonapplications} />
+      ),
+    },
+    {
+      name: 'submissions',
+      label: 'Submissions',
+      content: () => <SubmissionsPage initialSubmissions={submissions} />,
+    },
   ]
 
   return (
@@ -95,6 +116,22 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
       />
     </>
   )
+}
+
+type BulkResp = {
+  whartonapplications: any
+  submissions: Array<ApplicationSubmission>
+}
+
+Settings.getInitialProps = async (ctx: NextPageContext) => {
+  const data: BulkResp = (await doBulkLookup(
+    ['whartonapplications', ['submissions', '/submissions/?format=json']],
+    ctx,
+  )) as BulkResp
+  return {
+    ...data,
+    fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
+  }
 }
 
 export default renderPage(Settings)
