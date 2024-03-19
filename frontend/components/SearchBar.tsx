@@ -353,7 +353,7 @@ export const SearchBarTextItem = ({
           }
           return { ...inpt, [param]: nameInput }
         }),
-      400,  // debounce search input
+      400,
     )
     storeTimeout(timeoutId)
   }, [nameInput])
