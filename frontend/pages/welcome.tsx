@@ -150,6 +150,7 @@ const Welcome = ({
         <Center>
           <Subtitle>3. Start exploring {SITE_NAME}!</Subtitle>
           <Link
+            legacyBehavior
             href={nextUrl && nextUrl.startsWith('/') ? nextUrl : HOME_ROUTE}
           >
             <a className="button is-success is-large" onClick={markWelcome}>

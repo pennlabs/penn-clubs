@@ -97,7 +97,7 @@ function StatusCard({
 
   return (
     <>
-      <Card className="mb-4" bordered background={WHITE}>
+      <Card className="mb-4" $bordered $background={WHITE}>
         <CardHeader>
           <CardTitle className="is-size-3">{application}</CardTitle>
         </CardHeader>
@@ -110,8 +110,8 @@ function StatusCard({
               left === 'Total'
                 ? -10
                 : right === 'Total'
-                ? -10
-                : left.localeCompare(right),
+                  ? -10
+                  : left.localeCompare(right),
             )
             .map((committee) => (
               <div
@@ -170,6 +170,18 @@ const WhartonApplicationStatus = ({
     ApplicationStatus[] | { detail: string } | null
   >(initialStatuses ?? null)
 
+  function downloadData(statuses) {
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(statuses, null, 2))
+    const downloadAnchorNode = document.createElement('a')
+    downloadAnchorNode.setAttribute('href', dataStr)
+    downloadAnchorNode.setAttribute('download', 'applicationStatuses.json')
+    document.body.appendChild(downloadAnchorNode)
+    downloadAnchorNode.click()
+    downloadAnchorNode.remove()
+  }
+
   if (statuses == null) {
     return <Loading />
   }
@@ -187,6 +199,9 @@ const WhartonApplicationStatus = ({
         registered {OBJECT_NAME_PLURAL} for an {FAIR_NAME} fair. Only users with
         the required permissions can view this page.
       </Text>
+      <button className="button" onClick={() => downloadData(statuses)}>
+        Download Data
+      </button>
       <div className="column">
         <DiscreteColorLegend
           items={Object.keys(colors).map((label) => ({

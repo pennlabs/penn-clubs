@@ -152,7 +152,9 @@ const ApplicationPage = ({
       <ClubMetadata club={club} />
       <Container paddingTop>
         <div className="is-clearfix">
-          <Title className="is-pulled-left">{application.name}</Title>
+          <div className="is-pulled-left">
+            <Title>{application.name}</Title>
+          </div>
         </div>
         {application.description != null && application.description !== '' && (
           <>
@@ -168,7 +170,9 @@ const ApplicationPage = ({
             <small className="is-block mt-2">
               <b>
                 Due:{' '}
-                {moment(application.application_end_time).format('dddd, MMM D')}
+                {moment(application.application_end_time).format(
+                  'dddd, MMMM D, YYYY [at] h:mm A [ET]',
+                )}
               </b>
             </small>
           )}
@@ -192,24 +196,6 @@ const ApplicationPage = ({
               ) {
                 submitErrors = 'One of your responses exceeds the word limit!'
               }
-            }
-
-            // submissions open & close error check
-            const applicationStartTime = moment.tz(
-              application.application_start_time,
-              'America/New_York',
-            )
-
-            const applicationEndTime = moment.tz(
-              application.application_end_time,
-              'America/New_York',
-            )
-            const currentTime = moment.tz('America/New_York')
-            if (
-              currentTime.valueOf() < applicationStartTime.valueOf() ||
-              currentTime.valueOf() > applicationEndTime.valueOf()
-            ) {
-              submitErrors = 'This application is not currently open!'
             }
 
             if (submitErrors === null) {

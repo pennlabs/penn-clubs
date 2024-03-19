@@ -15,7 +15,7 @@ type AdvisorCardProps = {
 
 const AdvisorCard = ({ info }: AdvisorCardProps): ReactElement => {
   return (
-    <StyledCard bordered>
+    <StyledCard $bordered>
       <div className="columns">
         <div className="column is-narrow is-hidden-mobile">
           <ProfilePic

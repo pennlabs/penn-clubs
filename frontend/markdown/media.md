@@ -4,9 +4,9 @@ Hi there! 👋
 
 If you are a club officer looking to upload a video, pdf, or other file to share with potential members, look no further! **Please note that this guide will show you how to upload files that viewable by the public**. If you are looking to upload a club constitution, or private files to be kept within your organization, please follow the steps of [this guide](https://pennclubs.com/guides/fileupload).
 
-## 👩‍👧‍👦 Getting Officer Access 
+## 👩‍👧‍👦 Getting Officer Access
 
-In order to add media to your club's page, you need to be listed as an officer for your club. To check whether or not you have officer status, click your name in the upper-right corner to view the clubs you are listed under. 
+In order to add media to your club's page, you need to be listed as an officer for your club. To check whether or not you have officer status, click your name in the upper-right corner to view the clubs you are listed under.
 
 ![Penn Clubs Dashboard Clicking on Profile Name](Dashboard.png)
 
@@ -16,7 +16,7 @@ If the actions button says "Manage", click this button to be redirected to manag
 
 ## 📎 Uploading Media to your public Club Page
 
-Once you are able to access the management page for your club, scroll down to the "Description" section of the "Edit Club Page" tab. 
+Once you are able to access the management page for your club, scroll down to the "Description" section of the "Edit Club Page" tab.
 
 ![Editing your Club Description](Description.png)
 

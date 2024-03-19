@@ -161,8 +161,8 @@ export const RequestMembershipButton = ({
         {isRequested
           ? 'Withdraw Request'
           : isMembershipOpen
-          ? 'Request Membership'
-          : "I'm a Member"}
+            ? 'Request Membership'
+            : "I'm a Member"}
       </ActionButton>
       <Modal
         marginBottom={false}
@@ -284,7 +284,6 @@ const Actions = ({
       <div className={className} style={style}>
         <Wrapper>
           {SHOW_MEMBERSHIP_REQUEST &&
-            !inClub &&
             club.members.length > 0 &&
             isMembershipOpen &&
             club.accepting_members && (
@@ -293,8 +292,9 @@ const Actions = ({
                 updateRequests={updateRequests}
               />
             )}
-          {SHOW_APPLICATIONS && (
+          {SHOW_APPLICATIONS && !isMembershipOpen && club.accepting_members && (
             <Link
+              legacyBehavior
               href={CLUB_APPLY_ROUTE()}
               as={CLUB_APPLY_ROUTE(code)}
               passHref
@@ -305,7 +305,12 @@ const Actions = ({
             </Link>
           )}
           {canEdit && (
-            <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)} passHref>
+            <Link
+              legacyBehavior
+              href={CLUB_EDIT_ROUTE()}
+              as={CLUB_EDIT_ROUTE(code)}
+              passHref
+            >
               <ActionButton className="button is-success">
                 Manage {OBJECT_NAME_TITLE_SINGULAR}
               </ActionButton>

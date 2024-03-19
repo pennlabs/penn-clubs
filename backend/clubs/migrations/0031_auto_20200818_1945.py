@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("clubs", "0030_auto_20200818_1835"),
@@ -15,7 +14,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="club", name="ghost", field=models.BooleanField(default=False),
+            model_name="club",
+            name="ghost",
+            field=models.BooleanField(default=False),
         ),
         migrations.CreateModel(
             name="HistoricalClub",

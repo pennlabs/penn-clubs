@@ -71,7 +71,7 @@ const OptionalProfileLink = ({
 
   if (username != null) {
     return (
-      <Link href={PROFILE_ROUTE()} as={PROFILE_ROUTE(username)}>
+      <Link href={PROFILE_ROUTE()} as={PROFILE_ROUTE(username)} legacyBehavior>
         <ClickableBox
           onKeyPress={(e) => {
             if (e.code === 'Space' || e.code === 'Enter') {
@@ -93,7 +93,7 @@ const MemberCard = ({ account }: Props): ReactElement => {
   const { email, name, title, username } = account
   return (
     <OptionalProfileLink username={username}>
-      <StyledCard bordered>
+      <StyledCard $bordered>
         <ProfilePic user={account} fontSize="24px" isRound />
         <br />
         <MemberInfo>

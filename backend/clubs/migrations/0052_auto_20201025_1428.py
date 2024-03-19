@@ -17,7 +17,6 @@ def update_application_enum(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0051_auto_20201025_1428"),
     ]

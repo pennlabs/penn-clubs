@@ -19,7 +19,6 @@ def reverse_func(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("clubs", "0006_profile")]
 
     operations = [migrations.RunPython(forwards_func, reverse_func)]

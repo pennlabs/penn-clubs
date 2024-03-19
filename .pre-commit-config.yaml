@@ -2,32 +2,24 @@
 repos:
   - repo: local
     hooks:
-      - id: black
-        name: black
-        entry: bash -c "export PIPENV_IGNORE_VIRTUALENVS=1 && cd backend && pipenv run black ."
+      - id: ruff-format
+        name: Ruff Formatter
+        entry: bash -c "export PIPENV_IGNORE_VIRTUALENVS=1 && cd backend && pipenv run ruff format ."
         language: python
         types: [python]
         require_serial: true
         files: ^backend/
         pass_filenames: false
-      - id: isort
-        name: isort
-        entry: isort
+      - id: ruff-lint-fix
+        name: Ruff Lint (Apply Fixes)
+        entry: ruff check . --fix
         language: python
         types: [python]
         require_serial: true
         files: ^backend/
-      - id: flake8
-        name: flake8
-        entry: flake8
-        language: python
-        types: [python]
-        require_serial: true
-        files: ^backend/
-        args: [--config, backend/setup.cfg]
       - id: frontend
         name: Yarn Linter
-        entry: yarn --cwd frontend lint
+        entry: bash -c "cd frontend && yarn lint"
         language: system
         files: ^frontend/
         require_serial: false

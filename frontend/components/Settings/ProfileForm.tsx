@@ -112,6 +112,7 @@ const ProfileForm = ({
                     Allow my profile page to be visible to the public. You can
                     view your profile page{' '}
                     <Link
+                      legacyBehavior
                       href={PROFILE_ROUTE()}
                       as={PROFILE_ROUTE(settings.username)}
                     >

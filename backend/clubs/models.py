@@ -322,6 +322,10 @@ class Club(models.Model):
     appointment_needed = models.BooleanField(default=False)
     signature_events = models.TextField(blank=True)  # html
 
+    # cache club aggregation counts
+    favorite_count = models.IntegerField(default=0)
+    membership_count = models.IntegerField(default=0)
+
     # cache club rankings
     rank = models.IntegerField(default=0)
 
@@ -1534,6 +1538,7 @@ class ApplicationCycle(models.Model):
     name = models.CharField(max_length=255)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
+    release_date = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.name
@@ -1551,6 +1556,7 @@ class ClubApplication(CloneModel):
     description = models.TextField(blank=True)
     application_start_time = models.DateTimeField()
     application_end_time = models.DateTimeField()
+    application_end_time_exception = models.BooleanField(default=False, blank=True)
     name = models.TextField(blank=True)
     result_release_time = models.DateTimeField()
     application_cycle = models.ForeignKey(
@@ -1592,6 +1598,40 @@ class ClubApplication(CloneModel):
         return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
 
 
+class ApplicationExtension(models.Model):
+    """
+    Represents an individual club application extension.
+    """
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    application = models.ForeignKey(
+        ClubApplication, related_name="extensions", on_delete=models.CASCADE
+    )
+    end_time = models.DateTimeField()
+
+    def send_extension_mail(self):
+        context = {
+            "name": self.user.first_name,
+            "application_name": self.application.name,
+            "end_time": self.end_time,
+            "club": self.application.club.name,
+            "url": (
+                f"https://pennclubs.com/club/{self.application.club.code}"
+                f"/application/{self.application.pk}/"
+            ),
+        }
+
+        send_mail_helper(
+            name="application_extension",
+            subject=f"Application Extension for {self.application.name}",
+            emails=[self.user.email],
+            context=context,
+        )
+
+    class Meta:
+        unique_together = (("user", "application"),)
+
+
 class ApplicationCommittee(models.Model):
     """
     Represents a committee for a particular club application. Each application
@@ -1600,7 +1640,9 @@ class ApplicationCommittee(models.Model):
 
     name = models.TextField(blank=True)
     application = models.ForeignKey(
-        ClubApplication, related_name="committees", on_delete=models.CASCADE,
+        ClubApplication,
+        related_name="committees",
+        on_delete=models.CASCADE,
     )
 
     def get_word_limit(self):
@@ -1652,7 +1694,9 @@ class ApplicationMultipleChoice(models.Model):
 
     value = models.TextField(blank=True)
     question = models.ForeignKey(
-        ApplicationQuestion, related_name="multiple_choice", on_delete=models.CASCADE,
+        ApplicationQuestion,
+        related_name="multiple_choice",
+        on_delete=models.CASCADE,
     )
 
 
@@ -1687,13 +1731,15 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    archived = models.BooleanField(default=False)
     notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.first_name}: {self.application.name}"
+
+    class Meta:
+        unique_together = (("user", "application", "committee"),)
 
 
 class ApplicationQuestionResponse(models.Model):
@@ -1723,14 +1769,8 @@ class ApplicationQuestionResponse(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
-class QuestionResponse(models.Model):
-    """
-    Represents a response to a question on a custom application
-    """
-
-    question = models.ForeignKey(ApplicationQuestion, on_delete=models.CASCADE)
-    response = models.TextField(blank=True)
+    class Meta:
+        unique_together = (("question", "submission"),)
 
 
 @receiver(models.signals.pre_delete, sender=Asset)

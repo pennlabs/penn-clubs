@@ -11,8 +11,25 @@
 //
 // -- This is a parent command --
 Cypress.Commands.add('logout', () => {
-  cy.visit('/api/admin/logout/')
-  cy.contains('Clubs Backend Admin')
+  cy.request({
+    method: 'GET',
+    url: '/api/admin/',
+  }).then(() => {
+    cy.getCookie('csrftoken')
+      .its('value')
+      .then((token) => {
+        cy.request({
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': token,
+          },
+          url: '/api/admin/logout/',
+        }).then(() => {
+          cy.visit('/api/admin/')
+          cy.contains('Clubs Backend Admin')
+        })
+      })
+  })
 })
 
 Cypress.Commands.add('login', (username, password) => {
@@ -20,18 +37,18 @@ Cypress.Commands.add('login', (username, password) => {
     cy.visit('/')
     cy.contains('Login')
       .invoke('attr', 'href')
-      .then(href => {
+      .then((href) => {
         cy.request({
           method: 'GET',
           url: href,
-        }).then(data => {
+        }).then((data) => {
           cy.log('Processing platform auth flow')
-          cy.window().then(win => {
+          cy.window().then((win) => {
             const ele = win.document.createElement('div')
             ele.innerHTML = data.body
             const form = new win.FormData(ele.querySelector('form'))
             const formattedData = {}
-            Array.from(form.entries()).forEach(a => {
+            Array.from(form.entries()).forEach((a) => {
               formattedData[a[0]] = a[1]
             })
             formattedData.allow = 'Authorize'

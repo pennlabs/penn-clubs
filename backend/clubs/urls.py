@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from clubs.views import (
     AdminNoteViewSet,
     AdvisorViewSet,
+    ApplicationExtensionViewSet,
     ApplicationQuestionViewSet,
     ApplicationSubmissionUserViewSet,
     ApplicationSubmissionViewSet,
@@ -50,6 +51,7 @@ from clubs.views import (
     UserZoomAPIView,
     WhartonApplicationAPIView,
     WhartonApplicationStatusAPIView,
+    WhartonCyclesView,
     YearViewSet,
     email_preview,
 )
@@ -70,12 +72,22 @@ router.register(r"requests", MembershipRequestViewSet, basename="requests")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
-router.register(r"student_types", StudentTypeViewSet, basename="student_types"),
+router.register(r"student_types", StudentTypeViewSet, basename="student_types")
 router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
 router.register(r"users", UserViewSet, basename="users")
 router.register(
     r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
+)
+router.register(
+    r"cycles",
+    WhartonCyclesView,
+    basename="wharton-applications-create",
+)
+router.register(
+    r"whartonapplications",
+    WhartonApplicationAPIView,
+    basename="wharton",
 )
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 
@@ -111,6 +123,10 @@ applications_router.register(
     r"submissions",
     ApplicationSubmissionViewSet,
     basename="club-application-submissions",
+)
+
+applications_router.register(
+    r"extensions", ApplicationExtensionViewSet, basename="club-application-extensions"
 )
 
 router.register(r"booths", ClubBoothsViewSet, basename="club-booth")
@@ -150,11 +166,6 @@ urlpatterns = [
         r"webhook/meeting/",
         MeetingZoomWebhookAPIView.as_view(),
         name="webhooks-meeting",
-    ),
-    path(
-        r"whartonapplications/",
-        WhartonApplicationAPIView.as_view(),
-        name="wharton-applications",
     ),
     path(
         r"whartonapplications/status/",

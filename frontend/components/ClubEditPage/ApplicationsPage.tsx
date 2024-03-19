@@ -2,6 +2,7 @@ import { Field, Form, Formik } from 'formik'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { ALLBIRDS_GRAY, CLUBS_BLUE, MD, mediaMaxWidth, SNOW } from '~/constants'
@@ -22,7 +23,13 @@ import { doApiRequest, getApiUrl, getSemesterFromDate } from '~/utils'
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
-import { CheckboxField, SelectField, TextField } from '../FormComponents'
+import {
+  CheckboxField,
+  DateTimeField,
+  SelectField,
+  TextField,
+} from '../FormComponents'
+import ModelForm from '../ModelForm'
 
 const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
   margin-bottom: 20px;
@@ -222,7 +229,7 @@ const NotificationModal = (props: {
           if (data.email_type.id === 'acceptance' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
-                sub.notified === false &&
+                (data.allow_resend || !sub.notified) &&
                 sub.status === 'Accepted' &&
                 sub.reason,
             )
@@ -230,7 +237,7 @@ const NotificationModal = (props: {
           } else if (data.email_type.id === 'rejection' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
-                sub.notified === false &&
+                (data.allow_resend || !sub.notified) &&
                 sub.status.startsWith('Rejected') &&
                 sub.reason,
             )
@@ -273,6 +280,23 @@ const NotificationModal = (props: {
               as={CheckboxField}
               label="Dry Run"
               helpText="If selected, will return the number of emails the script would have sent out"
+            />
+            <Field
+              name="allow_resend"
+              as={CheckboxField}
+              label="Resend Emails"
+              onClick={(e) => {
+                if (e.target.checked) {
+                  toast.warning(
+                    'Resending emails will send emails to all applicants, even if they have already been notified.',
+                  )
+                }
+              }}
+              helpText={
+                <strong>
+                  If selected, will resend notifications to all applicants
+                </strong>
+              }
             />
             <button type="submit" className="button">
               Submit
@@ -369,20 +393,16 @@ export default function ApplicationsPage({
   club: Club
 }): ReactElement {
   const [applications, setApplications] = useState<Array<Application>>([])
-  const [
-    currentApplication,
-    setCurrentApplication,
-  ] = useState<Application | null>(null)
+  const [currentApplication, setCurrentApplication] =
+    useState<Application | null>(null)
   const [submissions, setSubmissions] = useState<{
     [key: number]: Array<ApplicationSubmission>
   }>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [showNotifModal, setShowNotifModal] = useState<boolean>(false)
   const [showReasonModal, setShowReasonModal] = useState<boolean>(false)
-  const [
-    currentSubmission,
-    setCurrentSubmission,
-  ] = useState<ApplicationSubmission | null>(null)
+  const [currentSubmission, setCurrentSubmission] =
+    useState<ApplicationSubmission | null>(null)
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [statusToggle, setStatusToggle] = useState<boolean>(false)
   const [categoriesSelectAll, setCategoriesSelectAll] = useState<Array<string>>(
@@ -474,6 +494,14 @@ export default function ApplicationsPage({
     { label: 'Committee', name: 'committee' },
     { label: 'Status', name: 'status' },
     { label: 'Graduation Year', name: 'graduation_year' },
+  ]
+
+  const extensionTableFields = [
+    { label: 'First Name', name: 'first_name' },
+    { label: 'Last Name', name: 'last_name' },
+    { label: 'Username', name: 'username' },
+    { label: 'Graduation Year', name: 'graduation_year' },
+    { label: 'Extension End Time', name: 'end_time' },
   ]
 
   const columns = useMemo(
@@ -608,9 +636,8 @@ export default function ApplicationsPage({
                         categoriesSelectAll.includes(statusLabel)
 
                       if (deselecting) {
-                        const newCategoriesSelectAll = categoriesSelectAll.filter(
-                          (e) => e !== statusLabel,
-                        )
+                        const newCategoriesSelectAll =
+                          categoriesSelectAll.filter((e) => e !== statusLabel)
                         setCategoriesSelectAll(newCategoriesSelectAll)
                       } else {
                         const newCategoriesSelectAll = categoriesSelectAll
@@ -673,12 +700,11 @@ export default function ApplicationsPage({
                 <ScrollWrapper>
                   <TableWrapper>
                     <Table
-                      data={submissions[
-                        currentApplication.id
-                      ].map((item, index) =>
-                        item.pk
-                          ? { ...item, id: item.pk }
-                          : { ...item, id: index },
+                      data={submissions[currentApplication.id].map(
+                        (item, index) =>
+                          item.pk
+                            ? { ...item, id: item.pk }
+                            : { ...item, id: index },
                       )}
                       columns={responseTableFields}
                       searchableColumns={['name']}
@@ -784,6 +810,42 @@ export default function ApplicationsPage({
             </a>
           </div>
         )}
+      <br></br>
+      <div>
+        {currentApplication != null ? (
+          <>
+            <StyledHeader style={{ marginBottom: '2px' }}>
+              Extensions
+            </StyledHeader>
+            <ModelForm
+              key={currentApplication.id}
+              baseUrl={`/clubs/${club.code}/applications/${currentApplication.id}/extensions/`}
+              fields={
+                <>
+                  <Field
+                    name="username"
+                    as={TextField}
+                    required={true}
+                    helpText="The username (PennKey) of the applicant to be granted an extension."
+                  />
+                  <Field
+                    name="end_time"
+                    as={DateTimeField}
+                    required={true}
+                    helpText="The extended end time for this applicant's application."
+                  />
+                </>
+              }
+              tableFields={extensionTableFields}
+              confirmDeletion
+              searchableColumns={['username']}
+              noun="Extension"
+            />
+          </>
+        ) : (
+          <Loading />
+        )}
+      </div>
       {showModal && (
         <Modal
           show={showModal}

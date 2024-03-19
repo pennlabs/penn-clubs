@@ -15,6 +15,7 @@ from clubs.models import (
     Advisor,
     ApplicationCommittee,
     ApplicationCycle,
+    ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
@@ -406,12 +407,13 @@ class ZoomMeetingVisitAdmin(admin.ModelAdmin):
 
 
 class ApplicationSubmissionAdmin(admin.ModelAdmin):
-    list_display = ("user", "id", "created_at", "status", "archived")
-    list_filter = ("archived",)
+    search_fields = ("user__username",)
+    list_display = ("user", "id", "created_at", "status")
 
 
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
+admin.site.register(ApplicationExtension)
 admin.site.register(ApplicationMultipleChoice)
 admin.site.register(ApplicationQuestion)
 admin.site.register(ApplicationQuestionResponse)

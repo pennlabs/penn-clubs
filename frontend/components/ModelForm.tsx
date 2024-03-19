@@ -1,4 +1,5 @@
 import { Form, Formik } from 'formik'
+import moment from 'moment'
 import { ReactElement, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
@@ -73,6 +74,7 @@ type ModelFormProps = {
   empty?: ReactElement | string
   fields: any
   tableFields?: TableField[]
+  searchableColumns?: string[]
   filterOptions?: FilterOption[]
   currentTitle?: (object: ModelObject) => ReactElement | string
   noun?: string
@@ -112,6 +114,7 @@ type ModelTableProps = {
   tableFields: TableField[]
   filterOptions?: FilterOption[]
   objects: ModelObject[]
+  searchableColumns?: string[]
   allowEditing?: boolean
   allowDeletion?: boolean
   confirmDeletion?: boolean
@@ -131,6 +134,7 @@ export const ModelTable = ({
   tableFields,
   filterOptions,
   objects,
+  searchableColumns,
   allowEditing = false,
   allowDeletion = false,
   confirmDeletion = false,
@@ -216,7 +220,7 @@ export const ModelTable = ({
       <Table
         data={objects}
         columns={tableFields}
-        searchableColumns={['name']}
+        searchableColumns={searchableColumns || ['name']}
         filterOptions={filterOptions || []}
         draggable={draggable}
         onDragEnd={onDragEnd}
@@ -231,10 +235,8 @@ export const ModelTable = ({
  */
 export const ModelForm = (props: ModelFormProps): ReactElement => {
   const [objects, setObjects] = useState<ModelObject[]>([])
-  const [
-    currentlyEditing,
-    changeCurrentlyEditing,
-  ] = useState<ModelObject | null>(null)
+  const [currentlyEditing, changeCurrentlyEditing] =
+    useState<ModelObject | null>(null)
   const [newCount, changeNewCount] = useState<number>(0)
   const [createObject, changeCreateObject] = useState<ModelObject>(
     props.defaultObject != null
@@ -258,6 +260,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     fields,
     tableFields,
     filterOptions,
+    searchableColumns,
     onUpdate,
     currentTitle,
     noun = 'Object',
@@ -351,6 +354,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           data[key] !== null
         )
       ) {
+        if (data[key] instanceof Date) {
+          data[key] = moment(data[key]).format('YYYY-MM-DD HH:mm:ssZ')
+        }
         flt[key] = data[key]
       }
       return flt
@@ -466,6 +472,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
           noun={noun}
           tableFields={tableFields}
           filterOptions={filterOptions}
+          searchableColumns={searchableColumns}
           objects={objects}
           allowDeletion={allowDeletion}
           confirmDeletion={confirmDeletion}

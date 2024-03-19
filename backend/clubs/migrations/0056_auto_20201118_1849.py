@@ -5,13 +5,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0055_auto_20201117_1457"),
     ]
 
     operations = [
-        migrations.RemoveField(model_name="advisor", name="school",),
+        migrations.RemoveField(
+            model_name="advisor",
+            name="school",
+        ),
         migrations.AddField(
             model_name="advisor",
             name="department",

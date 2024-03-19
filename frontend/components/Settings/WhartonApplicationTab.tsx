@@ -140,6 +140,7 @@ const WhartonApplicationTab = ({
                 <tr key={i}>
                   <td>
                     <Link
+                      legacyBehavior
                       href={`/club/${row.club}/application/${row.applicationId}/`}
                     >
                       {row.clubName}

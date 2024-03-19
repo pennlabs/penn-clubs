@@ -116,8 +116,8 @@ const CheckList = ({ items }: CheckListProps): ReactElement => {
             value
               ? 'has-text-success'
               : value == null
-              ? 'has-text-warning'
-              : 'has-text-danger'
+                ? 'has-text-warning'
+                : 'has-text-danger'
           }
         >
           <Icon
@@ -230,14 +230,12 @@ const ZoomPage = ({
   fairs,
 }: ZoomPageProps): ReactElement => {
   const [nextUrl, setNextUrl] = useState<string>('/')
-  const [zoomSettings, setZoomSettings] = useState<ZoomSettings>(
-    initialZoomSettings,
-  )
+  const [zoomSettings, setZoomSettings] =
+    useState<ZoomSettings>(initialZoomSettings)
   const [events, setEvents] = useState<ClubEvent[]>(initialEvents)
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [userMeetings, setUserMeetings] = useState<ZoomMeeting[]>(
-    initialUserMeetings,
-  )
+  const [userMeetings, setUserMeetings] =
+    useState<ZoomMeeting[]>(initialUserMeetings)
 
   useEffect(() => {
     setNextUrl(window.location.pathname)
@@ -528,6 +526,7 @@ const ZoomPage = ({
                 <b>{event.name}</b>
                 <div>
                   <Link
+                    legacyBehavior
                     href={CLUB_ROUTE()}
                     as={CLUB_ROUTE(event.club as string)}
                   >
@@ -762,6 +761,7 @@ const ZoomPage = ({
                     </button>
                   )}
                   <Link
+                    legacyBehavior
                     href={CLUB_EDIT_ROUTE() + '#events'}
                     as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
                   >

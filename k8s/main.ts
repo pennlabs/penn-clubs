@@ -16,17 +16,28 @@ export class MyChart extends PennLabsChart {
     const clubsSecret = 'penn-clubs';
     const clubsDomain = 'pennclubs.com';
 
-    new RedisApplication(this, 'redis', {});
+    /** Ingress HTTPS Enforcer */
+    const ingressProps = {
+      annotations: {
+        ["ingress.kubernetes.io/protocol"]: "https",
+        ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redirect-http@kubernetescrd"
+      }
+    }
+
+    new RedisApplication(this, 'redis', {
+      persistData: true,
+    });
 
     new DjangoApplication(this, 'django-wsgi', {
       deployment: {
         image: backendImage,
-        replicas: 3,
+        replicas: 4,
         secret: clubsSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
         ],
       },
+      ingressProps,
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api'] }],
     });
@@ -41,6 +52,7 @@ export class MyChart extends PennLabsChart {
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
         ],
       },
+      ingressProps,
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api/ws'] }],
     });
@@ -48,10 +60,11 @@ export class MyChart extends PennLabsChart {
     new ReactApplication(this, 'react', {
       deployment: {
         image: frontendImage,
-        replicas: 1,
+        replicas: 3,
       },
       domain: { host: clubsDomain, paths: ['/'] },
       port: 80,
+      ingressProps,
     });
 
     /** FYH */
@@ -71,6 +84,12 @@ export class MyChart extends PennLabsChart {
           { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
         ],
       },
+      ingressProps: {
+        annotations: {
+          ["ingress.kubernetes.io/protocol"]: "https",
+          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
+        }
+      },
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: fyhDomain, paths: ['/api'] }],
     });
@@ -84,6 +103,7 @@ export class MyChart extends PennLabsChart {
         ],
       },
       domain: { host: fyhDomain, paths: ['/'] },
+      ingressProps,
       port: 80,
     });
 

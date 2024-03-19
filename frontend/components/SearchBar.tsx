@@ -69,7 +69,7 @@ const SearchWrapper = styled.div`
   }
 `
 
-const Content = styled.div<{ show?: boolean }>`
+const Content = styled.div<{ $show?: boolean }>`
   padding: 12px 17px 12px 17px;
   width: 100%;
 
@@ -82,7 +82,7 @@ const Content = styled.div<{ show?: boolean }>`
   }
 
   ${mediaMaxWidth(MD)} {
-    display: ${({ show }) => (show ? 'block' : 'none')};
+    display: ${({ $show }) => ($show ? 'block' : 'none')};
     overflow-x: hidden;
     width: 100%;
     margin: 0;
@@ -353,7 +353,7 @@ export const SearchBarTextItem = ({
           }
           return { ...inpt, [param]: nameInput }
         }),
-      200,
+      400,
     )
     storeTimeout(timeoutId)
   }, [nameInput])
@@ -508,7 +508,7 @@ const SearchBar = ({
   return (
     <>
       <Wrapper style={{ paddingTop: `${scrollAmount}rem` }}>
-        <Content show={mobileShow}>
+        <Content $show={mobileShow}>
           <SearchBarValueContext.Provider value={searchInput}>
             <SearchBarContext.Provider value={updateSearch}>
               {children}

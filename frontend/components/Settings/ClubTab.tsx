@@ -234,10 +234,7 @@ const ClubTab = ({
       <Center>
         <Text isGray>
           No memberships yet! Browse {OBJECT_NAME_PLURAL}{' '}
-          <Link href="/">
-            <a>here</a>
-          </Link>
-          .
+          <Link href="/">here</Link>.
         </Text>
       </Center>
     </>

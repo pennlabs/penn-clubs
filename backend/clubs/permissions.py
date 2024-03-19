@@ -85,7 +85,6 @@ class ProfilePermission(permissions.BasePermission):
 
         # show profile if public or if profile is self
         if view.action in {"list", "retrieve"}:
-
             # admins can see all profiles
             if request.user.has_perm("clubs.manage_club"):
                 return True
@@ -323,7 +322,7 @@ class IsSuperuser(permissions.BasePermission):
 
 class WhartonApplicationPermission(permissions.BasePermission):
     """
-    Grants permission is the user is an officer of Wharton Council
+    Grants permission if the user is an officer of Wharton Council
     """
 
     WHARTON_COUNCIL_CLUB_CODE = "wharton-council"

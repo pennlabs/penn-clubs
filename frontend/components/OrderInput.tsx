@@ -147,7 +147,12 @@ const OrderInput = ({
           className="button"
           aria-haspopup="true"
           aria-controls="dropdown-menu"
-          onClick={() => !isOpen && setIsOpen(true)}
+          onClick={(e) => {
+            if (!isOpen) {
+              e.stopPropagation()
+              setIsOpen(true)
+            }
+          }}
         >
           <Icon name={selectedOrdering?.icon ?? 'x'} />{' '}
           {selectedOrdering?.name ?? 'Unknown'}
