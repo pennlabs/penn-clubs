@@ -178,9 +178,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
                 }}
               >
                 <div>
-                  <Link href="/events">
-                    <a>View QR Code</a>
-                  </Link>
+                  <Link href="/events">View QR Code</Link>
                 </div>
                 <div style={{ cursor: 'pointer' }} onClick={showModal}>
                   Transfer Ownership <Icon name="send" />
@@ -197,10 +195,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
       <Center>
         <Text isGray>
           No tickets yet! Browse events to find tickets{' '}
-          <Link href="/events">
-            <a>here</a>
-          </Link>
-          .
+          <Link href="/events">here</Link>.
         </Text>
       </Center>
     </>
