@@ -7,17 +7,17 @@ import { apiSetFavoriteStatus } from '../../utils'
 import { AuthCheckContext } from '../contexts'
 
 type BookmarkIconTagProps = {
-  padding?: string
-  absolute?: boolean
-  favorite?: boolean
+  $padding?: string
+  $absolute?: boolean
+  $favorite?: boolean
 }
 
 const BookmarkIconTag = styled.span<BookmarkIconTagProps>`
-  padding: ${({ padding }) => padding || '15px 10px 0 0'};
+  padding: ${({ $padding }) => $padding || '15px 10px 0 0'};
   cursor: pointer;
 
-  ${({ absolute }) =>
-    absolute &&
+  ${({ $absolute }) =>
+    $absolute &&
     `
     float: none;
     position: absolute;
@@ -28,14 +28,14 @@ const BookmarkIconTag = styled.span<BookmarkIconTagProps>`
   svg {
     height: 1rem;
     width: 1rem;
-    fill: ${({ favorite }) => (favorite ? BLACK : 'none')};
-    stroke: ${({ favorite }) => (favorite ? BLACK : MEDIUM_GRAY)};
+    fill: ${({ $favorite }) => ($favorite ? BLACK : 'none')};
+    stroke: ${({ $favorite }) => ($favorite ? BLACK : MEDIUM_GRAY)};
     stroke-width: 2px;
     stroke-linecap: round;
     stroke-linejoin: round;
 
     &:hover {
-      fill: ${({ favorite }) => (favorite ? BLACK : MEDIUM_GRAY)};
+      fill: ${({ $favorite }) => ($favorite ? BLACK : MEDIUM_GRAY)};
     }
   }
 `
@@ -60,9 +60,9 @@ export const BookmarkIcon = ({
 
   return (
     <BookmarkIconTag
-      favorite={favorite}
-      absolute={absolute}
-      padding={padding}
+      $favorite={favorite}
+      $absolute={absolute}
+      $padding={padding}
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()

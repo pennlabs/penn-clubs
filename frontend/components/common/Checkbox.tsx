@@ -19,13 +19,13 @@ const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
   width: 1px;
 `
 
-const StyledCheckbox = styled.div<{ color?: string }>`
+const StyledCheckbox = styled.div<{ $color?: string }>`
   display: inline-block;
   width: 16px;
   height: 16px;
   transition: all 150ms;
   cursor: pointer;
-  fill: ${(props) => props.color || CLUBS_RED};
+  fill: ${(props) => props.$color || CLUBS_RED};
 `
 
 const CheckboxContainer = styled.div`
@@ -75,7 +75,7 @@ export const Checkbox = ({
         type="checkbox"
       />
       <StyledCheckbox
-        color={color}
+        $color={color}
         onClick={() => checkboxRef.current?.click()}
       >
         <Icon

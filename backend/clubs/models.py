@@ -329,9 +329,6 @@ class Club(models.Model):
     # cache club rankings
     rank = models.IntegerField(default=0)
 
-    # cache club rankings
-    rank = models.IntegerField(default=0)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1774,15 +1771,6 @@ class ApplicationQuestionResponse(models.Model):
 
     class Meta:
         unique_together = (("question", "submission"),)
-
-
-class QuestionResponse(models.Model):
-    """
-    Represents a response to a question on a custom application
-    """
-
-    question = models.ForeignKey(ApplicationQuestion, on_delete=models.CASCADE)
-    response = models.TextField(blank=True)
 
 
 @receiver(models.signals.pre_delete, sender=Asset)

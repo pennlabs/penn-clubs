@@ -36,7 +36,7 @@ const Description = styled.p`
 `
 
 type CardProps = {
-  readonly hovering?: boolean
+  readonly $hovering?: boolean
   className?: string
 }
 
@@ -46,7 +46,7 @@ const Card = styled.div<CardProps>`
   transition: all ${ANIMATION_DURATION}ms ease;
   border-radius: ${BORDER_RADIUS};
   box-shadow: 0 0 0 ${WHITE};
-  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
+  background-color: ${({ $hovering }) => ($hovering ? HOVER_GRAY : WHITE)};
   border: 1px solid ${ALLBIRDS_GRAY};
   justify-content: space-between;
   height: auto;
@@ -97,55 +97,46 @@ type ClubCardProps = {
 }
 
 const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
-  const {
-    name,
-    active,
-    approved,
-    subtitle,
-    tags,
-    enables_subscription,
-    code,
-  } = club
+  const { name, active, approved, subtitle, tags, enables_subscription, code } =
+    club
   const img = club.image_url
   const textDescription = shorten(subtitle || 'This club has no description.')
 
   return (
     <CardWrapper className={fullWidth ? '' : 'column is-half-desktop'}>
-      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
-        <a target="_blank">
-          <Card className="card">
-            <div style={{ display: 'flex' }}>
-              <div style={{ flex: 1 }}>
-                <div>
-                  <CardHeader>
-                    <CardTitle className="is-size-5">{name}</CardTitle>
-                  </CardHeader>
-                </div>
-                {!active && (
-                  <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
-                )}
-                {approved === null && (
-                  <InactiveTag className="tag is-rounded">
-                    Pending Approval
-                  </InactiveTag>
-                )}
-                {approved === false && (
-                  <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
-                )}
-                <TagGroup tags={tags} />
+      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} target="_blank">
+        <Card className="card">
+          <div style={{ display: 'flex' }}>
+            <div style={{ flex: 1 }}>
+              <div>
+                <CardHeader>
+                  <CardTitle className="is-size-5">{name}</CardTitle>
+                </CardHeader>
               </div>
-              {img && (
-                <LazyLoad height={62} offset={800}>
-                  <Image src={img} alt={`${name} Logo`} />
-                </LazyLoad>
+              {!active && (
+                <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
               )}
+              {approved === null && (
+                <InactiveTag className="tag is-rounded">
+                  Pending Approval
+                </InactiveTag>
+              )}
+              {approved === false && (
+                <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
+              )}
+              <TagGroup tags={tags} />
             </div>
+            {img && (
+              <LazyLoad height={62} offset={800}>
+                <Image src={img} alt={`${name} Logo`} />
+              </LazyLoad>
+            )}
+          </div>
 
-            <Description>{textDescription}</Description>
+          <Description>{textDescription}</Description>
 
-            <ClubDetails club={club} />
-          </Card>
-        </a>
+          <ClubDetails club={club} />
+        </Card>
       </Link>
     </CardWrapper>
   )

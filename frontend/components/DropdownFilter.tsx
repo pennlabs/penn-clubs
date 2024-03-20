@@ -38,7 +38,7 @@ const DropdownHeader = styled.div`
   }
 `
 
-const CheckboxRow = styled.div<{ color?: string }>`
+const CheckboxRow = styled.div<{ $color?: string }>`
   padding-top: 3px;
 
   & label {
@@ -46,7 +46,9 @@ const CheckboxRow = styled.div<{ color?: string }>`
   }
 
   & span {
-    color: ${({ color }) => color ?? CLUBS_GREY};
+    color: ${({ $color }) =>
+      $color ??
+      CLUBS_GREY}; // Using the prop with a $ prefix and providing a fallback value
   }
 
   & span[role='checkbox'] {

@@ -92,7 +92,7 @@ export const getServerSideProps = async (
   props: {
     title: string
     contents: string | null
-    toc: { title: string; id: string }[]
+    toc: { title: string; id: string | undefined }[]
   }
 }> => {
   const fetchProps = async () => {

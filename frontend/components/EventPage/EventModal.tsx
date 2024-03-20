@@ -293,7 +293,11 @@ const EventModal = (props: {
           <div className="is-clearfix">
             <div className="buttons is-pulled-right">
               {club != null && <ActionButtons club={club} />}
-              <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(event.club)}>
+              <Link
+                legacyBehavior
+                href={CLUB_ROUTE()}
+                as={CLUB_ROUTE(event.club)}
+              >
                 <a
                   className="button is-link is-small"
                   onClick={(e) => {

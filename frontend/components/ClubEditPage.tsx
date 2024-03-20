@@ -386,6 +386,7 @@ const ClubForm = ({
         {showInactiveTag && <InactiveTag />}
         {
           <Link
+            legacyBehavior
             href={isViewButton ? CLUB_ROUTE() : HOME_ROUTE}
             as={isViewButton && club ? CLUB_ROUTE(club.code) : HOME_ROUTE}
           >
@@ -410,7 +411,7 @@ const ClubForm = ({
             <b>Before creating your {OBJECT_NAME_SINGULAR},</b> please check to{' '}
             see if it already exists on the{' '}
             <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-              <a>directory page</a>
+              directory page
             </Link>
             . If your {OBJECT_NAME_SINGULAR} already exists, please email{' '}
             <Contact /> to gain access instead of filling out this form.

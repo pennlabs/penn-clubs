@@ -7,16 +7,16 @@ import { apiSetSubscribeStatus } from '../../utils'
 import { AuthCheckContext } from '../contexts'
 
 const SubscribeIconTag = styled.span<{
-  padding?: string
-  absolute?: boolean
-  subscribe?: boolean
+  $padding?: string
+  $absolute?: boolean
+  $subscribe?: boolean
 }>`
   float: right;
-  padding: ${({ padding }) => padding || '7px 0 0 0'};
+  padding: ${({ $padding }) => $padding || '7px 0 0 0'};
   cursor: pointer;
 
-  ${({ absolute }) =>
-    absolute &&
+  ${({ $absolute }) =>
+    $absolute &&
     `
     float: none;
     position: absolute;
@@ -26,14 +26,14 @@ const SubscribeIconTag = styled.span<{
   svg {
     height: 1rem;
     width: 1rem;
-    fill: ${({ subscribe }) => (subscribe ? BLACK : 'none')};
-    stroke: ${({ subscribe }) => (subscribe ? BLACK : MEDIUM_GRAY)};
+    fill: ${({ $subscribe }) => ($subscribe ? BLACK : 'none')};
+    stroke: ${({ $subscribe }) => ($subscribe ? BLACK : MEDIUM_GRAY)};
     stroke-width: 2px;
     stroke-linecap: round;
     stroke-linejoin: round;
 
     &:hover {
-      fill: ${({ subscribe }) => (subscribe ? BLACK : MEDIUM_GRAY)};
+      fill: ${({ $subscribe }) => ($subscribe ? BLACK : MEDIUM_GRAY)};
     }
   }
 `
@@ -65,9 +65,9 @@ export const SubscribeIcon = ({
 
   return (
     <SubscribeIconTag
-      subscribe={subscribe}
-      absolute={absolute}
-      padding={padding}
+      $subscribe={subscribe}
+      $absolute={absolute}
+      $padding={padding}
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()

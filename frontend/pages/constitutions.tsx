@@ -68,7 +68,11 @@ const ConstitutionDirectory = ({ clubs }: Props): ReactElement => {
                 return (
                   <tr key={club.code}>
                     <td>
-                      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
+                      <Link
+                        legacyBehavior
+                        href={CLUB_ROUTE()}
+                        as={CLUB_ROUTE(club.code)}
+                      >
                         <a>{club.name}</a>
                       </Link>
                     </td>

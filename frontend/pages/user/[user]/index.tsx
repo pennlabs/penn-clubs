@@ -100,10 +100,7 @@ const UserProfilePage = ({
           always be able to see all of the information shown here. Currently,
           other people <b>{userInfo?.show_profile ? 'can' : 'cannot'}</b> see
           this page. To change this, go to the{' '}
-          <Link href={SETTINGS_ROUTE + '#Profile'}>
-            <a>settings page</a>
-          </Link>
-          .
+          <Link href={SETTINGS_ROUTE + '#Profile'}>settings page</Link>.
         </div>
       )}
       {!isSelf && !profile.public && (
@@ -123,7 +120,7 @@ const UserProfilePage = ({
           />
         </div>
         <div className="is-pulled-left">
-          <Title className="mb-2">{profile.name}</Title>
+          <Title>{profile.name}</Title>
           <div className="tags mb-0">
             {profile.school
               .sort((a, b) => a.name.localeCompare(b.name))

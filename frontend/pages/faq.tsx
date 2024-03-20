@@ -197,7 +197,7 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
           <b>does not exist</b> on {SITE_NAME}, you can add your{' '}
           {OBJECT_NAME_SINGULAR} using the form found{' '}
           <Link href={CREATE_ROUTE} as={CREATE_ROUTE}>
-            <a>here</a>
+            here
           </Link>
           .
         </li>
@@ -231,11 +231,8 @@ const GENERIC_TEMPLATE = (data): ReactElement => (
       <Question
         title={`How are ${OBJECT_NAME_PLURAL} ordered on ${SITE_NAME}?`}
       >
-        Click{' '}
-        <Link href="/rank">
-          <a>here</a>
-        </Link>{' '}
-        for details about our {OBJECT_NAME_SINGULAR} recommendation algorithm.
+        Click <Link href="/rank">here</Link> for details about our{' '}
+        {OBJECT_NAME_SINGULAR} recommendation algorithm.
       </Question>
     )}
     <Question title="I have another question!">

@@ -13,7 +13,6 @@ import styled from 'styled-components'
 import { ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
-import ApplicationsPage from '~/components/Applications'
 import SubmissionsPage from '~/components/Submissions'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
 import { BORDER_RADIUS } from '~/constants/measurements'
@@ -38,12 +37,7 @@ type SettingsProps = {
   authenticated: boolean | null
 }
 
-const Settings = ({
-  userInfo,
-  authenticated,
-  whartonapplications,
-  submissions,
-}) => {
+const Settings = ({ userInfo, authenticated, submissions }) => {
   /**
    * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
@@ -77,6 +71,11 @@ const Settings = ({
       content: <FavoritesTab key="subscription" keyword="subscription" />,
     },
     {
+      name: 'submissions',
+      label: 'Submissions',
+      content: () => <SubmissionsPage initialSubmissions={submissions} />,
+    },
+    {
       name: 'Requests',
       icon: 'user-check',
       content: <MembershipRequestsTab />,
@@ -87,18 +86,6 @@ const Settings = ({
       icon: 'user',
       content: <ProfileTab defaults={userInfo} />,
     },
-    {
-      name: 'applications',
-      label: 'Applications',
-      content: () => (
-        <ApplicationsPage whartonapplications={whartonapplications} />
-      ),
-    },
-    {
-      name: 'submissions',
-      label: 'Submissions',
-      content: () => <SubmissionsPage initialSubmissions={submissions} />,
-    },
   ]
 
   return (
@@ -106,7 +93,7 @@ const Settings = ({
       <Metadata title="Your Profile" />
       <Container background={BG_GRADIENT}>
         <Title style={{ marginTop: '2.5rem', color: WHITE, opacity: 0.95 }}>
-          Welcome, {userInfo.name}
+          Welcome, {userInfo.name || userInfo.username}
         </Title>
       </Container>
       <HashTabView
@@ -119,13 +106,12 @@ const Settings = ({
 }
 
 type BulkResp = {
-  whartonapplications: any
   submissions: Array<ApplicationSubmission>
 }
 
 Settings.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
-    ['whartonapplications', ['submissions', '/submissions/?format=json']],
+    ['submissions', '/submissions/?format=json'],
     ctx,
   )) as BulkResp
   return {

@@ -37,13 +37,14 @@ const RenewTabTable = ({
         <tr key={club.code}>
           <td>
             <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-              <a>{club.name}</a>
+              {club.name}
             </Link>
           </td>
           <td>
             {!club.active ? (
               role <= MembershipRank.Officer ? (
                 <Link
+                  legacyBehavior
                   href={CLUB_RENEW_ROUTE()}
                   as={CLUB_RENEW_ROUTE(club.code)}
                 >
