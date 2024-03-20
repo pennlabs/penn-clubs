@@ -6,16 +6,15 @@
 app = "penn-clubs-frontend"
 primary_region = "ewr"
 
-[build]
-  image = "pennlabs/penn-clubs-frontend:latest"
+# [build]
+#   image = "pennlabs/penn-clubs-frontend:latest"
 
 [env]
-  # DOMAIN = "clubs-backend.internal:80"
-  DOMAIN = "clubs-backend.fly.dev"
+  DOMAIN = "upenn.club"
 
 [http_service]
   internal_port = 3000
-  force_https = true
+  force_https = false # TODO: eventually true lmao
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1

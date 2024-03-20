@@ -1,0 +1,14 @@
+# fly.toml app configuration file generated for penn-clubs-nginx on 2024-01-03T23:25:09-08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "penn-clubs-nginx"
+primary_region = "ewr"
+
+[http_service]
+  internal_port = 80
+  force_https = false # TODO: eventually we want this to be true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0

@@ -55,3 +55,4 @@ frontend/coverage
 
 # Logs
 yarn-error.log
+*/certs/*

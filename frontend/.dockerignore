@@ -14,3 +14,6 @@ LICENSE
 # Misc
 node_modules/
 .next/
+
+# Fly config
+fly.toml

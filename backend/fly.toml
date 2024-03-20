@@ -5,24 +5,14 @@
 
 app = "clubs-backend"
 primary_region = "ewr"
-# console_command = "/code/manage.py shell"
-
-# [build]
-  # image = "pennlabs/penn-clubs-backend:latest"
-
-# [deploy]
-  # strategy = "bluegreen"
-  # release_command = "python manage.py migrate"
 
 [env]
-  # PORT = "80"
-  REDIS_HOST = "redis-clubs.internal"
-  # DOMAINS = "clubs-backend.internal,penn-clubs-frontend.internal,penn-clubs-frontend.fly.dev"
-  DOMAINS = "*"
+  # TODO: On fly, the REDIS_URL should not end with trailing `/1`.
+  DOMAINS = "*" # TODO: not sure why but was `*` before
 
 [http_service]
   internal_port = 80
-  force_https = true
+  force_https = false # TODO: eventually true lmao
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1

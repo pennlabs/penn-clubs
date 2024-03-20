@@ -51,6 +51,9 @@ STORAGES = {
 
 # Redis settings
 REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_URL = os.getenv("REDIS_URL")
+if REDIS_HOST is None and REDIS_URL is not None:
+    REDIS_HOST = REDIS_URL.split("://")[1]
 
 # Django Channels settings
 CHANNEL_LAYERS = {
@@ -64,7 +67,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:6379/1",
+        "LOCATION": f"redis://{REDIS_HOST}:6379/1" if REDIS_URL is None else REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "IGNORE_EXCEPTIONS": True,  # ignore Redis connection errors
