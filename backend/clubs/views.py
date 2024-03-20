@@ -2932,6 +2932,28 @@ class EventViewSet(ClubEventViewSet):
 
         return Response(EventSerializer(events, many=True).data)
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        Checks if there are tickets linked to this event before deletion.
+        """
+        event = self.get_object()
+        now = timezone.now()
+
+        if (
+            now <= event.end_time
+            and Ticket.objects.filter(event=event, owner__isnull=False).exists()
+        ):
+            return Response(
+                {
+                    "detail": "Cannot delete event with active tickets \
+                          associated with it."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Proceed with deletion if no active tickets are linked
+        return super().destroy(request, *args, **kwargs)
+
 
 class TestimonialViewSet(viewsets.ModelViewSet):
     """
