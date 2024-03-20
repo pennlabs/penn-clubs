@@ -149,6 +149,13 @@ export class MyChart extends PennLabsChart {
       secret: fyhSecret,
       cmd: ["python", "manage.py", "import_paideia_events"],
     });
+
+    new CronJob(this, 'expire-stale-membership-invites', {
+      schedule: cronTime.everyDayAt(12),
+      image: backendImage,
+      secret: fyhSecret,
+      cmd: ["python", "manage.py", "expire_membership_invites"],
+    });
   }
 }
 
