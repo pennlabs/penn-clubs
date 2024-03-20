@@ -86,6 +86,18 @@ const Settings = ({ userInfo, authenticated, submissions }) => {
       icon: 'user',
       content: <ProfileTab defaults={userInfo} />,
     },
+    {
+      name: 'applications',
+      label: 'Applications',
+      content: () => (
+        <ApplicationsPage whartonapplications={whartonapplications} />
+      ),
+    },
+    {
+      name: 'submissions',
+      label: 'Submissions',
+      content: () => <SubmissionsPage initialSubmissions={submissions} />,
+    },
   ]
 
   return (
