@@ -4803,11 +4803,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
 
             # Send out membership invites after sending acceptance emails
+            expiry_time = timezone.now() + datetime.timedelta(days=5)
             invites = [
                 MembershipInvite(
                     creator=self.request.user,
                     club=app.club,
                     email=email,
+                    # programmatically generated invites should expire after some time
+                    expires_at=expiry_time,
                 )
                 for email in invitee_emails
             ]
