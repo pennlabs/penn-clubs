@@ -4704,8 +4704,6 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                                         type: string
                                     name:
                                         type: string
-                            send_invites:
-                                type: boolean
         responses:
             "200":
                 content:
@@ -4728,7 +4726,6 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         ).select_related("user", "committee")
 
         dry_run = self.request.data.get("dry_run")
-        send_invites = self.request.data.get("send_invites")
 
         if not dry_run:
             # Invalidate submission viewset cache
@@ -4760,9 +4757,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 and email_type == "acceptance"
             ):
                 template = acceptance_template
-
-                if send_invites:
-                    invitee_emails.append(submission.user.email)
+                invitee_emails.append(submission.user.email)
 
             elif (
                 email_type == "rejection"
@@ -4818,7 +4813,6 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             # Create all the membership invitations in the database
             MembershipInvite.objects.bulk_create(invites)
 
-            # If send_invites = False, invites would be empty at this point
             for invite in invites:
                 invite.send_mail(self.request)
 
