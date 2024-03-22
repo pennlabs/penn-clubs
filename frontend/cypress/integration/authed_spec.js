@@ -135,7 +135,10 @@ describe('Authenticated user tests', () => {
 
     cy.visit('/club/test-new-club/edit/member')
     cy.contains('Invite Members').scrollIntoView()
-    cy.get('textarea[placeholder="Enter email addresses here!"]').type(fakeEmails.join(','), {delay: 1})
+    cy.get('textarea[placeholder="Enter email addresses here!"]').type(
+      fakeEmails.join(','),
+      { delay: 1 },
+    )
     cy.contains('.button', 'Send Invite').click()
     cy.contains(/Sent invites? to 50 emails?/).should('be.visible')
 

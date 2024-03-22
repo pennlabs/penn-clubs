@@ -52,7 +52,11 @@ const MembershipRequestsTab = (): ReactElement => {
           {requests.map((req) => (
             <tr key={req.club}>
               <td>
-                <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(req.club)}>
+                <Link
+                  legacyBehavior
+                  href={CLUB_ROUTE()}
+                  as={CLUB_ROUTE(req.club)}
+                >
                   <a>{req.club_name}</a>
                 </Link>
               </td>

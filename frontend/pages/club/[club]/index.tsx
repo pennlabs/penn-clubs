@@ -190,7 +190,7 @@ const ClubPage = ({
         <div className="column">
           {isActive || (
             <InactiveCard
-              bordered
+              $bordered
               style={{
                 paddingLeft: '1rem',
               }}
@@ -200,7 +200,7 @@ const ClubPage = ({
           )}
 
           <StyledCard
-            bordered
+            $bordered
             style={{
               paddingLeft: '1rem',
             }}
@@ -226,7 +226,7 @@ const ClubPage = ({
               updateRequests={updateRequests}
             />
           )}
-          <StyledCard bordered>
+          <StyledCard $bordered>
             <Description club={club} />
           </StyledCard>
           {club.advisor_set.length > 0 && (
@@ -258,7 +258,7 @@ const ClubPage = ({
           {club.is_member !== false && club.files && !!club.files.length && (
             <div className="mt-4">
               <StrongText> Uploaded Files </StrongText>
-              <StyledCard bordered>
+              <StyledCard $bordered>
                 <FilesList club={club} />
               </StyledCard>
             </div>
@@ -286,14 +286,14 @@ const ClubPage = ({
                 } asked about this ${OBJECT_NAME_SINGULAR} so far!`
               : `Be the first to ask a question about this ${OBJECT_NAME_SINGULAR}!`}
           </QAButton>
-          <StyledCard bordered>
+          <StyledCard $bordered>
             <InfoBox club={club} />
             <br />
             <StrongText>Contact</StrongText>
             <SocialIcons club={club} />
           </StyledCard>
           {involvement && !!involvement.length && (
-            <StyledCard bordered>
+            <StyledCard $bordered>
               <StrongText>{FIELD_PARTICIPATION_LABEL}</StrongText>
               <div dangerouslySetInnerHTML={{ __html: involvement }} />
             </StyledCard>
@@ -302,7 +302,7 @@ const ClubPage = ({
           {isClubFieldShown('signature_events') &&
             signatureEvents &&
             !!signatureEvents.length && (
-              <StyledCard bordered>
+              <StyledCard $bordered>
                 <StrongText>Signature Events</StrongText>
                 <Text style={{ marginBottom: M0, wordBreak: 'break-word' }}>
                   <Linkify>{signatureEvents}</Linkify>
@@ -316,6 +316,7 @@ const ClubPage = ({
               <ul>
                 <li>
                   <Link
+                    legacyBehavior
                     href={CLUB_ALUMNI_ROUTE()}
                     as={CLUB_ALUMNI_ROUTE(club.code)}
                   >
@@ -325,7 +326,11 @@ const ClubPage = ({
                   </Link>
                 </li>
                 <li>
-                  <Link href={CLUB_ORG_ROUTE()} as={CLUB_ORG_ROUTE(club.code)}>
+                  <Link
+                    legacyBehavior
+                    href={CLUB_ORG_ROUTE()}
+                    as={CLUB_ORG_ROUTE(club.code)}
+                  >
                     <a>
                       <Icon name="git-branch" /> Org Tree
                     </a>

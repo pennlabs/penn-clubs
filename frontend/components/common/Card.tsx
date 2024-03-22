@@ -3,10 +3,10 @@ import styled from 'styled-components'
 import { ANIMATION_DURATION, BORDER } from '../../constants'
 
 type CardProps = {
-  bordered?: boolean
-  hoverable?: boolean
-  background?: string
-  pinned?: boolean
+  $bordered?: boolean
+  $hoverable?: boolean
+  $background?: string
+  $pinned?: boolean
 }
 
 export const CARD_BORDER_RADIUS = '4px'
@@ -16,12 +16,12 @@ export const Card = styled.div<CardProps>`
   box-shadow: 0 0 0 transparent;
   border-radius: ${CARD_BORDER_RADIUS};
   transition: all ${ANIMATION_DURATION}ms ease;
-  background-color: ${({ background }) => background || 'transparent'};
+  background-color: ${({ $background }) => $background || 'transparent'};
 
-  ${({ bordered }) => bordered && `border: 1px solid ${BORDER};`}
+  ${({ $bordered }) => $bordered && `border: 1px solid ${BORDER};`}
 
-  ${({ hoverable }) =>
-    hoverable &&
+  ${({ $hoverable }) =>
+    $hoverable &&
     `
   &:hover,
   &:active,

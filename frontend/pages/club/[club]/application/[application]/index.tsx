@@ -152,7 +152,9 @@ const ApplicationPage = ({
       <ClubMetadata club={club} />
       <Container paddingTop>
         <div className="is-clearfix">
-          <Title className="is-pulled-left">{application.name}</Title>
+          <div className="is-pulled-left">
+            <Title>{application.name}</Title>
+          </div>
         </div>
         {application.description != null && application.description !== '' && (
           <>
@@ -168,7 +170,9 @@ const ApplicationPage = ({
             <small className="is-block mt-2">
               <b>
                 Due:{' '}
-                {moment(application.application_end_time).format('dddd, MMM D')}
+                {moment(application.application_end_time).format(
+                  'dddd, MMMM D, YYYY [at] h:mm A [ET]',
+                )}
               </b>
             </small>
           )}

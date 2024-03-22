@@ -54,7 +54,7 @@ export const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
           alt="Calendar icon"
         />
         <div>
-          <BigParagraph>
+          <BigParagraph suppressHydrationWarning>
             {new Intl.DateTimeFormat('en-US', {
               year: 'numeric',
               month: 'long',
@@ -78,7 +78,7 @@ const Events = ({ data }: EventsProps): ReactElement | null => {
   }
 
   return (
-    <StyledCard bordered>
+    <StyledCard $bordered>
       <div className="mb-3">
         <StrongText className="mb-0">Events</StrongText>
         <small>Click on an event to get more details.</small>

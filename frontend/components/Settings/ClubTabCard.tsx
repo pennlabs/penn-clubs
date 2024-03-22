@@ -117,11 +117,15 @@ const ClubTabCard = ({
   return (
     <Card className="card">
       <CardRow>
-        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)}>
+        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} legacyBehavior>
           <CardTitle>{name}</CardTitle>
         </Link>
         {canManage ? (
-          <Link href={CLUB_EDIT_ROUTE()} as={CLUB_EDIT_ROUTE(code)}>
+          <Link
+            legacyBehavior
+            href={CLUB_EDIT_ROUTE()}
+            as={CLUB_EDIT_ROUTE(code)}
+          >
             <ManageButton className="button is-small">
               <ButtonIcon name="edit" size="1rem" />
               Manage

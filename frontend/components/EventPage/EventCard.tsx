@@ -62,7 +62,7 @@ const EventCard = (props: {
 
   return (
     <EventCardContainer className="event">
-      <Card bordered hoverable background={WHITE} onClick={props.onClick}>
+      <Card $bordered $hoverable $background={WHITE} onClick={props.onClick}>
         <LazyLoad offset={800}>
           <CoverPhoto
             image={imageUrl}

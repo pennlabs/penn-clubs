@@ -195,10 +195,12 @@ const ClubManagementCard = ({
                       {clubs.map((club) => (
                         <div className="panel-block is-clearfix">
                           {club.name}{' '}
-                          <Link href={CLUB_ROUTE(club.code)}>
-                            <a className="ml-2" target="_blank">
-                              <Icon name="external-link" />
-                            </a>
+                          <Link
+                            href={CLUB_ROUTE(club.code)}
+                            className="ml-2"
+                            target="_blank"
+                          >
+                            <Icon name="external-link" />
                           </Link>
                           <div style={{ marginLeft: 'auto' }}>
                             <button
