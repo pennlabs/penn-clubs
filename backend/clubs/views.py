@@ -105,6 +105,7 @@ from clubs.models import (
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
+    send_mail_helper,
 )
 from clubs.permissions import (
     AssetPermission,
@@ -1987,11 +1988,30 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Set archived boolean to be True so that the club appears to have been deleted
         """
+        now = timezone.now()
+
+        club = self.get_object()
 
         instance.archived = True
         instance.archived_by = self.request.user
-        instance.archived_on = timezone.now()
+        instance.archived_on = now
         instance.save()
+
+        # Send notice to club officers and executor
+        context = {
+            "name": club.name,
+            "branding_site_name": settings.BRANDING_SITE_NAME,
+            "branding_site_email": settings.BRANDING_SITE_EMAIL,
+        }
+        emails = club.get_officer_emails() + [self.request.user.email]
+        send_mail_helper(
+            name="club_deletion",
+            subject="Removal of {} from {}".format(
+                club.name, settings.BRANDING_SITE_NAME
+            ),
+            emails=emails,
+            context=context,
+        )
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
