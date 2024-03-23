@@ -1988,13 +1988,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Set archived boolean to be True so that the club appears to have been deleted
         """
-        now = timezone.now()
-
         club = self.get_object()
 
         instance.archived = True
         instance.archived_by = self.request.user
-        instance.archived_on = now
+        instance.archived_on = timezone.now()
         instance.save()
 
         # Send notice to club officers and executor
