@@ -1,6 +1,6 @@
 import 'react-multi-carousel/lib/styles.css'
 
-import React, { ReactElement, useState } from 'react'
+import React, { useState } from 'react'
 import Carousel from 'react-multi-carousel'
 import styled from 'styled-components'
 
@@ -61,7 +61,7 @@ type EventsProps = {
   data: ClubEvent[]
 }
 
-const EventCarousel = ({ data }: EventsProps): ReactElement | null => {
+const EventCarousel = ({ data }: EventsProps) => {
   const [show, setShow] = useState(false)
   const [modalData, setModalData] = useState<ClubEvent>()
 
