@@ -1070,7 +1070,6 @@ class ClubListRankSerializer(ClubListSerializer):
     """
 
     elo = serializers.FloatField()
-    elo_rank = serializers.IntegerField()
     tier = serializers.CharField()
 
     class Meta(ClubListSerializer.Meta):
