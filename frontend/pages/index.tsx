@@ -80,7 +80,7 @@ const Divider = styled.div`
   background: #000f3a;
 `
 
-type SplashProps = {
+export type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
   tags: Tag[]
