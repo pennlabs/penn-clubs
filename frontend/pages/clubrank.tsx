@@ -101,10 +101,10 @@ function Rank(props: SplashProps): ReactElement {
       <InfoPageTitle>Penn Clubs Rank</InfoPageTitle>
       <StrongText>Rank your favorite clubs!</StrongText>
       <Text>
-        Inspired by wholesome websites such as prestigehunt and GreekRank, we've
-        decided to take a crack at making our own club ranking system. Clubs are
-        ranked and given "tiers" based on head-to-head votes by the Penn
-        community.
+        Inspired by <i>wholesome</i> websites such as prestigehunt and
+        GreekRank, we've decided to take a crack at making our own club ranking
+        system. Clubs (with {'>'}10 members on Penn Clubs) are ranked and given
+        "tiers" based on head-to-head votes by the Penn community.
         <br />
         <br /> Users can vote every three seconds. Good luck!
       </Text>

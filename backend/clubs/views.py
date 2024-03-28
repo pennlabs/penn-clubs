@@ -6184,7 +6184,7 @@ class ClubRankViewSet(viewsets.ModelViewSet):
         queryset = queryset.filter(active=True)
 
         # filter by minimum member count
-        queryset = queryset.filter(membership_count__gte=5)
+        queryset = queryset.filter(membership_count__gte=10)
 
         # filter by approved clubs
         queryset = queryset.filter(Q(approved=True) | Q(ghost=True))
@@ -6255,6 +6255,13 @@ class ClubRankViewSet(viewsets.ModelViewSet):
         # Select two random clubs from queryset
         queryset = self.get_queryset()
         ordering = queryset.order_by("?")
+        if ordering.count() < 2:
+            return Response(
+                {
+                    "success": False,
+                    "message": "There are not enough clubs to rank.",
+                }
+            )
         club1 = ordering.first()
         club2 = ordering.exclude(code=club1.code).first()
         serializer = self.get_serializer([club1, club2], many=True)
