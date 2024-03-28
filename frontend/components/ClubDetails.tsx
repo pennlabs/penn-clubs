@@ -122,7 +122,7 @@ const Details = ({ club, showElo }: DetailsProps): ReactElement => {
             {' • '}
             &nbsp;
             <Icon name="star" alt="elo" size="0.8rem" style={iconStyles} />
-            {club.elo}
+            <b>{Math.round(club.elo)}</b>
           </>
         )}
       </div>
