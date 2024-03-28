@@ -6180,8 +6180,11 @@ class ClubRankViewSet(viewsets.ModelViewSet):
         # filter out archived clubs
         queryset = queryset.filter(archived=False)
 
+        # filter out inactive clubs
+        queryset = queryset.filter(active=True)
+
         # filter by minimum member count
-        queryset = queryset.filter(membership_count__gte=0)
+        queryset = queryset.filter(membership_count__gte=5)
 
         # filter by approved clubs
         queryset = queryset.filter(Q(approved=True) | Q(ghost=True))
