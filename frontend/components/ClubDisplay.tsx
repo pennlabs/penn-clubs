@@ -111,7 +111,7 @@ const ClubDisplay = ({
                   fontSize: '1.2rem',
                 }}
               >
-                {`${`${`${`${tier}`}`}`}`}
+                {tier}
               </div>
             )}
             <div style={{ padding: '4px 16px 4px' }}>
