@@ -1070,10 +1070,17 @@ class ClubListRankSerializer(ClubListSerializer):
     """
 
     elo = serializers.FloatField()
-    tier = serializers.CharField()
+    elo_rank = serializers.SerializerMethodField()
+    tier = serializers.SerializerMethodField()
 
     class Meta(ClubListSerializer.Meta):
         fields = ClubListSerializer.Meta.fields + ["elo", "elo_rank", "tier"]
+
+    def get_elo_rank(self, obj):
+        return obj.elo_rank
+
+    def get_tier(self, obj):
+        return obj.tier
 
 
 class MembershipClubListSerializer(ClubListSerializer):
