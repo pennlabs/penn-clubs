@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { ReactElement } from 'react'
 import LazyLoad from 'react-lazy-load'
 import styled from 'styled-components'
 
@@ -97,11 +96,7 @@ type ClubCardProps = {
   clickable?: boolean
 }
 
-const ClubCard = ({
-  club,
-  fullWidth,
-  clickable = false,
-}: ClubCardProps): ReactElement => {
+const ClubCard: React.FC<ClubCardProps> = ({ club, fullWidth, clickable }) => {
   const { name, active, approved, subtitle, tags, enables_subscription, code } =
     club
   const img = club.image_url

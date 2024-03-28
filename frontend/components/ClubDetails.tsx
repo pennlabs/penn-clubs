@@ -44,8 +44,7 @@ const DetailBoolIcon = ({ value, alt }): ReactElement => {
     />
   )
 }
-
-const Details = ({ club, showElo }: DetailsProps): ReactElement => {
+const Details: React.FC<DetailsProps> = ({ club, showElo }) => {
   const {
     size,
     application_required: applicationRequired,

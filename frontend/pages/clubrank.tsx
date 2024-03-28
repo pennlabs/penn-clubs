@@ -62,17 +62,15 @@ function Rank(props: SplashProps): ReactElement {
   const [searchInput, setSearchInput] = useState<SearchInput>({})
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const currentSearch = useRef<SearchInput>({})
-  useEffect((): void => {
-    const performSearch = async (): Promise<void> => {
+  useEffect(() => {
+    ;(async () => {
       if (equal(searchInput, currentSearch.current)) {
         return
       }
       setLoading(true) // Only show loading animation if actively searching, rather than refreshing.
       await search()
       setLoading(false)
-    }
-
-    performSearch()
+    })()
   }, [searchInput])
 
   async function search() {
@@ -110,7 +108,7 @@ function Rank(props: SplashProps): ReactElement {
         <br />
         <br /> Users can vote every three seconds. Good luck!
       </Text>
-      <RankDropdown reloadRankings={search} />
+      <RankDropdown onReloadRankings={search} />
       <div style={{ height: '20px' }} />
       <TopSearchBar
         onChange={(value) =>

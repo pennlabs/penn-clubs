@@ -8,7 +8,7 @@ import ClubCard from '../ClubCard'
 import { Collapsible } from '../SearchBar'
 
 type RankDropdownProps = {
-  reloadRankings: () => void
+  onReloadRankings?: () => void
 }
 
 const breatheAnimation = keyframes`
@@ -56,7 +56,7 @@ function RankDropdown(props: RankDropdownProps): ReactElement {
       if (resp.ok && json.success) {
         setTooSoon(true)
         // set async function to reset
-        props.reloadRankings()
+        props.onReloadRankings?.()
         reload()
         setTimeout(() => {
           setTooSoon(false)
