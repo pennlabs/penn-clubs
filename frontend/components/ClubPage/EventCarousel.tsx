@@ -96,7 +96,7 @@ const EventCarousel = ({ data }: EventsProps) => {
       </div>
       <div
         style={{
-          height: '35vh',
+          height: '260px',
           width: '100%',
           boxSizing: 'border-box',
           position: 'relative',
