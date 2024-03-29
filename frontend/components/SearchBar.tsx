@@ -166,7 +166,7 @@ type CollapsibleProps = React.PropsWithChildren<{
   name: string
 }>
 
-const Collapsible = ({
+export const Collapsible = ({
   children,
   active,
   name,
@@ -353,7 +353,7 @@ export const SearchBarTextItem = ({
           }
           return { ...inpt, [param]: nameInput }
         }),
-      200,
+      400,
     )
     storeTimeout(timeoutId)
   }, [nameInput])

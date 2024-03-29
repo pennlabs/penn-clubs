@@ -31,6 +31,7 @@ const iconStyles = {
 
 type DetailsProps = {
   club: Club
+  showElo?: boolean
 }
 
 const DetailBoolIcon = ({ value, alt }): ReactElement => {
@@ -43,8 +44,7 @@ const DetailBoolIcon = ({ value, alt }): ReactElement => {
     />
   )
 }
-
-const Details = ({ club }: DetailsProps): ReactElement => {
+const Details: React.FC<DetailsProps> = ({ club, showElo }) => {
   const {
     size,
     application_required: applicationRequired,
@@ -113,6 +113,15 @@ const Details = ({ club }: DetailsProps): ReactElement => {
             &nbsp;
             <DetailBoolIcon value={acceptingMembers} alt="accepting members" />
             {acceptingMembers ? 'Taking Members' : 'Not Taking Members'}
+          </>
+        )}
+        {showElo && (
+          <>
+            &nbsp;
+            {' • '}
+            &nbsp;
+            <Icon name="star" alt="elo" size="0.8rem" style={iconStyles} />
+            <b>{Math.round(club.elo)}</b>
           </>
         )}
       </div>
