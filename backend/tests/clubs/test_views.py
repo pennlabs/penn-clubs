@@ -18,9 +18,11 @@ from ics import Calendar
 
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
+    ApplicationSubmission,
     Asset,
     Badge,
     Club,
+    ClubApplication,
     ClubFair,
     ClubFairRegistration,
     Event,
@@ -1619,6 +1621,95 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+    def test_send_invite_with_acceptance_email(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Create a club application
+        now = timezone.now()
+        application = ClubApplication.objects.create(
+            name="Send Acceptance Invivites",
+            club=self.club1,
+            application_start_time=now,
+            application_end_time=now + timezone.timedelta(days=1),
+            result_release_time=now + timezone.timedelta(days=2),
+            is_wharton_council=False,
+        )
+        application.save()
+
+        applicants = [self.user1, self.user2, self.user3, self.user4]
+        # 4 = accepted, 2 = rejected, 1 = pending
+        statuses = [4, 4, 2, 1]
+
+        # Create submissions for each applicant
+        i = 0
+        for user in applicants:
+            submission = ApplicationSubmission.objects.create(
+                user=user,
+                application=application,
+                committee=None,
+                status=statuses[i],
+                reason="a reason",
+            )
+            i += 1
+            submission.save()
+
+        # Send acceptance & invitations emails emails
+        resp = self.client.post(
+            reverse(
+                "club-applications-send-emails",
+                kwargs={"club_code": self.club1.code, "pk": application.pk},
+            ),
+            {
+                "allow_resend": True,
+                "dry_run": False,
+                "email_type": {"id": "acceptance", "name": "Acceptance"},
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Check club application was created
+        self.assertTrue(
+            ClubApplication.objects.filter(
+                club=application.club, name="Send Acceptance Invivites"
+            ).exists()
+        )
+
+        i = 0
+        for user in applicants:
+            # check application submissions were created
+            self.assertTrue(
+                ApplicationSubmission.objects.filter(
+                    application=application, user=user, status=statuses[i]
+                ).exists()
+            )
+            i += 1
+
+        # Check that invitations were created.
+        # Email test are done in test_send_invite_email
+        self.assertTrue(
+            MembershipInvite.objects.filter(
+                club=application.club, email=self.user1.email
+            ).exists()
+        )
+        self.assertTrue(
+            MembershipInvite.objects.filter(
+                club=application.club, email=self.user2.email
+            ).exists()
+        )
+
+        # Check applicants not accepted are not invited
+        self.assertFalse(
+            MembershipInvite.objects.filter(
+                club=application.club, email=self.user3.email
+            ).exists()
+        )
+        self.assertFalse(
+            MembershipInvite.objects.filter(
+                club=application.club, email=self.user4.email
+            ).exists()
+        )
 
     def test_club_invite_insufficient_auth(self):
         self.client.login(username=self.user2.username, password="test")
