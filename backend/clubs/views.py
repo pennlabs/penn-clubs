@@ -6189,12 +6189,6 @@ class ClubRankViewSet(viewsets.ModelViewSet):
         if not person.is_authenticated:
             person = None
 
-        # select subset of clubs if requested
-        subset = self.request.query_params.get("in", None)
-        if subset:
-            subset = [x.strip() for x in subset.strip().split(",")]
-            queryset = queryset.filter(code__in=subset)
-
         # filter out archived clubs
         queryset = queryset.filter(archived=False)
 
@@ -6227,6 +6221,12 @@ class ClubRankViewSet(viewsets.ModelViewSet):
             ),
             elo_rank=F("rank_elo"),
         )
+
+        # select subset of clubs if requested
+        subset = self.request.query_params.get("in", None)
+        if subset:
+            subset = [x.strip() for x in subset.strip().split(",")]
+            queryset_with_tier = queryset_with_tier.filter(code__in=subset)
 
         return queryset_with_tier
 
