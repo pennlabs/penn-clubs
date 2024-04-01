@@ -6202,7 +6202,7 @@ class ClubRankViewSet(viewsets.ModelViewSet):
         queryset = queryset.filter(active=True)
 
         # filter by minimum member count
-        queryset = queryset.filter(membership_count__gte=10)
+        queryset = queryset.filter(membership_count__gte=15)
 
         # filter by approved clubs
         queryset = queryset.filter(Q(approved=True) | Q(ghost=True))

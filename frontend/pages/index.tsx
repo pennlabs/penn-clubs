@@ -1,7 +1,15 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
 import { LiveEventsDialog } from 'components/ClubPage/LiveEventsDialog'
-import { Icon, Metadata, Title, WideContainer } from 'components/common'
+import {
+  AlertDesc,
+  AlertText,
+  Card,
+  Icon,
+  Metadata,
+  Title,
+  WideContainer,
+} from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
 import { FuseTag } from 'components/FilterSearch'
 import { ActionLink } from 'components/Header/Feedback'
@@ -15,6 +23,7 @@ import SearchBar, {
   SearchInput,
 } from 'components/SearchBar'
 import equal from 'deep-equal'
+import Link from 'next/link'
 import {
   createContext,
   ReactElement,
@@ -46,6 +55,7 @@ import {
   TAG_BACKGROUND_COLOR_MAP,
   TAG_TEXT_COLOR_MAP,
 } from '~/constants/colors'
+import { M2, M3 } from '~/constants/measurements'
 
 const ClearAllLink = styled.span`
   cursor: pointer;
@@ -78,6 +88,12 @@ const Divider = styled.div`
   margin-bottom: 1.5rem;
   border-radius: 1.5px;
   background: #000f3a;
+`
+
+const NotifCard = styled(Card)`
+  background-color: ${CLUBS_PURPLE};
+  margin-bottom: ${M3};
+  padding-left: ${M2};
 `
 
 export type SplashProps = {
@@ -565,6 +581,26 @@ const Splash = (props: SplashProps): ReactElement => {
                 <ScrollTopButton />
               </>
             )}
+
+            <NotifCard
+              $bordered
+              style={{
+                paddingLeft: '1rem',
+              }}
+            >
+              <AlertText>
+                <Icon name="award" style={{ marginRight: 4 }} />
+                Penn Club Rank Released!
+              </AlertText>
+              <AlertDesc>
+                Check out our new{' '}
+                <Link href="/clubrank">
+                  <u>Club Rank</u>
+                </Link>{' '}
+                feature to see how clubs stack up against each other.
+              </AlertDesc>
+            </NotifCard>
+
             <ResultsText>
               {' '}
               {exclusiveClubs ? (
