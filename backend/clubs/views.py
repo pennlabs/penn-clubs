@@ -195,19 +195,20 @@ from clubs.utils import fuzzy_lookup_club, html_to_text
 
 
 def file_upload_endpoint_helper(request, code):
-    obj = get_object_or_404(Club, code=code)
-    if "file" in request.data and isinstance(request.data["file"], UploadedFile):
-        asset = Asset.objects.create(
-            creator=request.user,
-            club=obj,
-            file=request.data["file"],
-            name=request.data["file"].name,
-        )
-    else:
+    club = get_object_or_404(Club, code=code)
+
+    if "file" not in request.data or not isinstance(request.data["file"], UploadedFile):
         return Response(
             {"detail": "No image file was uploaded!"},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    asset = Asset.objects.create(
+        creator=request.user,
+        club=club,
+        file=request.data["file"],
+        name=request.data["file"].name,
+    )
     return Response({"detail": "Club file uploaded!", "id": asset.id})
 
 
@@ -327,141 +328,143 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
     If model is not a Club, expects the model to have a club foreign key to Club.
     """
 
+    def parse_year(self, field, value, operation, queryset):
+        if value.isdigit():
+            suffix = ""
+            if operation in {"lt", "gt", "lte", "gte"}:
+                suffix = f"__{operation}"
+            return {f"{field}__year{suffix}": int(value)}
+        if value.lower() in {"none", "null"}:
+            return {f"{field}__isnull": True}
+        return {}
+
+    def parse_int(self, field, value, operation, queryset):
+        if operation == "in":
+            values = value.strip().split(",")
+            sizes = [int(size) for size in values if size]
+            return {f"{field}__in": sizes}
+
+        if "," in value:
+            values = [int(x.strip()) for x in value.split(",") if x]
+            if operation == "and":
+                for value in values:
+                    queryset = queryset.filter(**{field: value})
+                return queryset
+            return {f"{field}__in": values}
+
+        if value.isdigit():
+            suffix = ""
+            if operation in {"lt", "gt", "lte", "gte"}:
+                suffix = f"__{operation}"
+            return {f"{field}{suffix}": int(value)}
+        if value.lower() in {"none", "null"}:
+            return {f"{field}__isnull": True}
+        return {}
+
+    def parse_many_to_many(self, label, field, value, operation, queryset):
+        tags = value.strip().split(",")
+        if operation == "or":
+            if tags[0].isdigit():
+                tags = [int(tag) for tag in tags if tag]
+                return {f"{field}__id__in": tags}
+            else:
+                return {f"{field}__{label}__in": tags}
+
+        if tags[0].isdigit() or operation == "id":
+            tags = [int(tag) for tag in tags if tag]
+            if settings.BRANDING == "fyh":
+                queryset = queryset.filter(**{f"{field}__id__in": tags})
+            else:
+                queryset = queryset.filter(**{f"{field}__id__in": tags})
+                for tag in tags:
+                    queryset = queryset.filter(**{f"{field}__id": tag})
+        else:
+            for tag in tags:
+                queryset = queryset.filter(**{f"{field}__{label}": tag})
+
+        return queryset
+
+    def parse_badges(self, field, value, operation, queryset):
+        return self.parse_many_to_many("label", field, value, operation, queryset)
+
+    def parse_tags(self, field, value, operation, queryset):
+        return self.parse_many_to_many("name", field, value, operation, queryset)
+
+    def parse_boolean(self, field, value, operation, queryset):
+        value = value.strip().lower()
+
+        if operation == "in":
+            if set(value.split(",")) == {"true", "false"}:
+                return
+
+        if value in {"true", "yes"}:
+            boolval = True
+        elif value in {"false", "no"}:
+            boolval = False
+        elif value in {"null", "none"}:
+            boolval = None
+        else:
+            return
+
+        if boolval is None:
+            return {f"{field}__isnull": True}
+
+        return {f"{field}": boolval}
+
+    def parse_string(self, field, value, operation, queryset):
+        if operation == "in":
+            values = [x.strip() for x in value.split(",")]
+            values = [x for x in values if x]
+            return {f"{field}__in": values}
+        return {f"{field}": value}
+
+    def parse_datetime(self, field, value, operation, queryset):
+        try:
+            value = parse(value.strip())
+        except (ValueError, OverflowError):
+            return
+
+        if operation in {"gt", "lt", "gte", "lte"}:
+            return {f"{field}__{operation}": value}
+        return
+
+    def parse_fair(self, field, value, operation, queryset):
+        try:
+            value = int(value.strip())
+        except ValueError:
+            return
+
+        fair = ClubFair.objects.filter(id=value).first()
+        if fair:
+            return {
+                "start_time__gte": fair.start_time,
+                "end_time__lte": fair.end_time,
+            }
+
     def filter_queryset(self, request, queryset, view):
         params = request.GET.dict()
 
-        def parse_year(field, value, operation, queryset):
-            if value.isdigit():
-                suffix = ""
-                if operation in {"lt", "gt", "lte", "gte"}:
-                    suffix = f"__{operation}"
-                return {f"{field}__year{suffix}": int(value)}
-            if value.lower() in {"none", "null"}:
-                return {f"{field}__isnull": True}
-            return {}
-
-        def parse_int(field, value, operation, queryset):
-            if operation == "in":
-                values = value.strip().split(",")
-                sizes = [int(size) for size in values if size]
-                return {f"{field}__in": sizes}
-
-            if "," in value:
-                values = [int(x.strip()) for x in value.split(",") if x]
-                if operation == "and":
-                    for value in values:
-                        queryset = queryset.filter(**{field: value})
-                    return queryset
-                return {f"{field}__in": values}
-
-            if value.isdigit():
-                suffix = ""
-                if operation in {"lt", "gt", "lte", "gte"}:
-                    suffix = f"__{operation}"
-                return {f"{field}{suffix}": int(value)}
-            if value.lower() in {"none", "null"}:
-                return {f"{field}__isnull": True}
-            return {}
-
-        def parse_many_to_many(label, field, value, operation, queryset):
-            tags = value.strip().split(",")
-            if operation == "or":
-                if tags[0].isdigit():
-                    tags = [int(tag) for tag in tags if tag]
-                    return {f"{field}__id__in": tags}
-                else:
-                    return {f"{field}__{label}__in": tags}
-
-            if tags[0].isdigit() or operation == "id":
-                tags = [int(tag) for tag in tags if tag]
-                if settings.BRANDING == "fyh":
-                    queryset = queryset.filter(**{f"{field}__id__in": tags})
-                else:
-                    for tag in tags:
-                        queryset = queryset.filter(**{f"{field}__id": tag})
-            else:
-                for tag in tags:
-                    queryset = queryset.filter(**{f"{field}__{label}": tag})
-            return queryset
-
-        def parse_badges(field, value, operation, queryset):
-            return parse_many_to_many("label", field, value, operation, queryset)
-
-        def parse_tags(field, value, operation, queryset):
-            return parse_many_to_many("name", field, value, operation, queryset)
-
-        def parse_boolean(field, value, operation, queryset):
-            value = value.strip().lower()
-
-            if operation == "in":
-                if set(value.split(",")) == {"true", "false"}:
-                    return
-
-            if value in {"true", "yes"}:
-                boolval = True
-            elif value in {"false", "no"}:
-                boolval = False
-            elif value in {"null", "none"}:
-                boolval = None
-            else:
-                return
-
-            if boolval is None:
-                return {f"{field}__isnull": True}
-
-            return {f"{field}": boolval}
-
-        def parse_string(field, value, operation, queryset):
-            if operation == "in":
-                values = [x.strip() for x in value.split(",")]
-                values = [x for x in values if x]
-                return {f"{field}__in": values}
-            return {f"{field}": value}
-
-        def parse_datetime(field, value, operation, queryset):
-            try:
-                value = parse(value.strip())
-            except (ValueError, OverflowError):
-                return
-
-            if operation in {"gt", "lt", "gte", "lte"}:
-                return {f"{field}__{operation}": value}
-            return
-
         fields = {
-            "accepting_members": parse_boolean,
-            "active": parse_boolean,
-            "application_required": parse_int,
-            "appointment_needed": parse_boolean,
-            "approved": parse_boolean,
-            "available_virtually": parse_boolean,
-            "badges": parse_badges,
-            "code": parse_string,
-            "enables_subscription": parse_boolean,
-            "favorite_count": parse_int,
-            "founded": parse_year,
-            "recruiting_cycle": parse_int,
-            "size": parse_int,
-            "tags": parse_tags,
-            "target_majors": parse_tags,
-            "target_schools": parse_tags,
-            "target_years": parse_tags,
-            "target_students": parse_tags,
-            "student_types": parse_tags,
+            "accepting_members": self.parse_boolean,
+            "active": self.parse_boolean,
+            "application_required": self.parse_int,
+            "appointment_needed": self.parse_boolean,
+            "approved": self.parse_boolean,
+            "available_virtually": self.parse_boolean,
+            "badges": self.parse_badges,
+            "code": self.parse_string,
+            "enables_subscription": self.parse_boolean,
+            "favorite_count": self.parse_int,
+            "founded": self.parse_year,
+            "recruiting_cycle": self.parse_int,
+            "size": self.parse_int,
+            "tags": self.parse_tags,
+            "target_majors": self.parse_tags,
+            "target_schools": self.parse_tags,
+            "target_years": self.parse_tags,
+            "target_students": self.parse_tags,
+            "student_types": self.parse_tags,
         }
-
-        def parse_fair(field, value, operation, queryset):
-            try:
-                value = int(value.strip())
-            except ValueError:
-                return
-
-            fair = ClubFair.objects.filter(id=value).first()
-            if fair:
-                return {
-                    "start_time__gte": fair.start_time,
-                    "end_time__lte": fair.end_time,
-                }
 
         if not queryset.model == Club:
             fields = {f"club__{k}": v for k, v in fields.items()}
@@ -469,10 +472,10 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
         if queryset.model == Event:
             fields.update(
                 {
-                    "type": parse_int,
-                    "start_time": parse_datetime,
-                    "end_time": parse_datetime,
-                    "fair": parse_fair,
+                    "type": self.parse_int,
+                    "start_time": self.parse_datetime,
+                    "end_time": self.parse_datetime,
+                    "fair": self.parse_fair,
                 }
             )
 
@@ -545,6 +548,7 @@ class ClubsOrderingFilter(RandomOrderingFilter):
         if "featured" in ordering:
             if queryset.model == Club:
                 return queryset.order_by("-rank", "-favorite_count", "-id")
+
             return queryset.order_by(
                 "-club__rank", "-club__favorite_count", "-club__id"
             )
@@ -620,10 +624,11 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             start_time__lte=now + datetime.timedelta(minutes=2),
             end_time__gte=now - datetime.timedelta(minutes=2),
         ).first()
+
         if fair is None:
             return Response([])
-        else:
-            return Response([ClubFairSerializer(instance=fair).data])
+
+        return Response([ClubFairSerializer(instance=fair).data])
 
     @action(detail=True, methods=["get"])
     def live(self, *args, **kwargs):
@@ -1025,6 +1030,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Club.objects.all().prefetch_related("tags").order_by("-favorite_count", "name")
     )
     permission_classes = [ClubPermission | IsSuperuser]
+
     filter_backends = [filters.SearchFilter, ClubsSearchFilter, ClubsOrderingFilter]
     search_fields = ["name", "subtitle", "code", "terms"]
     ordering_fields = ["favorite_count", "name"]
@@ -2994,16 +3000,13 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         """
         If a membership request object already exists, reuse it.
         """
-        club = request.data.get("club", None)
-        obj = MembershipRequest.objects.filter(
-            club__code=club, person=request.user
-        ).first()
-        if obj is not None:
-            obj.withdrew = False
-            obj.save(update_fields=["withdrew"])
-            return Response(UserMembershipRequestSerializer(obj).data)
-
-        return super().create(request, *args, **kwargs)
+        club_code = request.data.get("club", None)
+        obj, _ = MembershipRequest.objects.update_or_create(
+            club__code=club_code,
+            person=request.user,
+            defaults={"withdrew": False},
+        )
+        return Response(UserMembershipRequestSerializer(obj).data)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -4911,36 +4914,36 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         """
         Updates times for all applications with cycle
         """
-        applications = ClubApplication.objects.filter(
-            application_cycle=self.get_object()
-        )
-        str_start_date = self.request.data.get("start_date").replace("T", " ")
-        str_end_date = self.request.data.get("end_date").replace("T", " ")
-        str_release_date = self.request.data.get("release_date").replace("T", " ")
+        cycle = self.get_object()
+        applications = ClubApplication.objects.filter(application_cycle=cycle)
+
+        new_start = self.request.data.get("start_date").replace("T", " ")
+        new_end = self.request.data.get("end_date").replace("T", " ")
+        new_release = self.request.data.get("release_date").replace("T", " ")
+
         time_format = "%Y-%m-%d %H:%M:%S%z"
         start = (
-            datetime.datetime.strptime(str_start_date, time_format)
-            if str_start_date
-            else self.get_object().start_date
+            datetime.datetime.strptime(new_start, time_format)
+            if new_start
+            else cycle.start_date
         )
         end = (
-            datetime.datetime.strptime(str_end_date, time_format)
-            if str_end_date
-            else self.get_object().end_date
+            datetime.datetime.strptime(new_end, time_format)
+            if new_end
+            else cycle.end_date
         )
         release = (
-            datetime.datetime.strptime(str_release_date, time_format)
-            if str_release_date
-            else self.get_object().release_date
+            datetime.datetime.strptime(new_release, time_format)
+            if new_release
+            else cycle.release_date
         )
-        for app in applications:
-            app.application_start_time = start
-            if app.application_end_time_exception:
-                continue
-            app.application_end_time = end
-            app.result_release_time = release
-        f = ["application_start_time", "application_end_time", "result_release_time"]
-        ClubApplication.objects.bulk_update(applications, f)
+
+        applications.update(application_start_time=start)
+        # Exclude applications with an extension from end & release update
+        applications.filter(application_end_time_exception=False).update(
+            application_end_time=end, result_release_time=release
+        )
+
         return super().update(*args, **kwargs)
 
     @action(detail=True, methods=["GET"])
@@ -5461,28 +5464,29 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
         submission_pks = self.request.data.get("submissions", [])
         status = self.request.data.get("status", None)
-        if (
-            status in map(lambda x: x[0], ApplicationSubmission.STATUS_TYPES)
-            and len(submission_pks) > 0
-        ):
-            # Invalidate submission viewset cache
-            submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
-            app_id = submissions.first().application.id if submissions.first() else None
-            if not app_id:
-                return Response({"detail": "No submissions found"})
-            key = f"applicationsubmissions:{app_id}"
-            cache.delete(key)
 
-            submissions.update(status=status)
-
-            return Response(
-                {
-                    "detail": f"Successfully updated submissions' {submission_pks}"
-                    f"status {status}"
-                }
-            )
-        else:
+        if len(submission_pks) == 0 or status not in [
+            status_type[0] for status_type in ApplicationSubmission.STATUS_TYPES
+        ]:
             return Response({"detail": "Invalid request"})
+
+        submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
+        if not submissions.exists():
+            return Response({"detail": "No submissions found"})
+
+        # Invalidate submission viewset cache
+        app_id = submissions.first().application.id
+        key = f"applicationsubmissions:{app_id}"
+        cache.delete(key)
+
+        submissions.update(status=status)
+
+        return Response(
+            {
+                "detail": f"Successfully updated submissions' {submission_pks} "
+                f"status to {status}"
+            }
+        )
 
     @action(detail=False, methods=["post"])
     def reason(self, *args, **kwargs):
@@ -5519,27 +5523,22 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         ---
         """
         submissions = self.request.data.get("submissions", [])
-        pks = list(map(lambda x: x["id"], submissions))
-        reasons = list(map(lambda x: x["reason"], submissions))
+        pks = [submission["id"] for submission in submissions]
+        reasons = {submission["id"]: submission["reason"] for submission in submissions}
 
         submission_objs = ApplicationSubmission.objects.filter(pk__in=pks)
 
-        # Invalidate submission viewset cache
-        app_id = (
-            submission_objs.first().application.id if submission_objs.first() else None
-        )
-        if not app_id:
+        if not submission_objs.exists():
             return Response({"detail": "No submissions found"})
+
+        # Invalidate submission viewset cache
+        app_id = submission_objs.first().application.id
         key = f"applicationsubmissions:{app_id}"
         cache.delete(key)
 
-        for idx, pk in enumerate(pks):
-            obj = submission_objs.filter(pk=pk).first()
-            if obj:
-                obj.reason = reasons[idx]
-                obj.save()
-            else:
-                return Response({"detail": "Object not found"})
+        for submission in submission_objs:
+            submission.reason = reasons[submission.pk]
+        ApplicationSubmission.objects.bulk_update(submission_objs, ["reason"])
 
         return Response({"detail": "Successfully updated submissions' reasons"})
 
