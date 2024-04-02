@@ -54,6 +54,7 @@ pandas = "*"
 drf-excel = "*"
 numpy = "*"
 inflection = "*"
+cybersource-rest-client-python = "*"
 
 [requires]
 python_version = "3.11"
