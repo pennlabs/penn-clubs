@@ -58,6 +58,8 @@ Now, you can run
   to populate the database with dummy data)
 - `$ ./manage.py runserver` OR `$ python3 manage.py runserver`
 
+Use `$ ./manage.py test` to run unit tests.
+
 ### Frontend
 
 Running the frontend requires [Node.js](https://nodejs.org/en/) and
@@ -76,6 +78,8 @@ You will need to set the following environment variables on the frontend:
 2. Install dependencies using `yarn install` in the project directory.
 3. Run application using `yarn dev`.
 4. Access application at [http://localhost:3000](http://localhost:3000).
+
+Use `$ yarn test` to run Cypress tests.
 
 ### Development
 
