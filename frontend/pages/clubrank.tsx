@@ -11,6 +11,7 @@ import { ReactElement, useEffect, useRef, useState } from 'react'
 import { PaginatedClubPage, renderListPage } from 'renderPage'
 
 import RankDropdown from '~/components/ClubRank/RankDropdown'
+import AuthPrompt from '~/components/common/AuthPrompt'
 import PaginatedClubDisplay from '~/components/PaginatedClubDisplay'
 import { SearchInput } from '~/components/SearchBar'
 import { SNOW } from '~/constants/colors'
@@ -67,9 +68,7 @@ function Rank(props: SplashProps): ReactElement {
       if (equal(searchInput, currentSearch.current)) {
         return
       }
-      setLoading(true) // Only show loading animation if actively searching, rather than refreshing.
       await search()
-      setLoading(false)
     })()
   }, [searchInput])
 
@@ -82,6 +81,7 @@ function Rank(props: SplashProps): ReactElement {
     }
 
     ;(async () => {
+      setLoading(true)
       const params = new URLSearchParams(paramsObject)
       const displayClubs = await doApiRequest(
         `/clubrank/?${params.toString()}`,
@@ -92,18 +92,22 @@ function Rank(props: SplashProps): ReactElement {
       if (equal(currentSearch.current, searchInput)) {
         setClubs(displayClubs)
       }
+      setLoading(false)
     })()
   }
 
+  if (!props.userInfo) {
+    return <AuthPrompt title="Sorry, you must be logged in to use Club Rank." />
+  }
   return (
     <Container background={SNOW}>
-      <Metadata title="Penn Clubs Rank" />
-      <InfoPageTitle>Penn Clubs Rank</InfoPageTitle>
+      <Metadata title="Penn Club Rank" />
+      <InfoPageTitle>Penn Club Rank</InfoPageTitle>
       <StrongText>Rank your favorite clubs!</StrongText>
       <Text>
         Inspired by <i>wholesome</i> websites such as prestigehunt and
         GreekRank, we've decided to take a crack at making our own club ranking
-        system. Clubs (with {'>'}10 members on Penn Clubs) are ranked and given
+        system. Clubs (with {'>'}15 members on Penn Clubs) are ranked and given
         "tiers" based on head-to-head votes by the Penn community.
         <br />
         <br /> Users can vote every three seconds. Good luck!
@@ -115,6 +119,7 @@ function Rank(props: SplashProps): ReactElement {
           setSearchInput((inpt) => ({ ...inpt, search: value }))
         }
       />
+
       {isLoading || !clubs ? (
         <ListLoadIndicator />
       ) : (
