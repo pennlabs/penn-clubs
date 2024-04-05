@@ -37,7 +37,7 @@ const Wrapper = styled.div`
   }
 `
 
-export const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
+const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
   const [show, setShow] = useState(false)
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)

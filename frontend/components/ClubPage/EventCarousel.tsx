@@ -120,7 +120,7 @@ const EventCarousel = ({ data }: EventsProps) => {
               }
             >
               {data.map((entry, index) => (
-                <div onClick={() => showModal(entry)} key={index}>
+                <div key={index}>
                   <EventWrapper>
                     <EventCard
                       event={entry}
