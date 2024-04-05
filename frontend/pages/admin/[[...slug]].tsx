@@ -39,6 +39,7 @@ function AdminPage({
   }
 
   const router = useRouter()
+
   const tabs = [
     {
       name: 'bulk',

@@ -35,6 +35,7 @@ const Notification = styled.span`
 type SettingsProps = {
   userInfo: UserInfo
   authenticated: boolean | null
+  submissions: ApplicationSubmission[]
 }
 
 const Settings = ({ userInfo, authenticated, submissions }) => {
