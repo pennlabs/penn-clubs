@@ -651,3 +651,46 @@ class MergeDuplicatesTestCase(TestCase):
 
         with self.assertRaises(CommandError):
             call_command("merge_duplicates", "--tag")
+
+
+class ExpireMembershipInvitesTest(TestCase):
+    def setUp(self):
+        # Create users
+        self.user1 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
+        )
+        self.user2 = get_user_model().objects.create_user(
+            "tjefferson", "test-application-notif@example.com", "test"
+        )
+
+        # Create club1
+        self.club1 = Club.objects.create(
+            code="one", name="Club One", active=True, email="test@example.com"
+        )
+
+        # Create expired MembershipInvite
+        self.expired_invite = MembershipInvite.objects.create(
+            email=self.user2.email,
+            club=self.club1,
+            creator=self.user1,
+            active=True,
+            expires_at=timezone.now() - datetime.timedelta(days=1),
+        )
+
+        # Create active MembershipInvite
+        self.active_invite = MembershipInvite.objects.create(
+            email=self.user1.email,
+            club=self.club1,
+            creator=self.user1,
+            active=True,
+            expires_at=timezone.now() + datetime.timedelta(days=1),
+        )
+
+    def test_expire_membership_invites(self):
+        call_command("expire_membership_invites")
+
+        self.expired_invite.refresh_from_db()
+        self.active_invite.refresh_from_db()
+
+        self.assertFalse(self.expired_invite.active)
+        self.assertTrue(self.active_invite.active)

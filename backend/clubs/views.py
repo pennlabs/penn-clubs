@@ -4755,6 +4755,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         rejection_template = Template(app.rejection_email)
 
         mass_emails = []
+        invitee_emails = []
         for submission in submissions:
             if (
                 (not allow_resend and submission.notified)
@@ -4768,6 +4769,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 and email_type == "acceptance"
             ):
                 template = acceptance_template
+                invitee_emails.append(submission.user.email)
+
             elif (
                 email_type == "rejection"
                 and submission.status != ApplicationSubmission.ACCEPTED
@@ -4805,6 +4808,25 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             with mail.get_connection() as conn:
                 conn.send_messages(mass_emails)
             ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
+
+            # Send out membership invites after sending acceptance emails
+            expiry_time = timezone.now() + datetime.timedelta(days=5)
+            invites = [
+                MembershipInvite(
+                    creator=self.request.user,
+                    club=app.club,
+                    email=email,
+                    # programmatically generated invites should expire after some time
+                    expires_at=expiry_time,
+                )
+                for email in invitee_emails
+            ]
+
+            # Create all the membership invitations in the database
+            MembershipInvite.objects.bulk_create(invites)
+
+            for invite in invites:
+                invite.send_mail(self.request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
         return Response(
