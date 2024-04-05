@@ -655,7 +655,7 @@ class MergeDuplicatesTestCase(TestCase):
 
 class ExpireMembershipInvitesTest(TestCase):
     def setUp(self):
-        # Users
+        # Create users
         self.user1 = get_user_model().objects.create_user(
             "bfranklin", "bfranklin@seas.upenn.edu", "test"
         )
@@ -663,12 +663,12 @@ class ExpireMembershipInvitesTest(TestCase):
             "tjefferson", "test-application-notif@example.com", "test"
         )
 
-        # Club
+        # Create club1
         self.club1 = Club.objects.create(
             code="one", name="Club One", active=True, email="test@example.com"
         )
 
-        # Expired MembershipInvite
+        # Create expired MembershipInvite
         self.expired_invite = MembershipInvite.objects.create(
             email=self.user2.email,
             club=self.club1,
@@ -677,7 +677,7 @@ class ExpireMembershipInvitesTest(TestCase):
             expires_at=timezone.now() - datetime.timedelta(days=1),
         )
 
-        # Active MembershipInvite
+        # Create active MembershipInvite
         self.active_invite = MembershipInvite.objects.create(
             email=self.user1.email,
             club=self.club1,

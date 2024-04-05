@@ -1628,7 +1628,7 @@ class ClubTestCase(TestCase):
         # Create a club application
         now = timezone.now()
         application = ClubApplication.objects.create(
-            name="Send Acceptance Invivites",
+            name="Ordinary Name",
             club=self.club1,
             application_start_time=now,
             application_end_time=now + timezone.timedelta(days=1),
@@ -1637,24 +1637,30 @@ class ClubTestCase(TestCase):
         )
         application.save()
 
-        applicants = [self.user1, self.user2, self.user3, self.user4]
-        # 4 = accepted, 2 = rejected, 1 = pending
-        statuses = [4, 4, 2, 1]
+        applicants = [self.user1, self.user2, self.user3, self.user4, self.user5]
+        statuses = [
+            ApplicationSubmission.ACCEPTED,
+            ApplicationSubmission.ACCEPTED,
+            ApplicationSubmission.REJECTED_AFTER_INTERVIEW,
+            ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+            ApplicationSubmission.PENDING,
+        ]
 
         # Create submissions for each applicant
-        i = 0
-        for user in applicants:
-            submission = ApplicationSubmission.objects.create(
-                user=user,
-                application=application,
-                committee=None,
-                status=statuses[i],
-                reason="a reason",
-            )
-            i += 1
-            submission.save()
+        ApplicationSubmission.objects.bulk_create(
+            [
+                ApplicationSubmission(
+                    user=applicant,
+                    application=application,
+                    committee=None,
+                    status=status,
+                    reason="a reason",
+                )
+                for applicant, status in zip(applicants, statuses)
+            ]
+        )
 
-        # Send acceptance & invitations emails emails
+        # Send acceptance & invitation emails
         resp = self.client.post(
             reverse(
                 "club-applications-send-emails",
@@ -1669,37 +1675,30 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        # Check club application was created
-        self.assertTrue(
-            ClubApplication.objects.filter(
-                club=application.club, name="Send Acceptance Invivites"
-            ).exists()
+        # Check that invitations were created
+        invite1 = MembershipInvite.objects.filter(
+            club=application.club, email=self.user1.email
+        ).first()
+        invite2 = MembershipInvite.objects.filter(
+            club=application.club, email=self.user2.email
+        ).first()
+        self.assertIsNotNone(invite1)
+        self.assertIsNotNone(invite2)
+
+        expiry_date = now + timezone.timedelta(days=5)
+
+        # Compare the expiry dates excluding microseconds
+        self.assertEqual(
+            invite1.expires_at.replace(microsecond=0),
+            expiry_date.replace(microsecond=0),
         )
 
-        i = 0
-        for user in applicants:
-            # check application submissions were created
-            self.assertTrue(
-                ApplicationSubmission.objects.filter(
-                    application=application, user=user, status=statuses[i]
-                ).exists()
-            )
-            i += 1
-
-        # Check that invitations were created.
-        # Email test are done in test_send_invite_email
-        self.assertTrue(
-            MembershipInvite.objects.filter(
-                club=application.club, email=self.user1.email
-            ).exists()
-        )
-        self.assertTrue(
-            MembershipInvite.objects.filter(
-                club=application.club, email=self.user2.email
-            ).exists()
+        self.assertEqual(
+            invite2.expires_at.replace(microsecond=0),
+            expiry_date.replace(microsecond=0),
         )
 
-        # Check applicants not accepted are not invited
+        # Check that applicants not accepted are not invited
         self.assertFalse(
             MembershipInvite.objects.filter(
                 club=application.club, email=self.user3.email
@@ -1708,6 +1707,11 @@ class ClubTestCase(TestCase):
         self.assertFalse(
             MembershipInvite.objects.filter(
                 club=application.club, email=self.user4.email
+            ).exists()
+        )
+        self.assertFalse(
+            MembershipInvite.objects.filter(
+                club=application.club, email=self.user5.email
             ).exists()
         )
 
