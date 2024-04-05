@@ -298,7 +298,6 @@ const ClubPage = ({
               <div dangerouslySetInnerHTML={{ __html: involvement }} />
             </StyledCard>
           )}
-          {/* <Events data={events} /> */}
           {isClubFieldShown('signature_events') &&
             signatureEvents &&
             !!signatureEvents.length && (

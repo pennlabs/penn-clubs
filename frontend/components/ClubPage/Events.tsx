@@ -11,7 +11,7 @@ type EventsProps = {
   data: ClubEvent[]
 }
 
-export const StyledCard = styled(Card)`
+const StyledCard = styled(Card)`
   background-color: ${WHITE};
   margin-bottom: ${M3};
   padding-left: ${M2};
