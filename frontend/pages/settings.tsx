@@ -33,12 +33,12 @@ const Notification = styled.span`
 `
 
 type SettingsProps = {
-  userInfo: UserInfo
+  userInfo?: UserInfo
   authenticated: boolean | null
   submissions: ApplicationSubmission[]
 }
 
-const Settings = ({ userInfo, authenticated, submissions }) => {
+const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
   /**
    * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
