@@ -75,10 +75,6 @@ const EventCarousel = ({ data }: EventsProps) => {
       breakpoint: { max: 4000, min: 1400 },
       items: 3,
     },
-    desktop: {
-      breakpoint: { max: 1401, min: 1400 },
-      items: 3,
-    },
     tablet: {
       breakpoint: { max: 1400, min: 580 },
       items: 2,
