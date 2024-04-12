@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("clubs", "0095_rm_field_add_count"),
+        ("clubs", "0097_club_elo_historicalclub_elo_profile_time_since_vote"),
     ]
 
     operations = [
