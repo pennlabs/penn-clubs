@@ -4626,9 +4626,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # Replace in-cart tickets that have been bought/held
         tickets_to_replace = cart.tickets.filter(
-            owner__isnull=False
-        ) | cart.tickets.filter(holder__isnull=False, holder__ne=self.request.user)
-
+            Q(owner__isnull=False)
+            | Q(holder__isnull=False, holder__ne=self.request.user)
+        )
         sold_out = False  # true when replacement fails. return 200 if true, else 204
 
         replacement_tickets = []
