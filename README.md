@@ -87,6 +87,6 @@ To test ticketing locally, you will need to [install](https://github.com/FiloSot
 
 - `$ mkcert -install`
 - `$ mkcert localhost 127.0.0.1 ::1`
-- `$ export DOMAIN=https://localhost NODE_TLS_REJECT_UNAUTHORIZED=0`
+- `$ export DOMAIN=https://localhost:3001 NODE_TLS_REJECT_UNAUTHORIZED=0`
 
-Then, after the frontend is running, run `docker-compose up` **in a new terminal window** and access the application at [https://localhost](https://localhost).
+Then, after the frontend is running, run `yarn ssl-proxy` **in a new terminal window** and access the application at [https://localhost:3001](https://localhost:3001).
