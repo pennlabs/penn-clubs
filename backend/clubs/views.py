@@ -17,6 +17,8 @@ import qrcode
 import requests
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from CyberSource import UnifiedCheckoutCaptureContextApi
+from CyberSource.rest import ApiException
 from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -39,6 +41,7 @@ from django.db.models import (
     F,
     Prefetch,
     Q,
+    Sum,
     TextField,
     Value,
     When,
@@ -4587,6 +4590,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     qr:
     Get a ticket's QR code
+
+    context:
+    Create a Cybersource capture context
     """
 
     permission_classes = [IsAuthenticated]
@@ -4770,6 +4776,89 @@ class TicketViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type="image/png")
         qr_image.save(response, "PNG")
         return response
+
+    @action(detail=False, methods=["post"])
+    def context(self, request, *args, **kwargs):
+        """
+        Creates a Cybersource capture context to be used for iframe generation.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+        ---
+        """
+        cart = get_object_or_404(Cart, owner=self.request.user)
+        cart_total = cart.tickets.aggregate(total=Sum("price"))["total"]
+
+        if not cart_total:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart total must be nonzero to generate capture context.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        capture_context_request = {
+            "_target_origins": [settings.CYBERSOURCE_TARGET_ORIGIN],
+            "_client_version": settings.CYBERSOURCE_CLIENT_VERSION,
+            "_allowed_card_networks": [
+                "VISA",
+                "MASTERCARD",
+                "AMEX",
+                "DISCOVER",
+            ],
+            "_allowed_payment_types": ["PANENTRY", "SRC"],
+            "_country": "US",
+            "_locale": "en_US",
+            "_capture_mandate": {
+                "_billing_type": "FULL",
+                "_request_email": True,
+                "_request_phone": True,
+                "_request_shipping": True,
+                "_show_accepted_network_icons": True,
+            },
+            "_order_information": {
+                "_amount_details": {
+                    "_total_amount": f"{cart_total:.2f}",
+                    "_currency": "USD",
+                }
+            },
+        }
+
+        try:
+            context, _, _ = UnifiedCheckoutCaptureContextApi(
+                settings.CYBERSOURCE_CONFIG
+            ).generate_unified_checkout_capture_context_with_http_info(
+                json.dumps(capture_context_request)
+            )
+            return Response({"success": True, "detail": context})
+        except ApiException:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "An error occurred when generating the capture context.",
+                }
+            )
 
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)

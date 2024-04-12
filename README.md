@@ -80,3 +80,13 @@ You will need to set the following environment variables on the frontend:
 ### Development
 
 Click `Login` to log in as a test user. The `./manage.py populate` command creates a test user for you with username `bfranklin` and password `test`. Go to `/api/admin` to login to this account.
+
+#### Ticketing
+
+To test ticketing locally, you will need to [install](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) `mkcert`, enter the `frontend` directory, and run the following commands:
+
+- `$ mkcert -install`
+- `$ mkcert localhost 127.0.0.1 ::1`
+- `$ export DOMAIN=https://localhost NODE_TLS_REJECT_UNAUTHORIZED=0`
+
+Then, after the frontend is running, run `docker-compose up` **in a new terminal window** and access the application at [https://localhost](https://localhost).
