@@ -1304,6 +1304,7 @@ class MembershipInvite(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
 
     title = models.CharField(max_length=255, default="Member")
     role = models.IntegerField(default=Membership.ROLE_MEMBER)
