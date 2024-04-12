@@ -4624,34 +4624,39 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
-        # this flag is true when a validate operation fails to
-        # replace a ticket. return 200 if true, otherwise 204
-        sold_out_flag = False
+        # Replace in-cart tickets that have been bought/held
+        tickets_to_replace = cart.tickets.filter(
+            owner__isnull=False
+        ) | cart.tickets.filter(holder__isnull=False, holder__ne=self.request.user)
 
-        for ticket in cart.tickets.all():
-            # if ticket in cart has been bought, try to replace
-            if ticket.owner or ticket.holder:
-                # lock new ticket until transaction is completed
-                new_ticket = (
-                    Ticket.objects.select_for_update(skip_locked=True)
-                    .filter(
-                        event=ticket.event,
-                        type=ticket.type,
-                        owner__isnull=True,
-                        holder__isnull=True,
-                    )
-                    .first()
+        sold_out = False  # true when replacement fails. return 200 if true, else 204
+
+        replacement_tickets = []
+        for ticket in tickets_to_replace:
+            ticket = (
+                Ticket.objects.select_for_update(skip_locked=True)
+                .filter(
+                    event=ticket.event,
+                    type=ticket.type,
+                    owner__isnull=True,
+                    holder__isnull=True,
                 )
-                cart.tickets.remove(ticket)
-                if new_ticket:
-                    cart.tickets.add(new_ticket)
-                else:
-                    sold_out_flag = True
+                .first()
+            )
+
+            if ticket is not None:
+                replacement_tickets.append(ticket)
+            else:
+                sold_out = True
+
+        cart.tickets.remove(*tickets_to_replace)
+        if replacement_tickets:
+            cart.tickets.add(*replacement_tickets)
         cart.save()
 
         return Response(
             TicketSerializer(cart.tickets.all(), many=True).data,
-            status=200 if sold_out_flag else 204,
+            status=200 if sold_out else 204,
         )
 
     @action(detail=False, methods=["post"])
