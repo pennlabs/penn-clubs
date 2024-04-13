@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { CARD_HEADING, CLUBS_GREY, H1_TEXT } from '~/constants'
 import { EventTicket } from '~/types'
 
+import { CardHeader, CardTitle } from '../ClubCard'
 import { Card } from '../common'
 
 export interface CountedEventTicket extends EventTicket {
@@ -88,19 +89,45 @@ const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
   const condensedTickets = useMemo(() => combineTickets(tickets), [tickets])
   // console.log(condensedTickets)
   return (
-    <ul>
-      {condensedTickets.map(({ event, id }) => {
-        return (
-          <TicketCard key={id}>
-            <Thumbnail url={event.image_url} />
-            <Body>
-              <EventTitle>{event.name}</EventTitle>
-              <ClubName>{event.club_name}</ClubName>
-            </Body>
-          </TicketCard>
-        )
-      })}
-    </ul>
+    <div className="columns">
+      <div className="column">
+        <ul>
+          {condensedTickets.map((ticket) => {
+            return (
+              <TicketCard key={ticket.id}>
+                <Thumbnail url={ticket.event.image_url} />
+                <Body>
+                  <EventTitle>{ticket.event.name}</EventTitle>
+                  <ClubName>{ticket.event.club_name}</ClubName>
+                  Type: {ticket.type}, Quantity: {ticket.count}
+                </Body>
+              </TicketCard>
+            )
+          })}
+        </ul>
+      </div>
+      <div className="column is-one-third">
+        <Card className="card">
+          <div style={{ display: 'flex' }}>
+            <div style={{ flex: 1 }}>
+              <div>
+                <CardHeader>
+                  <CardTitle className="is-size-5">Summary</CardTitle>
+                </CardHeader>
+              </div>
+            </div>
+          </div>
+          {condensedTickets &&
+            condensedTickets.map((ticket) => (
+              <div key={ticket.event.id}>
+                <p>
+                  {ticket.event.name} x{ticket.count} - $14.99
+                </p>
+              </div>
+            ))}
+        </Card>
+      </div>
+    </div>
   )
 }
 
