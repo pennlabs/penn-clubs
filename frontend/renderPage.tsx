@@ -449,7 +449,6 @@ const getPublicCachedContent = async () => {
  */
 export function renderListPage<T>(
   Page: ListPageComponent<T>,
-  Endpoint: string = 'clubs',
 ): React.ComponentType {
   class RenderListPage extends Component<
     ListPageProps & PageComponentProps & T
@@ -484,7 +483,7 @@ export function renderListPage<T>(
     const initialProps = await fetchOriginalProps()
 
     const [clubsResponse, cached] = await Promise.all([
-      doApiRequest(`/${Endpoint}/?page=1&ordering=featured&format=json`, data)
+      doApiRequest('/clubs/?page=1&ordering=featured&format=json', data)
         .then((resp) => resp.json())
         .catch(() => []),
       getPublicCachedContent(),

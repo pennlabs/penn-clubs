@@ -12,7 +12,6 @@ type ClubDisplayProps = {
   displayClubs: PaginatedClubPage
   tags: Tag[]
   display: 'list' | 'cards'
-  ranked?: boolean
 }
 
 const EmptyState = styled.div`
@@ -29,7 +28,6 @@ const PaginatedClubDisplay = ({
   displayClubs,
   tags,
   display,
-  ranked,
 }: ClubDisplayProps): ReactElement => {
   const [isLoading, setLoading] = useState<boolean>(false)
   const [clubs, setClubs] = useState<Club[]>(displayClubs.results)
@@ -100,7 +98,6 @@ const PaginatedClubDisplay = ({
           tags={tags}
           display={display}
           onScroll={loadNextPage}
-          ranked={ranked}
         />
       )}
       {isLoading && <Loading delay={0} />}

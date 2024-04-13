@@ -1064,25 +1064,6 @@ class ClubListSerializer(serializers.ModelSerializer):
         }
 
 
-class ClubListRankSerializer(ClubListSerializer):
-    """
-    The club list serializer, except with more rank information.
-    """
-
-    elo = serializers.FloatField()
-    elo_rank = serializers.SerializerMethodField()
-    tier = serializers.SerializerMethodField()
-
-    class Meta(ClubListSerializer.Meta):
-        fields = ClubListSerializer.Meta.fields + ["elo", "elo_rank", "tier"]
-
-    def get_elo_rank(self, obj):
-        return obj.elo_rank
-
-    def get_tier(self, obj):
-        return obj.tier
-
-
 class MembershipClubListSerializer(ClubListSerializer):
     """
     The club list serializer, except return more detailed information about the
@@ -1233,8 +1214,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     linkedin = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
-    elo = serializers.FloatField(required=False)
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
@@ -1698,7 +1677,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "created_at",
             "description",
-            "elo",
             "events",
             "facebook",
             "github",

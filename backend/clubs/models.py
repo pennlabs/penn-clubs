@@ -335,8 +335,6 @@ class Club(models.Model):
     ghost = models.BooleanField(default=False)
     history = HistoricalRecords(cascade_delete_history=True)
 
-    elo = models.FloatField(default=1500)
-
     def __str__(self):
         return self.name
 
@@ -1528,9 +1526,6 @@ class Profile(models.Model):
     graduation_year = models.PositiveSmallIntegerField(null=True, blank=True)
     school = models.ManyToManyField(School, blank=True)
     major = models.ManyToManyField(Major, blank=True)
-    time_since_vote = models.DateTimeField(
-        null=True, blank=True
-    )  # set > current time to ban user for that long
 
     def __str__(self):
         return self.user.username
