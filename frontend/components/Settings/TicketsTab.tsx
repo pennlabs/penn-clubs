@@ -28,6 +28,7 @@ import {
   Text,
   Title,
 } from '../common'
+import { Collapsible } from '../SearchBar'
 import TicketTransferModal from './TicketTransferModal'
 
 const CardHeader = styled.div`
@@ -101,14 +102,6 @@ type TicketsTabProps = {
   userInfo: UserInfo
 }
 
-// remove later, for testing
-const ticks = [
-  { event: 'Champions league', class: 'General Admission', club: 'Uefa' },
-  { event: 'Champions league', class: 'General Admission', club: 'Uefa' },
-  { event: 'Champions league', class: 'General Admission', club: 'Uefa' },
-  { event: 'Champions league', class: 'General Admission', club: 'Uefa' },
-]
-
 const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
   const [tickets, setTickets] = useState<any>(null)
   const [show, setShow] = useState<boolean>(false)
@@ -122,14 +115,20 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
   }
   useEffect(() => {
     getTickets()
-    // remove later
-    // setTickets(ticks)
   }, [])
 
   if (tickets == null) {
     return <Loading />
   }
 
+  // Group by event
+  const groupedTickets = tickets.reduce((acc, ticket) => {
+    if (!acc[ticket.event.id]) {
+      acc[ticket.event.id] = []
+    }
+    acc[ticket.event.id].push(ticket)
+    return acc
+  }, {})
   return tickets.length ? (
     <div>
       {show && (
@@ -145,48 +144,35 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
       <TitleWrapper>
         <Title>Browse Your Tickets</Title>
       </TitleWrapper>
-      {tickets.map((ticket) => (
-        <Card className="card">
-          <div style={{ display: 'flex' }}>
-            <div>
-              <img
-                style={{ marginRight: '1rem', height: '60px' }}
-                src={ticket.event.image_url}
-              />
-            </div>
-            <div>
-              <div>
-                <CardHeader>
-                  <CardTitle className="is-size-5">
-                    {ticket.event.name}
-                  </CardTitle>
-                </CardHeader>
-              </div>
-              <Description>{ticket.type}</Description>
-            </div>
-          </div>
-          <ActionWrapper>
-            <div style={{ flex: 1 }}></div>
-            <div style={{ flex: 1 }}>
-              <div
-                className="is-pulled-right"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                }}
-              >
-                <div>
-                  <Link href="/events">View QR Code</Link>
-                </div>
-                <div style={{ cursor: 'pointer' }} onClick={showModal}>
-                  Transfer Ownership <Icon name="send" />
+      {Object.entries(groupedTickets).map((group: [string, any[]]) => (
+        <Collapsible
+          name={group[1][0].event.name + ' - ' + group[1][0].event.club_name}
+          key={group[0]}
+        >
+          {group[1].map((ticket) => (
+            <Card className="card" key={ticket.id}>
+              <div style={{ flex: 1 }}>
+                <Description>
+                  {ticket.type} | {ticket.event.start_time}
+                </Description>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <Link href="/events">View QR Code</Link>
+                  </div>
+                  <div style={{ cursor: 'pointer' }} onClick={showModal}>
+                    Transfer Ownership <Icon name="send" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </ActionWrapper>
-        </Card>
+            </Card>
+          ))}
+        </Collapsible>
       ))}
     </div>
   ) : (
