@@ -91,7 +91,7 @@ const Settings = ({ userInfo, authenticated }: SettingsProps) => {
       <Metadata title="Your Profile" />
       <Container background={BG_GRADIENT}>
         <Title style={{ marginTop: '2.5rem', color: WHITE, opacity: 0.95 }}>
-          Welcome, {userInfo.name}
+          Welcome, {userInfo.name || userInfo.username}
         </Title>
       </Container>
       <HashTabView

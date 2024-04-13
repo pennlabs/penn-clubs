@@ -109,6 +109,7 @@ from clubs.models import (
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
+    send_mail_helper,
 )
 from clubs.permissions import (
     AssetPermission,
@@ -1680,7 +1681,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def constitutions(self, request, *args, **kwargs):
         """
-        A special endpoint for SAC affilaited clubs to check if
+        A special endpoint for SAC affiliated clubs to check if
         they have uploaded a club constitution.
         ---
         operationId: List Club Constitutions
@@ -2004,11 +2005,28 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Set archived boolean to be True so that the club appears to have been deleted
         """
+        club = self.get_object()
 
         instance.archived = True
         instance.archived_by = self.request.user
         instance.archived_on = timezone.now()
         instance.save()
+
+        # Send notice to club officers and executor
+        context = {
+            "name": club.name,
+            "branding_site_name": settings.BRANDING_SITE_NAME,
+            "branding_site_email": settings.BRANDING_SITE_EMAIL,
+        }
+        emails = club.get_officer_emails() + [self.request.user.email]
+        send_mail_helper(
+            name="club_deletion",
+            subject="Removal of {} from {}".format(
+                club.name, settings.BRANDING_SITE_NAME
+            ),
+            emails=emails,
+            context=context,
+        )
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
@@ -5229,6 +5247,10 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         rejection_template = Template(app.rejection_email)
 
         mass_emails = []
+<<<<<<< HEAD
+=======
+        invitee_emails = []
+>>>>>>> master
         for submission in submissions:
             if (
                 (not allow_resend and submission.notified)
@@ -5242,6 +5264,11 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 and email_type == "acceptance"
             ):
                 template = acceptance_template
+<<<<<<< HEAD
+=======
+                invitee_emails.append(submission.user.email)
+
+>>>>>>> master
             elif (
                 email_type == "rejection"
                 and submission.status != ApplicationSubmission.ACCEPTED
@@ -5279,6 +5306,25 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             with mail.get_connection() as conn:
                 conn.send_messages(mass_emails)
             ApplicationSubmission.objects.bulk_update(submissions, ["notified"])
+
+            # Send out membership invites after sending acceptance emails
+            expiry_time = timezone.now() + datetime.timedelta(days=5)
+            invites = [
+                MembershipInvite(
+                    creator=self.request.user,
+                    club=app.club,
+                    email=email,
+                    # programmatically generated invites should expire after some time
+                    expires_at=expiry_time,
+                )
+                for email in invitee_emails
+            ]
+
+            # Create all the membership invitations in the database
+            MembershipInvite.objects.bulk_create(invites)
+
+            for invite in invites:
+                invite.send_mail(self.request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
         return Response(

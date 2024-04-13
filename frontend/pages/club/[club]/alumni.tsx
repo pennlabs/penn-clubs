@@ -25,20 +25,12 @@ const AlumniPage = ({ club, alumni }: AlumniPageProps): ReactElement => {
           <div className="is-pulled-left">
             <Title>{club.name} Alumni</Title>
           </div>
-          <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(club.code)}>
-            <a className="button is-pulled-right is-secondary is-medium">
-              Back
-            </a>
-            <div className="is-pulled-left">
-              <Title>{club.name} Alumni</Title>
-            </div>
-            <Link
-              href={CLUB_ROUTE()}
-              as={CLUB_ROUTE(club.code)}
-              className="button is-pulled-right is-secondary is-medium"
-            >
-              Back
-            </Link>
+          <Link
+            href={CLUB_ROUTE()}
+            as={CLUB_ROUTE(club.code)}
+            className="button is-pulled-right is-secondary is-medium"
+          >
+            Back
           </Link>
         </div>
         <Text>

@@ -490,7 +490,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
             className="button is-primary"
           >
             <Icon name="chevrons-left" />
-            Back to{OBJECT_NAME_TITLE_SINGULAR}
+            Back to {OBJECT_NAME_TITLE_SINGULAR}
           </Link>
         )}
       </div>
