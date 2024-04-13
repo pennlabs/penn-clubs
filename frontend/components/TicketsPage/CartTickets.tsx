@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from 'react'
+import { ReactElement, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import { CARD_HEADING, CLUBS_GREY, H1_TEXT } from '~/constants'
@@ -87,27 +87,34 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] => {
 
 const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
   const condensedTickets = useMemo(() => combineTickets(tickets), [tickets])
+  const [isPaying, setIsPaying] = useState(false)
+  // TODO: if cart is frozen, set to true automatically
+
   // console.log(condensedTickets)
   return (
     <div className="columns">
       <div className="column">
-        <ul>
-          {condensedTickets.map((ticket) => {
-            return (
-              <TicketCard key={ticket.id}>
-                <Thumbnail url={ticket.event.image_url} />
-                <Body>
-                  <EventTitle>{ticket.event.name}</EventTitle>
-                  <ClubName>{ticket.event.club_name}</ClubName>
-                  Type: {ticket.type}, Quantity: {ticket.count}
-                </Body>
-              </TicketCard>
-            )
-          })}
-        </ul>
+        {isPaying ? (
+          <></>
+        ) : (
+          <ul>
+            {condensedTickets.map((ticket) => {
+              return (
+                <TicketCard key={ticket.id}>
+                  <Thumbnail url={ticket.event.image_url} />
+                  <Body>
+                    <EventTitle>{ticket.event.name}</EventTitle>
+                    <ClubName>{ticket.event.club_name}</ClubName>
+                    Type: {ticket.type}, Quantity: {ticket.count}
+                  </Body>
+                </TicketCard>
+              )
+            })}
+          </ul>
+        )}
       </div>
       <div className="column is-one-third">
-        <Card className="card">
+        <Card $bordered $background="white" className="card">
           <div style={{ display: 'flex' }}>
             <div style={{ flex: 1 }}>
               <div>
@@ -126,6 +133,24 @@ const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
               </div>
             ))}
         </Card>
+        {isPaying ? (
+          <button
+            type="submit"
+            className="button is-primary mt-4 is-pulled-right"
+          >
+            Pay
+          </button>
+        ) : (
+          <>
+            <button
+              type="submit"
+              className="button is-primary mt-4 is-pulled-right"
+              onClick={() => setIsPaying(true)}
+            >
+              Check Out
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
