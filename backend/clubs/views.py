@@ -5247,10 +5247,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         rejection_template = Template(app.rejection_email)
 
         mass_emails = []
-<<<<<<< HEAD
-=======
         invitee_emails = []
->>>>>>> master
         for submission in submissions:
             if (
                 (not allow_resend and submission.notified)
@@ -5264,11 +5261,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 and email_type == "acceptance"
             ):
                 template = acceptance_template
-<<<<<<< HEAD
-=======
                 invitee_emails.append(submission.user.email)
 
->>>>>>> master
             elif (
                 email_type == "rejection"
                 and submission.status != ApplicationSubmission.ACCEPTED
