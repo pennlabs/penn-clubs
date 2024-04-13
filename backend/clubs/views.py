@@ -17,7 +17,11 @@ import qrcode
 import requests
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from CyberSource import UnifiedCheckoutCaptureContextApi
+from CyberSource import (
+    PaymentsApi,
+    TransientTokenDataApi,
+    UnifiedCheckoutCaptureContextApi,
+)
 from CyberSource.rest import ApiException
 from dateutil.parser import parse
 from django.conf import settings
@@ -109,6 +113,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Ticket,
+    TicketTransactionRecord,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -2270,9 +2275,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     tickets:
     Get or create tickets for particular event
 
-    buy:
-    Buy a ticket for an event
-
     buyers:
     Get information about the buyers of an event's ticket
 
@@ -2315,10 +2317,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
-                            type:
-                                type: string
-                            count:
-                                type: integer
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            type: string
+                                        count:
+                                            type: integer
         responses:
             "200":
                 content:
@@ -2328,6 +2335,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
+                                success:
+                                    type: boolean
             "403":
                 content:
                     application/json:
@@ -2336,29 +2345,35 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
+                                success:
+                                    type: boolean
         ---
         """
-        type = request.data.get("type")
-        count = request.data.get("count")
         event = self.get_object()
         cart = Cart.objects.get_or_create(owner=self.request.user)
 
-        # Count unowned/unheld tickets of requested type
-        tickets = (
-            Ticket.objects.select_for_update(skip_locked=True)
-            .filter(event=event, type=type, owner__isnull=True, holder__isnull=True)
-            .exclude(carts__owner=self.request.user)
-        )
+        quantities = request.data.get("quantities")
+        for item in quantities:
+            type = item["type"]
+            count = item["count"]
 
-        if tickets.count() < count:
-            return Response(
-                {"detail": f"Not enough tickets of type {type} left!"},
-                status=status.HTTP_403_FORBIDDEN,
+            # Count unowned/unheld tickets of requested type
+            tickets = (
+                Ticket.objects.select_for_update(skip_locked=True)
+                .filter(event=event, type=type, owner__isnull=True, holder__isnull=True)
+                .exclude(carts__owner=self.request.user)
             )
-        else:
-            cart.tickets.add(*tickets[:count])
-            cart.save()
-            return Response({"detail": "Successfully added to cart"})
+
+            if tickets.count() < count:
+                return Response(
+                    {"detail": f"Not enough tickets of type {type} left!"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            else:
+                cart.tickets.add(*tickets[:count])
+
+        cart.save()
+        return Response({"detail": "Successfully added to cart"})
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
@@ -2373,10 +2388,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
-                            type:
-                                type: string
-                            count:
-                                type: integer
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            type: string
+                                        count:
+                                            type: integer
         responses:
             "200":
                 content:
@@ -2487,7 +2507,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             available.append(
                 {
                     "type": type,
-                    "count": (tickets.filter(type=type, owner__isnull=True).count()),
+                    "count": (
+                        tickets.filter(
+                            type=type, owner__isnull=True, holder__isnull=True
+                        ).count()
+                    ),
                 }
             )
 
@@ -4579,7 +4603,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     cart:
     List all unowned/unheld tickets currently in user's cart
 
-    checkout:
+    initiate_checkout:
     Initiate a hold on the tickets in a user's cart and create a capture context
 
     checkout_success_callback:
@@ -4611,14 +4635,13 @@ class TicketViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
-                            allOf:
-                                - $ref: "#/components/schemas/Ticket"
-            "204":
-                content:
-                    application/json:
-                        schema:
-                            allOf:
-                                - $ref: "#/components/schemas/Ticket"
+                            type: object
+                            properties:
+                                tickets:
+                                    allOf:
+                                        - $ref: "#/components/schemas/Ticket"
+                                sold_out:
+                                    type: integer
         ---
         """
 
@@ -4629,15 +4652,15 @@ class TicketViewSet(viewsets.ModelViewSet):
             Q(owner__isnull=False)
             | Q(holder__isnull=False, holder__ne=self.request.user)
         )
-        sold_out = False  # true when replacement fails. return 200 if true, else 204
+        sold_out_count = 0
 
         replacement_tickets = []
-        for ticket in tickets_to_replace:
+        for gone_ticket in tickets_to_replace:
             ticket = (
                 Ticket.objects.select_for_update(skip_locked=True)
                 .filter(
-                    event=ticket.event,
-                    type=ticket.type,
+                    event=gone_ticket.event,
+                    type=gone_ticket.type,
                     owner__isnull=True,
                     holder__isnull=True,
                 )
@@ -4647,7 +4670,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             if ticket is not None:
                 replacement_tickets.append(ticket)
             else:
-                sold_out = True
+                sold_out_count += 1
 
         cart.tickets.remove(*tickets_to_replace)
         if replacement_tickets:
@@ -4655,19 +4678,24 @@ class TicketViewSet(viewsets.ModelViewSet):
         cart.save()
 
         return Response(
-            TicketSerializer(cart.tickets.all(), many=True).data,
-            status=200 if sold_out else 204,
+            {
+                "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
+                "sold_out": sold_out_count,
+            },
         )
 
     @action(detail=False, methods=["post"])
     @update_holds
     @transaction.atomic
-    def checkout(self, request, *args, **kwargs):
+    def initiate_checkout(self, request, *args, **kwargs):
         """
         Checkout all tickets in cart and create a Cybersource capture context
 
         NOTE: this does NOT buy tickets, it simply initiates a checkout process
         which includes a 10-minute ticket hold
+
+        Once the user has entered their payment details and submitted the form
+        the request will be routed to complete_checkout
         ---
         requestBody: {}
         responses:
@@ -4753,22 +4781,33 @@ class TicketViewSet(viewsets.ModelViewSet):
             ).generate_unified_checkout_capture_context_with_http_info(
                 json.dumps(capture_context_request)
             )
+            if not context or (status % 100) in [4, 5]:
+                raise ApiException
+
             return Response({"success": True, "detail": context})
-        except ApiException:
+        except ApiException as e:
             return Response(
                 {
                     "success": False,
-                    "detail": "An error occurred when generating the capture context.",
+                    "detail": f"Unable to generate capture context: {e}",
                 }
             )
 
     @action(detail=False, methods=["post"])
     @transaction.atomic
-    def checkout_success_callback(self, request, *args, **kwargs):
+    def complete_checkout(self, request, *args, **kwargs):
         """
-        Callback after third party payment succeeds
+        Complete the checkout after the user has entered their payment details
+        and obtained a transient token on the frontend.
         ---
-        requestBody: {}
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            transient_token:
+                                type: string
         responses:
             "200":
                 content:
@@ -4778,47 +4817,95 @@ class TicketViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
+                                success:
+                                    type: boolean
         ---
         """
+        tt = request.data.get("transient_token")
         cart = get_object_or_404(Cart, owner=self.request.user)
 
-        for ticket in cart.tickets.select_for_update().all():
+        try:
+            _, status, transaction_data = TransientTokenDataApi(
+                settings.CYBERSOURCE_CONFIG
+            ).get_transaction_for_transient_token(tt)
+
+            if not transaction_data or (status % 100) in [4, 5]:
+                raise ApiException(
+                    reason=f"Received {transaction_data} with HTTP status {status}"
+                )
+            transaction_data = json.loads(transaction_data)
+
+        except ApiException as e:
+            # Cleanup state since the purchase failed
+            for ticket in cart.tickets.select_for_update().all():
+                ticket.holder = None
+                ticket.owner = None
+                ticket.save()
+
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Transaction failed: {e}",
+                }
+            )
+
+        create_payment_request = {"tokenInformation": {"transientTokenJwt": tt}}
+
+        try:
+            payment_response, status, _ = PaymentsApi(
+                settings.CYBERSOURCE_CONFIG
+            ).create_payment(json.dumps(create_payment_request))
+
+            if payment_response["status"] != "Authorized":
+                raise ApiException(reason="Payment response status is not Authorized")
+
+            if not payment_response or (status % 100) in [4, 5]:
+                raise ApiException(
+                    reason=f"Received {payment_response} with HTTP status {status}"
+                )
+        except ApiException as e:
+            # Cleanup state since the purchase failed
+            for ticket in cart.tickets.select_for_update().all():
+                ticket.holder = None
+                ticket.owner = None
+                ticket.save()
+
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Transaction failed: {e}",
+                }
+            )
+
+        # Archive transaction data for historical purposes.
+        # We're explicitly using the response data over what's in self.request.user
+        orderInfo = transaction_data["orderInformation"]
+        transaction_record = TicketTransactionRecord.objects.create(
+            total_amount=float(orderInfo["amountDetails"]["totalAmount"]),
+            buyer_first_name=orderInfo["billTo"]["firstName"],
+            buyer_last_name=orderInfo["billTo"]["lastName"],
+            buyer_phone=orderInfo["billTo"]["phoneNumber"],
+            buyer_email=orderInfo["billTo"]["email"],
+        )
+
+        # At this point, we have validated that the payment was authorized
+        # Give the tickets to the user
+        for ticket in cart.tickets.select_for_update(holder=self.request.user).all():
             ticket.owner = request.user
-            ticket.carts.clear()
-            # ticket.send_confirmation_email()
+            ticket.carts.remove(cart)
+            ticket.holder = None
+            ticket.transaction_record = transaction_record
             ticket.save()
+            ticket.send_confirmation_email()
 
-        return Response({"detail": "callback successful"})
+        Ticket.objects.update_holds()
 
-    @action(detail=False, methods=["post"])
-    @transaction.atomic
-    def buy(self, request, *args, **kwargs):
-        """
-        Buy held tickets in a cart
-        ---
-        requestBody:
-            content: {}
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            allOf:
-                                - $ref: "#/components/schemas/Ticket"
-        ---
-        """
-
-        # TODO: Implement
-
-        # Some logic here to serialize all held tickets down to whatever
-        # format third party asks for
-
-        cart = get_object_or_404(Cart, owner=self.request.user)
-
-        for ticket in cart.tickets.filter(holder=self.request.user):
-            pass
-
-        return Response({})
+        return Response(
+            {
+                "success": True,
+                "detail": "Payment successful.",
+            }
+        )
 
     @action(detail=True, methods=["get"])
     def qr(self, request, *args, **kwargs):

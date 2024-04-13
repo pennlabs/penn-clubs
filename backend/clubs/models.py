@@ -1814,6 +1814,18 @@ class TicketManager(models.Manager):
             self.bulk_update(expired_tickets, ["holder"])
 
 
+class TicketTransactionRecord(models.Model):
+    """
+    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    """
+
+    total_amount = models.FloatField()
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+    buyer_first_name = models.CharField(max_length=100)
+    buyer_last_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField(blank=True, null=True)
+
+
 class Ticket(models.Model):
     """
     Represents an instance of a ticket for an event
@@ -1841,6 +1853,13 @@ class Ticket(models.Model):
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
+    transaction_record = models.ForeignKey(
+        TicketTransactionRecord,
+        related_name="tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
     objects = TicketManager()
 
     def get_qr(self):
