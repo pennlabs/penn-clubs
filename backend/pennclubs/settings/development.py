@@ -41,4 +41,4 @@ CYBERSOURCE_CONFIG = {
     "merchant_secretkey": "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE=",
     "run_environment": "apitest.cybersource.com",
 }
-CYBERSOURCE_TARGET_ORIGIN = "https://localhost"
+CYBERSOURCE_TARGET_ORIGIN = "https://localhost:3001"
