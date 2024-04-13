@@ -2350,7 +2350,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
-        cart = Cart.objects.get_or_create(owner=self.request.user)
+        cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         quantities = request.data.get("quantities")
         for item in quantities:
@@ -2358,9 +2358,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             count = item["count"]
 
             # Count unowned/unheld tickets of requested type
+            # We don't need a lock since we aren't changing the holder or owner
             tickets = (
-                Ticket.objects.select_for_update(skip_locked=True)
-                .filter(event=event, type=type, owner__isnull=True, holder__isnull=True)
+                Ticket.objects.filter(
+                    event=event, type=type, owner__isnull=True, holder__isnull=True
+                )
+                .prefetch_related("carts")
                 .exclude(carts__owner=self.request.user)
             )
 
@@ -2408,18 +2411,20 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: string
         ---
         """
-
-        type = request.data.get("type")
         event = self.get_object()
+        quantities = request.data.get("quantities")
         cart = get_object_or_404(Cart, owner=self.request.user)
-        tickets = cart.tickets.filter(type=type, event=event)
 
-        # Ensure we don't try to remove more tickets than we can
-        count = min(request.data.get("count"), tickets.count())
+        for item in quantities:
+            type = item["type"]
+            count = item["count"]
+            tickets_to_remove = cart.tickets.filter(type=type, event=event)
 
-        cart.tickets.remove(*tickets[:count])
+            # Ensure we don't try to remove more tickets than we can
+            count = min(count, tickets_to_remove.count())
+            cart.tickets.remove(*tickets_to_remove[:count])
+
         cart.save()
-
         return Response({"detail": "Successfully removed from cart"})
 
     @action(detail=True, methods=["get"])
@@ -4606,8 +4611,8 @@ class TicketViewSet(viewsets.ModelViewSet):
     initiate_checkout:
     Initiate a hold on the tickets in a user's cart and create a capture context
 
-    checkout_success_callback:
-    Callback after third party payment succeeds
+    complete_checkout:
+    Complete the checkout process after we have obtained an auth on the user's card
 
     buy:
     Buy the tickets in a user's cart
@@ -4626,7 +4631,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def cart(self, request, *args, **kwargs):
         """
-        Validate tickets in a cart
+        Validate tickets in a cart and return them
         ---
         requestBody:
             content: {}
@@ -4647,25 +4652,32 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
-        # Replace in-cart tickets that have been bought/held
+        # Replace in-cart tickets that have been bought/held by someone else
         tickets_to_replace = cart.tickets.filter(
             Q(owner__isnull=False)
             | Q(holder__isnull=False, holder__ne=self.request.user)
         )
+
+        # In most cases, we won't need to replace, so exit early
+        if not tickets_to_replace:
+            return Response(
+                {
+                    "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
+                    "sold_out": 0,
+                },
+            )
+
         sold_out_count = 0
 
         replacement_tickets = []
         for gone_ticket in tickets_to_replace:
-            ticket = (
-                Ticket.objects.select_for_update(skip_locked=True)
-                .filter(
-                    event=gone_ticket.event,
-                    type=gone_ticket.type,
-                    owner__isnull=True,
-                    holder__isnull=True,
-                )
-                .first()
-            )
+            # We don't need to lock since we aren't updating holder/owner
+            ticket = Ticket.objects.filter(
+                event=gone_ticket.event,
+                type=gone_ticket.type,
+                owner__isnull=True,
+                holder__isnull=True,
+            ).first()
 
             if ticket is not None:
                 replacement_tickets.append(ticket)
@@ -4723,20 +4735,24 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
 
-        # The assumption is that this filter query should return all tickets in the cart
-        # however we cannot guarantee atomicity between cart and checkout
-
-        # customers will be prompted to review the cart before payment
-
-        tickets = cart.tickets.select_for_update().filter(
+        # skip_locked is important here because if any of the tickets in cart
+        # are locked, we shouldn't block.
+        tickets = cart.tickets.select_for_update(skip_locked=True).filter(
             Q(holder__isnull=True) | Q(holder=self.request.user), owner__isnull=True
         )
 
-        for ticket in tickets:
-            ticket.holder = self.request.user
-            ticket.holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+        # Assert that the filter succeeded in freezing all the tickets for checkout
+        if tickets.count() != cart.tickets.all().count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart is stale, please invoke /api/cart to refresh.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        Ticket.objects.bulk_update(tickets, ["holder", "holding_expiration"])
+        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+        tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
         cart_total = tickets.aggregate(total=Sum("price"))["total"]
         if not cart_total:
@@ -4776,13 +4792,15 @@ class TicketViewSet(viewsets.ModelViewSet):
         }
 
         try:
-            context, _, _ = UnifiedCheckoutCaptureContextApi(
+            context, http_status, _ = UnifiedCheckoutCaptureContextApi(
                 settings.CYBERSOURCE_CONFIG
             ).generate_unified_checkout_capture_context_with_http_info(
                 json.dumps(capture_context_request)
             )
-            if not context or (status % 100) in [4, 5]:
-                raise ApiException
+            if not context or http_status >= 400:
+                raise ApiException(
+                    reason=f"Received {context} with HTTP status {status}",
+                )
 
             return Response({"success": True, "detail": context})
         except ApiException as e:
@@ -4790,7 +4808,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                 {
                     "success": False,
                     "detail": f"Unable to generate capture context: {e}",
-                }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
     @action(detail=False, methods=["post"])
@@ -4822,59 +4841,56 @@ class TicketViewSet(viewsets.ModelViewSet):
         ---
         """
         tt = request.data.get("transient_token")
-        cart = get_object_or_404(Cart, owner=self.request.user)
+        cart = get_object_or_404(
+            Cart.objects.prefetch_related("tickets"), owner=self.request.user
+        )
 
         try:
-            _, status, transaction_data = TransientTokenDataApi(
+            _, http_status, transaction_data = TransientTokenDataApi(
                 settings.CYBERSOURCE_CONFIG
             ).get_transaction_for_transient_token(tt)
 
-            if not transaction_data or (status % 100) in [4, 5]:
+            if not transaction_data or http_status >= 400:
                 raise ApiException(
                     reason=f"Received {transaction_data} with HTTP status {status}"
                 )
             transaction_data = json.loads(transaction_data)
-
         except ApiException as e:
             # Cleanup state since the purchase failed
-            for ticket in cart.tickets.select_for_update().all():
-                ticket.holder = None
-                ticket.owner = None
-                ticket.save()
+            cart.tickets.update(holder=None, owner=None)
 
             return Response(
                 {
                     "success": False,
                     "detail": f"Transaction failed: {e}",
-                }
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
         create_payment_request = {"tokenInformation": {"transientTokenJwt": tt}}
 
         try:
-            payment_response, status, _ = PaymentsApi(
+            payment_response, http_status, _ = PaymentsApi(
                 settings.CYBERSOURCE_CONFIG
             ).create_payment(json.dumps(create_payment_request))
 
             if payment_response["status"] != "Authorized":
                 raise ApiException(reason="Payment response status is not Authorized")
 
-            if not payment_response or (status % 100) in [4, 5]:
+            if not payment_response or http_status >= 400:
                 raise ApiException(
                     reason=f"Received {payment_response} with HTTP status {status}"
                 )
         except ApiException as e:
             # Cleanup state since the purchase failed
-            for ticket in cart.tickets.select_for_update().all():
-                ticket.holder = None
-                ticket.owner = None
-                ticket.save()
+            cart.tickets.update(holder=None, owner=None)
 
             return Response(
                 {
                     "success": False,
                     "detail": f"Transaction failed: {e}",
-                }
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
         # Archive transaction data for historical purposes.
@@ -4890,12 +4906,16 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # At this point, we have validated that the payment was authorized
         # Give the tickets to the user
-        for ticket in cart.tickets.select_for_update(holder=self.request.user).all():
-            ticket.owner = request.user
+        tickets = (
+            cart.tickets.select_for_update()
+            .filter(holder=self.request.user)
+            .prefetch_related("carts")
+        )
+        tickets.update(
+            owner=request.user, holder=None, transaction_record=transaction_record
+        )
+        for ticket in tickets:
             ticket.carts.remove(cart)
-            ticket.holder = None
-            ticket.transaction_record = transaction_record
-            ticket.save()
             ticket.send_confirmation_email()
 
         Ticket.objects.update_holds()

@@ -1808,6 +1808,10 @@ class TicketManager(models.Manager):
         expired_tickets = self.select_for_update().filter(
             holder__isnull=False, holding_expiration__lte=timezone.now()
         )
+
+        if not expired_tickets:
+            return
+
         with transaction.atomic():
             for ticket in expired_tickets:
                 ticket.holder = None
@@ -1819,7 +1823,7 @@ class TicketTransactionRecord(models.Model):
     Represents an instance of a transaction record for an ticket, used for bookkeeping
     """
 
-    total_amount = models.FloatField()
+    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
     buyer_phone = PhoneNumberField(null=True, blank=True)
     buyer_first_name = models.CharField(max_length=100)
     buyer_last_name = models.CharField(max_length=100)
