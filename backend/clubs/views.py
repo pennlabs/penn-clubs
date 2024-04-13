@@ -17,6 +17,8 @@ import qrcode
 import requests
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from CyberSource import UnifiedCheckoutCaptureContextApi
+from CyberSource.rest import ApiException
 from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -39,6 +41,7 @@ from django.db.models import (
     F,
     Prefetch,
     Q,
+    Sum,
     TextField,
     Value,
     When,
@@ -4595,7 +4598,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     List all unowned/unheld tickets currently in user's cart
 
     checkout:
-    Initiate a hold on the tickets in a user's cart
+    Initiate a hold on the tickets in a user's cart and create a capture context
 
     checkout_success_callback:
     Callback after third party payment succeeds
@@ -4639,34 +4642,39 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
-        # this flag is true when a validate operation fails to
-        # replace a ticket. return 200 if true, otherwise 204
-        sold_out_flag = False
+        # Replace in-cart tickets that have been bought/held
+        tickets_to_replace = cart.tickets.filter(
+            Q(owner__isnull=False)
+            | Q(holder__isnull=False, holder__ne=self.request.user)
+        )
+        sold_out = False  # true when replacement fails. return 200 if true, else 204
 
-        for ticket in cart.tickets.all():
-            # if ticket in cart has been bought, try to replace
-            if ticket.owner or ticket.holder:
-                # lock new ticket until transaction is completed
-                new_ticket = (
-                    Ticket.objects.select_for_update(skip_locked=True)
-                    .filter(
-                        event=ticket.event,
-                        type=ticket.type,
-                        owner__isnull=True,
-                        holder__isnull=True,
-                    )
-                    .first()
+        replacement_tickets = []
+        for ticket in tickets_to_replace:
+            ticket = (
+                Ticket.objects.select_for_update(skip_locked=True)
+                .filter(
+                    event=ticket.event,
+                    type=ticket.type,
+                    owner__isnull=True,
+                    holder__isnull=True,
                 )
-                cart.tickets.remove(ticket)
-                if new_ticket:
-                    cart.tickets.add(new_ticket)
-                else:
-                    sold_out_flag = True
+                .first()
+            )
+
+            if ticket is not None:
+                replacement_tickets.append(ticket)
+            else:
+                sold_out = True
+
+        cart.tickets.remove(*tickets_to_replace)
+        if replacement_tickets:
+            cart.tickets.add(*replacement_tickets)
         cart.save()
 
         return Response(
             TicketSerializer(cart.tickets.all(), many=True).data,
-            status=200 if sold_out_flag else 204,
+            status=200 if sold_out else 204,
         )
 
     @action(detail=False, methods=["post"])
@@ -4674,7 +4682,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def checkout(self, request, *args, **kwargs):
         """
-        Checkout all tickets in cart
+        Checkout all tickets in cart and create a Cybersource capture context
 
         NOTE: this does NOT buy tickets, it simply initiates a checkout process
         which includes a 10-minute ticket hold
@@ -4689,6 +4697,18 @@ class TicketViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
+                                success:
+                                    type: boolean
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
         ---
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
@@ -4708,7 +4728,57 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         Ticket.objects.bulk_update(tickets, ["holder", "holding_expiration"])
 
-        return Response({"detail": "Successfully initated checkout"})
+        cart_total = tickets.aggregate(total=Sum("price"))["total"]
+        if not cart_total:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart total must be nonzero to generate capture context.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        capture_context_request = {
+            "_target_origins": [settings.CYBERSOURCE_TARGET_ORIGIN],
+            "_client_version": settings.CYBERSOURCE_CLIENT_VERSION,
+            "_allowed_card_networks": [
+                "VISA",
+                "MASTERCARD",
+                "AMEX",
+                "DISCOVER",
+            ],
+            "_allowed_payment_types": ["PANENTRY", "SRC"],
+            "_country": "US",
+            "_locale": "en_US",
+            "_capture_mandate": {
+                "_billing_type": "FULL",
+                "_request_email": True,
+                "_request_phone": True,
+                "_request_shipping": True,
+                "_show_accepted_network_icons": True,
+            },
+            "_order_information": {
+                "_amount_details": {
+                    "_total_amount": f"{cart_total:.2f}",
+                    "_currency": "USD",
+                }
+            },
+        }
+
+        try:
+            context, _, _ = UnifiedCheckoutCaptureContextApi(
+                settings.CYBERSOURCE_CONFIG
+            ).generate_unified_checkout_capture_context_with_http_info(
+                json.dumps(capture_context_request)
+            )
+            return Response({"success": True, "detail": context})
+        except ApiException:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "An error occurred when generating the capture context.",
+                }
+            )
 
     @action(detail=False, methods=["post"])
     @transaction.atomic

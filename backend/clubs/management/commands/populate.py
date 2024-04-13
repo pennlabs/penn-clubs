@@ -773,19 +773,23 @@ class Command(BaseCommand):
 
             # Create some unowned tickets
             Ticket.objects.bulk_create(
-                [Ticket(event=e, type="Regular") for _ in range(10)]
+                [Ticket(event=e, type="Regular", price=10.10) for _ in range(10)]
             )
 
             Ticket.objects.bulk_create(
-                [Ticket(event=e, type="Premium") for _ in range(5)]
+                [Ticket(event=e, type="Premium", price=100.10) for _ in range(5)]
             )
 
             # Create some owned tickets and tickets in cart
             for i in range((idx + 1) * 10):
                 if i % 5:
-                    Ticket.objects.create(event=e, owner=person, type="Regular")
+                    Ticket.objects.create(
+                        event=e, owner=person, type="Regular", price=i
+                    )
                 else:
                     c, _ = Cart.objects.get_or_create(owner=person)
-                    c.tickets.add(Ticket.objects.create(event=e, type="Premium"))
+                    c.tickets.add(
+                        Ticket.objects.create(event=e, type="Premium", price=i)
+                    )
 
         self.stdout.write("Finished populating database!")

@@ -3909,6 +3909,11 @@ ansi-colors@^4.1.1:
   resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.1.tgz#cbb9ae256bf750af1eab344f229aa27fe94ba348"
   integrity sha512-JoX0apGbHaUJBNl6yF+p6JAFYZ666/hhCGKN5t9QFjbJQKUU/g8MNbFDbvfrgKXvI1QpZplPOnwIo99lX/AAmA==
 
+ansi-colors@^4.1.3:
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-4.1.3.tgz#37611340eb2243e70cc604cad35d63270d48781b"
+  integrity sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==
+
 ansi-escapes@^4.3.0:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/ansi-escapes/-/ansi-escapes-4.3.2.tgz#6b2291d1db7d98b6521d5f1efa42d0f3a9feb65e"
@@ -4833,6 +4838,11 @@ combined-stream@^1.0.6, combined-stream@^1.0.8, combined-stream@~1.0.6:
   integrity sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==
   dependencies:
     delayed-stream "~1.0.0"
+
+commander@^10.0.0:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-10.0.1.tgz#881ee46b4f77d1c1dccc5823433aa39b022cbe06"
+  integrity sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==
 
 commander@^6.2.1:
   version "6.2.1"
@@ -7733,6 +7743,15 @@ listr2@^3.8.3:
     rxjs "^7.5.1"
     through "^2.3.8"
     wrap-ansi "^7.0.0"
+
+local-ssl-proxy@^2.0.5:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/local-ssl-proxy/-/local-ssl-proxy-2.0.5.tgz#792ad902a61c36a650f8c45b790e19765fd48a11"
+  integrity sha512-/oWxo8IX12HTVNWza+Ui1HNz7TfrNsVyD0+ZSyf5UZocJXdR70wfNb/xHgNfEPFyjgbsaRFdqFdfxg2d11aANQ==
+  dependencies:
+    ansi-colors "^4.1.3"
+    commander "^10.0.0"
+    http-proxy "^1.18.1"
 
 locate-path@^5.0.0:
   version "5.0.0"
