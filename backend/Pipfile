@@ -53,6 +53,7 @@ jinja2 = "*"
 pandas = "*"
 drf-excel = "*"
 numpy = "*"
+inflection = "*"
 
 [requires]
 python_version = "3.11"
