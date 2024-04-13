@@ -1,4 +1,5 @@
 import argparse
+import base64
 import collections
 import datetime
 import functools
@@ -9,8 +10,10 @@ import re
 import secrets
 import string
 from functools import wraps
+from typing import Tuple
 from urllib.parse import urlparse
 
+import jwt
 import pandas as pd
 import pytz
 import qrcode
@@ -326,6 +329,28 @@ def hour_to_string_helper(hour):
         hour_string = f"{hour - 12}pm"
 
     return hour_string
+
+
+def validate_transient_token(tt: str) -> Tuple[bool, str]:
+    """Validate the integrity of the transient token using
+    the public key (JWK) obtained from the public key endpoint"""
+
+    cybersource_url = "https://" + settings.CYBERSOURCE_CONFIG["run_environment"]
+    try:
+        header, payload, signature = tt.split(".")
+        decoded_header = json.loads(base64.b64decode(header + "=="))
+        kid = decoded_header["kid"]
+        resp = requests.get(f"{cybersource_url}/flex/v2/public-keys/{kid}")
+        if resp.status_code >= 400:
+            raise ApiException(reason=f"Public key retrieval failed {resp.json()}")
+        jwk = resp.json()
+        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+        # This will throw if the key is invalid
+        jwt.decode(tt, key=public_key, algorithms=["RS256"])
+        return (True, "Successfully decoded the JWT")
+
+    except Exception as e:
+        return (False, str(e))
 
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -4654,9 +4679,8 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # Replace in-cart tickets that have been bought/held by someone else
         tickets_to_replace = cart.tickets.filter(
-            Q(owner__isnull=False)
-            | Q(holder__isnull=False, holder__ne=self.request.user)
-        )
+            Q(owner__isnull=False) | Q(holder__isnull=False)
+        ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
         if not tickets_to_replace:
@@ -4746,7 +4770,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
-                    "detail": "Cart is stale, please invoke /api/cart to refresh.",
+                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -4841,6 +4865,13 @@ class TicketViewSet(viewsets.ModelViewSet):
         ---
         """
         tt = request.data.get("transient_token")
+        ok, message = validate_transient_token(tt)
+        if not ok:
+            return Response(
+                {"success": False, "detail": message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         cart = get_object_or_404(
             Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
@@ -4874,8 +4905,9 @@ class TicketViewSet(viewsets.ModelViewSet):
                 settings.CYBERSOURCE_CONFIG
             ).create_payment(json.dumps(create_payment_request))
 
-            if payment_response["status"] != "Authorized":
-                raise ApiException(reason="Payment response status is not Authorized")
+            if payment_response.status != "AUTHORIZED":
+                raise ApiException(reason="Payment response status is not authorized")
+            reconciliation_id = payment_response.reconciliation_id
 
             if not payment_response or http_status >= 400:
                 raise ApiException(
@@ -4897,6 +4929,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         # We're explicitly using the response data over what's in self.request.user
         orderInfo = transaction_data["orderInformation"]
         transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=reconciliation_id,
             total_amount=float(orderInfo["amountDetails"]["totalAmount"]),
             buyer_first_name=orderInfo["billTo"]["firstName"],
             buyer_last_name=orderInfo["billTo"]["lastName"],
@@ -4914,8 +4947,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         tickets.update(
             owner=request.user, holder=None, transaction_record=transaction_record
         )
+        cart.tickets.clear()
         for ticket in tickets:
-            ticket.carts.remove(cart)
             ticket.send_confirmation_email()
 
         Ticket.objects.update_holds()

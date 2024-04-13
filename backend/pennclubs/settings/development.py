@@ -17,7 +17,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 # Allow requests from frontend
-CSRF_TRUSTED_ORIGINS = ["https://localhost", "http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS = ["https://localhost:3001", "http://localhost:3000"]
 
 # Use console email backend during development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
