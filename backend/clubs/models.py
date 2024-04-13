@@ -1840,6 +1840,7 @@ class Ticket(models.Model):
     )
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
     objects = TicketManager()
 
     def get_qr(self):
