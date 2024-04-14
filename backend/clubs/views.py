@@ -2396,6 +2396,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         quantities = request.data.get("quantities")
+
+        num_requested = sum(item["count"] for item in quantities)
+        num_carted = cart.tickets.filter(event=event).count()
+
+        if num_requested + num_carted > event.ticket_order_limit:
+            return Response(
+                {
+                    "detail": f"Order exceeds the maximum ticket limit of "
+                    f"{event.ticket_order_limit}."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         for item in quantities:
             type = item["type"]
             count = item["count"]
@@ -2800,7 +2813,7 @@ class EventViewSet(ClubEventViewSet):
     Get information about a fair listing
 
     owned:
-    Return all events that the user has officer permissions over.
+    Return all events that the user has def officer permissions over.
     """
 
     def get_operation_id(self, **kwargs):
@@ -4795,22 +4808,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Check if each ticket is within its event's order limit
-        for ticket in tickets:
-            event = ticket.event
-            if (
-                event.ticket_order_limit is not None
-                and cart.tickets.filter(event=event).count() > event.ticket_order_limit
-            ):
-                return Response(
-                    {
-                        "success": False,
-                        "detail": f"Event {event.name} has a maximum order limit of "
-                        f"{event.ticket_order_limit} tickets.",
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
 
         holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
         tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
