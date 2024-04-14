@@ -23,8 +23,9 @@ htmlcov/
 # Test database
 db.sqlite3
 
-# Mac
+# Misc
 .DS_Store
+*.pem
 
 # React
 node_modules/

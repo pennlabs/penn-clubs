@@ -36,7 +36,7 @@ django-runtime-options = "*"
 social-auth-app-django = "*"
 django-redis = "*"
 channels-redis = "*"
-uwsgi = {version = "*", sys_platform = "== 'linux'"}
+uwsgi = {version ="==2.0.24", sys_platform = "== 'linux'"}
 uvloop = {version = "*", sys_platform = "== 'linux'"}
 uvicorn = {extras = ["standard"], version = "*"}
 gunicorn = "*"
@@ -54,6 +54,8 @@ pandas = "*"
 drf-excel = "*"
 numpy = "*"
 inflection = "*"
+cybersource-rest-client-python = "*"
+pyjwt = "*"
 
 [requires]
 python_version = "3.11"
