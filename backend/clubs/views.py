@@ -2813,7 +2813,7 @@ class EventViewSet(ClubEventViewSet):
     Get information about a fair listing
 
     owned:
-    Return all events that the user has def officer permissions over.
+    Return all events that the user has officer permissions over.
     """
 
     def get_operation_id(self, **kwargs):
