@@ -2573,6 +2573,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: string
                                         count:
                                             type: integer
+                            order_limit:
+                                type: int
+                                required: false
         responses:
             "200":
                 content:
@@ -2598,6 +2601,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ]
 
         Ticket.objects.bulk_create(tickets)
+
+        order_limit = request.data.get("order_limit", None)
+        if order_limit is not None:
+            event.ticket_order_limit = order_limit
+            event.save()
 
         return Response({"detail": "success"})
 
@@ -4776,6 +4784,30 @@ class TicketViewSet(viewsets.ModelViewSet):
                 {
                     "success": False,
                     "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if tickets.count() == 0:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "No tickets selected for checkout.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if number of tickets is within event's order limit
+        event = tickets.first().event if tickets.exists() else None
+        if (
+            event.ticket_order_limit is not None
+            and cart.tickets.count() > event.ticket_order_limit
+        ):
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Event has a maximum order limit of "
+                    f"{event.ticket_order_limit} tickets.",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
