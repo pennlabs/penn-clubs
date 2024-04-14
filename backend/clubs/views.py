@@ -4784,6 +4784,15 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
 
+        if not cart.tickets.exists():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "No tickets selected for checkout.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # skip_locked is important here because if any of the tickets in cart
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
@@ -4791,20 +4800,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         # Assert that the filter succeeded in freezing all the tickets for checkout
-        if tickets.count() != cart.tickets.all().count():
+        if tickets.count() != cart.tickets.count():
             return Response(
                 {
                     "success": False,
                     "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if tickets.count() == 0:
-            return Response(
-                {
-                    "success": False,
-                    "detail": "No tickets selected for checkout.",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
