@@ -4796,20 +4796,21 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if number of tickets is within event's order limit
-        event = tickets.first().event if tickets.exists() else None
-        if (
-            event.ticket_order_limit is not None
-            and cart.tickets.count() > event.ticket_order_limit
-        ):
-            return Response(
-                {
-                    "success": False,
-                    "detail": "Event has a maximum order limit of "
-                    f"{event.ticket_order_limit} tickets.",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Check if each ticket is within its event's order limit
+        for ticket in tickets:
+            event = ticket.event
+            if (
+                event.ticket_order_limit is not None
+                and cart.tickets.filter(event=event).count() > event.ticket_order_limit
+            ):
+                return Response(
+                    {
+                        "success": False,
+                        "detail": f"Event {event.name} has a maximum order limit of "
+                        f"{event.ticket_order_limit} tickets.",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
         tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
