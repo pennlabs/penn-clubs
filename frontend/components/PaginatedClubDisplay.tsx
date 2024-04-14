@@ -23,7 +23,6 @@ const EmptyState = styled.div`
     margin-bottom: 1rem;
   }
 `
-
 const PaginatedClubDisplay = ({
   displayClubs,
   tags,

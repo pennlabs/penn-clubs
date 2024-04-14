@@ -394,3 +394,11 @@ export type ApplicationResponse = {
   question_type: string
   question: ApplicationQuestion
 }
+
+
+export type PagedResponse<T> = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
