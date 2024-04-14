@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="event",
             name="ticket_order_limit",
-            field=models.IntegerField(blank=True, null=True),
+            field=models.IntegerField(default=10),
         ),
     ]
