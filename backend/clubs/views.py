@@ -2615,9 +2615,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         Ticket.objects.bulk_create(tickets)
 
-        order_limit = request.data.get("order_limit", 10)
-        event.ticket_order_limit = order_limit
-        event.save()
+        order_limit = request.data.get("order_limit", None)
+        if order_limit is not None:
+            event.ticket_order_limit = order_limit
+            event.save()
 
         return Response({"detail": "success"})
 
