@@ -117,6 +117,7 @@ from clubs.models import (
     Testimonial,
     Ticket,
     TicketTransactionRecord,
+    TicketTransfer,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -4649,6 +4650,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     qr:
     Get a ticket's QR code
+
+    transfer:
+    Transfer a ticket to another user
     """
 
     permission_classes = [IsAuthenticated]
@@ -4985,6 +4989,73 @@ class TicketViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type="image/png")
         qr_image.save(response, "PNG")
         return response
+
+    @action(detail=True, methods=["post"])
+    def transfer(self, request, *args, **kwargs):
+        """
+        Transfer a ticket to another user
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                        required:
+                            - username
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "404":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        receiver = get_object_or_404(
+            get_user_model(), username=request.data.get("username")
+        )
+
+        ticket = self.get_object()
+        if not ticket.transferrable:
+            return Response(
+                {"detail": "The ticket is non-transferrable"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if self.request.user == receiver:
+            return Response(
+                {"detail": "You cannot transfer a ticket to yourself"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        ticket.owner = receiver
+        ticket.save()
+        TicketTransfer.objects.create(
+            ticket=ticket, sender=self.request.user, receiver=receiver
+        )
+
+        return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)

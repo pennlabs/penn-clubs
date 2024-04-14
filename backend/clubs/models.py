@@ -1846,6 +1846,7 @@ class Ticket(models.Model):
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
+    transferrable = models.BooleanField(default=True)
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
@@ -1893,6 +1894,23 @@ class Ticket(models.Model):
                 emails=[owner.email],
                 context=context,
             )
+
+
+class TicketTransfer(models.Model):
+    """
+    Represents a transfer of ticket ownership, used for bookkeeping
+    """
+
+    ticket = models.ForeignKey(
+        Ticket, related_name="transfers", on_delete=models.CASCADE
+    )
+    sender = models.ForeignKey(
+        get_user_model(), related_name="sent_transfers", on_delete=models.CASCADE
+    )
+    receiver = models.ForeignKey(
+        get_user_model(), related_name="received_transfers", on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 @receiver(models.signals.pre_delete, sender=Asset)
