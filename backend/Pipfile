@@ -53,7 +53,7 @@ jinja2 = "*"
 pandas = "*"
 drf-excel = "*"
 numpy = "*"
-elosports = "*"
+inflection = "*"
 
 [requires]
 python_version = "3.11"

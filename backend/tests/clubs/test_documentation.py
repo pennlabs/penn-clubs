@@ -49,7 +49,6 @@ class DocumentationTestCase(TestCase):
                 ("ClubViewSet", "notes_about"),
                 ("ClubViewSet", "subscription"),
                 ("EventViewSet", "owned"),
-                ("ClubRankViewSet", "get_match"),
             ]
         )
 

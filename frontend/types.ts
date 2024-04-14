@@ -149,8 +149,6 @@ export interface Club {
   badges: Badge[]
   code: string
   description: string
-  elo: number
-  elo_rank?: number
   email: string
   enables_subscription: boolean
   events: ClubEvent[]
@@ -188,7 +186,6 @@ export interface Club {
   target_schools: School[]
   target_years: Year[]
   testimonials: Testimonial[]
-  tier?: string
   twitter: string
   website: string
 }
