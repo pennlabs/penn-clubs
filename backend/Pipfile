@@ -55,6 +55,7 @@ drf-excel = "*"
 numpy = "*"
 inflection = "*"
 cybersource-rest-client-python = "*"
+pyjwt = "*"
 
 [requires]
 python_version = "3.11"
