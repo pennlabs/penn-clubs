@@ -2397,8 +2397,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     {"detail": f"Not enough tickets of type {type} left!"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
-            else:
-                cart.tickets.add(*tickets[:count])
+            cart.tickets.add(*tickets[:count])
 
         cart.save()
         return Response({"detail": "Successfully added to cart"})
@@ -2525,27 +2524,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
-        types = tickets.values_list("type", flat=True).distinct()
 
-        # TODO: convert this into SQL
-
-        totals = []
-        available = []
-
-        for type in types:
-            totals.append({"type": type, "count": tickets.filter(type=type).count()})
-            available.append(
-                {
-                    "type": type,
-                    "count": (
-                        tickets.filter(
-                            type=type, owner__isnull=True, holder__isnull=True
-                        ).count()
-                    ),
-                }
-            )
-
-        return Response({"totals": totals, "available": available})
+        totals = tickets.values("type").annotate(count=Count("type")).order_by("type")
+        available = (
+            tickets.filter(owner__isnull=True, holder__isnull=True)
+            .values("type")
+            .annotate(count=Count("type"))
+            .order_by("type")
+        )
+        return Response({"totals": list(totals), "available": list(available)})
 
     @tickets.mapping.put
     @transaction.atomic
