@@ -1912,6 +1912,25 @@ class TicketTransfer(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def send_confirmation_emails(self):
+        """
+        Send confirmation emails to the sender and recipient of the transfer.
+        """
+        context = {
+            "sender_first_name": self.sender.first_name,
+            "receiver_first_name": self.receiver.first_name,
+            "receiver_username": self.receiver.username,
+            "event_name": self.ticket.event.name,
+            "type": self.ticket.event.type,
+        }
+
+        send_mail_helper(
+            name="ticket_transfer",
+            subject=f"Ticket transfer confirmation for {self.ticket.event.name}",
+            emails=[self.sender.email, self.receiver.email],
+            context=context,
+        )
+
 
 @receiver(models.signals.pre_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):

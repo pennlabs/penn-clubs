@@ -4991,6 +4991,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         return response
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def transfer(self, request, *args, **kwargs):
         """
         Transfer a ticket to another user
@@ -5053,7 +5054,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.save()
         TicketTransfer.objects.create(
             ticket=ticket, sender=self.request.user, receiver=receiver
-        )
+        ).send_confirmation_emails()
+        ticket.send_confirmation_email()  # send event details to recipient
 
         return Response({"detail": "Successfully transferred ownership of ticket"})
 

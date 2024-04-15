@@ -1,0 +1,27 @@
+<!-- TYPES:
+sender_first_name:
+    type: string
+receiver_first_name:
+    type: string
+receiver_username:
+    type: string
+event_name:
+    type: string
+type:
+    type: string
+-->
+
+{% extends 'emails/base.html' %}
+
+{% block content %}
+<h2>Thanks for using Penn Clubs!</h2>
+
+<p style="font-size: 1.2em">
+    {{ sender_first_name }}, this is confirmation that you have transferred a ticket to {{ receiver_first_name }} ({{ receiver_username }}) for {{ event_name }} with ticket type {{ type }}.
+</p>
+
+
+<p style="font-size: 1.2em">
+    If you believe that this was sent in error or have any questions, feel free to respond to this email.
+</p>
+{% endblock %}
