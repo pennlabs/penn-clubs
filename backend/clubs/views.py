@@ -5054,7 +5054,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.save()
         TicketTransfer.objects.create(
             ticket=ticket, sender=self.request.user, receiver=receiver
-        ).send_confirmation_emails()
+        ).send_confirmation_email()
         ticket.send_confirmation_email()  # send event details to recipient
 
         return Response({"detail": "Successfully transferred ownership of ticket"})

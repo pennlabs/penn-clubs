@@ -1912,9 +1912,9 @@ class TicketTransfer(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def send_confirmation_emails(self):
+    def send_confirmation_email(self):
         """
-        Send confirmation emails to the sender and recipient of the transfer.
+        Send confirmation email to the sender and recipient of the transfer.
         """
         context = {
             "sender_first_name": self.sender.first_name,
