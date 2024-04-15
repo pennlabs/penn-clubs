@@ -4911,6 +4911,19 @@ class TicketViewSet(viewsets.ModelViewSet):
             Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
 
+        # Guard against holds expiring before the capture context
+        tickets = cart.tickets.select_for_update(skip_locked=True).filter(
+            holder=self.request.user, owner__isnull=True
+        )
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             _, http_status, transaction_data = TransientTokenDataApi(
                 settings.CYBERSOURCE_CONFIG
