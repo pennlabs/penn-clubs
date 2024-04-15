@@ -4872,6 +4872,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=["post"])
+    @update_holds
     @transaction.atomic
     def complete_checkout(self, request, *args, **kwargs):
         """
