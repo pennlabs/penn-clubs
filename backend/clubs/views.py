@@ -4912,9 +4912,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         # Guard against holds expiring before the capture context
-        tickets = cart.tickets.select_for_update(skip_locked=True).filter(
-            holder=self.request.user, owner__isnull=True
-        )
+        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
         if tickets.count() != cart.tickets.count():
             return Response(
                 {
