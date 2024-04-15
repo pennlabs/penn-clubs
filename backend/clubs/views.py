@@ -4872,6 +4872,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=["post"])
+    @update_holds
     @transaction.atomic
     def complete_checkout(self, request, *args, **kwargs):
         """
@@ -4910,6 +4911,17 @@ class TicketViewSet(viewsets.ModelViewSet):
         cart = get_object_or_404(
             Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
+
+        # Guard against holds expiring before the capture context
+        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             _, http_status, transaction_data = TransientTokenDataApi(
