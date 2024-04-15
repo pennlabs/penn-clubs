@@ -52,6 +52,7 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    TicketTransactionRecord,
     Year,
     ZoomMeetingVisit,
 )
@@ -454,5 +455,6 @@ admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
 admin.site.register(AdminNote)
 admin.site.register(Ticket)
+admin.site.register(TicketTransactionRecord)
 admin.site.register(Cart)
 admin.site.register(ApplicationCycle)

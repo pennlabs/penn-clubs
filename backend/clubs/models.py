@@ -924,6 +924,7 @@ class Event(models.Model):
     parent_recurring_event = models.ForeignKey(
         RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
     )
+    ticket_order_limit = models.IntegerField(default=10)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -1796,10 +1797,27 @@ class TicketManager(models.Manager):
         expired_tickets = self.select_for_update().filter(
             holder__isnull=False, holding_expiration__lte=timezone.now()
         )
+
+        if not expired_tickets:
+            return
+
         with transaction.atomic():
             for ticket in expired_tickets:
                 ticket.holder = None
             self.bulk_update(expired_tickets, ["holder"])
+
+
+class TicketTransactionRecord(models.Model):
+    """
+    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    """
+
+    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+    buyer_first_name = models.CharField(max_length=100)
+    buyer_last_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField(blank=True, null=True)
 
 
 class Ticket(models.Model):
@@ -1828,6 +1846,14 @@ class Ticket(models.Model):
     )
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    transaction_record = models.ForeignKey(
+        TicketTransactionRecord,
+        related_name="tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
     objects = TicketManager()
 
     def get_qr(self):

@@ -74,3 +74,13 @@ CACHES = {
         "KEY_PREFIX": "django",
     }
 }
+
+# Cybersource settings
+CYBERSOURCE_CONFIG = {
+    "authentication_type": "http_signature",
+    "merchantid": os.getenv("MERCHANT_ID"),
+    "merchant_keyid": os.getenv("MERCHANT_KEYID"),
+    "merchant_secretkey": os.getenv("MERCHANT_SECRETKEY"),
+    "run_environment": "api.cybersource.com",
+}
+CYBERSOURCE_TARGET_ORIGIN = "https://pennclubs.com"
