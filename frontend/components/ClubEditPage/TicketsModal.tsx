@@ -55,12 +55,14 @@ const TicketItem = ({
   ticket,
   changeName,
   changeCount,
+  changePrice,
   deleteTicket,
   deletable,
   index,
 }): ReactElement => {
   const [name, setName] = useState(ticket.name)
   const [count, setCount] = useState(ticket.count)
+  const [price, setPrice] = useState(ticket.price)
 
   const handleNameChange = (e) => {
     setName(e.target.value)
@@ -70,6 +72,12 @@ const TicketItem = ({
   const handleCountChange = (e) => {
     setCount(e.target.value)
     changeCount(e.target.value, index)
+  }
+
+  const handlePriceChange = (e) => {
+    const rounded = Math.round(parseFloat(e.target.value) * 100) / 100
+    setPrice(rounded.toString())
+    changePrice(rounded.toString(), index)
   }
 
   return (
@@ -95,6 +103,13 @@ const TicketItem = ({
           placeholder="Ticket Count"
           onChange={handleCountChange}
         />
+        <Input
+          type="number"
+          className="input"
+          value={price}
+          placeholder="Ticket Price"
+          onChange={handlePriceChange}
+        />
         <button
           className="button is-danger"
           disabled={!deletable}
@@ -110,6 +125,7 @@ const TicketItem = ({
 type Ticket = {
   name: string
   count: string | null
+  price: string | null // Free if null
 }
 
 const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
@@ -119,7 +135,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const [submitting, setSubmitting] = useState(false)
 
   const [tickets, setTickets] = useState<Ticket[]>([
-    { name: 'Regular Ticket', count: null },
+    { name: 'Regular Ticket', count: null, price: null },
   ])
 
   const handleNameChange = (name, i) => {
@@ -134,6 +150,12 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
     setTickets(ticks)
   }
 
+  const handlePriceChange = (price, i) => {
+    const ticks = [...tickets]
+    ticks[i].price = price
+    setTickets(ticks)
+  }
+
   const deleteTicket = (i) => {
     const ticks = [...tickets]
     ticks.splice(i, 1)
@@ -142,7 +164,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
 
   const addNewTicket = () => {
     const ticks = [...tickets]
-    ticks.push({ name: '', count: null })
+    ticks.push({ name: '', count: null, price: null })
     setTickets(ticks)
   }
 
@@ -151,7 +173,11 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       const quantities = tickets
         .filter((ticket) => ticket.count != null)
         .map((ticket) => {
-          return { type: ticket.name, count: parseInt(ticket.count || '') }
+          return {
+            type: ticket.name,
+            count: parseInt(ticket.count || ''),
+            price: parseInt(ticket.price || ''),
+          }
         })
       doApiRequest(`/events/${id}/tickets/?format=json`, {
         method: 'PUT',
@@ -168,7 +194,9 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
     (ticket) =>
       typeof ticket.name !== 'string' ||
       ticket.count === null ||
-      !Number.isInteger(parseInt(ticket.count || '0')),
+      !Number.isInteger(parseInt(ticket.count || '0')) ||
+      ticket.price === null ||
+      !Number.isInteger(parseInt(ticket.price || '0')),
   )
 
   return (
@@ -202,6 +230,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
               deletable={tickets.length !== 1}
               changeName={handleNameChange}
               changeCount={handleCountChange}
+              changePrice={handlePriceChange}
               deleteTicket={deleteTicket}
             />
           ))}
