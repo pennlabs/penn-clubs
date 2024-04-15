@@ -5021,7 +5021,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
-    
+
     def give_tickets(self, order_info, cart, reconciliation_id):
         """
         Helper function that give the tickets to the user/buyer
