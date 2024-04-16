@@ -76,7 +76,7 @@ const WhartonApplicationTab = ({
         startTime: formatDateTime(application.application_start_time),
         endTime: formatDateTime(application.application_end_time),
         updatedTime: formatDateTime(application.updated_at),
-        wordCount: wordCount,
+        wordCount,
       }
     })
   }
