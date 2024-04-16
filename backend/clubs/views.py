@@ -49,7 +49,6 @@ from django.db.models import (
     Max,
     Prefetch,
     Q,
-    Sum,
     TextField,
     Value,
     When,
@@ -4884,7 +4883,21 @@ class TicketViewSet(viewsets.ModelViewSet):
         holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
         tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
-        cart_total = tickets.aggregate(total=Sum("price"))["total"]
+        # Calculate cart total, applying group discounts where appropriate
+        ticket_type_counts = tickets.values("type").annotate(count=Count("type"))
+        ticket_type_counts = {
+            item["type"]: item["count"] for item in ticket_type_counts
+        }
+
+        cart_total = sum(
+            ticket.price * (1 - ticket.group_discount)
+            if ticket.group_discount
+            and ticket.group_size
+            and ticket_type_counts[ticket.type] >= ticket.group_size
+            else ticket.price
+            for ticket in tickets
+        )
+
         if not cart_total:
             return Response(
                 {
