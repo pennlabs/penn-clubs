@@ -1854,7 +1854,11 @@ class Ticket(models.Model):
         blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(1)],
     )
-    group_size = models.IntegerField(null=True, blank=True)
+    group_size = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(2)],
+    )
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
