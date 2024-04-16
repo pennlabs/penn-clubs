@@ -19,10 +19,10 @@ import {
   CARD_HEADING,
   mediaMaxWidth,
   SM,
-} from '../../constants/measurements'
-import { UserInfo } from '../../types'
-import { doApiRequest } from '../../utils'
-import { QRCodeCardTicketing } from '../ClubEditPage/QRCodeCard'
+} from '../../../constants/measurements'
+import { UserInfo } from '../../../types'
+import { doApiRequest } from '../../../utils'
+import QRCodeCard, { QRCodeType } from '../../ClubEditPage/QRCodeCard'
 import {
   Center,
   EmptyState,
@@ -31,8 +31,8 @@ import {
   Modal,
   Text,
   Title,
-} from '../common'
-import TicketTransferModal from './TicketTransferModal'
+} from '../../common'
+import TicketTransferModal from '../TicketTransferModal'
 
 const CardHeader = styled.div`
   display: flex;
@@ -303,7 +303,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
   const [tickets, setTickets] = useState<any>(null)
   const [show, setShow] = useState<boolean>(false)
   const [expandedEvents, setExpandedEvents] = useState(new Set())
-  const [qrCodeModal, setQRCodeModal] = useState<string | undefined>()
+  const [selectedTicket, setSelectedTicket] = useState<string | undefined>()
 
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)
@@ -332,7 +332,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
 
   const viewQRCode = (id: string) => {
     showModal()
-    setQRCodeModal(id)
+    setSelectedTicket(id)
   }
 
   const toggleGroup = (key) => {
@@ -355,10 +355,13 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
           marginBottom={false}
         >
           <TicketTransferModal event={null} />
-          {qrCodeModal && (
+          {selectedTicket && (
             <ModalContainer>
               <ModalBody>
-                <QRCodeCardTicketing id={qrCodeModal ?? ''} />
+                <QRCodeCard
+                  id={selectedTicket ?? ''}
+                  type={QRCodeType.TICKET}
+                />
               </ModalBody>
             </ModalContainer>
           )}

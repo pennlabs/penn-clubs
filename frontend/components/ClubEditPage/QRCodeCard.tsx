@@ -1,9 +1,8 @@
 import Link from 'next/link'
-import { ReactElement } from 'react'
+import { PropsWithChildren } from 'react'
 import styled from 'styled-components'
 
 import { CLUB_FLYER_ROUTE } from '../../constants/routes'
-import { Club } from '../../types'
 import { getApiUrl } from '../../utils'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Icon, Text } from '../common'
@@ -16,17 +15,29 @@ const QRCode = styled.img`
   margin-bottom: 15px;
 `
 
-type QRCodeCardProps = {
-  club: Club
+export enum QRCodeType {
+  CLUB = 'club',
+  TICKET = 'tickets',
 }
 
-export function QRCodeCardTicketing({ id }: { id: string }): ReactElement {
+const QRCodeCard: React.FC<
+  PropsWithChildren<{
+    id: string
+    type: QRCodeType
+  }>
+> = ({ id, type, children }) => {
   return (
     <BaseCard title="QR Code">
-      <QRCode src={getApiUrl(`/tickets/${id}/qr`)} alt="qr code" />
+      {type === QRCodeType.CLUB && (
+        <Text>
+          When scanned, gives mobile-friendly access to your{' '}
+          {OBJECT_NAME_SINGULAR} page and bookmark/subscribe actions.
+        </Text>
+      )}
+      <QRCode src={getApiUrl(`/${type}/${id}/qr`)} alt="qr code" />
       <div className="buttons">
         <a
-          href={getApiUrl(`/tickets/${id}/qr`)}
+          href={getApiUrl(`/${type}/${id}/qr`)}
           download={`${id}.png`}
           className="button is-success"
         >
@@ -34,37 +45,19 @@ export function QRCodeCardTicketing({ id }: { id: string }): ReactElement {
           Download QR Code
         </a>
       </div>
-    </BaseCard>
-  )
-}
-
-export default function QRCodeCard({ club }: QRCodeCardProps): ReactElement {
-  return (
-    <BaseCard title="QR Code">
-      <Text>
-        When scanned, gives mobile-friendly access to your{' '}
-        {OBJECT_NAME_SINGULAR} page and bookmark/subscribe actions.
-      </Text>
-      <QRCode src={getApiUrl(`/clubs/${club.code}/qr`)} alt="qr code" />
-      <div className="buttons">
-        <a
-          href={getApiUrl(`/clubs/${club.code}/qr`)}
-          download={`${club.code}.png`}
-          className="button is-success"
-        >
-          <Icon alt="qr" name="download" />
-          Download QR Code
-        </a>
+      {type === QRCodeType.CLUB && (
         <Link
           legacyBehavior
           href={CLUB_FLYER_ROUTE()}
-          as={CLUB_FLYER_ROUTE(club.code)}
+          as={CLUB_FLYER_ROUTE(id)}
         >
           <a target="_blank" className="button is-success">
             <Icon alt="flyer" name="external-link" /> View Flyer
           </a>
         </Link>
-      </div>
+      )}
+      {children}
     </BaseCard>
   )
 }
+export default QRCodeCard
