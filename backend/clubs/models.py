@@ -1850,7 +1850,7 @@ class Ticket(models.Model):
     group_discount = models.DecimalField(
         max_digits=3,
         decimal_places=2,
-        null=True,
+        default=0,
         blank=True,
     )
     group_size = models.PositiveIntegerField(null=True, blank=True)

@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 decimal_places=2,
                 max_digits=3,
-                null=True,
+                default=0,
             ),
         ),
         migrations.AddField(
