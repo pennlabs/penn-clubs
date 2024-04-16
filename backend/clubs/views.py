@@ -46,6 +46,7 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
+    Max,
     Prefetch,
     Q,
     Sum,
@@ -2398,6 +2399,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         quantities = request.data.get("quantities")
+
+        num_requested = sum(item["count"] for item in quantities)
+        num_carted = cart.tickets.filter(event=event).count()
+
+        if num_requested + num_carted > event.ticket_order_limit:
+            return Response(
+                {
+                    "detail": f"Order exceeds the maximum ticket limit of "
+                    f"{event.ticket_order_limit}."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         for item in quantities:
             type = item["type"]
             count = item["count"]
@@ -2531,6 +2545,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             count:
                                                 type: integer
+                                            price:
+                                                type: number
                                 available:
                                     type: array
                                     items:
@@ -2540,15 +2556,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             count:
                                                 type: integer
+                                            price:
+                                                type: number
         ---
         """
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
-        totals = tickets.values("type").annotate(count=Count("type")).order_by("type")
+        # Take price of first ticket of given type for now
+        totals = (
+            tickets.values("type")
+            .annotate(price=Max("price"))
+            .annotate(count=Count("type"))
+            .order_by("type")
+        )
         available = (
             tickets.filter(owner__isnull=True, holder__isnull=True)
             .values("type")
+            .annotate(price=Max("price"))
             .annotate(count=Count("type"))
             .order_by("type")
         )
@@ -2579,6 +2604,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: number
                                         transferrable:
                                             type: boolean
+                            order_limit:
+                                type: int
+                                required: false
         responses:
             "200":
                 content:
@@ -2609,8 +2637,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         serializer.save()
+
+        order_limit = request.data.get("order_limit", None)
+        if order_limit is not None:
+            event.ticket_order_limit = order_limit
+            event.save()
+
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
@@ -4779,6 +4812,15 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
 
+        if not cart.tickets.exists():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "No tickets selected for checkout.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # skip_locked is important here because if any of the tickets in cart
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
@@ -4786,7 +4828,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         # Assert that the filter succeeded in freezing all the tickets for checkout
-        if tickets.count() != cart.tickets.all().count():
+        if tickets.count() != cart.tickets.count():
             return Response(
                 {
                     "success": False,
@@ -4857,6 +4899,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=["post"])
+    @update_holds
     @transaction.atomic
     def complete_checkout(self, request, *args, **kwargs):
         """
@@ -4895,6 +4938,17 @@ class TicketViewSet(viewsets.ModelViewSet):
         cart = get_object_or_404(
             Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
+
+        # Guard against holds expiring before the capture context
+        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             _, http_status, transaction_data = TransientTokenDataApi(

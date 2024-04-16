@@ -924,6 +924,7 @@ class Event(models.Model):
     parent_recurring_event = models.ForeignKey(
         RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
     )
+    ticket_order_limit = models.IntegerField(default=10)
 
     OTHER = 0
     RECRUITMENT = 1
