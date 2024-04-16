@@ -1847,6 +1847,13 @@ class Ticket(models.Model):
     holding_expiration = models.DateTimeField(null=True, blank=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
+    group_discount = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0,
+        blank=True,
+    )
+    group_size = models.PositiveIntegerField(null=True, blank=True)
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
