@@ -55,12 +55,14 @@ const TicketItem = ({
   ticket,
   changeName,
   changeCount,
+  changePrice,
   deleteTicket,
   deletable,
   index,
 }): ReactElement => {
   const [name, setName] = useState(ticket.name)
   const [count, setCount] = useState(ticket.count)
+  const [price, setPrice] = useState(ticket.price)
 
   const handleNameChange = (e) => {
     setName(e.target.value)
@@ -68,8 +70,17 @@ const TicketItem = ({
   }
 
   const handleCountChange = (e) => {
-    setCount(e.target.value)
-    changeCount(e.target.value, index)
+    let rounded = Math.round(parseFloat(e.target.value))
+    rounded = rounded < 0 ? 0 : rounded
+    setCount(rounded.toString())
+    changeCount(rounded.toString(), index)
+  }
+
+  const handlePriceChange = (e) => {
+    let rounded = Math.round(parseFloat(e.target.value) * 100) / 100
+    rounded = rounded < 0 ? 0 : rounded
+    setPrice(rounded.toString())
+    changePrice(rounded.toString(), index)
   }
 
   return (
@@ -95,6 +106,13 @@ const TicketItem = ({
           placeholder="Ticket Count"
           onChange={handleCountChange}
         />
+        <Input
+          type="number"
+          className="input"
+          value={price}
+          placeholder="Ticket Price"
+          onChange={handlePriceChange}
+        />
         <button
           className="button is-danger"
           disabled={!deletable}
@@ -110,6 +128,7 @@ const TicketItem = ({
 type Ticket = {
   name: string
   count: string | null
+  price: string | null // Free if null
 }
 
 const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
@@ -119,7 +138,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
   const [submitting, setSubmitting] = useState(false)
 
   const [tickets, setTickets] = useState<Ticket[]>([
-    { name: 'Regular Ticket', count: null },
+    { name: 'Regular Ticket', count: null, price: null },
   ])
 
   const handleNameChange = (name, i) => {
@@ -134,6 +153,12 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
     setTickets(ticks)
   }
 
+  const handlePriceChange = (price, i) => {
+    const ticks = [...tickets]
+    ticks[i].price = price
+    setTickets(ticks)
+  }
+
   const deleteTicket = (i) => {
     const ticks = [...tickets]
     ticks.splice(i, 1)
@@ -142,7 +167,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
 
   const addNewTicket = () => {
     const ticks = [...tickets]
-    ticks.push({ name: '', count: null })
+    ticks.push({ name: '', count: null, price: null })
     setTickets(ticks)
   }
 
@@ -151,16 +176,26 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       const quantities = tickets
         .filter((ticket) => ticket.count != null)
         .map((ticket) => {
-          return { type: ticket.name, count: parseInt(ticket.count || '') }
+          return {
+            type: ticket.name,
+            count: parseInt(ticket.count || ''),
+            price: parseFloat(ticket.price || ''),
+          }
         })
       doApiRequest(`/events/${id}/tickets/?format=json`, {
         method: 'PUT',
         body: {
-          quantities: quantities,
+          quantities,
         },
+      }).then((res) => {
+        if (res.ok) {
+          notify(<>Tickets Created!</>, 'success')
+          setSubmitting(false)
+        } else {
+          notify(<>Error creating tickets</>, 'error')
+          setSubmitting(false)
+        }
       })
-      notify(<>Tickets Created!</>, 'success')
-      setSubmitting(false)
     }
   }
 
@@ -168,7 +203,11 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
     (ticket) =>
       typeof ticket.name !== 'string' ||
       ticket.count === null ||
-      !Number.isInteger(parseInt(ticket.count || '0')),
+      !Number.isInteger(parseInt(ticket.count || '0')) ||
+      parseInt(ticket.count || '0') < 0 ||
+      ticket.price === null ||
+      !Number.isFinite(parseFloat(ticket.price || '0')) ||
+      parseFloat(ticket.price || '0') < 0,
   )
 
   return (
@@ -181,15 +220,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       />
       <ModalBody>
         <Title>{name}</Title>
-        <Text>
-          Create new tickets for this event. To be filled with actual
-          instructions. Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-          sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-          enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-          ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur.
-        </Text>
+        <Text>Create new tickets for this event.</Text>
         <Line />
         <SectionContainer>
           <h1>Tickets</h1>
@@ -202,6 +233,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
               deletable={tickets.length !== 1}
               changeName={handleNameChange}
               changeCount={handleCountChange}
+              changePrice={handlePriceChange}
               deleteTicket={deleteTicket}
             />
           ))}

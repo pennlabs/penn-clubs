@@ -46,6 +46,7 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
+    Max,
     Prefetch,
     Q,
     Sum,
@@ -2542,6 +2543,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             count:
                                                 type: integer
+                                            price:
+                                                type: number
                                 available:
                                     type: array
                                     items:
@@ -2551,15 +2554,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             count:
                                                 type: integer
+                                            price:
+                                                type: number
         ---
         """
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
-        totals = tickets.values("type").annotate(count=Count("type")).order_by("type")
+        # Take price of first ticket of given type for now
+        totals = (
+            tickets.values("type")
+            .annotate(price=Max("price"))
+            .annotate(count=Count("type"))
+            .order_by("type")
+        )
         available = (
             tickets.filter(owner__isnull=True, holder__isnull=True)
             .values("type")
+            .annotate(price=Max("price"))
             .annotate(count=Count("type"))
             .order_by("type")
         )
@@ -2586,11 +2598,21 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: string
                                         count:
                                             type: integer
+                                        price:
+                                            type: number
                             order_limit:
                                 type: int
                                 required: false
         responses:
             "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
                 content:
                     application/json:
                         schema:
@@ -2604,11 +2626,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         quantities = request.data.get("quantities")
 
-        # Atomicity ensures idempotency
+        # Ticket prices must be non-negative
+        if any(item.get("price", 0) < 0 for item in quantities):
+            return Response(
+                {"detail": "Ticket price cannot be negative."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        # Atomicity ensures idempotency
         Ticket.objects.filter(event=event).delete()  # Idempotency
         tickets = [
-            Ticket(event=event, type=item["type"])
+            Ticket(event=event, type=item["type"], price=item["price"])
             for item in quantities
             for _ in range(item["count"])
         ]
