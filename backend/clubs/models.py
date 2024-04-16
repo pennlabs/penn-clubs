@@ -1806,19 +1806,6 @@ class TicketManager(models.Manager):
             self.bulk_update(expired_tickets, ["holder"])
 
 
-class TicketTransactionRecord(models.Model):
-    """
-    Represents an instance of a transaction record for an ticket, used for bookkeeping
-    """
-
-    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    buyer_phone = PhoneNumberField(null=True, blank=True)
-    buyer_first_name = models.CharField(max_length=100)
-    buyer_last_name = models.CharField(max_length=100)
-    buyer_email = models.EmailField(blank=True, null=True)
-
-
 class Ticket(models.Model):
     """
     Represents an instance of a ticket for an event
@@ -1847,13 +1834,6 @@ class Ticket(models.Model):
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     transferrable = models.BooleanField(default=True)
-    transaction_record = models.ForeignKey(
-        TicketTransactionRecord,
-        related_name="tickets",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
     objects = TicketManager()
 
     def get_qr(self):
@@ -1896,19 +1876,43 @@ class Ticket(models.Model):
             )
 
 
-class TicketTransfer(models.Model):
+class TicketTransactionRecord(models.Model):
+    """
+    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    """
+
+    ticket = models.ForeignKey(
+        Ticket, related_name="transaction_records", on_delete=models.PROTECT
+    )
+    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+    buyer_first_name = models.CharField(max_length=100)
+    buyer_last_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField(blank=True, null=True)
+
+
+class TicketTransferRecord(models.Model):
     """
     Represents a transfer of ticket ownership, used for bookkeeping
     """
 
     ticket = models.ForeignKey(
-        Ticket, related_name="transfers", on_delete=models.CASCADE
+        Ticket, related_name="transfer_records", on_delete=models.PROTECT
     )
     sender = models.ForeignKey(
-        get_user_model(), related_name="sent_transfers", on_delete=models.CASCADE
+        get_user_model(),
+        related_name="sent_transfers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
     receiver = models.ForeignKey(
-        get_user_model(), related_name="received_transfers", on_delete=models.CASCADE
+        get_user_model(),
+        related_name="received_transfers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

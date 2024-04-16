@@ -1767,6 +1767,33 @@ class TicketSerializer(serializers.ModelSerializer):
         fields = ("id", "event", "type", "owner", "price")
 
 
+class TicketCreationSerializer(serializers.ModelSerializer):
+    """
+    Used to create tickets for an event
+    """
+
+    count = serializers.IntegerField(min_value=1, write_only=True)
+
+    def create(self, validated_data):
+        print(validated_data)
+        event = self.context.get("event")
+        count = validated_data.pop("count")
+        return Ticket.objects.bulk_create(
+            Ticket(**validated_data, event=event) for _ in range(count)
+        )
+
+    def validate(self, data):
+        if data["price"] < 0:
+            raise serializers.ValidationError("Ticket price must be non-negative")
+        if data["count"] <= 0:
+            raise serializers.ValidationError("Ticket count must be positive")
+        return data
+
+    class Meta:
+        model = Ticket
+        fields = ("type", "price", "transferrable", "count")
+
+
 class UserUUIDSerializer(serializers.ModelSerializer):
     """
     Used to get the uuid of a user (for ICS Calendar export)

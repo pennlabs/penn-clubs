@@ -14,10 +14,10 @@ type:
 {% extends 'emails/base.html' %}
 
 {% block content %}
-<h2>Thanks for using Penn Clubs!</h2>
+<h2>Ticket Transfer Confirmation</h2>
 
 <p style="font-size: 1.2em">
-    {{ sender_first_name }}, this is confirmation that you have transferred a ticket to {{ receiver_first_name }} ({{ receiver_username }}) for {{ event_name }} with ticket type {{ type }}.
+    <b>{{ sender_first_name }}</b>, this is confirmation that you have transferred a ticket to <b>{{ receiver_first_name }}</b> (<b>{{ receiver_username }}</b>) for <b>{{ event_name }}</b> with ticket type <b>{{ type }}</b>.
 </p>
 
 

@@ -117,7 +117,7 @@ from clubs.models import (
     Testimonial,
     Ticket,
     TicketTransactionRecord,
-    TicketTransfer,
+    TicketTransferRecord,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -188,6 +188,7 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    TicketCreationSerializer,
     TicketSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
@@ -2574,6 +2575,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: string
                                         count:
                                             type: integer
+                                        price:
+                                            type: number
+                                        transferrable:
+                                            type: boolean
         responses:
             "200":
                 content:
@@ -2583,24 +2588,30 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                        type: object
+                        additionalProperties:
+                            type: array
+                            items:
+                                type: string
         ---
         """
         event = self.get_object()
-
-        quantities = request.data.get("quantities")
-
-        # Atomicity ensures idempotency
+        quantities = request.data.get("quantities", [])
 
         Ticket.objects.filter(event=event).delete()  # Idempotency
-        tickets = [
-            Ticket(event=event, type=item["type"])
-            for item in quantities
-            for _ in range(item["count"])
-        ]
 
-        Ticket.objects.bulk_create(tickets)
+        serializer = TicketCreationSerializer(
+            data=quantities, many=True, allow_empty=False, context={"event": event}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"detail": "success"})
+        serializer.save()
+        return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -4934,28 +4945,29 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        # Archive transaction data for historical purposes.
-        # We're explicitly using the response data over what's in self.request.user
-        orderInfo = transaction_data["orderInformation"]
-        transaction_record = TicketTransactionRecord.objects.create(
-            reconciliation_id=reconciliation_id,
-            total_amount=float(orderInfo["amountDetails"]["totalAmount"]),
-            buyer_first_name=orderInfo["billTo"]["firstName"],
-            buyer_last_name=orderInfo["billTo"]["lastName"],
-            buyer_phone=orderInfo["billTo"]["phoneNumber"],
-            buyer_email=orderInfo["billTo"]["email"],
-        )
-
         # At this point, we have validated that the payment was authorized
         # Give the tickets to the user
-        tickets = (
-            cart.tickets.select_for_update()
-            .filter(holder=self.request.user)
-            .prefetch_related("carts")
-        )
-        tickets.update(
-            owner=request.user, holder=None, transaction_record=transaction_record
-        )
+        tickets = cart.tickets.select_for_update().filter(holder=self.request.user)
+
+        # Archive transaction data for historical purposes.
+        # We're explicitly using the response data over what's in self.request.user
+        order_info = transaction_data["orderInformation"]
+        transaction_records = []
+        for ticket in tickets:
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    reconciliation_id=reconciliation_id,
+                    total_amount=float(order_info["amountDetails"]["totalAmount"]),
+                    buyer_first_name=order_info["billTo"]["firstName"],
+                    buyer_last_name=order_info["billTo"]["lastName"],
+                    buyer_phone=order_info["billTo"]["phoneNumber"],
+                    buyer_email=order_info["billTo"]["email"],
+                )
+            )
+
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+        tickets.update(owner=request.user, holder=None)
         cart.tickets.clear()
         for ticket in tickets:
             ticket.send_confirmation_email()
@@ -5037,6 +5049,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             get_user_model(), username=request.data.get("username")
         )
 
+        # checking whether the request's user owns the ticket is handled by the queryset
         ticket = self.get_object()
         if not ticket.transferrable:
             return Response(
@@ -5052,7 +5065,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         ticket.owner = receiver
         ticket.save()
-        TicketTransfer.objects.create(
+        TicketTransferRecord.objects.create(
             ticket=ticket, sender=self.request.user, receiver=receiver
         ).send_confirmation_email()
         ticket.send_confirmation_email()  # send event details to recipient
