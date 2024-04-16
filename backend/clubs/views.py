@@ -4892,8 +4892,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         cart_total = sum(
             ticket.price * (1 - ticket.group_discount)
-            if ticket.group_discount
-            and ticket.group_size
+            if ticket.group_size
             and ticket_type_counts[ticket.type] >= ticket.group_size
             else ticket.price
             for ticket in tickets
