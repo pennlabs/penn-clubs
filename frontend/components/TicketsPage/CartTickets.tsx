@@ -3,9 +3,11 @@ import styled from 'styled-components'
 
 import { CARD_HEADING, CLUBS_GREY, H1_TEXT } from '~/constants'
 import { EventTicket } from '~/types'
+import { doApiRequest } from '~/utils'
 
 import { CardHeader, CardTitle } from '../ClubCard'
 import { Card } from '../common'
+import PaymentForm from './PaymentForm'
 
 export interface CountedEventTicket extends EventTicket {
   count: number
@@ -90,12 +92,34 @@ const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
   const [isPaying, setIsPaying] = useState(false)
   // TODO: if cart is frozen, set to true automatically
 
-  // console.log(condensedTickets)
+  // TODO: delete in favor of storing token in cart ()
+  const [checkoutToken, setCheckoutToken] = useState<string | null>(null)
+
+  async function checkout() {
+    if (isPaying) {
+      return
+    }
+    doApiRequest(`/tickets/initiate_checkout/?format=json`, {
+      method: 'POST',
+      body: JSON.stringify({ tickets: condensedTickets }),
+    })
+      .then((resp) => resp.json())
+      .then((res) => {
+        if (!res.success) {
+          // eslint-disable-next-line no-console
+          console.error(res.detail)
+          return
+        }
+        setCheckoutToken(res.detail)
+        setIsPaying(true)
+      })
+  }
+
   return (
     <div className="columns">
       <div className="column">
         {isPaying ? (
-          <></>
+          <PaymentForm token={checkoutToken} />
         ) : (
           <ul>
             {condensedTickets.map((ticket) => {
@@ -145,7 +169,7 @@ const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
             <button
               type="submit"
               className="button is-primary mt-4 is-pulled-right"
-              onClick={() => setIsPaying(true)}
+              onClick={() => checkout()}
             >
               Check Out
             </button>
