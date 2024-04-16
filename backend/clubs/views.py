@@ -2620,11 +2620,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
-                        type: object
-                        additionalProperties:
                             type: array
                             items:
-                                type: string
+                                type: object
+                                additionalProperties:
+                                    type: array
+                                    items:
+                                        type: string
         ---
         """
         event = self.get_object()
