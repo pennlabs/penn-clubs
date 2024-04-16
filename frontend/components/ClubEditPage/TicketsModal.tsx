@@ -70,13 +70,15 @@ const TicketItem = ({
   }
 
   const handleCountChange = (e) => {
-    const rounded = Math.round(parseFloat(e.target.value))
+    let rounded = Math.round(parseFloat(e.target.value))
+    rounded = rounded < 0 ? 0 : rounded
     setCount(rounded.toString())
     changeCount(rounded.toString(), index)
   }
 
   const handlePriceChange = (e) => {
-    const rounded = Math.round(parseFloat(e.target.value) * 100) / 100
+    let rounded = Math.round(parseFloat(e.target.value) * 100) / 100
+    rounded = rounded < 0 ? 0 : rounded
     setPrice(rounded.toString())
     changePrice(rounded.toString(), index)
   }
