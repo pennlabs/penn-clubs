@@ -2612,14 +2612,28 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
         ---
         """
         event = self.get_object()
 
         quantities = request.data.get("quantities")
 
-        # Atomicity ensures idempotency
+        # Ticket prices must be non-negative
+        if any(item.get("price", 0) < 0 for item in quantities):
+            return Response(
+                {"detail": "Ticket price cannot be negative."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        # Atomicity ensures idempotency
         Ticket.objects.filter(event=event).delete()  # Idempotency
         tickets = [
             Ticket(event=event, type=item["type"], price=item["price"])
