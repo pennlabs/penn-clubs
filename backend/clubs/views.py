@@ -4855,6 +4855,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
 
+        # Cart must have at least one ticket
         if not cart.tickets.exists():
             return Response(
                 {
