@@ -102,35 +102,36 @@ const Ticket = ({ tickets, buyers, event, home }): ReactElement => {
   }
   const { totals, available } = tickets
   const ticks = {}
-  totals.forEach((tick) => {
-    if (ticks[tick.type] == null) {
-      ticks[tick.type] = { type: tick.type }
-    }
-    ticks[tick.type].total = tick.count
-  })
 
-  available.forEach((tick) => {
-    if (ticks[tick.type] == null) {
-      ticks[tick.type] = { type: tick.type }
-    }
-    ticks[tick.type].available = tick.count
-  })
+  // totals.forEach((tick) => {
+  //   if (ticks[tick.type] == null) {
+  //     ticks[tick.type] = { type: tick.type }
+  //   }
+  //   ticks[tick.type].total = tick.count
+  // })
 
-  buyers.forEach((tick) => {
-    if (ticks[tick.type] == null) {
-      ticks[tick.type] = { type: tick.type }
-    }
-    if (ticks[tick.type].buyers == null) {
-      ticks[tick.type].buyers = []
-    }
+  // available.forEach((tick) => {
+  //   if (ticks[tick.type] == null) {
+  //     ticks[tick.type] = { type: tick.type }
+  //   }
+  //   ticks[tick.type].available = tick.count
+  // })
 
-    ticks[tick.type].buyers.push(tick.fullname)
-  })
+  // buyers.forEach((tick) => {
+  //   if (ticks[tick.type] == null) {
+  //     ticks[tick.type] = { type: tick.type }
+  //   }
+  //   if (ticks[tick.type].buyers == null) {
+  //     ticks[tick.type].buyers = []
+  //   }
 
-  tickets = []
-  for (const [_, value] of Object.entries(ticks)) {
-    tickets.push(value)
-  }
+  //   ticks[tick.type].buyers.push(tick.fullname)
+  // })
+
+  // tickets = []
+  // for (const [_, value] of Object.entries(ticks)) {
+  //   tickets.push(value)
+  // }
 
   return (
     <>
@@ -184,20 +185,16 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
       return { home: true, tickets: {}, event: {}, buyers: [] }
     }
     const id = query && query.slug ? query.slug[0] : -1
-    const [ticketsReq, eventReq, buyersReq] = await Promise.all([
+    const [ticketsReq, eventReq] = await Promise.all([
       doApiRequest(`/events/${id}/tickets?format=json`, data),
       doApiRequest(`/events/${id}/?format=json`, data),
-      doApiRequest(`/events/${id}/buyers?format=json`, data),
     ])
 
     const ticketsRes = await ticketsReq.json()
     const eventRes = await eventReq.json()
-    const buyersRes = await buyersReq.json()
 
-    // console.log('ticketsRes', ticketsRes)
-    // console.log('eventRes', eventRes)
-    // console.log('buyersRes', buyersRes)
-    // console.log('buyersRes.buyers', buyersRes.buyers)
+    console.log('ticketsRes', ticketsRes)
+    console.log('eventRes', eventRes)
 
     return {
       home: false,

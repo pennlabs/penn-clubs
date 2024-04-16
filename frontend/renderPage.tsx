@@ -34,7 +34,7 @@ import {
 import { SITE_ID } from './utils/branding'
 import { logException } from './utils/sentry'
 
-const ToastStyle = styled.div`
+export const ToastStyle = styled.div`
   & .Toastify__toast-container {
     font-family: inherit;
   }
@@ -67,12 +67,12 @@ const ToastStyle = styled.div`
   }
 `
 
-const Wrapper = styled.div`
+export const Wrapper = styled.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
   background: ${SNOW};
 `
 
-const GlobalStyle = createGlobalStyle`
+export const GlobalStyle = createGlobalStyle`
   a {
     color: ${BULMA_A};
   }
@@ -86,7 +86,7 @@ const GlobalStyle = createGlobalStyle`
  * Override the Bulma styles here if the site is not Penn Clubs.
  * Otherwise, don't do any overrides to interfere with Bulma as little as possible.
  */
-const RenderPageWrapper = styled.div`
+export const RenderPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   background-color: ${WHITE};
