@@ -70,8 +70,9 @@ const TicketItem = ({
   }
 
   const handleCountChange = (e) => {
-    setCount(e.target.value)
-    changeCount(e.target.value, index)
+    const rounded = Math.round(parseFloat(e.target.value))
+    setCount(rounded.toString())
+    changeCount(rounded.toString(), index)
   }
 
   const handlePriceChange = (e) => {
@@ -176,17 +177,23 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
           return {
             type: ticket.name,
             count: parseInt(ticket.count || ''),
-            price: parseInt(ticket.price || ''),
+            price: parseFloat(ticket.price || ''),
           }
         })
       doApiRequest(`/events/${id}/tickets/?format=json`, {
         method: 'PUT',
         body: {
-          quantities: quantities,
+          quantities,
         },
+      }).then((res) => {
+        if (res.ok) {
+          notify(<>Tickets Created!</>, 'success')
+          setSubmitting(false)
+        } else {
+          notify(<>Error creating tickets</>, 'error')
+          setSubmitting(false)
+        }
       })
-      notify(<>Tickets Created!</>, 'success')
-      setSubmitting(false)
     }
   }
 
@@ -195,8 +202,10 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       typeof ticket.name !== 'string' ||
       ticket.count === null ||
       !Number.isInteger(parseInt(ticket.count || '0')) ||
+      parseInt(ticket.count || '0') < 0 ||
       ticket.price === null ||
-      !Number.isInteger(parseInt(ticket.price || '0')),
+      !Number.isFinite(parseFloat(ticket.price || '0')) ||
+      parseFloat(ticket.price || '0') < 0,
   )
 
   return (
@@ -209,15 +218,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       />
       <ModalBody>
         <Title>{name}</Title>
-        <Text>
-          Create new tickets for this event. To be filled with actual
-          instructions. Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-          sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-          enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi
-          ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur.
-        </Text>
+        <Text>Create new tickets for this event.</Text>
         <Line />
         <SectionContainer>
           <h1>Tickets</h1>
