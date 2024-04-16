@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("clubs", "0101_merge_20240414_1708"),
+        ("clubs", "0102_event_ticket_order_limit"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
