@@ -1775,7 +1775,6 @@ class TicketCreationSerializer(serializers.ModelSerializer):
     count = serializers.IntegerField(min_value=1, write_only=True)
 
     def create(self, validated_data):
-        print(validated_data)
         event = self.context.get("event")
         count = validated_data.pop("count")
         return Ticket.objects.bulk_create(
