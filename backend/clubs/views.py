@@ -2647,7 +2647,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 )
 
             # Min group sizes must be greater than 1
-            if item.get("group_size", 2) < 1:
+            if item.get("group_size", 2) <= 1:
                 return Response(
                     {"detail": "Min group size must be greater than 1"},
                     status=status.HTTP_400_BAD_REQUEST,
