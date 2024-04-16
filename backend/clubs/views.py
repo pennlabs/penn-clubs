@@ -4885,9 +4885,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
         # Calculate cart total, applying group discounts where appropriate
-        ticket_type_counts = tickets.values("type").annotate(count=Count("type"))
         ticket_type_counts = {
-            item["type"]: item["count"] for item in ticket_type_counts
+            item["type"]: item["count"]
+            for item in tickets.values("type").annotate(count=Count("type"))
         }
 
         cart_total = sum(
