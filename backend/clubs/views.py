@@ -2600,6 +2600,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: integer
                                         price:
                                             type: number
+                                        group_size:
+                                            type: number
+                                            required: false
+                                        group_discount:
+                                            type: number
+                                            required: false
                             order_limit:
                                 type: int
                                 required: false
@@ -2629,14 +2635,50 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         # Ticket prices must be non-negative
         if any(item.get("price", 0) < 0 for item in quantities):
             return Response(
-                {"detail": "Ticket price cannot be negative."},
+                {"detail": "Ticket price cannot be negative"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Group discounts must be between 0 and 1
+        if any(
+            item.get("group_discount", 0) < 0 or item.get("group_discount", 0) > 1
+            for item in quantities
+        ):
+            return Response(
+                {"detail": "Group discount must be between 0 and 1"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Min group sizes must be greater than 1
+        if any(item.get("group_size", 2) < 1 for item in quantities):
+            return Response(
+                {"detail": "Min group size must be greater than 1"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Tickets must specify both group_discount and group_size or neither
+        for item in quantities:
+            if ("group_discount" in item) != ("group_size" in item):
+                return Response(
+                    {
+                        "detail": (
+                            "Ticket must specify either both group_discount "
+                            "and group_size or neither"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # Atomicity ensures idempotency
         Ticket.objects.filter(event=event).delete()  # Idempotency
         tickets = [
-            Ticket(event=event, type=item["type"], price=item["price"])
+            Ticket(
+                event=event,
+                type=item["type"],
+                price=item["price"],
+                group_discount=item.get("group_discount", None),
+                group_size=item.get("group_size", None),
+            )
             for item in quantities
             for _ in range(item["count"])
         ]
