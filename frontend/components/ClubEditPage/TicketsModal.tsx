@@ -156,7 +156,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       doApiRequest(`/events/${id}/tickets/?format=json`, {
         method: 'PUT',
         body: {
-          quantities: quantities,
+          quantities,
         },
       })
       notify(<>Tickets Created!</>, 'success')

@@ -20,6 +20,24 @@ type QRCodeCardProps = {
   club: Club
 }
 
+export function QRCodeCardTicketing({ id }: { id: string }): ReactElement {
+  return (
+    <BaseCard title="QR Code">
+      <QRCode src={getApiUrl(`/tickets/${id}/qr`)} alt="qr code" />
+      <div className="buttons">
+        <a
+          href={getApiUrl(`/tickets/${id}/qr`)}
+          download={`${id}.png`}
+          className="button is-success"
+        >
+          <Icon alt="qr" name="download" />
+          Download QR Code
+        </a>
+      </div>
+    </BaseCard>
+  )
+}
+
 export default function QRCodeCard({ club }: QRCodeCardProps): ReactElement {
   return (
     <BaseCard title="QR Code">

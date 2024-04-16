@@ -1837,7 +1837,7 @@ class Ticket(models.Model):
         if not self.owner:
             return None
 
-        url = f"https://{settings.DOMAIN}/api/tickets/{self.id}"
+        url = f"https://{settings.DOMAINS[0]}/api/tickets/{self.id}"
         qr_image = qrcode.make(url, box_size=20, border=0)
         return qr_image
 

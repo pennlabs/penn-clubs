@@ -280,7 +280,7 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
           resp.json().then((userInfo) => {
             this.setState(
               {
-                userInfo: userInfo,
+                userInfo,
               },
               this.checkRedirect,
             )
