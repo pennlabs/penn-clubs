@@ -1,11 +1,8 @@
 import { Center, Container, Icon } from 'components/common'
-import { NextPageContext } from 'next'
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { ReactElement, useState } from 'react'
-import renderPage from 'renderPage'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
-
-import { EventTicket } from '~/types'
 
 import { ALLBIRDS_GRAY, HOVER_GRAY, WHITE } from '../../constants/colors'
 import {
@@ -15,38 +12,9 @@ import {
   SM,
 } from '../../constants/measurements'
 
-/*
-Ticket.getInitialProps = async ({ query }): Promise<any> => {
- const id = query.slug[0]
- return doApiRequest(`/events/${id}/tickets?format=json`, {
-   method: 'GET',
- })
-   .then((resp) => resp.json())
-   .then((res) => {
-     console.log(res)
-   })
-}
-*/
-
 type CardProps = {
   readonly hovering?: boolean
   className?: string
-}
-
-type TicketsResponse = {
-  totals: EventTicket[]
-  available: EventTicket[]
-}
-
-type Buyer = {
-  fullname: string
-  id: string
-  ownerId: string
-  type: string
-}
-
-type BuyerResponse = {
-  buyers: Buyer[]
 }
 
 const Card = styled.div<CardProps>`
@@ -85,11 +53,17 @@ const Text = styled.h1`
   font-size: 1rem;
   margin: 0.5rem 0rem;
 `
+
+type TicketProps = InferGetServerSidePropsType<typeof getServerSideProps>
+
 // TODO: Add auth handling gracefully.
 
-const Ticket = ({ tickets, buyers, event, home }): ReactElement => {
-  // const Ticket = ({ event }): ReactElement => {
-
+const Ticket: React.FC<TicketProps> = ({
+  tickets,
+  buyers,
+  event,
+  home,
+}): ReactElement => {
   if (home) {
     return (
       <Center>
@@ -97,114 +71,124 @@ const Ticket = ({ tickets, buyers, event, home }): ReactElement => {
         <a href="/events">here</a>.
       </Center>
     )
-  } else if (!tickets.totals) {
+  } else if (!tickets || !tickets.totals || !tickets.available) {
     return <Center>No tickets found with given user permissions.</Center>
   }
   const { totals, available } = tickets
-  const ticks = {}
+  const tickTypes = {}
 
-  // totals.forEach((tick) => {
-  //   if (ticks[tick.type] == null) {
-  //     ticks[tick.type] = { type: tick.type }
-  //   }
-  //   ticks[tick.type].total = tick.count
-  // })
+  // For given ticket type, get the total and available tickets, as well as buyers
+  for (const ticket of totals) {
+    tickTypes[ticket.type] = {
+      type: ticket.type,
+      total: ticket.count,
+      price: ticket.price,
+      available: 0,
+      buyers: [],
+    }
+  }
 
-  // available.forEach((tick) => {
-  //   if (ticks[tick.type] == null) {
-  //     ticks[tick.type] = { type: tick.type }
-  //   }
-  //   ticks[tick.type].available = tick.count
-  // })
+  for (const ticket of available) {
+    tickTypes[ticket.type].available = ticket.count
+  }
 
-  // buyers.forEach((tick) => {
-  //   if (ticks[tick.type] == null) {
-  //     ticks[tick.type] = { type: tick.type }
-  //   }
-  //   if (ticks[tick.type].buyers == null) {
-  //     ticks[tick.type].buyers = []
-  //   }
-
-  //   ticks[tick.type].buyers.push(tick.fullname)
-  // })
-
-  // tickets = []
-  // for (const [_, value] of Object.entries(ticks)) {
-  //   tickets.push(value)
-  // }
+  // Public should be able to access info about general tickets metrics, not specific buyers.
+  if (buyers.buyers) {
+    for (const buyer of buyers.buyers) {
+      tickTypes[buyer.type].buyers.push(buyer.fullname)
+    }
+  }
 
   return (
     <>
       <Container>
         <Title>All Tickets for {event.name}</Title>
-        {tickets.map((ticket, i) => (
-          <TicketCard key={i} ticket={ticket} />
+        {Object.values(tickTypes).map((ticket, i) => (
+          <TicketCard key={i} ticket={ticket} buyersPerm={buyers.buyers} />
         ))}
       </Container>
     </>
   )
 }
 
-const TicketCard = ({ ticket }) => {
+const TicketCard = ({ ticket, buyersPerm }) => {
   const [viewBuyers, setViewBuyers] = useState(false)
   return (
     <Card>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Title style={{ marginTop: '1rem', color: 'black', opacity: 0.95 }}>
+      <div
+        style={{ display: 'flex', flexDirection: 'column' }}
+        onClick={() => {
+          setViewBuyers(!viewBuyers)
+        }}
+      >
+        <Title
+          style={{
+            marginTop: '0px',
+            paddingTop: '0px',
+            color: 'black',
+            opacity: 0.95,
+          }}
+        >
           {ticket.type}
         </Title>
         <Text>Total Tickets: {ticket.total}</Text>
         <Text>Currently available: {ticket.available}</Text>
-        <Text
-          onClick={() => {
-            setViewBuyers(!viewBuyers)
-          }}
-        >
-          View Buyers {ticket.total && `(${ticket.total - ticket.available})`}{' '}
-          {ticket.buyers && (
-            <span>
-              <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
-            </span>
-          )}
-        </Text>
+        {buyersPerm && (
+          <>
+            <Text>
+              View Buyers{' '}
+              {ticket.total && `(${ticket.total - ticket.available})`}{' '}
+              {ticket.buyers && (
+                <span>
+                  <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
+                </span>
+              )}
+            </Text>
 
-        {viewBuyers &&
-          ticket.buyers &&
-          ticket.buyers.map((buyer) => <li>{buyer}</li>)}
+            {viewBuyers && ticket.buyers && (
+              <ul style={{ listStyle: 'disc' }}>
+                {ticket.buyers.map((buyer) => (
+                  <li style={{ marginLeft: '16px' }}>{buyer}</li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
       </div>
     </Card>
   )
 }
 
-Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
-  const data = {
-    headers: req ? { cookie: req.headers.cookie } : undefined,
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { query, req } = context
+  const headers = req ? { cookie: req.headers.cookie } : undefined
+  if (!query || !query.slug) {
+    return { props: { home: true, tickets: {}, event: {}, buyers: {} } }
   }
+  const id = query.slug[0]
   try {
-    if (!query || !query.slug) {
-      return { home: true, tickets: {}, event: {}, buyers: [] }
-    }
-    const id = query && query.slug ? query.slug[0] : -1
-    const [ticketsReq, eventReq] = await Promise.all([
-      doApiRequest(`/events/${id}/tickets?format=json`, data),
-      doApiRequest(`/events/${id}/?format=json`, data),
+    const [ticketsReq, eventReq, buyersReq] = await Promise.all([
+      doApiRequest(`/events/${id}/tickets?format=json`, { headers }),
+      doApiRequest(`/events/${id}/?format=json`, { headers }),
+      doApiRequest(`/events/${id}/buyers?format=json`, { headers }),
     ])
 
-    const ticketsRes = await ticketsReq.json()
-    const eventRes = await eventReq.json()
-
-    console.log('ticketsRes', ticketsRes)
-    console.log('eventRes', eventRes)
-
+    const [tickets, event, buyers] = await Promise.all([
+      ticketsReq.json(),
+      eventReq.json(),
+      buyersReq.json(),
+    ])
     return {
-      home: false,
-      tickets: ticketsRes,
-      event: eventRes,
-      buyers: buyersRes.buyers,
+      props: {
+        home: false,
+        tickets,
+        event,
+        buyers,
+      },
     }
-  } catch (err) {
-    // console.log(err)
+  } catch (error) {
+    return { props: { home: true, tickets: {}, event: {}, buyers: {} } }
   }
 }
 
-export default renderPage(Ticket)
+export default Ticket
