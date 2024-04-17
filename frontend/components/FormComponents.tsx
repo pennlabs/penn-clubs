@@ -511,7 +511,7 @@ export const DynamicQuestionField = useFieldWrapper(
       values.push({
         name: uuidv4(),
         label: '',
-        type: type,
+        type,
         choices: [],
       })
       setFieldValue(name, JSON.stringify(values))

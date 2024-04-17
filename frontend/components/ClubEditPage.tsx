@@ -11,7 +11,7 @@ import FilesCard from '../components/ClubEditPage/FilesCard'
 import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
-import QRCodeCard from '../components/ClubEditPage/QRCodeCard'
+import QRCodeCard, { QRCodeType } from '../components/ClubEditPage/QRCodeCard'
 import TicketsViewCard from '../components/ClubEditPage/TicketsViewCard'
 import {
   CLUB_EDIT_ROUTE,
@@ -303,7 +303,7 @@ const ClubForm = ({
         content: (
           <>
             {SHOW_APPLICATIONS && <ApplicationsCard club={club} />}
-            <QRCodeCard club={club} />
+            <QRCodeCard id={club.code} type={QRCodeType.CLUB} />
             <EnableSubscriptionCard
               notify={notify}
               club={club}
