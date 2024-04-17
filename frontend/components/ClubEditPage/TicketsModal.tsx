@@ -65,7 +65,6 @@ const TicketItem: React.FC<TicketItemProps> = ({
   deletable,
 }) => {
   const [ticket, setTicket] = useState(propTicket)
-
   return (
     <div style={{ padding: '5px 0px' }}>
       <div
@@ -76,7 +75,6 @@ const TicketItem: React.FC<TicketItemProps> = ({
         }}
       >
         <Input
-          key={'name'}
           type="text"
           className="input"
           value={ticket.name ?? ''}
@@ -108,21 +106,23 @@ const TicketItem: React.FC<TicketItemProps> = ({
             onChange?.({ ...ticket, price })
           }}
         />
-        {typeof ticket.groupNumber !== 'undefined' ? (
+        {typeof ticket.groupNumber !== 'undefined' &&
+        ticket.groupNumber !== null &&
+        typeof ticket.groupDiscount !== 'undefined' &&
+        ticket.groupDiscount !== null ? (
           <>
             <Input
               type="number"
               className="input"
-              value={ticket.groupDiscount ?? '0'}
+              value={ticket.groupDiscount ?? ''}
               placeholder="Group Discount"
               onChange={(e) => {
                 const groupDiscount = e.target.value
                 setTicket({ ...ticket, groupDiscount })
                 onChange?.({ ...ticket, groupDiscount })
               }}
-            >
-              <Text>%</Text>
-            </Input>
+            />
+            <Text>%</Text>
             <Input
               type="number"
               className="input"
@@ -135,7 +135,7 @@ const TicketItem: React.FC<TicketItemProps> = ({
               }}
             />
             <button
-              onClick={(e) => {
+              onClick={() => {
                 setTicket({
                   ...ticket,
                   groupDiscount: null,
@@ -157,12 +157,12 @@ const TicketItem: React.FC<TicketItemProps> = ({
               onClick={(e) => {
                 setTicket({
                   ...ticket,
-                  groupDiscount: '0',
+                  groupDiscount: '',
                   groupNumber: '',
                 })
                 onChange?.({
                   ...ticket,
-                  groupDiscount: '0',
+                  groupDiscount: '',
                   groupNumber: '',
                 })
               }}

@@ -477,7 +477,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
       <CreateTickets event={event} />
       <Line />
       <div ref={eventDetailsRef as React.RefObject<HTMLDivElement>}>
-        <EventPreview event={event} />
+        {/* <EventPreview event={event} /> */}
       </div>
     </BaseCard>
   )
