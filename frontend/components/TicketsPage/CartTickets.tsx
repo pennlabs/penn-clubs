@@ -1,4 +1,4 @@
-import { ReactElement, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import { CARD_HEADING, CLUBS_GREY, H1_TEXT } from '~/constants'
@@ -62,36 +62,29 @@ const Thumbnail = styled.div<TicketImageProps>`
   border-radius: 3px;
 `
 
-// TODO: use ticket type as well
-const ticketKey = (t1: EventTicket) => t1.event.id
-
 /**
  * Combines an array of tickets into a list of unique ticket types with counts
  * @param tickets - Original array of tickets
  * @returns Array of tickets condensed into unique types
  */
-const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] => {
-  const tix = [...tickets]
-  const countedTickets: { [key: string]: CountedEventTicket } = {}
+const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] =>
+  Object.values(
+    tickets.reduce(
+      (acc, ticket) => ({
+        ...acc,
+        [`${ticket.event.id}_${ticket.type}`]: {
+          ...ticket,
+          count: (acc[`${ticket.event.id}_${ticket.type}`]?.count ?? 0) + 1,
+        },
+      }),
+      {},
+    ),
+  )
 
-  while (tix.length > 0) {
-    const currentTicket = tix.pop() as EventTicket
-    const key = ticketKey(currentTicket)
-    if (countedTickets[key] === undefined) {
-      countedTickets[key] = { ...currentTicket, count: 1 }
-    } else {
-      countedTickets[key].count += 1
-    }
-  }
-
-  return Object.values(countedTickets)
-}
-
-const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
+const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
   const condensedTickets = useMemo(() => combineTickets(tickets), [tickets])
   const [isPaying, setIsPaying] = useState(false)
   // TODO: if cart is frozen, set to true automatically
-
   // TODO: delete in favor of storing token in cart ()
   const [checkoutToken, setCheckoutToken] = useState<string | null>(null)
 
@@ -101,7 +94,7 @@ const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
     }
     doApiRequest(`/tickets/initiate_checkout/?format=json`, {
       method: 'POST',
-      body: JSON.stringify({ tickets: condensedTickets }),
+      body: { tickets: condensedTickets },
     })
       .then((resp) => resp.json())
       .then((res) => {
@@ -148,14 +141,13 @@ const CartTickets = ({ tickets }: CartTicketsProps): ReactElement => {
               </div>
             </div>
           </div>
-          {condensedTickets &&
-            condensedTickets.map((ticket) => (
-              <div key={ticket.event.id}>
-                <p>
-                  {ticket.event.name} x{ticket.count} - $14.99
-                </p>
-              </div>
-            ))}
+          {condensedTickets?.map((ticket) => (
+            <div key={ticket.event.id}>
+              <p>
+                {ticket.event.name} x{ticket.count} - {ticket.price}
+              </p>
+            </div>
+          ))}
         </Card>
         {isPaying ? (
           <button
