@@ -4906,7 +4906,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         # Calculate cart total, applying group discounts where appropriate
         ticket_type_counts = {
             item["type"]: item["count"]
-            for item in tickets.values("type").annotate(count=Count("type"))
+            for item in cart.tickets.values("type").annotate(count=Count("type"))
         }
 
         cart_total = sum(
