@@ -193,9 +193,6 @@ Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
     const ticketsRes = await ticketsReq.json()
     const eventRes = await eventReq.json()
 
-    console.log('ticketsRes', ticketsRes)
-    console.log('eventRes', eventRes)
-
     return {
       home: false,
       tickets: ticketsRes,

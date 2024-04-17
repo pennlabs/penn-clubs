@@ -1,7 +1,8 @@
 import { DateTime, Settings } from 'luxon'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { ReactElement, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { BaseLayout } from '~/components/BaseLayout'
@@ -14,12 +15,18 @@ import {
   Title,
 } from '~/components/common'
 import {
+  ALLBIRDS_GRAY,
+  BODY_FONT,
   BORDER,
+  BORDER_RADIUS,
   CLUBS_BLUE,
+  CLUBS_GREY,
   CLUBS_LIGHT_BLUE,
+  FOCUS_GRAY,
   mediaMaxWidth,
   mediaMinWidth,
   PHONE,
+  WHITE,
 } from '~/constants'
 import { Club, ClubEvent, TicketAvailability } from '~/types'
 import { doApiRequest } from '~/utils'
@@ -118,6 +125,79 @@ const Divider = styled.hr`
   margin: 20px 0;
 `
 
+const Input = styled.input`
+  border: 1px solid ${ALLBIRDS_GRAY};
+  outline: none;
+  color: ${CLUBS_GREY};
+  flex: '0 0 auto';
+  font-size: 1em;
+  padding: 8px 10px;
+  margin: 0px 5px 0px 0px;
+  background: ${WHITE};
+  border-radius: ${BORDER_RADIUS};
+  min-width: 50px;
+  font-family: ${BODY_FONT};
+  &:hover,
+  &:active,
+  &:focus {
+    background: ${FOCUS_GRAY};
+  }
+`
+
+type Ticket = {
+  type: string
+  price: string
+  max: string
+  count: string | null
+}
+
+const TicketItem = ({
+  ticket,
+  name,
+  price,
+  max,
+  changeCount,
+  index,
+}): ReactElement => {
+  const [count, setCount] = useState(ticket.count)
+  const handleCountChange = (e: { target: { value: string } }) => {
+    // Round to nearest integer and clamp to min/max
+    const value = Math.max(
+      0,
+      Math.min(Math.round(parseFloat(e.target.value)), parseInt(max, 10)),
+    )
+    setCount(value)
+    changeCount(value, index)
+  }
+
+  return (
+    <div style={{ padding: '5px 0px' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+        }}
+      >
+        <p style={{ flex: '1', fontSize: '18px' }}>
+          {name} - ${price}
+        </p>
+        <Input
+          type="number"
+          className="input"
+          min={0}
+          max={max}
+          value={count}
+          step={1}
+          placeholder="Ticket Count"
+          onChange={handleCountChange}
+          style={{ flex: '0 0 auto', width: 'initial!important' }}
+        />
+      </div>
+    </div>
+  )
+}
+
 const EventPage: React.FC<EventPageProps> = ({
   baseProps,
   club,
@@ -136,22 +216,74 @@ const EventPage: React.FC<EventPageProps> = ({
         total: cur.count,
         available:
           tickets.available.find((t) => t.type === cur.type)?.count ?? 0,
+        price: cur.price,
       },
     }),
     {},
-  ) as Record<string, { total: number; available: number }>
+  ) as Record<string, { total: number; available: number; price: number }>
+
+  const [order, setOrder] = useState<Ticket[]>(
+    Object.entries(ticketMap).map(([type, counts]) => ({
+      type,
+      price: counts.price.toString(),
+      max: counts.total.toString(),
+      count: '0',
+    })),
+  )
 
   const totalAvailableTickets = Object.values(ticketMap)
     .map((k) => k.available)
     .reduce((a, b) => a + b, 0)
+
+  const handleCountChange = (count: string | null, i: string | number) => {
+    const ticks = [...order]
+    ticks[i].count = count
+    setOrder(ticks)
+  }
 
   return (
     <>
       <Modal
         show={showTicketModal}
         closeModal={() => setShowTicketModal(false)}
+        marginBottom={false}
       >
-        <h1>Get Tickets</h1>
+        <Subtitle>Get Tickets</Subtitle>
+        {order.map((ticket, index) => (
+          <TicketItem
+            ticket={ticket}
+            index={index}
+            max={ticket.max}
+            name={ticket.type}
+            price={ticket.price}
+            changeCount={handleCountChange}
+          />
+        ))}
+        <button
+          className="button is-primary my-4"
+          onClick={() => {
+            // Select type and count properties
+            const orderToSend = order
+              .filter((ticket) => ticket.count != null && ticket.count !== '0')
+              .map(({ type, count }) => ({ type, count }))
+            doApiRequest(
+              `/clubs/${event.club}/events/${event.id}/add_to_cart/?format=json`,
+              {
+                method: 'POST',
+                body: {
+                  quantities: orderToSend,
+                },
+              },
+            ).then((res) => {
+              if (res.ok) {
+                toast.success('Tickets purchased successfully')
+                setShowTicketModal(false)
+              }
+            })
+          }}
+        >
+          Purchase Tickets
+        </button>
       </Modal>
       <BaseLayout {...baseProps}>
         <Metadata title="Events" />
