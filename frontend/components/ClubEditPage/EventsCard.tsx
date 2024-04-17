@@ -1,6 +1,6 @@
 import { Field } from 'formik'
 import moment from 'moment'
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement, useRef, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
@@ -440,6 +440,7 @@ const CreateTickets = ({ event }: { event: ClubEvent }) => {
 
 export default function EventsCard({ club }: EventsCardProps): ReactElement {
   const [deviceContents, setDeviceContents] = useState<any>({})
+  const eventDetailsRef = useRef<HTMLElement>(null)
 
   const event = {
     ...deviceContents,
@@ -465,13 +466,19 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         noun="Event"
         currentTitle={(obj) => (obj != null ? obj.name : 'Deleted Event')}
         onChange={(obj) => {
+          eventDetailsRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
           setDeviceContents(obj)
         }}
       />
       <Line />
       <CreateTickets event={event} />
       <Line />
-      <EventPreview event={event} />
+      <div ref={eventDetailsRef as React.RefObject<HTMLDivElement>}>
+        <EventPreview event={event} />
+      </div>
     </BaseCard>
   )
 }
