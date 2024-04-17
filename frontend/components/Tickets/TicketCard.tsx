@@ -1,0 +1,246 @@
+import { css } from '@emotion/react'
+import { DateTime, Settings } from 'luxon'
+import type { CSSProperties } from 'react'
+import styled from 'styled-components'
+
+import { Icon, Title } from '~/components/common'
+import {
+  ALLBIRDS_GRAY,
+  CLUBS_BLUE,
+  CLUBS_GREY_LIGHT,
+  HOVER_GRAY,
+  HUB_SNOW,
+  WHITE,
+} from '~/constants'
+import {
+  ANIMATION_DURATION,
+  BORDER_RADIUS,
+  mediaMaxWidth,
+  SM,
+} from '~/constants/measurements'
+import { EventTicket } from '~/types'
+
+Settings.defaultZone = 'America/New_York'
+
+type CardProps = {
+  readonly hovering?: boolean
+  className?: string
+}
+
+const Card = styled.div<CardProps>`
+  padding: 10px;
+  margin-top: 1rem;
+  box-shadow: 0 0 0 transparent;
+  transition: all ${ANIMATION_DURATION}ms ease;
+  border-radius: ${BORDER_RADIUS};
+  box-shadow: 0 0 0 ${WHITE};
+  background-color: ${({ hovering }) => (hovering ? HOVER_GRAY : WHITE)};
+  border: 1px solid ${ALLBIRDS_GRAY};
+  justify-content: space-between;
+  height: auto;
+
+  &:hover,
+  &:active,
+  &:focus {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  ${mediaMaxWidth(SM)} {
+    width: calc(100%);
+    padding: 8px;
+  }
+`
+
+const Description = styled.p`
+  margin-bottom: 0.5rem;
+  color: ${CLUBS_GREY_LIGHT};
+  width: 100%;
+`
+
+const formatTime = (startTime: string, endTime: string) => {
+  const startDateTime = DateTime.fromISO(startTime)
+  const endDateTime = DateTime.fromISO(endTime)
+
+  const dayDuration = endDateTime.day - startDateTime.day
+  const startFormatted = startDateTime.toFormat(
+    dayDuration === 0 ? 'h:mm a' : 'MMM d, h:mm a',
+  )
+  const endFormatted = endDateTime.toFormat(
+    dayDuration === 0 ? 'h:mm a z' : 'MMM d, h:mm a z',
+  )
+
+  return {
+    month: startDateTime.toFormat('LLL'),
+    day: startDateTime.day,
+    timeRange: `${startFormatted} — ${endFormatted}`,
+    dayDuration,
+  }
+}
+
+function generateBoxShadow(collapsed) {
+  let boxShadow = ''
+  boxShadow += '0 1px 6px rgba(0, 0, 0, 0.2),\n'
+  for (let i = 1; i <= collapsed; i++) {
+    boxShadow += `${i * 10}px -${i * 10}px 0 -1px ${HUB_SNOW}, ${i * 10}px -${i * 10}px rgba(0, 0, 0, 0.1)${
+      i !== collapsed ? ',\n' : ''
+    }`
+  }
+  return boxShadow
+}
+
+export const TicketCard = ({
+  collapsed = 0,
+  ticket,
+  showModal,
+  style,
+  hideActions,
+  onClick,
+  viewQRCode,
+}: {
+  collapsed?: number
+  ticket: EventTicket
+
+  style?: CSSProperties
+  hideActions?: boolean
+
+  onClick?: () => void
+  viewQRCode?: () => void
+  showModal?: () => void
+}) => {
+  const datetimeData = formatTime(
+    ticket.event.start_time,
+    ticket.event.end_time,
+  )
+  return (
+    <Card
+      className="card"
+      style={{
+        ...style,
+        display: 'flex',
+        cursor: typeof onClick === 'function' ? 'pointer' : 'default',
+        ...(collapsed !== 0
+          ? {
+              boxShadow: generateBoxShadow(collapsed),
+            }
+          : {}),
+        margin: collapsed !== 0 ? '4rem 0' : '1rem 0',
+      }}
+      onClick={onClick}
+    >
+      <div
+        css={css`
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 16px;
+          background: ${CLUBS_BLUE};
+          border-radius: 8px;
+          color: ${WHITE};
+          width: 80px;
+        `}
+      >
+        <Title
+          css={css`
+            display: flex;
+            align-items: top;
+            color: ${WHITE};
+          `}
+          className="mb-0"
+        >
+          {datetimeData.day}
+          {datetimeData.dayDuration !== 0 && (
+            <div
+              css={css`
+                font-size: 12px;
+                position: relative;
+                right: 0;
+                top: 0;
+              `}
+            >
+              {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
+              {Math.abs(datetimeData.dayDuration)}
+            </div>
+          )}
+        </Title>
+        <Description
+          style={{
+            color: WHITE,
+            width: '100%',
+            textAlign: 'center',
+            marginBottom: 0,
+          }}
+        >
+          {datetimeData.month}
+        </Description>
+      </div>
+      <div style={{ width: '20px' }} />
+      <div style={{ flex: 1 }}>
+        <Description
+          style={{
+            fontWeight: 600,
+          }}
+        >
+          {ticket.event.name}
+        </Description>
+        <Description>{ticket.event.club_name}</Description>
+        <Description>
+          {ticket.type} | {datetimeData.timeRange}
+        </Description>
+      </div>
+      {!hideActions && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <button
+              className="button is-primary"
+              css={css`
+                display: flex;
+                align-items: center;
+                background-color: ${CLUBS_BLUE} !important;
+                border: 1px solid ${CLUBS_BLUE} !important;
+                & > *:not(:first-child) {
+                  margin-left: 4px;
+                  margin-right: 0px;
+                  color: ${WHITE};
+                }
+              `}
+              onClick={(e) => {
+                e.stopPropagation()
+                viewQRCode?.()
+              }}
+            >
+              <span>QR Code</span>
+              <Icon name="qr-code" size="1rem" />
+            </button>
+          </div>
+          <div style={{ width: '12px' }} />
+          <button
+            className="button is-primary"
+            css={css`
+              display: flex;
+              align-items: center;
+              & > *:not(:first-child) {
+                margin-left: 4px;
+                margin-right: 0px;
+                color: ${WHITE};
+              }
+            `}
+            onClick={(e) => {
+              e.stopPropagation()
+              showModal?.()
+            }}
+          >
+            <span>Transfer Ownership</span>
+            <Icon name="swap-horiz" size="1rem" />
+          </button>
+        </div>
+      )}
+    </Card>
+  )
+}

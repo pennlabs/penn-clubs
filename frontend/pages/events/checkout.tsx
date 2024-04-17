@@ -3,7 +3,7 @@ import React from 'react'
 
 import { BaseLayout } from '~/components/BaseLayout'
 import { Container, Metadata, Title } from '~/components/common'
-import CartTickets from '~/components/TicketsPage/CartTickets'
+import CartTickets from '~/components/Tickets/CartTickets'
 import { SNOW } from '~/constants'
 import { EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
