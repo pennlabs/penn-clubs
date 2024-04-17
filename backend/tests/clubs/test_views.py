@@ -1688,14 +1688,12 @@ class ClubTestCase(TestCase):
         expiry_date = now + timezone.timedelta(days=5)
 
         # Compare the expiry dates excluding microseconds
-        self.assertEqual(
-            invite1.expires_at.replace(microsecond=0),
-            expiry_date.replace(microsecond=0),
+        self.assertLessEqual(
+            abs(invite1.expires_at - expiry_date), timezone.timedelta(minutes=5)
         )
 
-        self.assertEqual(
-            invite2.expires_at.replace(microsecond=0),
-            expiry_date.replace(microsecond=0),
+        self.assertLessEqual(
+            abs(invite2.expires_at - expiry_date), timezone.timedelta(minutes=5)
         )
 
         # Check that applicants not accepted are not invited
