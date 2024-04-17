@@ -49,7 +49,6 @@ from django.db.models import (
     Max,
     Prefetch,
     Q,
-    Sum,
     TextField,
     Value,
     When,
@@ -2600,6 +2599,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: integer
                                         price:
                                             type: number
+                                        group_size:
+                                            type: number
+                                            required: false
+                                        group_discount:
+                                            type: number
+                                            required: false
                             order_limit:
                                 type: int
                                 required: false
@@ -2626,17 +2631,50 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         quantities = request.data.get("quantities")
 
-        # Ticket prices must be non-negative
-        if any(item.get("price", 0) < 0 for item in quantities):
-            return Response(
-                {"detail": "Ticket price cannot be negative."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        for item in quantities:
+            # Ticket prices must be non-negative
+            if item.get("price", 0) < 0:
+                return Response(
+                    {"detail": "Ticket price cannot be negative"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Group discounts must be between 0 and 1
+            if item.get("group_discount", 0) < 0 or item.get("group_discount", 0) > 1:
+                return Response(
+                    {"detail": "Group discount must be between 0 and 1"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Min group sizes must be greater than 1
+            if item.get("group_size", 2) <= 1:
+                return Response(
+                    {"detail": "Min group size must be greater than 1"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Tickets must specify both group_discount and group_size or neither
+            if ("group_discount" in item) != ("group_size" in item):
+                return Response(
+                    {
+                        "detail": (
+                            "Ticket must specify either both group_discount "
+                            "and group_size or neither"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         # Atomicity ensures idempotency
         Ticket.objects.filter(event=event).delete()  # Idempotency
         tickets = [
-            Ticket(event=event, type=item["type"], price=item["price"])
+            Ticket(
+                event=event,
+                type=item["type"],
+                price=item["price"],
+                group_discount=item.get("group_discount", None),
+                group_size=item.get("group_size", None),
+            )
             for item in quantities
             for _ in range(item["count"])
         ]
@@ -4813,6 +4851,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
 
+        # Cart must have at least one ticket
         if not cart.tickets.exists():
             return Response(
                 {
@@ -4838,10 +4877,24 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Place hold on tickets for 10 mins
         holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
         tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
-        cart_total = tickets.aggregate(total=Sum("price"))["total"]
+        # Calculate cart total, applying group discounts where appropriate
+        ticket_type_counts = {
+            item["type"]: item["count"]
+            for item in tickets.values("type").annotate(count=Count("type"))
+        }
+
+        cart_total = sum(
+            ticket.price * (1 - ticket.group_discount)
+            if ticket.group_size
+            and ticket_type_counts[ticket.type] >= ticket.group_size
+            else ticket.price
+            for ticket in tickets
+        )
+
         if not cart_total:
             return Response(
                 {
