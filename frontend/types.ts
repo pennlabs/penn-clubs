@@ -76,6 +76,10 @@ export interface EventTicket {
   price: string
 }
 
+export interface CountedEventTicket extends EventTicket {
+  count?: number
+}
+
 export interface ClubApplication {
   id: number
   name: string

@@ -18,7 +18,7 @@ import {
   mediaMaxWidth,
   SM,
 } from '~/constants/measurements'
-import { EventTicket } from '~/types'
+import { CountedEventTicket } from '~/types'
 
 Settings.defaultZone = 'America/New_York'
 
@@ -93,15 +93,20 @@ export const TicketCard = ({
   ticket,
   showModal,
   style,
+  removable,
+  onRemove,
   hideActions,
   onClick,
   viewQRCode,
 }: {
   collapsed?: number
-  ticket: EventTicket
+  ticket: CountedEventTicket
 
   style?: CSSProperties
   hideActions?: boolean
+
+  removable?: boolean
+  onRemove?: () => void
 
   onClick?: () => void
   viewQRCode?: () => void
@@ -127,6 +132,34 @@ export const TicketCard = ({
       }}
       onClick={onClick}
     >
+      {typeof ticket.count === 'number' && (
+        <div
+          css={css`
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            width: 120px;
+            border-right: 2px dashed #dedede;
+            margin-right: 20px;
+
+            font-size: 32px;
+            font-weight: 800;
+          `}
+        >
+          {ticket.count}
+          <span
+            css={css`
+              font-size: 14px;
+              font-weight: 400;
+              margin-left: 4px;
+              color: #888;
+            `}
+          >
+            X
+          </span>
+        </div>
+      )}
       <div
         css={css`
           display: flex;
@@ -174,8 +207,12 @@ export const TicketCard = ({
           {datetimeData.month}
         </Description>
       </div>
-      <div style={{ width: '20px' }} />
-      <div style={{ flex: 1 }}>
+      <div
+        css={css`
+          flex: 1;
+          margin-left: 20px;
+        `}
+      >
         <Description
           style={{
             fontWeight: 600,
@@ -188,6 +225,15 @@ export const TicketCard = ({
           {ticket.type} | {datetimeData.timeRange}
         </Description>
       </div>
+      {removable && (
+        <button
+          className="delete"
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove?.()
+          }}
+        />
+      )}
       {!hideActions && (
         <div
           style={{
