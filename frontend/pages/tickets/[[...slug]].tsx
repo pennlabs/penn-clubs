@@ -104,14 +104,31 @@ const Ticket: React.FC<TicketProps> = ({
       <Container>
         <Title>All Tickets for {event.name}</Title>
         {Object.values(tickTypes).map((ticket, i) => (
-          <TicketCard key={i} ticket={ticket} buyersPerm={buyers.buyers} />
+          <TicketCard
+            key={i}
+            ticket={ticket as Ticket}
+            buyersPerm={buyers.buyers != null}
+          />
         ))}
       </Container>
     </>
   )
 }
 
-const TicketCard = ({ ticket, buyersPerm }) => {
+type Ticket = {
+  type: string
+  total: number
+  price: number
+  available: number
+  buyers: string[]
+}
+
+type TicketCardProps = {
+  ticket: Ticket
+  buyersPerm: boolean
+}
+
+const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
   const [viewBuyers, setViewBuyers] = useState(false)
   return (
     <Card>
