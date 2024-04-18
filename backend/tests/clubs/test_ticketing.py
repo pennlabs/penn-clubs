@@ -67,7 +67,7 @@ def commonSetUp(self):
 
 class TicketEventTestCase(TestCase):
     """
-    Test cases related to the methods on the EventViewSet
+    Test cases related to the methods on the ClubEventViewSet
     that correspond to the ticketing project:
 
     tickets (get), tickets (put), buyers, add_to_cart, remove_from_cart
