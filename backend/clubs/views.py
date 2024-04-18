@@ -2694,7 +2694,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 type=item["type"],
                 price=item.get("price", 0),
                 group_discount=item.get("group_discount", 0),
-                group_size=item.get("group_size", 0),
+                group_size=item.get("group_size", None),
             )
             for item in quantities
             for _ in range(item["count"])
@@ -4798,7 +4798,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
-        if not tickets_to_replace.count():
+        if not tickets_to_replace.exists():
             return Response(
                 {
                     "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
@@ -4809,6 +4809,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         sold_out_count = 0
 
         replacement_tickets = []
+        tickets_in_cart = cart.tickets.values_list("id", flat=True)
         for ticket_class in tickets_to_replace.values("type", "event").annotate(
             count=Count("id")
         ):
@@ -4818,10 +4819,9 @@ class TicketViewSet(viewsets.ModelViewSet):
                 type=ticket_class["type"],
                 owner__isnull=True,
                 holder__isnull=True,
-            ).exclude(id__in=cart.tickets.all())[: ticket_class["count"]]
+            ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            if diff := (ticket_class["count"] - tickets.count()):
-                sold_out_count += diff
+            sold_out_count += ticket_class["count"] - tickets.count()
             replacement_tickets.extend(list(tickets))
 
         cart.tickets.remove(*tickets_to_replace)
