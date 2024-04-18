@@ -4902,7 +4902,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             else ticket.price
             for ticket in tickets
         )
-        
+
         # If all tickets are free, we can skip the payment process
         if not cart_total:
             order_info = {
