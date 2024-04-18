@@ -389,6 +389,21 @@ class TicketEventTestCase(TestCase):
         cart = Cart.objects.get(owner=self.user1)
         self.assertEqual(cart.tickets.count(), 0, cart.tickets)
 
+    def test_delete_event_with_bought_and_held_tickets(self):
+        # Simulate user initiating checkout
+        self.tickets1[0].holder = self.user1
+        self.tickets1[0].save()
+
+        # Simulate user purchasing ticket
+        self.tickets2[0].owner = self.user2
+        self.tickets2[0].save()
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.delete(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
 
 @dataclass
 class MockPaymentResponse:
