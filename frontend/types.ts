@@ -402,3 +402,13 @@ export type ApplicationResponse = {
   question_type: string
   question: ApplicationQuestion
 }
+
+export type TicketEntry = {
+  type: string
+  count: number
+}
+
+export type TicketAvailability = {
+  totals: TicketEntry[]
+  available: TicketEntry[]
+}

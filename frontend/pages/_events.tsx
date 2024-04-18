@@ -1,3 +1,5 @@
+// TODO: remove this page
+
 import Color from 'color'
 import { EVENT_TYPES } from 'components/ClubEditPage/EventsCard'
 import {

@@ -46,9 +46,9 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
+    Max,
     Prefetch,
     Q,
-    Sum,
     TextField,
     Value,
     When,
@@ -2542,6 +2542,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             count:
                                                 type: integer
+                                            price:
+                                                type: number
                                 available:
                                     type: array
                                     items:
@@ -2551,15 +2553,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             count:
                                                 type: integer
+                                            price:
+                                                type: number
         ---
         """
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
-        totals = tickets.values("type").annotate(count=Count("type")).order_by("type")
+        # Take price of first ticket of given type for now
+        totals = (
+            tickets.values("type")
+            .annotate(price=Max("price"))
+            .annotate(count=Count("type"))
+            .order_by("type")
+        )
         available = (
             tickets.filter(owner__isnull=True, holder__isnull=True)
             .values("type")
+            .annotate(price=Max("price"))
             .annotate(count=Count("type"))
             .order_by("type")
         )
@@ -2586,11 +2597,27 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: string
                                         count:
                                             type: integer
+                                        price:
+                                            type: number
+                                        group_size:
+                                            type: number
+                                            required: false
+                                        group_discount:
+                                            type: number
+                                            required: false
                             order_limit:
                                 type: int
                                 required: false
         responses:
             "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
                 content:
                     application/json:
                         schema:
@@ -2604,11 +2631,50 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         quantities = request.data.get("quantities")
 
-        # Atomicity ensures idempotency
+        for item in quantities:
+            # Ticket prices must be non-negative
+            if item.get("price", 0) < 0:
+                return Response(
+                    {"detail": "Ticket price cannot be negative"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
+            # Group discounts must be between 0 and 1
+            if item.get("group_discount", 0) < 0 or item.get("group_discount", 0) > 1:
+                return Response(
+                    {"detail": "Group discount must be between 0 and 1"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Min group sizes must be greater than 1
+            if item.get("group_size", 2) <= 1:
+                return Response(
+                    {"detail": "Min group size must be greater than 1"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Tickets must specify both group_discount and group_size or neither
+            if ("group_discount" in item) != ("group_size" in item):
+                return Response(
+                    {
+                        "detail": (
+                            "Ticket must specify either both group_discount "
+                            "and group_size or neither"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Atomicity ensures idempotency
         Ticket.objects.filter(event=event).delete()  # Idempotency
         tickets = [
-            Ticket(event=event, type=item["type"])
+            Ticket(
+                event=event,
+                type=item["type"],
+                price=item["price"],
+                group_discount=item.get("group_discount", None),
+                group_size=item.get("group_size", None),
+            )
             for item in quantities
             for _ in range(item["count"])
         ]
@@ -4789,6 +4855,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         cart = get_object_or_404(Cart, owner=self.request.user)
 
+        # Cart must have at least one ticket
         if not cart.tickets.exists():
             return Response(
                 {
@@ -4818,11 +4885,26 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Place hold on tickets for 10 mins
         holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
         tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
+        # Calculate cart total, applying group discounts where appropriate
+        ticket_type_counts = {
+            item["type"]: item["count"]
+            for item in tickets.values("type").annotate(count=Count("type"))
+        }
+
+        cart_total = sum(
+            ticket.price * (1 - ticket.group_discount)
+            if ticket.group_size
+            and ticket_type_counts[ticket.type] >= ticket.group_size
+            else ticket.price
+            for ticket in tickets
+        )
+        
         # If all tickets are free, we can skip the payment process
-        if (cart_total := tickets.aggregate(total=Sum("price"))["total"]) == 0:
+        if not cart_total:
             order_info = {
                 "amountDetails": {"totalAmount": "0.00"},
                 "billTo": {
@@ -4835,6 +4917,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             }
 
             self.give_tickets(order_info, cart, None)
+
             return Response(
                 {
                     "success": True,
@@ -4901,6 +4984,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=["post"])
+    @update_holds
     @transaction.atomic
     def complete_checkout(self, request, *args, **kwargs):
         """
@@ -4939,6 +5023,17 @@ class TicketViewSet(viewsets.ModelViewSet):
         cart = get_object_or_404(
             Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
+
+        # Guard against holds expiring before the capture context
+        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             _, http_status, transaction_data = TransientTokenDataApi(

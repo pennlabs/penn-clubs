@@ -170,9 +170,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   return (
     <>
       <Heading />
-
       <NavSpacer />
-
       <Nav
         className={`navbar ${isHub ? 'is-dark' : ''}`}
         role="navigation"
@@ -186,14 +184,11 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
               <Title>{SITE_NAME}</Title>
             </LogoItem>
           </Link>
-
           <Burger toggle={toggle} />
         </div>
-
         <Links userInfo={userInfo} authenticated={authenticated} show={show} />
       </Nav>
       {isHub && <ImageHead />}
-
       {SHOW_FEEDBACK && <Feedback />}
     </>
   )
