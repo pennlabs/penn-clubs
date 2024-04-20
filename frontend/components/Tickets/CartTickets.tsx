@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { Modal, Subtitle } from '~/components/common'
 import PaymentForm from '~/components/Tickets/PaymentForm'
@@ -7,6 +7,8 @@ import { TicketCard } from '~/components/Tickets/TicketCard'
 import { BORDER, BORDER_RADIUS, WHITE } from '~/constants'
 import { CountedEventTicket, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
+
+import { ModalContent } from '../ClubPage/Actions'
 
 const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
   return (
@@ -126,7 +128,14 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] =>
 const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [token, setToken] = useState('')
-  const countedTickets = useMemo(() => combineTickets(tickets), [tickets])
+  const [removeModal, setRemoveModal] = useState<CountedEventTicket | null>(
+    null,
+  )
+
+  const [countedTickets, setCountedTickets] = useState<CountedEventTicket[]>([])
+  useEffect(() => {
+    setCountedTickets(combineTickets(tickets))
+  }, [tickets])
 
   useEffect(() => {
     doApiRequest(`/tickets/initiate_checkout/?format=json`, {
@@ -147,6 +156,36 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
   return (
     <>
       <div>
+        <Modal show={removeModal !== null}>
+          <ModalContent>
+            <Subtitle>Remove Ticket</Subtitle>
+            <p>
+              Are you sure you want to remove this ticket for{' '}
+              {removeModal?.event.name}?
+            </p>
+            <div className="buttons">
+              <button
+                className="button is-danger"
+                onClick={() => {
+                  setCountedTickets(
+                    countedTickets.filter((t) => t.id !== removeModal!.id),
+                  )
+                  setRemoveModal(null)
+                }}
+              >
+                Remove
+              </button>
+              <button
+                className="button"
+                onClick={() => {
+                  setRemoveModal(null)
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </ModalContent>
+        </Modal>
         <div>
           {countedTickets.map((ticket) => (
             <TicketCard
@@ -155,7 +194,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
               hideActions
               removable
               onRemove={() => {
-                // TODO: Remove ticket from cart
+                setRemoveModal(ticket)
               }}
             />
           ))}
