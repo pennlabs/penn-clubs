@@ -2396,6 +2396,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         quantities = request.data.get("quantities")
+        if not quantities:
+            return Response(
+                {"detail": "Quantities must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         num_requested = sum(item["count"] for item in quantities)
         num_carted = cart.tickets.filter(event=event).count()
@@ -2468,6 +2473,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
         quantities = request.data.get("quantities")
+        if not quantities:
+            return Response(
+                {"detail": "Quantities must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         cart = get_object_or_404(Cart, owner=self.request.user)
 
         for item in quantities:
@@ -2515,7 +2525,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         )
 
         buyers = tickets.filter(owner__isnull=False).values(
-            "fullname", "id", "owner_id", "type"
+            "fullname", "id", "owner_id", "type", "owner__email"
         )
 
         return Response({"buyers": buyers})
@@ -2629,9 +2639,20 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
 
-        quantities = request.data.get("quantities")
+        quantities = request.data.get("quantities", [])
+        if not quantities:
+            return Response(
+                {"detail": "Quantities must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         for item in quantities:
+            if not item.get("type") or not item.get("count"):
+                return Response(
+                    {"detail": "Specify type and count to create some tickets."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # Ticket prices must be non-negative
             if item.get("price", 0) < 0:
                 return Response(
@@ -2671,8 +2692,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             Ticket(
                 event=event,
                 type=item["type"],
-                price=item["price"],
-                group_discount=item.get("group_discount", None),
+                price=item.get("price", 0),
+                group_discount=item.get("group_discount", 0),
                 group_size=item.get("group_size", None),
             )
             for item in quantities
@@ -4720,19 +4741,19 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
 class TicketViewSet(viewsets.ModelViewSet):
     """
     get:
-    List all tickets owned by user
+    Get a specific ticket owned by a user
+
+    list:
+    List all tickets owned by a user
 
     cart:
-    List all unowned/unheld tickets currently in user's cart
+    List all unowned/unheld tickets currently in a user's cart
 
     initiate_checkout:
     Initiate a hold on the tickets in a user's cart and create a capture context
 
     complete_checkout:
-    Complete the checkout process after we have obtained an auth on the user's card
-
-    buy:
-    Buy the tickets in a user's cart
+    Complete the checkout process after we have obtained an auth on a user's card
 
     qr:
     Get a ticket's QR code
@@ -4767,7 +4788,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         ---
         """
 
-        cart, _ = Cart.objects.get_or_create(owner=self.request.user)
+        cart, _ = Cart.objects.prefetch_related("tickets").get_or_create(
+            owner=self.request.user
+        )
 
         # Replace in-cart tickets that have been bought/held by someone else
         tickets_to_replace = cart.tickets.filter(
@@ -4775,7 +4798,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
-        if not tickets_to_replace:
+        if not tickets_to_replace.exists():
             return Response(
                 {
                     "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
@@ -4786,19 +4809,20 @@ class TicketViewSet(viewsets.ModelViewSet):
         sold_out_count = 0
 
         replacement_tickets = []
-        for gone_ticket in tickets_to_replace:
+        tickets_in_cart = cart.tickets.values_list("id", flat=True)
+        for ticket_class in tickets_to_replace.values("type", "event").annotate(
+            count=Count("id")
+        ):
             # We don't need to lock since we aren't updating holder/owner
-            ticket = Ticket.objects.filter(
-                event=gone_ticket.event,
-                type=gone_ticket.type,
+            tickets = Ticket.objects.filter(
+                event=ticket_class["event"],
+                type=ticket_class["type"],
                 owner__isnull=True,
                 holder__isnull=True,
-            ).first()
+            ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            if ticket is not None:
-                replacement_tickets.append(ticket)
-            else:
-                sold_out_count += 1
+            sold_out_count += ticket_class["count"] - tickets.count()
+            replacement_tickets.extend(list(tickets))
 
         cart.tickets.remove(*tickets_to_replace)
         if replacement_tickets:
@@ -4824,6 +4848,8 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         Once the user has entered their payment details and submitted the form
         the request will be routed to complete_checkout
+
+        403 implies a stale cart.
         ---
         requestBody: {}
         responses:
@@ -4874,17 +4900,13 @@ class TicketViewSet(viewsets.ModelViewSet):
                     "success": False,
                     "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_403_FORBIDDEN,
             )
-
-        # Place hold on tickets for 10 mins
-        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
-        tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
         # Calculate cart total, applying group discounts where appropriate
         ticket_type_counts = {
             item["type"]: item["count"]
-            for item in tickets.values("type").annotate(count=Count("type"))
+            for item in cart.tickets.values("type").annotate(count=Count("type"))
         }
 
         cart_total = sum(
@@ -4939,8 +4961,14 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
             if not context or http_status >= 400:
                 raise ApiException(
-                    reason=f"Received {context} with HTTP status {status}",
+                    reason=f"Received {context} with HTTP status {http_status}",
                 )
+
+            # Place hold on tickets for 10 mins
+            holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+            tickets.update(
+                holder=self.request.user, holding_expiration=holding_expiration
+            )
 
             return Response({"success": True, "detail": context})
         except ApiException as e:
@@ -4959,6 +4987,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         Complete the checkout after the user has entered their payment details
         and obtained a transient token on the frontend.
+
+        403 implies a stale cart.
         ---
         requestBody:
             content:
@@ -4982,16 +5012,18 @@ class TicketViewSet(viewsets.ModelViewSet):
         ---
         """
         tt = request.data.get("transient_token")
+        cart = get_object_or_404(
+            Cart.objects.prefetch_related("tickets"), owner=self.request.user
+        )
+
         ok, message = validate_transient_token(tt)
         if not ok:
+            # Cleanup state since the purchase failed
+            cart.tickets.update(holder=None, owner=None)
             return Response(
                 {"success": False, "detail": message},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-        cart = get_object_or_404(
-            Cart.objects.prefetch_related("tickets"), owner=self.request.user
-        )
 
         # Guard against holds expiring before the capture context
         tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
@@ -5001,7 +5033,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                     "success": False,
                     "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         try:
@@ -5011,7 +5043,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
             if not transaction_data or http_status >= 400:
                 raise ApiException(
-                    reason=f"Received {transaction_data} with HTTP status {status}"
+                    reason=f"Received {transaction_data} with HTTP status {http_status}"
                 )
             transaction_data = json.loads(transaction_data)
         except ApiException as e:
@@ -5039,7 +5071,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
             if not payment_response or http_status >= 400:
                 raise ApiException(
-                    reason=f"Received {payment_response} with HTTP status {status}"
+                    reason=f"Received {payment_response} with HTTP status {http_status}"
                 )
         except ApiException as e:
             # Cleanup state since the purchase failed
@@ -5057,7 +5089,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         # We're explicitly using the response data over what's in self.request.user
         orderInfo = transaction_data["orderInformation"]
         transaction_record = TicketTransactionRecord.objects.create(
-            reconciliation_id=reconciliation_id,
+            reconciliation_id=str(reconciliation_id),
             total_amount=float(orderInfo["amountDetails"]["totalAmount"]),
             buyer_first_name=orderInfo["billTo"]["firstName"],
             buyer_last_name=orderInfo["billTo"]["lastName"],
