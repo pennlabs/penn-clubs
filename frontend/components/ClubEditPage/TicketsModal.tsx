@@ -66,7 +66,9 @@ const TicketItem: React.FC<TicketItemProps> = ({
 }) => {
   const [ticket, setTicket] = useState(propTicket)
   return (
-    <div style={{ padding: '5px 0px' }}>
+    <div
+      style={{ padding: '5px 0px', display: 'flex', flexDirection: 'column' }}
+    >
       <div
         style={{
           display: 'flex',
@@ -106,71 +108,7 @@ const TicketItem: React.FC<TicketItemProps> = ({
             onChange?.({ ...ticket, price })
           }}
         />
-        {typeof ticket.groupNumber !== 'undefined' &&
-        ticket.groupNumber !== null &&
-        typeof ticket.groupDiscount !== 'undefined' &&
-        ticket.groupDiscount !== null ? (
-          <>
-            <Input
-              type="number"
-              className="input"
-              value={ticket.groupDiscount ?? ''}
-              placeholder="Group Discount"
-              onChange={(e) => {
-                const groupDiscount = e.target.value
-                setTicket({ ...ticket, groupDiscount })
-                onChange?.({ ...ticket, groupDiscount })
-              }}
-            />
-            <Text>%</Text>
-            <Input
-              type="number"
-              className="input"
-              value={ticket.groupNumber ?? ''}
-              placeholder="Group Number"
-              onChange={(e) => {
-                const groupNumber = e.target.value
-                setTicket({ ...ticket, groupNumber })
-                onChange?.({ ...ticket, groupNumber })
-              }}
-            />
-            <button
-              onClick={() => {
-                setTicket({
-                  ...ticket,
-                  groupDiscount: null,
-                  groupNumber: null,
-                })
-                onChange?.({
-                  ...ticket,
-                  groupDiscount: null,
-                  groupNumber: null,
-                })
-              }}
-            >
-              Delete
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={(e) => {
-                setTicket({
-                  ...ticket,
-                  groupDiscount: '',
-                  groupNumber: '',
-                })
-                onChange?.({
-                  ...ticket,
-                  groupDiscount: '',
-                  groupNumber: '',
-                })
-              }}
-            >
-              Add Group Buy
-            </button>
-          </>
-        )}
+
         <button
           className="button is-danger"
           disabled={!deletable}
@@ -178,6 +116,93 @@ const TicketItem: React.FC<TicketItemProps> = ({
         >
           <Icon name="x" alt="delete" />
         </button>
+      </div>
+      <div style={{ height: '12px' }} />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'end',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          {typeof ticket.groupNumber !== 'undefined' &&
+          ticket.groupNumber !== null &&
+          typeof ticket.groupDiscount !== 'undefined' &&
+          ticket.groupDiscount !== null ? (
+            <>
+              <div style={{ maxWidth: '75px' }}>
+                <Input
+                  type="number"
+                  className="input is-small"
+                  value={ticket.groupDiscount ?? ''}
+                  placeholder="100"
+                  onChange={(e) => {
+                    const groupDiscount = e.target.value
+                    setTicket({ ...ticket, groupDiscount })
+                    onChange?.({ ...ticket, groupDiscount })
+                  }}
+                />
+              </div>
+              <Text style={{ padding: '0 12px' }}>% Discount for</Text>
+              <div>
+                <Input
+                  type="number"
+                  className="input is-small"
+                  value={ticket.groupNumber ?? ''}
+                  placeholder="Group Number"
+                  onChange={(e) => {
+                    const groupNumber = e.target.value
+                    setTicket({ ...ticket, groupNumber })
+                    onChange?.({ ...ticket, groupNumber })
+                  }}
+                />
+              </div>
+              <button
+                className="button is-info is-small"
+                onClick={() => {
+                  setTicket({
+                    ...ticket,
+                    groupDiscount: null,
+                    groupNumber: null,
+                  })
+                  onChange?.({
+                    ...ticket,
+                    groupDiscount: null,
+                    groupNumber: null,
+                  })
+                }}
+              >
+                Delete Discount
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                className="button is-info is-small"
+                onClick={(e) => {
+                  setTicket({
+                    ...ticket,
+                    groupDiscount: '',
+                    groupNumber: '',
+                  })
+                  onChange?.({
+                    ...ticket,
+                    groupDiscount: '',
+                    groupNumber: '',
+                  })
+                }}
+              >
+                Add Group Discount
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -191,8 +216,13 @@ type Ticket = {
   groupNumber: string | null // If null, no group discount
 }
 
-const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
-  const { event } = props
+const TicketsModal = ({
+  event,
+  onSuccessfulSubmit,
+}: {
+  event: ClubEvent
+  onSuccessfulSubmit: () => void
+}): ReactElement => {
   const { large_image_url, image_url, club_name, name, id } = event
 
   const [submitting, setSubmitting] = useState(false)
@@ -246,6 +276,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
         if (res.ok) {
           notify(<>Tickets Created!</>, 'success')
           setSubmitting(false)
+          onSuccessfulSubmit()
         } else {
           notify(<>Error creating tickets</>, 'error')
           setSubmitting(false)
