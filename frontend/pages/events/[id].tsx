@@ -129,7 +129,7 @@ const Input = styled.input`
   border: 1px solid ${ALLBIRDS_GRAY};
   outline: none;
   color: ${CLUBS_GREY};
-  flex: '0 0 auto';
+  flex: 0 0 auto;
   font-size: 1em;
   padding: 8px 10px;
   margin: 0px 5px 0px 0px;
@@ -148,26 +148,33 @@ type Ticket = {
   type: string
   price: string
   max: string
-  count: string | null
+  count: number | null
 }
 
-const TicketItem = ({
+type TicketItemProps = {
+  ticket: Ticket
+  name: string
+  price: string
+  max: string
+  onCountChange: (newCount: number) => void
+}
+
+const TicketItem: React.FC<TicketItemProps> = ({
   ticket,
   name,
   price,
   max,
-  changeCount,
-  index,
+  onCountChange,
 }): ReactElement => {
   const [count, setCount] = useState(ticket.count)
-  const handleCountChange = (e: { target: { value: string } }) => {
+  const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Round to nearest integer and clamp to min/max
     const value = Math.max(
       0,
       Math.min(Math.round(parseFloat(e.target.value)), parseInt(max, 10)),
     )
     setCount(value)
-    changeCount(value, index)
+    onCountChange(value)
   }
 
   return (
@@ -187,7 +194,7 @@ const TicketItem = ({
           className="input"
           min={0}
           max={max}
-          value={count}
+          value={count ?? 0}
           step={1}
           placeholder="Ticket Count"
           onChange={handleCountChange}
@@ -227,19 +234,13 @@ const EventPage: React.FC<EventPageProps> = ({
       type,
       price: counts.price.toString(),
       max: counts.total.toString(),
-      count: '0',
+      count: 0,
     })),
   )
 
   const totalAvailableTickets = Object.values(ticketMap)
     .map((k) => k.available)
     .reduce((a, b) => a + b, 0)
-
-  const handleCountChange = (count: string | null, i: string | number) => {
-    const ticks = [...order]
-    ticks[i].count = count
-    setOrder(ticks)
-  }
 
   return (
     <>
@@ -252,11 +253,14 @@ const EventPage: React.FC<EventPageProps> = ({
         {order.map((ticket, index) => (
           <TicketItem
             ticket={ticket}
-            index={index}
             max={ticket.max}
             name={ticket.type}
             price={ticket.price}
-            changeCount={handleCountChange}
+            onCountChange={(count: number | null) => {
+              const ticks = [...order]
+              ticks[index].count = count
+              setOrder(ticks)
+            }}
           />
         ))}
         <button
@@ -264,7 +268,7 @@ const EventPage: React.FC<EventPageProps> = ({
           onClick={() => {
             // Select type and count properties
             const orderToSend = order
-              .filter((ticket) => ticket.count != null && ticket.count !== '0')
+              .filter((ticket) => ticket.count != null && ticket.count !== 0)
               .map(({ type, count }) => ({ type, count }))
             doApiRequest(
               `/clubs/${event.club}/events/${event.id}/add_to_cart/?format=json`,

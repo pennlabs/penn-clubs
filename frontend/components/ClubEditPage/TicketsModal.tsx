@@ -230,14 +230,16 @@ const TicketsModal = ({
 
   const addNewTicket = () => {
     const ticks = [...tickets]
-    ticks.push({
-      name: '',
-      count: null,
-      price: null,
-      groupDiscount: null,
-      groupNumber: null,
-    })
-    setTickets(ticks)
+    setTickets([
+      ...ticks,
+      {
+        name: '',
+        count: null,
+        price: null,
+        groupDiscount: null,
+        groupNumber: null,
+      },
+    ])
   }
 
   const submit = () => {
@@ -248,8 +250,8 @@ const TicketsModal = ({
           const usingGroupPricing = ticket.groupDiscount && ticket.groupNumber
           return {
             type: ticket.name,
-            count: parseInt(ticket.count || ''),
-            price: parseFloat(ticket.price || ''),
+            count: parseInt(ticket.count ?? '0'),
+            price: parseFloat(ticket.price ?? '0'),
             groupDiscount: usingGroupPricing
               ? parseFloat(ticket.groupDiscount!)
               : null,
