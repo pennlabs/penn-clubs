@@ -1,7 +1,7 @@
 import { css } from '@emotion/react'
 import React, { useEffect, useState } from 'react'
 
-import { Modal, Subtitle } from '~/components/common'
+import { EmptyState, Modal, Subtitle, Text } from '~/components/common'
 import PaymentForm from '~/components/Tickets/PaymentForm'
 import { TicketCard } from '~/components/Tickets/TicketCard'
 import { BORDER, BORDER_RADIUS, WHITE } from '~/constants'
@@ -194,18 +194,38 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
 
   if (countedTickets.length === 0) {
     return (
-      <div>
-        <Subtitle>Your cart is empty</Subtitle>
-        <p>
-          To add tickets to your cart, visit the event page and select the
-          tickets you wish to purchase.
-          <br />
-          If you believe this is an error, please contact support at
-          <a href="mailto:contact@pennlabs.org" className="ml-1">
-            contact@pennlabs.org
-          </a>
-          .
-        </p>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+        }}
+      >
+        <EmptyState name="empty_cart" />
+        <div
+          style={{
+            width: '24px',
+          }}
+        />
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Subtitle>Your cart is empty</Subtitle>
+          <Text isGray>
+            To add tickets to your cart, visit the event page and select the
+            tickets you wish to purchase.
+            <br />
+            If you believe this is an error, please contact support at
+            <a href="mailto:contact@pennlabs.org" className="ml-1">
+              contact@pennlabs.org
+            </a>
+            .
+          </Text>
+        </div>
       </div>
     )
   }
