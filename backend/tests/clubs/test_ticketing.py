@@ -11,6 +11,7 @@ from django.db.models import (
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from freezegun import freeze_time
 from rest_framework.test import APIClient
 
 from clubs.models import Cart, Club, Event, Ticket, TicketTransactionRecord
@@ -154,6 +155,43 @@ class TicketEventTestCase(TestCase):
             )
             self.assertIn(resp.status_code, [400], resp.content)
             self.assertEqual(Ticket.objects.filter(type__contains="_").count(), 0, data)
+
+    def test_create_ticket_offerings_delay_drop(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        args = {
+            "quantities": [
+                {"type": "_normal", "count": 20, "price": 10},
+                {"type": "_premium", "count": 10, "price": 20},
+            ],
+            "delay_drop": True,
+        }
+        _ = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+
+        self.event1.refresh_from_db()
+
+        # Drop time should be set
+        self.assertIsNotNone(self.event1.ticket_drop_time)
+
+        # Drop time should be 12 hours from initial ticket creation
+        expected_drop_time = timezone.now() + timezone.timedelta(hours=12)
+        diff = abs(self.event1.ticket_drop_time - expected_drop_time)
+        self.assertTrue(diff < timezone.timedelta(minutes=5))
+
+        # Move Django's internal clock 13 hours forward
+        with freeze_time(timezone.now() + timezone.timedelta(hours=13)):
+            resp = self.client.put(
+                reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+                args,
+                format="json",
+            )
+
+            # Tickets shouldn't be editable after drop time has elapsed
+            self.assertEqual(resp.status_code, 403, resp.content)
 
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
@@ -303,6 +341,27 @@ class TicketEventTestCase(TestCase):
         self.assertIn(
             "Not enough tickets of type normal left!", resp.data["detail"], resp.data
         )
+
+    def test_add_to_cart_before_ticket_drop(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Set drop time
+        self.event1.ticket_drop_time = timezone.now() + timedelta(hours=12)
+        self.event1.save()
+
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 2},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+
+        # Tickets should not be added to cart before drop time
+        self.assertEqual(resp.status_code, 403, resp.content)
 
     def test_remove_from_cart(self):
         self.client.login(username=self.user1.username, password="test")
