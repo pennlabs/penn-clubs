@@ -4871,6 +4871,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         sold_out_tickets = []
         replacement_tickets = []
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
+
         for ticket_class in tickets_to_replace.values("type", "event").annotate(
             count=Count("id")
         ):
@@ -4882,12 +4883,14 @@ class TicketViewSet(viewsets.ModelViewSet):
                 holder__isnull=True,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            sold_out_tickets += [
-                {
-                    **ticket_class,
-                    "count": ticket_class["count"] - tickets.count(),
-                }
-            ]
+            if tickets.count() < ticket_class["count"]:
+                sold_out_tickets.append(
+                    {
+                        **ticket_class,
+                        "count": ticket_class["count"] - tickets.count(),
+                    }
+                )
+
             replacement_tickets.extend(list(tickets))
 
         cart.tickets.remove(*tickets_to_replace)
