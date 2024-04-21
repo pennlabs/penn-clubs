@@ -138,6 +138,9 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
   }, [tickets])
 
   useEffect(() => {
+    if (countedTickets.length === 0) {
+      return
+    }
     doApiRequest(`/tickets/initiate_checkout/?format=json`, {
       method: 'POST',
       body: { tickets: countedTickets },
@@ -153,7 +156,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
       })
   }, [countedTickets])
 
-  function handleRemoveTicket(ticket: CountedEventTicket, count?: number) {
+  function handleRemoveTicket(ticket: CountedEventTicket, newCount?: number) {
     doApiRequest(
       `/clubs/${ticket.event.club}/events/${ticket.event.id}/remove_from_cart/`,
       {
@@ -163,7 +166,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
             {
               type: ticket.type,
               // If count is not provided, remove all tickets
-              count: count ?? ticket.count,
+              count: newCount ?? ticket.count,
             },
           ],
         },
@@ -181,12 +184,30 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
           countedTickets
             .map((t) =>
               t.id === ticket.id
-                ? { ...t, count: t.count! - (count ?? t.count!) }
+                ? { ...t, count: t.count! - (newCount ?? t.count!) }
                 : t,
             )
             .filter((t) => t.count !== 0),
         )
       })
+  }
+
+  if (countedTickets.length === 0) {
+    return (
+      <div>
+        <Subtitle>Your cart is empty</Subtitle>
+        <p>
+          To add tickets to your cart, visit the event page and select the
+          tickets you wish to purchase.
+          <br />
+          If you believe this is an error, please contact support at
+          <a href="mailto:contact@pennlabs.org" className="ml-1">
+            contact@pennlabs.org
+          </a>
+          .
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -227,6 +248,10 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
               ticket={ticket}
               hideActions
               removable
+              editable
+              onChange={(count) => {
+                handleRemoveTicket(ticket, count)
+              }}
               onRemove={() => {
                 setRemoveModal(ticket)
               }}

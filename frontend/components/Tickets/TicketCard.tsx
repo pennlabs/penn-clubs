@@ -1,6 +1,6 @@
 import { css } from '@emotion/react'
 import { DateTime, Settings } from 'luxon'
-import type { CSSProperties } from 'react'
+import { type CSSProperties, useState } from 'react'
 import styled from 'styled-components'
 
 import { Icon, Title } from '~/components/common'
@@ -94,8 +94,10 @@ export const TicketCard = ({
   showModal,
   style,
   removable,
-  onRemove,
+  editable,
   hideActions,
+  onRemove,
+  onChange,
   onClick,
   viewQRCode,
 }: {
@@ -106,16 +108,22 @@ export const TicketCard = ({
   hideActions?: boolean
 
   removable?: boolean
-  onRemove?: () => void
+  editable?: boolean
 
+  onRemove?: () => void
+  onChange?: (count: number) => void
   onClick?: () => void
+
   viewQRCode?: () => void
   showModal?: () => void
 }) => {
+  const [isEditMode, setIsEditMode] = useState(false)
+
   const datetimeData = formatTime(
     ticket.event.start_time,
     ticket.event.end_time,
   )
+
   return (
     <Card
       className="card"
@@ -145,9 +153,32 @@ export const TicketCard = ({
 
             font-size: 32px;
             font-weight: 800;
+            cursor: pointer;
           `}
+          onDoubleClick={() => {
+            editable && setIsEditMode(true)
+          }}
         >
-          {ticket.count}
+          {isEditMode && editable ? (
+            <input
+              style={{
+                width: '70px',
+                fontSize: '32px',
+                fontWeight: 800,
+                textAlign: 'center',
+              }}
+              type="number"
+              defaultValue={ticket.count}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setIsEditMode(false)
+                  onChange?.(parseInt(e.currentTarget.value ?? ticket.count))
+                }
+              }}
+            />
+          ) : (
+            <span>{ticket.count}</span>
+          )}
           <span
             css={css`
               font-size: 14px;
@@ -225,6 +256,30 @@ export const TicketCard = ({
           {ticket.type} | {datetimeData.timeRange}
         </Description>
       </div>
+      {editable && (
+        <span
+          className="delete"
+          css={css`
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: ${WHITE};
+            ::before {
+              content: '';
+            }
+            ::after {
+              content: '';
+            }
+          `}
+          onClick={(e) => {
+            e.stopPropagation()
+            setIsEditMode(true)
+          }}
+        >
+          <Icon className="is-small" name="edit" alt="edit" />
+        </span>
+      )}
       {removable && (
         <button
           className="delete"
