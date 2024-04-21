@@ -4826,7 +4826,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     allOf:
                                         - $ref: "#/components/schemas/Ticket"
                                 sold_out:
-                                    type: list
+                                    type: array
                                     items:
                                         type: object
                                         properties:
