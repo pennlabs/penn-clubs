@@ -569,7 +569,7 @@ class TicketTestCase(TestCase):
 
         from clubs.views import TicketViewSet
 
-        actual_total = TicketViewSet()._calculate_cart_total(cart)
+        actual_total = TicketViewSet._calculate_cart_total(cart)
         self.assertEqual(actual_total, expected_total)
 
     def test_calculate_cart_total_with_group_discount(self):
@@ -594,7 +594,7 @@ class TicketTestCase(TestCase):
 
         from clubs.views import TicketViewSet
 
-        total = TicketViewSet()._calculate_cart_total(cart)
+        total = TicketViewSet._calculate_cart_total(cart)
         self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
 
     def test_get_cart_replacement_required(self):

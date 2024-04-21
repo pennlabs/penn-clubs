@@ -4783,7 +4783,8 @@ class TicketViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
     lookup_field = "id"
 
-    def _calculate_cart_total(self, cart) -> float:
+    @staticmethod
+    def _calculate_cart_total(cart) -> float:
         """
         Calculate the total price of all tickets in a cart, applying discounts
         where appropriate. Does not validate that the cart is valid.
