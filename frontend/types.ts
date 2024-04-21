@@ -406,6 +406,7 @@ export type ApplicationResponse = {
 export type TicketEntry = {
   type: string
   count: number
+  price: number
 }
 
 export type TicketAvailability = {

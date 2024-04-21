@@ -121,9 +121,9 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
                 choices={badges}
                 deserialize={({ id, label, description, purpose }) => ({
                   value: id,
-                  label: label,
-                  description: description,
-                  purpose: purpose,
+                  label,
+                  description,
+                  purpose,
                 })}
                 formatOptionLabel={({ label, description, purpose }) => (
                   <>
