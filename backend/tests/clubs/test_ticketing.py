@@ -155,6 +155,35 @@ class TicketEventTestCase(TestCase):
             self.assertIn(resp.status_code, [400], resp.content)
             self.assertEqual(Ticket.objects.filter(type__contains="_").count(), 0, data)
 
+    def test_create_ticket_offerings_group_discounts(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        group_size, group_discount = 2, 0.5
+        args = {
+            "quantities": [
+                {
+                    "type": "_normal",
+                    "count": 20,
+                    "price": 10,
+                    "group_size": group_size,
+                    "group_discount": group_discount,
+                },
+            ]
+        }
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        tickets = Ticket.objects.filter(type="_normal")
+
+        # Created tickets should have correct group size and discount
+        for ticket in tickets:
+            self.assertEqual(ticket.group_size, group_size)
+            self.assertEqual(ticket.group_discount, group_discount)
+
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
         Ticket.objects.all().delete()
@@ -527,6 +556,48 @@ class TicketTestCase(TestCase):
             self.assertEqual(t1["id"], str(t2.id))
         self.assertEqual(data["sold_out"], 0, data)
 
+    def test_calculate_cart_total(self):
+        # Add a few tickets to cart
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        tickets_to_add = self.tickets1[:5]
+        for ticket in tickets_to_add:
+            cart.tickets.add(ticket)
+        cart.save()
+
+        expected_total = sum(t.price for t in tickets_to_add)
+
+        from clubs.views import TicketViewSet
+
+        actual_total = TicketViewSet()._calculate_cart_total(cart)
+        self.assertEqual(actual_total, expected_total)
+
+    def test_calculate_cart_total_with_group_discount(self):
+        # Create tickets with group discount
+        tickets = [
+            Ticket.objects.create(
+                type="group",
+                event=self.event1,
+                price=10.0,
+                group_size=2,
+                group_discount=0.2,
+            )
+            for _ in range(10)
+        ]
+
+        # Add enough to activate group discount
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        tickets_to_add = tickets[:5]
+        for ticket in tickets_to_add:
+            cart.tickets.add(ticket)
+        cart.save()
+
+        from clubs.views import TicketViewSet
+
+        total = TicketViewSet()._calculate_cart_total(cart)
+
+        # Total price should be 5 * price=10 * (1 - group_discount=0.2) = 40
+        self.assertEqual(total, 40.0)
+
     def test_get_cart_replacement_required(self):
         self.client.login(username=self.user1.username, password="test")
 
@@ -720,6 +791,7 @@ class TicketTestCase(TestCase):
             held_tickets = Ticket.objects.filter(holder=self.user1)
             self.assertEqual(held_tickets.count(), 2, held_tickets)
 
+            # Complete checkout
             resp = self.client.post(
                 reverse("tickets-complete-checkout"),
                 {"transient_token": "abcdefg"},
@@ -741,9 +813,10 @@ class TicketTestCase(TestCase):
             self.assertEqual(held_tickets.count(), 0, held_tickets)
 
             # Transaction record created
-            TicketTransactionRecord.objects.filter(
+            record_exists = TicketTransactionRecord.objects.filter(
                 reconciliation_id=MockPaymentResponse().reconciliation_id
             ).exists()
+            self.assertTrue(record_exists)
 
     def test_complete_checkout_stale_cart(self):
         self.client.login(username=self.user1.username, password="test")
