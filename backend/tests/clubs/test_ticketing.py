@@ -600,6 +600,8 @@ class TicketTestCase(TestCase):
             cart.tickets.add(ticket)
         cart.save()
 
+        self.assertEqual(cart.tickets.count(), 5)
+
         total = TicketViewSet._calculate_cart_total(cart)
         self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
 
