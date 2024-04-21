@@ -440,7 +440,7 @@ const CreateTickets = ({ event }: { event: ClubEvent }) => {
 
 export default function EventsCard({ club }: EventsCardProps): ReactElement {
   const [deviceContents, setDeviceContents] = useState<any>({})
-  const eventDetailsRef = useRef<HTMLElement>(null)
+  const eventDetailsRef = useRef<HTMLDivElement>(null)
 
   const event = {
     ...deviceContents,
@@ -476,7 +476,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
       <Line />
       <CreateTickets event={event} />
       <Line />
-      <div ref={eventDetailsRef as React.RefObject<HTMLDivElement>}>
+      <div ref={eventDetailsRef}>
         <EventPreview event={event} />
       </div>
     </BaseCard>

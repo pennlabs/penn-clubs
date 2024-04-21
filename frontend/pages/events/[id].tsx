@@ -1,7 +1,7 @@
 import { DateTime, Settings } from 'luxon'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
-import React, { ReactElement, useState } from 'react'
+import React, { useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
@@ -165,7 +165,7 @@ const TicketItem: React.FC<TicketItemProps> = ({
   price,
   max,
   onCountChange,
-}): ReactElement => {
+}) => {
   const [count, setCount] = useState(ticket.count)
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Round to nearest integer and clamp to min/max
