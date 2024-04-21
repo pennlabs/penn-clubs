@@ -585,14 +585,21 @@ class TicketTestCase(TestCase):
             for _ in range(10)
         ]
 
-        # Add enough to activate group discount
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = tickets[:5]
+        from clubs.views import TicketViewSet
+
+        # Add 1 ticket, shouldn't activate group discount
+        cart.tickets.add(tickets[0])
+        cart.save()
+
+        total = TicketViewSet._calculate_cart_total(cart)
+        self.assertEqual(total, 10.0)  # 1 * price=10 = 10
+
+        # Add 4 more tickets, enough to activate group discount
+        tickets_to_add = tickets[1:5]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
-
-        from clubs.views import TicketViewSet
 
         total = TicketViewSet._calculate_cart_total(cart)
         self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
