@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import { Icon, Title } from '~/components/common'
 import {
   ALLBIRDS_GRAY,
+  BULMA_SUCCESS,
   CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
   CLUBS_YELLOW,
@@ -268,14 +269,14 @@ export const TicketCard = ({
             border-radius: 50%;
             width: 20px;
             height: 20px;
-            background: ${CLUBS_YELLOW};
+            background: ${isEditMode ? BULMA_SUCCESS : CLUBS_YELLOW};
             &:hover {
               background: ${CLUBS_GREY_LIGHT};
             }
             margin: 0 4px;
           `}
           onClick={() => {
-            setIsEditMode(true)
+            setIsEditMode(!isEditMode)
           }}
         >
           <Icon
@@ -284,8 +285,8 @@ export const TicketCard = ({
               width: '12px',
             }}
             className="is-small"
-            name="edit"
-            alt="edit"
+            name={isEditMode ? 'check' : 'edit'}
+            alt={isEditMode ? 'confirm' : 'edit'}
           />
         </span>
       )}
