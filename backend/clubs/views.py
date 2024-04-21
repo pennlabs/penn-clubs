@@ -2395,6 +2395,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
+        # Cannot add tickets that haven't dropped yet
+        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+            return Response(
+                {"detail": "Ticket drop time has not yet elapsed"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         quantities = request.data.get("quantities")
         if not quantities:
             return Response(
@@ -2618,6 +2625,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             order_limit:
                                 type: int
                                 required: false
+                            delay_drop:
+                                type: boolean
+                                required: false
         responses:
             "200":
                 content:
@@ -2638,6 +2648,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
+
+        # Tickets can't be edited after they've dropped
+        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
+            return Response(
+                {"detail": "Tickets cannot be edited after they have dropped"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         quantities = request.data.get("quantities", [])
         if not quantities:
@@ -2705,6 +2722,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         order_limit = request.data.get("order_limit", None)
         if order_limit is not None:
             event.ticket_order_limit = order_limit
+            event.save()
+
+        delay_drop = request.data.get("delay_drop", None)
+        if delay_drop is not None:
+            event.ticket_drop_time = timezone.now() + timezone.timedelta(hours=12)
             event.save()
 
         return Response({"detail": "success"})
