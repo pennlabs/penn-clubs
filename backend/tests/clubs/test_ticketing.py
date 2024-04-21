@@ -4,14 +4,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 from unittest.mock import patch
 
+import freezegun
 from django.contrib.auth import get_user_model
-from django.db.models import (
-    Count,
-)
+from django.db.models import Count
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from freezegun import freeze_time
 from rest_framework.test import APIClient
 
 from clubs.models import Cart, Club, Event, Ticket, TicketTransactionRecord
@@ -183,7 +181,7 @@ class TicketEventTestCase(TestCase):
         self.assertTrue(diff < timezone.timedelta(minutes=5))
 
         # Move Django's internal clock 13 hours forward
-        with freeze_time(timezone.now() + timezone.timedelta(hours=13)):
+        with freezegun.freeze_time(timezone.now() + timezone.timedelta(hours=13)):
             resp = self.client.put(
                 reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
                 args,
