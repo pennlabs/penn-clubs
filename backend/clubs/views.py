@@ -334,7 +334,7 @@ def hour_to_string_helper(hour):
 
 def validate_transient_token(cc: str, tt: str) -> Tuple[bool, str]:
     """Validate the integrity of the transient token using
-    the associated capture context"""
+    the public key (JWK) obtained from the capture context"""
 
     try:
         _, body, _ = cc.split(".")
