@@ -594,9 +594,7 @@ class TicketTestCase(TestCase):
         from clubs.views import TicketViewSet
 
         total = TicketViewSet()._calculate_cart_total(cart)
-
-        # Total price should be 5 * price=10 * (1 - group_discount=0.2) = 40
-        self.assertEqual(total, 40.0)
+        self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
 
     def test_get_cart_replacement_required(self):
         self.client.login(username=self.user1.username, password="test")
