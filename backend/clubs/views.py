@@ -4806,10 +4806,21 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     items:
                                         type: object
                                         properties:
+                                            id:
+                                                type: integer
+                                            event:
+                                                type: object
+                                                properties:
+                                                    id:
+                                                        type: integer
+                                                    name:
+                                                        type: string
                                             type:
                                                 type: string
-                                            event:
-                                                type: integer
+                                            owner:
+                                                type: string
+                                            price:
+                                                type: number
                                             count:
                                                 type: integer
         ---
@@ -4849,8 +4860,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
             sold_out_tickets += [
                 {
-                    "type": ticket_class["type"],
-                    "event": ticket_class["event"],
+                    **ticket_class,
                     "count": ticket_class["count"] - tickets.count(),
                 }
             ]

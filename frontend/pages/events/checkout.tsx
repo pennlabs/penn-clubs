@@ -5,7 +5,7 @@ import { BaseLayout } from '~/components/BaseLayout'
 import { Container, Metadata, Title } from '~/components/common'
 import CartTickets from '~/components/Tickets/CartTickets'
 import { SNOW } from '~/constants'
-import { EventTicket } from '~/types'
+import { CountedEventTicket, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
@@ -13,14 +13,14 @@ const getBaseProps = createBasePropFetcher()
 
 type CartTicketsResponse = {
   tickets: EventTicket[]
-  soldOut: number
+  sold_out: CountedEventTicket[]
 }
 export const getServerSideProps = (async (ctx) => {
   const data = {
     headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
   }
 
-  const [baseProps, { tickets: initialCart }] = await Promise.all([
+  const [baseProps, { tickets: initialCart, sold_out }] = await Promise.all([
     getBaseProps(ctx),
     doApiRequest('/tickets/cart?format=json', data).then(
       (resp) => resp.json() as Promise<CartTicketsResponse>,
@@ -31,19 +31,24 @@ export const getServerSideProps = (async (ctx) => {
     props: {
       baseProps,
       initialCart,
+      soldOut: sold_out,
     },
   }
 }) satisfies GetServerSideProps
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>
 
-const TicketsCheckoutPage: React.FC<Props> = ({ baseProps, initialCart }) => {
+const TicketsCheckoutPage: React.FC<Props> = ({
+  baseProps,
+  initialCart,
+  soldOut,
+}) => {
   return (
     <BaseLayout {...baseProps} authRequired>
       <Metadata title="Checkout" />
       <Container background={SNOW} fullHeight>
         <Title>Checkout</Title>
-        <CartTickets tickets={initialCart} />
+        <CartTickets tickets={initialCart} soldOut={soldOut} />
       </Container>
     </BaseLayout>
   )

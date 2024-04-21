@@ -105,6 +105,7 @@ const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
 
 export interface CartTicketsProps {
   tickets: EventTicket[]
+  soldOut: CountedEventTicket[]
 }
 
 /**
@@ -126,7 +127,7 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] =>
     ),
   )
 
-const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
+const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [token, setToken] = useState('')
   const [removeModal, setRemoveModal] = useState<CountedEventTicket | null>(
@@ -137,6 +138,17 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
   useEffect(() => {
     setCountedTickets(combineTickets(tickets))
   }, [tickets])
+
+  useEffect(() => {
+    soldOut.forEach(
+      (ticket) => {
+        toast.error(
+          `${ticket.event.name} - ${ticket.type} is sold out and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
+        )
+      },
+      [soldOut],
+    )
+  })
 
   useEffect(() => {
     if (countedTickets.length === 0) {
