@@ -195,6 +195,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       eventReq.json(),
       buyersReq.json(),
     ])
+
     return {
       props: {
         home: false,
