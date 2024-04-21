@@ -23,4 +23,4 @@ class Command(BaseCommand):
                     "An error was encountered while expiring stale membership invites!"
                 )
             )
-            self.stdout.write(e)
+            self.stdout.write(str(e))
