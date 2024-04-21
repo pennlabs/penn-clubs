@@ -1789,6 +1789,7 @@ class Cart(models.Model):
     owner = models.OneToOneField(
         get_user_model(), related_name="cart", on_delete=models.CASCADE
     )
+    checkout_context = models.CharField(max_length=8297, blank=True, null=True)
 
 
 class TicketManager(models.Manager):
