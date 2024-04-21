@@ -2478,6 +2478,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 {"detail": "Quantities must be specified"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        if not all(isinstance(item, dict) for item in quantities):
+            return Response(
+                {"detail": "Quantities must be a list of dictionaries"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         cart = get_object_or_404(Cart, owner=self.request.user)
 
         for item in quantities:
@@ -4910,10 +4915,12 @@ class TicketViewSet(viewsets.ModelViewSet):
         }
 
         cart_total = sum(
-            ticket.price * (1 - ticket.group_discount)
-            if ticket.group_size
-            and ticket_type_counts[ticket.type] >= ticket.group_size
-            else ticket.price
+            (
+                ticket.price * (1 - ticket.group_discount)
+                if ticket.group_size
+                and ticket_type_counts[ticket.type] >= ticket.group_size
+                else ticket.price
+            )
             for ticket in tickets
         )
 

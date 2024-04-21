@@ -65,11 +65,11 @@ const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
           </span>
           {tickets.map((ticket) => (
             <>
-              <span>{ticket.count} x </span>
-              <span>{ticket.event.name}</span>
-              <span>({ticket.type})</span>
-              <span>${ticket.price}</span>
-              <span>
+              <span key={ticket.id}>{ticket.count} x </span>
+              <span key={ticket.id}>{ticket.event.name}</span>
+              <span key={ticket.id}>({ticket.type})</span>
+              <span key={ticket.id}>${ticket.price}</span>
+              <span key={ticket.id}>
                 ${(Number(ticket.price) * (ticket.count ?? 1)).toFixed(2)}
               </span>
             </>
@@ -153,6 +153,42 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
       })
   }, [countedTickets])
 
+  function handleRemoveTicket(ticket: CountedEventTicket, count?: number) {
+    doApiRequest(
+      `/clubs/${ticket.event.club}/events/${ticket.event.id}/remove_from_cart/`,
+      {
+        method: 'POST',
+        body: {
+          quantities: [
+            {
+              type: ticket.type,
+              // If count is not provided, remove all tickets
+              count: count ?? ticket.count,
+            },
+          ],
+        },
+      },
+    )
+      .then((resp) => resp.json())
+      .then((res) => {
+        if (!res.success) {
+          // eslint-disable-next-line no-console
+          console.error(res.detail)
+          return
+        }
+        // TODO: a less naive approach to updating the cart
+        setCountedTickets(
+          countedTickets
+            .map((t) =>
+              t.id === ticket.id
+                ? { ...t, count: t.count! - (count ?? t.count!) }
+                : t,
+            )
+            .filter((t) => t.count !== 0),
+        )
+      })
+  }
+
   return (
     <>
       <div>
@@ -167,9 +203,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
               <button
                 className="button is-danger"
                 onClick={() => {
-                  setCountedTickets(
-                    countedTickets.filter((t) => t.id !== removeModal!.id),
-                  )
+                  handleRemoveTicket(removeModal!)
                   setRemoveModal(null)
                 }}
               >

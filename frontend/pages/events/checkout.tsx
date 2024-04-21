@@ -11,15 +11,19 @@ import { createBasePropFetcher } from '~/utils/getBaseProps'
 
 const getBaseProps = createBasePropFetcher()
 
+type CartTicketsResponse = {
+  tickets: EventTicket[]
+  soldOut: number
+}
 export const getServerSideProps = (async (ctx) => {
   const data = {
     headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
   }
 
-  const [baseProps, initialCart] = await Promise.all([
+  const [baseProps, { tickets: initialCart }] = await Promise.all([
     getBaseProps(ctx),
-    doApiRequest('/tickets?format=json', data).then(
-      (resp) => resp.json() as Promise<EventTicket[]>,
+    doApiRequest('/tickets/cart?format=json', data).then(
+      (resp) => resp.json() as Promise<CartTicketsResponse>,
     ),
   ])
 
