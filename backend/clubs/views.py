@@ -4831,21 +4831,10 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     items:
                                         type: object
                                         properties:
-                                            id:
-                                                type: integer
                                             event:
-                                                type: object
-                                                properties:
-                                                    id:
-                                                        type: integer
-                                                    name:
-                                                        type: string
+                                                type: integer
                                             type:
                                                 type: string
-                                            owner:
-                                                type: string
-                                            price:
-                                                type: number
                                             count:
                                                 type: integer
         ---
