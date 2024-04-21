@@ -280,7 +280,7 @@ const EventPage: React.FC<EventPageProps> = ({
               },
             ).then((res) => {
               if (res.ok) {
-                toast.success('Tickets purchased successfully')
+                toast.success('Tickets added to cart')
                 setShowTicketModal(false)
               }
             })

@@ -2398,7 +2398,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         quantities = request.data.get("quantities")
         if not quantities:
             return Response(
-                {"detail": "Quantities must be specified"},
+                {"detail": "Quantities must be specified", "success": False},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -2409,7 +2409,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "detail": f"Order exceeds the maximum ticket limit of "
-                    f"{event.ticket_order_limit}."
+                    f"{event.ticket_order_limit}.",
+                    "success": False,
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -2436,7 +2437,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             cart.tickets.add(*tickets[:count])
 
         cart.save()
-        return Response({"detail": "Successfully added to cart"})
+        return Response(
+            {"detail": f"Successfully added {count} to cart", "success": True}
+        )
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
@@ -2469,18 +2472,26 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
+                                success:
+                                    type: boolean
         ---
         """
         event = self.get_object()
         quantities = request.data.get("quantities")
         if not quantities:
             return Response(
-                {"detail": "Quantities must be specified"},
+                {
+                    "detail": "Quantities must be specified",
+                    "success": False,
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if not all(isinstance(item, dict) for item in quantities):
             return Response(
-                {"detail": "Quantities must be a list of dictionaries"},
+                {
+                    "detail": "Quantities must be a list of dictionaries",
+                    "success": False,
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         cart = get_object_or_404(Cart, owner=self.request.user)
@@ -2495,7 +2506,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             cart.tickets.remove(*tickets_to_remove[:count])
 
         cart.save()
-        return Response({"detail": "Successfully removed from cart"})
+        return Response(
+            {"detail": f"Successfully removed {count} from cart", "success": True}
+        )
 
     @action(detail=True, methods=["get"])
     def buyers(self, request, *args, **kwargs):

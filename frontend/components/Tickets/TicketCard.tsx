@@ -8,6 +8,7 @@ import {
   ALLBIRDS_GRAY,
   CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
+  CLUBS_YELLOW,
   HOVER_GRAY,
   HUB_SNOW,
   WHITE,
@@ -258,26 +259,34 @@ export const TicketCard = ({
       </div>
       {editable && (
         <span
-          className="delete"
           css={css`
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             color: ${WHITE};
-            ::before {
-              content: '';
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            background: ${CLUBS_YELLOW};
+            &:hover {
+              background: ${CLUBS_GREY_LIGHT};
             }
-            ::after {
-              content: '';
-            }
+            margin: 0 4px;
           `}
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             setIsEditMode(true)
           }}
         >
-          <Icon className="is-small" name="edit" alt="edit" />
+          <Icon
+            style={{
+              color: 'white',
+              width: '12px',
+            }}
+            className="is-small"
+            name="edit"
+            alt="edit"
+          />
         </span>
       )}
       {removable && (

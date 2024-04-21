@@ -1,5 +1,6 @@
 import { css } from '@emotion/react'
 import React, { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { EmptyState, Modal, Subtitle, Text } from '~/components/common'
 import PaymentForm from '~/components/Tickets/PaymentForm'
@@ -65,11 +66,11 @@ const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
           </span>
           {tickets.map((ticket) => (
             <>
-              <span key={ticket.id}>{ticket.count} x </span>
-              <span key={ticket.id}>{ticket.event.name}</span>
-              <span key={ticket.id}>({ticket.type})</span>
-              <span key={ticket.id}>${ticket.price}</span>
-              <span key={ticket.id}>
+              <span key={`count-${ticket.id}`}>{ticket.count} x </span>
+              <span key={`name-${ticket.id}`}>{ticket.event.name}</span>
+              <span key={`type-${ticket.id}`}>({ticket.type})</span>
+              <span key={`price-${ticket.id}`}>${ticket.price}</span>
+              <span key={`cost-${ticket.id}`}>
                 ${(Number(ticket.price) * (ticket.count ?? 1)).toFixed(2)}
               </span>
             </>
@@ -156,37 +157,54 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
       })
   }, [countedTickets])
 
-  function handleRemoveTicket(ticket: CountedEventTicket, newCount?: number) {
-    doApiRequest(
-      `/clubs/${ticket.event.club}/events/${ticket.event.id}/remove_from_cart/`,
-      {
+  function handleUpdateTicket(ticket: CountedEventTicket, newCount?: number) {
+    let reqPromise
+
+    if (!ticket.count || newCount === ticket.count) {
+      return
+    }
+    if (newCount && newCount > ticket.count) {
+      reqPromise = doApiRequest(`/events/${ticket.event.id}/add_to_cart/`, {
         method: 'POST',
         body: {
           quantities: [
             {
               type: ticket.type,
-              // If count is not provided, remove all tickets
-              count: newCount ?? ticket.count,
+              count: newCount - ticket.count,
             },
           ],
         },
-      },
-    )
+      })
+    } else {
+      reqPromise = doApiRequest(
+        `/events/${ticket.event.id}/remove_from_cart/`,
+        {
+          method: 'POST',
+          body: {
+            quantities: [
+              {
+                type: ticket.type,
+                // If count is not provided, remove all tickets
+                count: newCount ? ticket.count! - newCount : ticket.count,
+              },
+            ],
+          },
+        },
+      )
+    }
+    reqPromise
       .then((resp) => resp.json())
       .then((res) => {
         if (!res.success) {
           // eslint-disable-next-line no-console
-          console.error(res.detail)
+          toast.error(res.detail)
           return
         }
+        toast.success(res.detail)
         // TODO: a less naive approach to updating the cart
         setCountedTickets(
           countedTickets
-            .map((t) =>
-              t.id === ticket.id
-                ? { ...t, count: t.count! - (newCount ?? t.count!) }
-                : t,
-            )
+            .map((t) => (t.id === ticket.id ? { ...t, count: newCount } : t))
             .filter((t) => t.count !== 0),
         )
       })
@@ -251,7 +269,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
               <button
                 className="button is-danger"
                 onClick={() => {
-                  handleRemoveTicket(removeModal!)
+                  handleUpdateTicket(removeModal!)
                   setRemoveModal(null)
                 }}
               >
@@ -277,7 +295,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
               removable
               editable
               onChange={(count) => {
-                handleRemoveTicket(ticket, count)
+                handleUpdateTicket(ticket, count)
               }}
               onRemove={() => {
                 setRemoveModal(ticket)
