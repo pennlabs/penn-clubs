@@ -332,19 +332,15 @@ def hour_to_string_helper(hour):
     return hour_string
 
 
-def validate_transient_token(tt: str) -> Tuple[bool, str]:
+def validate_transient_token(cc: str, tt: str) -> Tuple[bool, str]:
     """Validate the integrity of the transient token using
-    the public key (JWK) obtained from the public key endpoint"""
+    the public key (JWK) obtained from the capture context"""
 
-    cybersource_url = "https://" + settings.CYBERSOURCE_CONFIG["run_environment"]
     try:
-        header, payload, signature = tt.split(".")
-        decoded_header = json.loads(base64.b64decode(header + "=="))
-        kid = decoded_header["kid"]
-        resp = requests.get(f"{cybersource_url}/flex/v2/public-keys/{kid}")
-        if resp.status_code >= 400:
-            raise ApiException(reason=f"Public key retrieval failed {resp.json()}")
-        jwk = resp.json()
+        _, body, _ = cc.split(".")
+        decoded_body = json.loads(base64.b64decode(body + "==="))
+        jwk = decoded_body["flx"]["jwk"]
+
         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
         # This will throw if the key is invalid
         jwt.decode(tt, key=public_key, algorithms=["RS256"])
@@ -4964,6 +4960,11 @@ class TicketViewSet(viewsets.ModelViewSet):
                     reason=f"Received {context} with HTTP status {http_status}",
                 )
 
+            # Tie generated capture context to user cart
+            if cart.checkout_context != context:
+                cart.checkout_context = context
+                cart.save()
+
             # Place hold on tickets for 10 mins
             holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
             tickets.update(
@@ -5016,10 +5017,19 @@ class TicketViewSet(viewsets.ModelViewSet):
             Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
 
-        ok, message = validate_transient_token(tt)
+        cc = cart.checkout_context
+        if cc is None:
+            return Response(
+                {"success": False, "detail": "Associated capture context not found"},
+                status=status.HTTP_500_BAD_REQUEST,
+            )
+
+        ok, message = validate_transient_token(cc, tt)
         if not ok:
             # Cleanup state since the purchase failed
             cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
             return Response(
                 {"success": False, "detail": message},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -5049,6 +5059,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         except ApiException as e:
             # Cleanup state since the purchase failed
             cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
 
             return Response(
                 {
@@ -5076,6 +5088,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         except ApiException as e:
             # Cleanup state since the purchase failed
             cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
 
             return Response(
                 {
@@ -5112,6 +5126,9 @@ class TicketViewSet(viewsets.ModelViewSet):
             ticket.send_confirmation_email()
 
         Ticket.objects.update_holds()
+
+        cart.checkout_context = None
+        cart.save()
 
         return Response(
             {
