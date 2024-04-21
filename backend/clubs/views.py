@@ -4789,7 +4789,16 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     allOf:
                                         - $ref: "#/components/schemas/Ticket"
                                 sold_out:
-                                    type: integer
+                                    type: list
+                                    items:
+                                        type: object
+                                        properties:
+                                            type:
+                                                type: string
+                                            event:
+                                                type: integer
+                                            count:
+                                                type: integer
         ---
         """
 
@@ -4807,12 +4816,11 @@ class TicketViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
-                    "sold_out": 0,
+                    "sold_out": [],
                 },
             )
 
-        sold_out_count = 0
-
+        sold_out_tickets = []
         replacement_tickets = []
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
         for ticket_class in tickets_to_replace.values("type", "event").annotate(
@@ -4826,7 +4834,13 @@ class TicketViewSet(viewsets.ModelViewSet):
                 holder__isnull=True,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            sold_out_count += ticket_class["count"] - tickets.count()
+            sold_out_tickets += [
+                {
+                    "type": ticket_class["type"],
+                    "event": ticket_class["event"],
+                    "count": ticket_class["count"] - tickets.count(),
+                }
+            ]
             replacement_tickets.extend(list(tickets))
 
         cart.tickets.remove(*tickets_to_replace)
@@ -4837,7 +4851,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
-                "sold_out": sold_out_count,
+                "sold_out": sold_out_tickets,
             },
         )
 
