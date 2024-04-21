@@ -922,3 +922,59 @@ class TicketTestCase(TestCase):
             # Hold cancelled
             held_tickets = Ticket.objects.filter(holder=self.user1)
             self.assertEqual(held_tickets.count(), 0, held_tickets)
+
+    def test_transfer_ticket(self):
+        self.client.login(username=self.user1.username, password="test")
+        ticket = self.tickets1[0]
+
+        # fail to transfer when not owned
+        resp = self.client.post(
+            reverse("tickets-transfer", args=(ticket.id,)),
+            {"username": self.user2.username},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 404, resp.content)
+
+        ticket.owner = self.user1
+        ticket.save()
+
+        # successful transfer when owned
+        resp = self.client.post(
+            reverse("tickets-transfer", args=(ticket.id,)),
+            {"username": self.user2.username},
+            format="json",
+        )
+        ticket.refresh_from_db()
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(ticket.owner, self.user2, ticket.owner)
+
+    def test_transfer_non_transferable_ticket(self):
+        self.client.login(username=self.user1.username, password="test")
+        ticket = self.tickets1[0]
+        ticket.owner = self.user1
+        ticket.transferable = False
+        ticket.save()
+
+        resp = self.client.post(
+            reverse("tickets-transfer", args=(ticket.id,)),
+            {"username": self.user2.username},
+            format="json",
+        )
+        ticket.refresh_from_db()
+
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(ticket.owner, self.user1, ticket.owner)
+
+    def test_transfer_ticket_to_self(self):
+        self.client.login(username=self.user1.username, password="test")
+        ticket = self.tickets1[0]
+        ticket.owner = self.user1
+        ticket.save()
+
+        resp = self.client.post(
+            reverse("tickets-transfer", args=(ticket.id,)),
+            {"username": self.user1.username},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)

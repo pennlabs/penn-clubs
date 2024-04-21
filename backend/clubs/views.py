@@ -188,7 +188,6 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
-    TicketCreationSerializer,
     TicketSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
@@ -2613,7 +2612,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                         group_discount:
                                             type: number
                                             required: false
-                                        transferrable:
+                                        transferable:
                                             type: boolean
                             order_limit:
                                 type: int
@@ -5218,9 +5217,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # checking whether the request's user owns the ticket is handled by the queryset
         ticket = self.get_object()
-        if not ticket.transferrable:
+        if not ticket.transferable:
             return Response(
-                {"detail": "The ticket is non-transferrable"},
+                {"detail": "The ticket is non-transferable"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 

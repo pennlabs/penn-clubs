@@ -1843,7 +1843,7 @@ class Ticket(models.Model):
         blank=True,
     )
     group_size = models.PositiveIntegerField(null=True, blank=True)
-    transferrable = models.BooleanField(default=True)
+    transferable = models.BooleanField(default=True)
     objects = TicketManager()
 
     def get_qr(self):
