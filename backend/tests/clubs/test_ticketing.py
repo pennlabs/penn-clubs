@@ -614,15 +614,77 @@ class TicketTestCase(TestCase):
                 ]
             )
         ) as fake_cap_context:
-            fake_cap_context.return_value = "abcde", 200, None
+            cap_context_data = "abcde"
+            fake_cap_context.return_value = cap_context_data, 200, None
             resp = self.client.post(reverse("tickets-initiate-checkout"))
             self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        # Tickets are held
+        # Capture context should be tied to cart
+        cart = Cart.objects.filter(owner=self.user1).first()
+        self.assertIsNotNone(cart.checkout_context)
+        self.assertEqual(cart.checkout_context, cap_context_data)
+
+        # Tickets should be held
         held_tickets = Ticket.objects.filter(holder=self.user1)
         self.assertEqual(held_tickets.count(), 2, held_tickets)
         self.assertEqual(held_tickets.filter(type="normal").count(), 1, held_tickets)
         self.assertEqual(held_tickets.filter(type="premium").count(), 1, held_tickets)
+
+    def test_initiate_concurrent_checkouts(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Add tickets to cart
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 1},
+                {"type": "premium", "count": 1},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Initiate first checkout
+        cap_context_data = "abc"
+        with patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context:
+            fake_cap_context.return_value = cap_context_data, 200, None
+            resp = self.client.post(reverse("tickets-initiate-checkout"))
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        cart = Cart.objects.filter(owner=self.user1).first()
+        cap_context_1 = cart.checkout_context
+
+        # Initiate second checkout
+        cap_context_data = "def"  # simulate capture context changing between checkouts
+        with patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context:
+            fake_cap_context.return_value = cap_context_data, 200, None
+            resp = self.client.post(reverse("tickets-initiate-checkout"))
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        cart = Cart.objects.filter(owner=self.user1).first()
+        cap_context_2 = cart.checkout_context
+
+        # Stored capture context should change between checkouts
+        self.assertNotEqual(cap_context_1, cap_context_2)
 
     def test_initiate_checkout_fails_with_empty_cart(self):
         self.client.login(username=self.user1.username, password="test")
