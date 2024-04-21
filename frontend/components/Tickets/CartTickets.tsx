@@ -195,17 +195,25 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
   if (countedTickets.length === 0) {
     return (
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-        }}
+        css={css`
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          padding: 1rem;
+          background: ${WHITE};
+          border: 1px solid ${BORDER};
+          border-radius: ${BORDER_RADIUS};
+
+          @media (max-width: 768px) {
+            flex-direction: column;
+          }
+        `}
       >
-        <EmptyState name="empty_cart" />
+        <EmptyState name="empty_cart_two" />
         <div
           style={{
-            width: '24px',
+            padding: '1rem',
           }}
         />
         <div
@@ -217,9 +225,8 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets }) => {
           <Subtitle>Your cart is empty</Subtitle>
           <Text isGray>
             To add tickets to your cart, visit the event page and select the
-            tickets you wish to purchase.
-            <br />
-            If you believe this is an error, please contact support at
+            tickets you wish to purchase. If you believe this is an error,
+            please contact support at
             <a href="mailto:contact@pennlabs.org" className="ml-1">
               contact@pennlabs.org
             </a>
