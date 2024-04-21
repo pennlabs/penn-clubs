@@ -92,14 +92,14 @@ const EventCard = (props: {
               {clipLink(url)}
             </EventLink>
           ))}
-        {(badges?.length > 0 || pinned) && (
+        {(badges.length > 0 || pinned) && (
           <div className="tags mt-2">
             {pinned && (
               <span className="tag is-primary">
                 <Icon name="map-pin" className="mr-1" /> Pinned
               </span>
             )}
-            {badges?.map(({ id, label }) => (
+            {badges.map(({ id, label }) => (
               <span key={id} className="tag is-info">
                 {label}
               </span>
