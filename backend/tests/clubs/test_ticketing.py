@@ -554,7 +554,8 @@ class TicketTestCase(TestCase):
         self.assertEqual(len(data["tickets"]), 5, data)
         for t1, t2 in zip(data["tickets"], tickets_to_add):
             self.assertEqual(t1["id"], str(t2.id))
-        self.assertEqual(data["sold_out"], 0, data)
+        num_sold_out = sum(item["count"] for item in data["sold_out"])
+        self.assertEqual(num_sold_out, 0, data)
 
     def test_calculate_cart_total(self):
         # Add a few tickets to cart
@@ -616,7 +617,8 @@ class TicketTestCase(TestCase):
 
         # The cart still has 5 tickets: just replaced with available ones
         self.assertEqual(len(data["tickets"]), 5, data)
-        self.assertEqual(data["sold_out"], 0, data)
+        num_sold_out = sum(item["count"] for item in data["sold_out"])
+        self.assertEqual(num_sold_out, 0, data)
 
         in_cart = set(map(lambda t: t["id"], data["tickets"]))
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
@@ -648,7 +650,8 @@ class TicketTestCase(TestCase):
         self.assertEqual(len(data["tickets"]), 3, data)
 
         # 2 tickets have been sold out
-        self.assertEqual(data["sold_out"], 2, data)
+        num_sold_out = sum(item["count"] for item in data["sold_out"])
+        self.assertEqual(num_sold_out, 2, data)
 
         in_cart = set(map(lambda t: t["id"], data["tickets"]))
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
