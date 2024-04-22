@@ -4863,34 +4863,40 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
             )
 
-        sold_out_tickets = []
-        replacement_tickets = []
+        sold_out_tickets, replacement_tickets = [], []
+
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
+        event_dict = {
+            event["id"]: event["name"]
+            for event in Event.objects.filter(
+                id__in=tickets_to_replace.values_list("event", flat=True).distinct()
+            ).values("id", "name")
+        }
 
         for ticket_class in tickets_to_replace.values("type", "event").annotate(
             count=Count("id")
         ):
-            # We don't need to lock since we aren't updating holder/owner
-            tickets = Ticket.objects.filter(
+            available_tickets = Ticket.objects.filter(
                 event=ticket_class["event"],
                 type=ticket_class["type"],
                 owner__isnull=True,
                 holder__isnull=True,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            if tickets.count() < ticket_class["count"]:
+            available_count = available_tickets.count()
+            if available_count < ticket_class["count"]:
                 sold_out_tickets.append(
                     {
                         **ticket_class,
                         "event": {
                             "id": ticket_class["event"],
-                            "name": Event.objects.get(id=ticket_class["event"]).name,
+                            "name": event_dict[ticket_class["event"]],
                         },
-                        "count": ticket_class["count"] - tickets.count(),
+                        "count": ticket_class["count"] - available_count,
                     }
                 )
 
-            replacement_tickets.extend(list(tickets))
+            replacement_tickets.extend(list(available_tickets))
 
         cart.tickets.remove(*tickets_to_replace)
         if replacement_tickets:
