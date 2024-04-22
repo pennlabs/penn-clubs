@@ -129,6 +129,7 @@ export const TicketCard = ({
   return (
     <Card
       className="card"
+      id={`ticket-${ticket.id}`}
       style={{
         ...style,
         display: 'flex',

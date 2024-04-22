@@ -4817,10 +4817,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                                                         type: string
                                             type:
                                                 type: string
-                                            owner:
-                                                type: string
-                                            price:
-                                                type: number
                                             count:
                                                 type: integer
         ---
@@ -4861,6 +4857,12 @@ class TicketViewSet(viewsets.ModelViewSet):
             sold_out_tickets += [
                 {
                     **ticket_class,
+                    "event": {
+                        "id": ticket_class["event"],
+                        # TODO: use prefetch_related for performance + style,
+                        # Couldn't get it to fetch more than the event id somehow
+                        "name": Event.objects.get(id=ticket_class["event"]).name,
+                    },
                     "count": ticket_class["count"] - tickets.count(),
                 }
             ]

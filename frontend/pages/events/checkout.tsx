@@ -3,6 +3,7 @@ import React from 'react'
 
 import { BaseLayout } from '~/components/BaseLayout'
 import { Container, Metadata, Title } from '~/components/common'
+import AuthPrompt from '~/components/common/AuthPrompt'
 import CartTickets from '~/components/Tickets/CartTickets'
 import { SNOW } from '~/constants'
 import { CountedEventTicket, EventTicket } from '~/types'
@@ -30,8 +31,8 @@ export const getServerSideProps = (async (ctx) => {
   return {
     props: {
       baseProps,
-      initialCart,
-      soldOut: sold_out,
+      initialCart: initialCart ?? [],
+      soldOut: sold_out || [],
     },
   }
 }) satisfies GetServerSideProps
@@ -43,6 +44,15 @@ const TicketsCheckoutPage: React.FC<Props> = ({
   initialCart,
   soldOut,
 }) => {
+  if (!baseProps.auth.authenticated) {
+    return (
+      <BaseLayout {...baseProps} authRequired>
+        <Metadata title="Checkout" />
+        <AuthPrompt title="Please sign in for ticketing." />{' '}
+      </BaseLayout>
+    )
+  }
+
   return (
     <BaseLayout {...baseProps} authRequired>
       <Metadata title="Checkout" />
