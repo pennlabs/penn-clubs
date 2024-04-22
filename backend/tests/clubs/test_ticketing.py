@@ -268,6 +268,21 @@ class TicketEventTestCase(TestCase):
             data["available"],
         )
 
+    def test_get_tickets_before_drop_time(self):
+        self.event1.ticket_drop_time = timezone.now() + timedelta(days=1)
+        self.event1.save()
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = resp.json()
+
+        # Tickets shouldn't be available before the drop time
+        self.assertEqual(data["totals"], [])
+        self.assertEqual(data["available"], [])
+
     def test_get_tickets_buyers(self):
         self.client.login(username=self.user1.username, password="test")
 

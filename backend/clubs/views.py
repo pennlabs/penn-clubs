@@ -2577,6 +2577,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
+        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+            return Response({"totals": [], "available": []})
+
         # Take price of first ticket of given type for now
         totals = (
             tickets.values("type")
