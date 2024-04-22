@@ -15,6 +15,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
+from django.core.signing import Signer
 from django.core.validators import validate_email
 from django.db import models, transaction
 from django.db.models import Sum
@@ -1863,6 +1864,7 @@ class Ticket(models.Model):
         blank=True,
         null=True,
     )
+    attended = models.BooleanField(default=False)
     objects = TicketManager()
 
     def get_qr(self):
@@ -1872,8 +1874,9 @@ class Ticket(models.Model):
         if not self.owner:
             return None
 
-        url = f"https://{settings.DOMAINS[0]}/api/tickets/{self.id}"
-        qr_image = qrcode.make(url, box_size=20, border=0)
+        signer = Signer()
+        token = signer.sign_object({"owner": self.owner.id, "ticket_id": str(self.id)})
+        qr_image = qrcode.make(token, box_size=20, border=0)
         return qr_image
 
     def send_confirmation_email(self):
