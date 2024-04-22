@@ -5168,6 +5168,19 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         Validate a ticket's QR code and mark attendance. Only accessible via B2B IPC.
         ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                            token:
+                                type: string
+                        required:
+                            - username
+                            - token
         responses:
             "200":
                 content:
