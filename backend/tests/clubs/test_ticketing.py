@@ -662,7 +662,10 @@ class TicketTestCase(TestCase):
         # 2 normal tickets should be sold out
         expected_sold_out = {
             "type": self.tickets1[0].type,
-            "event": self.tickets1[0].event.id,
+            "event": {
+                "id": self.tickets1[0].event.id,
+                "name": self.tickets1[0].event.name,
+            },
             "count": 2,
         }
         for key, val in expected_sold_out.items():
