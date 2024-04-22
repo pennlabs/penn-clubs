@@ -2646,6 +2646,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
         ---
         """
         event = self.get_object()
