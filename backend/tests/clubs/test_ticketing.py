@@ -831,7 +831,7 @@ class TicketTestCase(TestCase):
             self.assertIn(resp.status_code, [200, 201], resp.content)
             self.assertIn("Payment successful", resp.data["detail"], resp.data)
 
-            # Ownership transfered
+            # Ownership transferred
             owned_tickets = Ticket.objects.filter(owner=self.user1)
             self.assertEqual(owned_tickets.count(), 2, owned_tickets)
 
@@ -879,7 +879,7 @@ class TicketTestCase(TestCase):
             self.assertEqual(resp.status_code, 403, resp.content)
             self.assertIn("Cart is stale", resp.data["detail"], resp.content)
 
-            # Ownership not transfered
+            # Ownership not transferred
             owned_tickets = Ticket.objects.filter(owner=self.user1)
             self.assertEqual(owned_tickets.count(), 0, owned_tickets)
 
@@ -913,7 +913,7 @@ class TicketTestCase(TestCase):
             self.assertEqual(resp.status_code, 500, resp.content)
             self.assertIn("Validation failed", resp.data["detail"], resp.content)
 
-            # Ownership not transfered
+            # Ownership not transferred
             owned_tickets = Ticket.objects.filter(owner=self.user1)
             self.assertEqual(owned_tickets.count(), 0, owned_tickets)
 
@@ -956,7 +956,7 @@ class TicketTestCase(TestCase):
             self.assertIn("Transaction failed", resp.data["detail"], resp.content)
             self.assertIn("HTTP status 400", resp.data["detail"], resp.content)
 
-            # Ownership not transfered
+            # Ownership not transferred
             owned_tickets = Ticket.objects.filter(owner=self.user1)
             self.assertEqual(owned_tickets.count(), 0, owned_tickets)
 
