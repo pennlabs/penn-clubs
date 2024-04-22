@@ -2876,7 +2876,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                         if "fair" in self.request.query_params
                         else Badge.objects.filter(visible=True)
                     ),
-                )
+                ),
+                "tickets",
             )
             .order_by("start_time")
         )
