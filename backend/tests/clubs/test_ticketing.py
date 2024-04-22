@@ -155,6 +155,35 @@ class TicketEventTestCase(TestCase):
             self.assertIn(resp.status_code, [400], resp.content)
             self.assertEqual(Ticket.objects.filter(type__contains="_").count(), 0, data)
 
+    def test_create_ticket_offerings_group_discounts(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        group_size, group_discount = 2, 0.5
+        args = {
+            "quantities": [
+                {
+                    "type": "_normal",
+                    "count": 20,
+                    "price": 10,
+                    "group_size": group_size,
+                    "group_discount": group_discount,
+                },
+            ]
+        }
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        tickets = Ticket.objects.filter(type="_normal")
+
+        # Created tickets should have correct group size and discount
+        for ticket in tickets:
+            self.assertEqual(ticket.group_size, group_size)
+            self.assertEqual(ticket.group_discount, group_discount)
+
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
         Ticket.objects.all().delete()
@@ -525,7 +554,56 @@ class TicketTestCase(TestCase):
         self.assertEqual(len(data["tickets"]), 5, data)
         for t1, t2 in zip(data["tickets"], tickets_to_add):
             self.assertEqual(t1["id"], str(t2.id))
-        self.assertEqual(data["sold_out"], 0, data)
+        self.assertEqual(len(data["sold_out"]), 0, data)
+
+    def test_calculate_cart_total(self):
+        # Add a few tickets to cart
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        tickets_to_add = self.tickets1[:5]
+        for ticket in tickets_to_add:
+            cart.tickets.add(ticket)
+        cart.save()
+
+        expected_total = sum(t.price for t in tickets_to_add)
+
+        from clubs.views import TicketViewSet
+
+        actual_total = TicketViewSet._calculate_cart_total(cart)
+        self.assertEqual(actual_total, expected_total)
+
+    def test_calculate_cart_total_with_group_discount(self):
+        # Create tickets with group discount
+        tickets = [
+            Ticket.objects.create(
+                type="group",
+                event=self.event1,
+                price=10.0,
+                group_size=2,
+                group_discount=0.2,
+            )
+            for _ in range(10)
+        ]
+
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        from clubs.views import TicketViewSet
+
+        # Add 1 ticket, shouldn't activate group discount
+        cart.tickets.add(tickets[0])
+        cart.save()
+
+        total = TicketViewSet._calculate_cart_total(cart)
+        self.assertEqual(total, 10.0)  # 1 * price=10 = 10
+
+        # Add 4 more tickets, enough to activate group discount
+        tickets_to_add = tickets[1:5]
+        for ticket in tickets_to_add:
+            cart.tickets.add(ticket)
+        cart.save()
+
+        self.assertEqual(cart.tickets.count(), 5)
+
+        total = TicketViewSet._calculate_cart_total(cart)
+        self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
 
     def test_get_cart_replacement_required(self):
         self.client.login(username=self.user1.username, password="test")
@@ -547,7 +625,7 @@ class TicketTestCase(TestCase):
 
         # The cart still has 5 tickets: just replaced with available ones
         self.assertEqual(len(data["tickets"]), 5, data)
-        self.assertEqual(data["sold_out"], 0, data)
+        self.assertEqual(len(data["sold_out"]), 0, data)
 
         in_cart = set(map(lambda t: t["id"], data["tickets"]))
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
@@ -578,13 +656,24 @@ class TicketTestCase(TestCase):
         # The cart now has 3 tickets
         self.assertEqual(len(data["tickets"]), 3, data)
 
-        # 2 tickets have been sold out
-        self.assertEqual(data["sold_out"], 2, data)
+        # Only 1 type of ticket should be sold out
+        self.assertEqual(len(data["sold_out"]), 1, data)
 
-        in_cart = set(map(lambda t: t["id"], data["tickets"]))
-        to_add = set(map(lambda t: str(t.id), tickets_to_add))
+        # 2 normal tickets should be sold out
+        expected_sold_out = {
+            "type": self.tickets1[0].type,
+            "event": {
+                "id": self.tickets1[0].event.id,
+                "name": self.tickets1[0].event.name,
+            },
+            "count": 2,
+        }
+        for key, val in expected_sold_out.items():
+            self.assertEqual(data["sold_out"][0][key], val, data)
 
         # 0 tickets are the same (we sell all but last 3)
+        in_cart = set(map(lambda t: t["id"], data["tickets"]))
+        to_add = set(map(lambda t: str(t.id), tickets_to_add))
         self.assertEqual(len(in_cart & to_add), 0, in_cart | to_add)
 
     def test_initiate_checkout(self):
@@ -720,6 +809,7 @@ class TicketTestCase(TestCase):
             held_tickets = Ticket.objects.filter(holder=self.user1)
             self.assertEqual(held_tickets.count(), 2, held_tickets)
 
+            # Complete checkout
             resp = self.client.post(
                 reverse("tickets-complete-checkout"),
                 {"transient_token": "abcdefg"},
@@ -741,9 +831,10 @@ class TicketTestCase(TestCase):
             self.assertEqual(held_tickets.count(), 0, held_tickets)
 
             # Transaction record created
-            TicketTransactionRecord.objects.filter(
+            record_exists = TicketTransactionRecord.objects.filter(
                 reconciliation_id=MockPaymentResponse().reconciliation_id
             ).exists()
+            self.assertTrue(record_exists)
 
     def test_complete_checkout_stale_cart(self):
         self.client.login(username=self.user1.username, password="test")

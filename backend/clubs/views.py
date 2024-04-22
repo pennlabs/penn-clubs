@@ -2632,6 +2632,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             required: false
                                         group_discount:
                                             type: number
+                                            format: float
                                             required: false
                             order_limit:
                                 type: int
@@ -4782,6 +4783,30 @@ class TicketViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
     lookup_field = "id"
 
+    @staticmethod
+    def _calculate_cart_total(cart) -> float:
+        """
+        Calculate the total price of all tickets in a cart, applying discounts
+        where appropriate. Does not validate that the cart is valid.
+
+        :param cart: Cart object
+        :return: Total price of all tickets in the cart
+        """
+        ticket_type_counts = {
+            item["type"]: item["count"]
+            for item in cart.tickets.values("type").annotate(count=Count("type"))
+        }
+        cart_total = sum(
+            (
+                ticket.price * (1 - ticket.group_discount)
+                if ticket.group_size
+                and ticket_type_counts[ticket.type] >= ticket.group_size
+                else ticket.price
+            )
+            for ticket in cart.tickets.all()
+        )
+        return cart_total
+
     @transaction.atomic
     @update_holds
     @action(detail=False, methods=["get"])
@@ -4802,12 +4827,10 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     allOf:
                                         - $ref: "#/components/schemas/Ticket"
                                 sold_out:
-                                    type: list
+                                    type: array
                                     items:
                                         type: object
                                         properties:
-                                            id:
-                                                type: integer
                                             event:
                                                 type: object
                                                 properties:
@@ -4843,6 +4866,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         sold_out_tickets = []
         replacement_tickets = []
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
+
         for ticket_class in tickets_to_replace.values("type", "event").annotate(
             count=Count("id")
         ):
@@ -4854,18 +4878,18 @@ class TicketViewSet(viewsets.ModelViewSet):
                 holder__isnull=True,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            sold_out_tickets += [
-                {
-                    **ticket_class,
-                    "event": {
-                        "id": ticket_class["event"],
-                        # TODO: use prefetch_related for performance + style,
-                        # Couldn't get it to fetch more than the event id somehow
-                        "name": Event.objects.get(id=ticket_class["event"]).name,
-                    },
-                    "count": ticket_class["count"] - tickets.count(),
-                }
-            ]
+            if tickets.count() < ticket_class["count"]:
+                sold_out_tickets.append(
+                    {
+                        **ticket_class,
+                        "event": {
+                            "id": ticket_class["event"],
+                            "name": Event.objects.get(id=ticket_class["event"]).name,
+                        },
+                        "count": ticket_class["count"] - tickets.count(),
+                    }
+                )
+
             replacement_tickets.extend(list(tickets))
 
         cart.tickets.remove(*tickets_to_replace)
@@ -4947,21 +4971,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Calculate cart total, applying group discounts where appropriate
-        ticket_type_counts = {
-            item["type"]: item["count"]
-            for item in cart.tickets.values("type").annotate(count=Count("type"))
-        }
-
-        cart_total = sum(
-            (
-                ticket.price * (1 - ticket.group_discount)
-                if ticket.group_size
-                and ticket_type_counts[ticket.type] >= ticket.group_size
-                else ticket.price
-            )
-            for ticket in tickets
-        )
+        cart_total = self._calculate_cart_total(cart)
 
         if not cart_total:
             return Response(
