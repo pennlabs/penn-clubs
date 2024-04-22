@@ -236,7 +236,6 @@ class TicketEventTestCase(TestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, 403, resp.content)
-        print("we made it bitch")
 
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
