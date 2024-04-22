@@ -162,7 +162,9 @@ class TicketEventTestCase(TestCase):
                 {"type": "_normal", "count": 20, "price": 10},
                 {"type": "_premium", "count": 10, "price": 20},
             ],
-            "delay_drop": True,
+            "drop_time": (timezone.now() + timezone.timedelta(hours=12)).strftime(
+                "%Y-%m-%dT%H:%M:%S%z"
+            ),
         }
         _ = self.client.put(
             reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
@@ -190,6 +192,51 @@ class TicketEventTestCase(TestCase):
 
             # Tickets shouldn't be editable after drop time has elapsed
             self.assertEqual(resp.status_code, 403, resp.content)
+
+    def test_create_ticket_offerings_already_owned_or_held(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Create ticket offerings
+        args = {
+            "quantities": [
+                {"type": "_normal", "count": 5, "price": 10},
+                {"type": "_premium", "count": 3, "price": 20},
+            ],
+        }
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Simulate checkout by applying holds
+        for ticket in Ticket.objects.filter(type="_normal"):
+            ticket.holder = self.user1
+            ticket.save()
+
+        # Recreating tickets should fail
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Simulate purchase by transferring ownership
+        for ticket in Ticket.objects.filter(type="_normal", holder=self.user1):
+            ticket.owner = self.user1
+            ticket.holder = None
+            ticket.save()
+
+        # Recreating tickets should fail
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        print("we made it bitch")
 
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets

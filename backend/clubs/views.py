@@ -2625,8 +2625,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             order_limit:
                                 type: int
                                 required: false
-                            delay_drop:
-                                type: boolean
+                            drop_time:
+                                type: string
+                                format: date-time
                                 required: false
         responses:
             "200":
@@ -2653,6 +2654,20 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
             return Response(
                 {"detail": "Tickets cannot be edited after they have dropped"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Tickets can't be edited after they've been sold
+        if (
+            Ticket.objects.filter(event=event)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            return Response(
+                {
+                    "detail": "Tickets cannot be edited after they have been "
+                    "sold or checked out"
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -2724,9 +2739,23 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_order_limit = order_limit
             event.save()
 
-        delay_drop = request.data.get("delay_drop", None)
-        if delay_drop is not None:
-            event.ticket_drop_time = timezone.now() + timezone.timedelta(hours=12)
+        drop_time = request.data.get("drop_time", None)
+        if drop_time is not None:
+            try:
+                drop_time = datetime.datetime.strptime(drop_time, "%Y-%m-%dT%H:%M:%S%z")
+            except ValueError as e:
+                return Response(
+                    {"detail": f"Invalid drop time: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if drop_time < timezone.now():
+                return Response(
+                    {"detail": "Specified drop time has already elapsed"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            event.ticket_drop_time = drop_time
             event.save()
 
         return Response({"detail": "success"})
