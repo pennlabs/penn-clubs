@@ -140,15 +140,17 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   }, [tickets])
 
   useEffect(() => {
-    soldOut.forEach(
-      (ticket) => {
-        toast.error(
-          `${ticket.event.name} - ${ticket.type} is sold out and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
-        )
-      },
-      [soldOut],
-    )
-  })
+    soldOut
+      .filter((ticket) => ticket.count !== 0)
+      .forEach(
+        (ticket) => {
+          toast.error(
+            `${ticket.event.name} - ${ticket.type} is sold out and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
+          )
+        },
+        [soldOut],
+      )
+  }, [])
 
   useEffect(() => {
     if (countedTickets.length === 0) {

@@ -4873,10 +4873,14 @@ class TicketViewSet(viewsets.ModelViewSet):
                 holder__isnull=True,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            if tickets.count() < ticket_class["count"]:
+            if tickets.count() < ticket_class["count"]: 
                 sold_out_tickets.append(
                     {
-                        **ticket_class,
+                        **ticket_class, 
+                        "event": {
+                            "id": ticket_class["event"],
+                            "name": Event.objects.get(id=ticket_class["event"]).name,
+                        },
                         "count": ticket_class["count"] - tickets.count(),
                     }
                 )
