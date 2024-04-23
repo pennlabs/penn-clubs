@@ -156,10 +156,11 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
       )
   }, [])
 
-  useEffect(() => {
+  function handleInitiateCheckout() {
     if (countedTickets.length === 0) {
       return
     }
+    setShowPaymentForm(true)
     doApiRequest(`/tickets/initiate_checkout/?format=json`, {
       method: 'POST',
       body: { tickets: countedTickets },
@@ -173,7 +174,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
         }
         setToken(res.detail)
       })
-  }, [countedTickets])
+  }
 
   function handleUpdateTicket(ticket: CountedEventTicket, newCount?: number) {
     let reqPromise
@@ -326,7 +327,9 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
         <Summary tickets={countedTickets} />
         <button
           className="button is-primary is-fullwidth mt-4"
-          onClick={() => setShowPaymentForm(true)}
+          onClick={() => {
+            handleInitiateCheckout()
+          }}
         >
           Proceed to Checkout
         </button>
