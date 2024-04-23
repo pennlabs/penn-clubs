@@ -1,7 +1,7 @@
 import { css } from '@emotion/react'
 import { Center, Container, Icon, Metadata } from 'components/common'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
-import { ReactElement, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
@@ -146,25 +146,25 @@ type TicketCardProps = {
   buyersPerm: boolean
 }
 
-const TicketIssueInput = () => {
-  const [tags, setTags] = useState([] as string[])
-  const [input, setInput] = useState('')
+const splitString = (s: string) =>
+  s
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .split(/, +|,| +/)
+    .filter((v) => v.length > 0)
 
-  const splitString = (string) => {
-    return string
-      .trim()
-      .replace(/[^a-zA-Z0-9]+/g, ' ')
-      .split(/, +|,| +/)
-      .filter((v) => v.length > 0)
-  }
+// TODO: make generic component
+const TicketIssueInput = () => {
+  const [tags, setTags] = useState<string[]>([])
+  const [input, setInput] = useState<string>()
 
   const handleInputChange = (newValues) => {
-    const newTags = newValues.map((v) => splitString(v.value)).flat()
+    const newTags = newValues.flatMap((v) => splitString(v.value))
     setTags(newTags)
   }
 
-  const handleInputKeyDown = (e) => {
-    const val = input.trim()
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const val = input?.trim()
     if ((e.key === 'Enter' || e.key === ',') && val) {
       e.preventDefault()
       const vals = splitString(val)
