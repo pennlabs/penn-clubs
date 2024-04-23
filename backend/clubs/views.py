@@ -2686,7 +2686,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Tickets can't be edited after they've been sold
+        # Tickets can't be edited after they've been sold or held
         if (
             Ticket.objects.filter(event=event)
             .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
@@ -2795,7 +2795,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     @update_holds
     def issue_tickets(self, request, *args, **kwargs):
         """
-        Issue tickets to users based on their pennkeys and ticket classes.
+        Issue tickets that have already been created to users in bulk.
         ---
         requestBody:
             content:
@@ -2810,7 +2810,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     properties:
                                         username:
                                             type: string
-                                        ticket_class:
+                                        ticket_type:
                                             type: string
 
         responses:
@@ -2843,21 +2843,20 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             )
 
         for item in quantities:
-            if not item.get("username") or not item.get("ticket_class"):
+            if not item.get("username") or not item.get("ticket_type"):
                 return Response(
-                    {"detail": "Specify username and ticket class to issue a ticket"},
+                    {"detail": "Specify username and ticket type to issue tickets"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
         usernames = [item.get("username") for item in quantities]
-        ticket_classes = [item.get("ticket_class") for item in quantities]
+        ticket_types = [item.get("ticket_type") for item in quantities]
 
-        # Check that requested usernames are valid
+        # Validate all usernames
         invalid_users = set(usernames) - set(
             get_user_model()
             .objects.filter(username__in=usernames)
             .values_list("username", flat=True)
-            .distinct()
         )
         if invalid_users:
             return Response(
@@ -2865,88 +2864,57 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check that requested ticket classes are valid
-        invalid_classes = set(ticket_classes) - set(
-            Ticket.objects.filter(event=event).values_list("type", flat=True).distinct()
+        # Validate all ticket types
+        invalid_types = set(ticket_types) - set(
+            Ticket.objects.filter(event=event).values_list("type", flat=True)
         )
-        if invalid_classes:
+        if invalid_types:
             return Response(
-                {"detail": f"Invalid ticket classes: {', '.join(invalid_classes)}"},
+                {"detail": f"Invalid ticket classes: {', '.join(invalid_types)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        ticket_class_counts = collections.defaultdict(int)
-        for ticket_class in ticket_classes:
-            ticket_class_counts[ticket_class] += 1
+        tickets = []
+        for ticket_type, num_requested in collections.Counter(ticket_types).items():
+            available_tickets = Ticket.objects.select_for_update(
+                skip_locked=True
+            ).filter(
+                event=event, type=ticket_type, owner__isnull=True, holder__isnull=True
+            )[:num_requested]
 
-        tickets_to_allocate = []
-
-        with transaction.atomic():
-            for ticket_class, count in ticket_class_counts.items():
-                available_tickets = Ticket.objects.select_for_update(
-                    skip_locked=True
-                ).filter(
-                    event=event,
-                    type=ticket_class,
-                    owner__isnull=True,
-                    holder__isnull=True,
-                )[:count]
-
-                if available_tickets.count() < count:
-                    return Response(
-                        {
-                            "detail": "Not enough tickets "
-                            "available for class {ticket_class}"
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-                tickets_to_allocate.extend(available_tickets)
-
-            # Update holder for all allocated tickets
-            Ticket.objects.filter(
-                id__in=[ticket.id for ticket in tickets_to_allocate]
-            ).update(holder=request.user)
-
-        for username, ticket_class in zip(usernames, ticket_classes):
-            receiver = get_user_model().objects.get(username=username)
-
-            ticket_for_user = next(
-                (
-                    ticket
-                    for ticket in tickets_to_allocate
-                    if ticket.type == ticket_class
-                ),
-                None,
-            )
-            if ticket_for_user:
-                tickets_to_allocate.remove(ticket_for_user)
-
-            if not ticket_for_user:
+            if available_tickets.count() < num_requested:
                 return Response(
-                    {
-                        "detail": "No ticket available for "
-                        "{username} in class {ticket_class}"
-                    },
+                    {"detail": f"Not enough tickets available for type: {ticket_type}"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # create transaction record
-            TicketTransactionRecord.objects.create(
-                ticket=ticket_for_user,
-                buyer_first_name=receiver.first_name,
-                buyer_last_name=receiver.last_name,
-                buyer_email=receiver.email,
-                reconciliation_id=None,
+            tickets.extend(available_tickets)
+
+        # Hold all selected tickets for 10 mins
+        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+        Ticket.objects.filter(id__in=[ticket.id for ticket in tickets]).update(
+            holder=self.request.user, holding_expiration=holding_expiration
+        )
+
+        # Assign tickets to users
+        for username, ticket_type in zip(usernames, ticket_types):
+            user = get_user_model().objects.filter(username=username).first()
+            ticket = next(
+                ticket
+                for ticket in tickets
+                if ticket.type == ticket_type and ticket.owner is None
             )
+            ticket.owner = user
+            ticket.holder = None
 
-            # release hold and transfer ownership
-            ticket_for_user.owner = receiver
-            ticket_for_user.holder = None
-            ticket_for_user.save()
-            ticket_for_user.send_confirmation_email()
+        Ticket.objects.bulk_update(tickets, ["owner", "holder"])
 
-        return Response({"detail": "success"})
+        for ticket in tickets:
+            ticket.send_confirmation_email()
+
+        Ticket.objects.update_holds()
+
+        return Response({"success": True, "detail": "success"})
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
