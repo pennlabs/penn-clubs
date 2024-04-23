@@ -150,10 +150,16 @@ const TicketIssueInput = () => {
   const [tags, setTags] = useState([] as string[])
   const [input, setInput] = useState('')
 
+  const splitString = (string) => {
+    return string
+      .trim()
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .split(/, +|,| +/)
+      .filter((v) => v.length > 0)
+  }
+
   const handleInputChange = (newValues) => {
-    const newTags = newValues
-      .map((val) => val.value.trim().split(/, +|,| +/))
-      .flat()
+    const newTags = newValues.map((v) => splitString(v.value)).flat()
     setTags(newTags)
   }
 
@@ -161,7 +167,7 @@ const TicketIssueInput = () => {
     const val = input.trim()
     if ((e.key === 'Enter' || e.key === ',') && val) {
       e.preventDefault()
-      const vals = val.trim().split(/, +|,| +/)
+      const vals = splitString(val)
       setTags([...tags, ...vals])
       setInput('')
     }
