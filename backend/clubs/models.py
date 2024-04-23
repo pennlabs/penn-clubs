@@ -925,6 +925,7 @@ class Event(models.Model):
         RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
     )
     ticket_order_limit = models.IntegerField(default=10)
+    ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -1789,6 +1790,8 @@ class Cart(models.Model):
     owner = models.OneToOneField(
         get_user_model(), related_name="cart", on_delete=models.CASCADE
     )
+    # Capture context from Cybersource should be 8297 chars
+    checkout_context = models.CharField(max_length=8297, blank=True, null=True)
 
 
 class TicketManager(models.Manager):
@@ -1805,19 +1808,6 @@ class TicketManager(models.Manager):
             for ticket in expired_tickets:
                 ticket.holder = None
             self.bulk_update(expired_tickets, ["holder"])
-
-
-class TicketTransactionRecord(models.Model):
-    """
-    Represents an instance of a transaction record for an ticket, used for bookkeeping
-    """
-
-    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    buyer_phone = PhoneNumberField(null=True, blank=True)
-    buyer_first_name = models.CharField(max_length=100)
-    buyer_last_name = models.CharField(max_length=100)
-    buyer_email = models.EmailField(blank=True, null=True)
 
 
 class Ticket(models.Model):
@@ -1854,13 +1844,7 @@ class Ticket(models.Model):
         blank=True,
     )
     group_size = models.PositiveIntegerField(null=True, blank=True)
-    transaction_record = models.ForeignKey(
-        TicketTransactionRecord,
-        related_name="tickets",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
+    transferable = models.BooleanField(default=True)
     objects = TicketManager()
 
     def get_qr(self):
@@ -1901,6 +1885,66 @@ class Ticket(models.Model):
                 emails=[owner.email],
                 context=context,
             )
+
+
+class TicketTransactionRecord(models.Model):
+    """
+    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    """
+
+    ticket = models.ForeignKey(
+        Ticket, related_name="transaction_records", on_delete=models.PROTECT
+    )
+    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+    buyer_first_name = models.CharField(max_length=100)
+    buyer_last_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField(blank=True, null=True)
+
+
+class TicketTransferRecord(models.Model):
+    """
+    Represents a transfer of ticket ownership, used for bookkeeping
+    """
+
+    ticket = models.ForeignKey(
+        Ticket, related_name="transfer_records", on_delete=models.PROTECT
+    )
+    sender = models.ForeignKey(
+        get_user_model(),
+        related_name="sent_transfers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    receiver = models.ForeignKey(
+        get_user_model(),
+        related_name="received_transfers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def send_confirmation_email(self):
+        """
+        Send confirmation email to the sender and recipient of the transfer.
+        """
+        context = {
+            "sender_first_name": self.sender.first_name,
+            "receiver_first_name": self.receiver.first_name,
+            "receiver_username": self.receiver.username,
+            "event_name": self.ticket.event.name,
+            "type": self.ticket.event.type,
+        }
+
+        send_mail_helper(
+            name="ticket_transfer",
+            subject=f"Ticket transfer confirmation for {self.ticket.event.name}",
+            emails=[self.sender.email, self.receiver.email],
+            context=context,
+        )
 
 
 @receiver(models.signals.pre_delete, sender=Asset)

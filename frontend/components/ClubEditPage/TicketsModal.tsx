@@ -51,40 +51,40 @@ const notify = (
   toast[type](msg)
 }
 
-const TicketItem = ({
-  ticket,
-  changeName,
-  changeCount,
-  changePrice,
-  deleteTicket,
+type TicketItemProps = {
+  ticket: Ticket
+  onChange?: (ticket: Ticket) => void
+  onDelete?: () => void
+  deletable: boolean
+}
+
+const TicketItem: React.FC<TicketItemProps> = ({
+  ticket: propTicket,
+  onChange,
+  onDelete,
   deletable,
-  index,
-}): ReactElement => {
-  const [name, setName] = useState(ticket.name)
-  const [count, setCount] = useState(ticket.count)
-  const [price, setPrice] = useState(ticket.price)
+}) => {
+  const [ticket, setTicket] = useState(propTicket)
+  const [openGroupDiscount, setOpenGroupDiscount] = useState(false)
 
-  const handleNameChange = (e) => {
-    setName(e.target.value)
-    changeName(e.target.value, index)
-  }
-
-  const handleCountChange = (e) => {
-    let rounded = Math.round(parseFloat(e.target.value))
-    rounded = rounded < 0 ? 0 : rounded
-    setCount(rounded.toString())
-    changeCount(rounded.toString(), index)
-  }
-
-  const handlePriceChange = (e) => {
-    let rounded = Math.round(parseFloat(e.target.value) * 100) / 100
-    rounded = rounded < 0 ? 0 : rounded
-    setPrice(rounded.toString())
-    changePrice(rounded.toString(), index)
+  const resetGroupDiscount = () => {
+    setTicket({
+      ...ticket,
+      groupDiscount: null,
+      groupNumber: null,
+    })
+    onChange?.({
+      ...ticket,
+      groupDiscount: null,
+      groupNumber: null,
+    })
+    setOpenGroupDiscount(!openGroupDiscount)
   }
 
   return (
-    <div style={{ padding: '5px 0px' }}>
+    <div
+      style={{ padding: '5px 0px', display: 'flex', flexDirection: 'column' }}
+    >
       <div
         style={{
           display: 'flex',
@@ -95,31 +95,105 @@ const TicketItem = ({
         <Input
           type="text"
           className="input"
-          value={name}
+          value={ticket.name ?? ''}
           placeholder="New Ticket"
-          onChange={handleNameChange}
+          onChange={(e) => {
+            setTicket({ ...ticket, name: e.target.value })
+            onChange?.({ ...ticket, name: e.target.value })
+          }}
         />
         <Input
           type="number"
           className="input"
-          value={count}
+          value={ticket.count ?? ''}
           placeholder="Ticket Count"
-          onChange={handleCountChange}
+          onChange={(e) => {
+            const count = e.target.value
+            setTicket({ ...ticket, count })
+            onChange?.({ ...ticket, count })
+          }}
         />
         <Input
           type="number"
           className="input"
-          value={price}
+          value={ticket.price ?? ''}
           placeholder="Ticket Price"
-          onChange={handlePriceChange}
+          onChange={(e) => {
+            const price = e.target.value
+            setTicket({ ...ticket, price })
+            onChange?.({ ...ticket, price })
+          }}
         />
+
         <button
           className="button is-danger"
           disabled={!deletable}
-          onClick={deleteTicket}
+          onClick={() => onDelete?.()}
         >
           <Icon name="x" alt="delete" />
         </button>
+      </div>
+      <div style={{ height: '12px' }} />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'end',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          {openGroupDiscount ? (
+            <>
+              <div style={{ maxWidth: '75px' }}>
+                <Input
+                  type="number"
+                  className="input is-small"
+                  value={ticket.groupDiscount ?? ''}
+                  placeholder="100"
+                  onChange={(e) => {
+                    const groupDiscount = e.target.value
+                    setTicket({ ...ticket, groupDiscount })
+                    onChange?.({ ...ticket, groupDiscount })
+                  }}
+                />
+              </div>
+              <Text style={{ padding: '0 12px' }}>% Discount for</Text>
+              <div>
+                <Input
+                  type="number"
+                  className="input is-small"
+                  value={ticket.groupNumber ?? ''}
+                  placeholder="Group Number"
+                  onChange={(e) => {
+                    const groupNumber = e.target.value
+                    setTicket({ ...ticket, groupNumber })
+                    onChange?.({ ...ticket, groupNumber })
+                  }}
+                />
+              </div>
+              <button
+                className="button is-info is-small"
+                onClick={resetGroupDiscount}
+              >
+                Delete Discount
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                className="button is-info is-small"
+                onClick={resetGroupDiscount}
+              >
+                Add Group Discount
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -129,46 +203,43 @@ type Ticket = {
   name: string
   count: string | null
   price: string | null // Free if null
+  groupDiscount: string | null // If null, no group discount
+  groupNumber: string | null // If null, no group discount
 }
 
-const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
-  const { event } = props
+const TicketsModal = ({
+  event,
+  onSuccessfulSubmit,
+}: {
+  event: ClubEvent
+  onSuccessfulSubmit: () => void
+}): ReactElement => {
   const { large_image_url, image_url, club_name, name, id } = event
 
   const [submitting, setSubmitting] = useState(false)
 
   const [tickets, setTickets] = useState<Ticket[]>([
-    { name: 'Regular Ticket', count: null, price: null },
+    {
+      name: 'Regular Ticket',
+      count: null,
+      price: null,
+      groupDiscount: null,
+      groupNumber: null,
+    },
   ])
-
-  const handleNameChange = (name, i) => {
-    const ticks = [...tickets]
-    ticks[i].name = name
-    setTickets(ticks)
-  }
-
-  const handleCountChange = (count, i) => {
-    const ticks = [...tickets]
-    ticks[i].count = count
-    setTickets(ticks)
-  }
-
-  const handlePriceChange = (price, i) => {
-    const ticks = [...tickets]
-    ticks[i].price = price
-    setTickets(ticks)
-  }
-
-  const deleteTicket = (i) => {
-    const ticks = [...tickets]
-    ticks.splice(i, 1)
-    setTickets(ticks)
-  }
 
   const addNewTicket = () => {
     const ticks = [...tickets]
-    ticks.push({ name: '', count: null, price: null })
-    setTickets(ticks)
+    setTickets([
+      ...ticks,
+      {
+        name: '',
+        count: null,
+        price: null,
+        groupDiscount: null,
+        groupNumber: null,
+      },
+    ])
   }
 
   const submit = () => {
@@ -176,10 +247,17 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       const quantities = tickets
         .filter((ticket) => ticket.count != null)
         .map((ticket) => {
+          const usingGroupPricing = ticket.groupDiscount && ticket.groupNumber
           return {
             type: ticket.name,
-            count: parseInt(ticket.count || ''),
-            price: parseFloat(ticket.price || ''),
+            count: parseInt(ticket.count ?? '0'),
+            price: parseFloat(ticket.price ?? '0'),
+            groupDiscount: usingGroupPricing
+              ? parseFloat(ticket.groupDiscount!)
+              : null,
+            groupNumber: usingGroupPricing
+              ? parseFloat(ticket.groupNumber!)
+              : null,
           }
         })
       doApiRequest(`/events/${id}/tickets/?format=json`, {
@@ -191,6 +269,7 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
         if (res.ok) {
           notify(<>Tickets Created!</>, 'success')
           setSubmitting(false)
+          onSuccessfulSubmit()
         } else {
           notify(<>Error creating tickets</>, 'error')
           setSubmitting(false)
@@ -207,7 +286,8 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
       parseInt(ticket.count || '0') < 0 ||
       ticket.price === null ||
       !Number.isFinite(parseFloat(ticket.price || '0')) ||
-      parseFloat(ticket.price || '0') < 0,
+      parseFloat(ticket.price || '0') < 0 ||
+      (ticket.groupNumber != null && parseFloat(ticket.price || '0') < 0),
   )
 
   return (
@@ -228,13 +308,17 @@ const TicketsModal = (props: { event: ClubEvent }): ReactElement => {
         <SectionContainer>
           {tickets.map((ticket, index) => (
             <TicketItem
+              key={index}
               ticket={ticket}
-              index={index}
-              deletable={tickets.length !== 1}
-              changeName={handleNameChange}
-              changeCount={handleCountChange}
-              changePrice={handlePriceChange}
-              deleteTicket={deleteTicket}
+              deletable={tickets.length > 1}
+              onChange={(newTicket) => {
+                setTickets((t) =>
+                  t.map((t, i) => (i === index ? newTicket : t)),
+                )
+              }}
+              onDelete={() => {
+                setTickets((t) => t.filter((_, i) => i !== index))
+              }}
             />
           ))}
         </SectionContainer>
