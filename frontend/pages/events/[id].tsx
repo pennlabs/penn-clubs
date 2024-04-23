@@ -170,7 +170,7 @@ const TicketItem: React.FC<TicketItemProps> = ({
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Round to nearest integer and clamp to min/max
     const value = Math.max(
-      0,
+      1,
       Math.min(Math.round(parseFloat(e.target.value)), parseInt(max, 10)),
     )
     setCount(value)
@@ -192,9 +192,9 @@ const TicketItem: React.FC<TicketItemProps> = ({
         <Input
           type="number"
           className="input"
-          min={0}
+          min={1}
           max={max}
-          value={count ?? 0}
+          value={count ?? 1}
           step={1}
           placeholder="Ticket Count"
           onChange={handleCountChange}
