@@ -1105,6 +1105,7 @@ class TicketTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
+
 class TicketModelTestCase(TestCase):
     """
     Test cases related to the models that correspond to the ticketing project:
