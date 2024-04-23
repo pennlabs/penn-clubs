@@ -925,6 +925,7 @@ class Event(models.Model):
         RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
     )
     ticket_order_limit = models.IntegerField(default=10)
+    ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1

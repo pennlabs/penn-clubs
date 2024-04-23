@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("clubs", "0104_cart_checkout_context"),
+        ("clubs", "0105_event_ticket_drop_time"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
