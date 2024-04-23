@@ -4878,7 +4878,8 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def cart(self, request, *args, **kwargs):
         """
-        Validate tickets in a cart and return them
+        Validate tickets in a cart and return them. Replace in-cart tickets that
+        have been bought/held by someone else.
         ---
         requestBody:
             content: {}
@@ -4915,7 +4916,6 @@ class TicketViewSet(viewsets.ModelViewSet):
             owner=self.request.user
         )
 
-        # Replace in-cart tickets that have been bought/held by someone else
         tickets_to_replace = cart.tickets.filter(
             Q(owner__isnull=False) | Q(holder__isnull=False)
         ).exclude(holder=self.request.user)
@@ -4929,43 +4929,37 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
             )
 
-        sold_out_tickets, replacement_tickets = [], []
+        # Attempt to replace all tickets that have gone stale
+        replacement_tickets, sold_out_tickets = [], []
 
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
-        event_dict = {
-            event["id"]: event["name"]
-            for event in Event.objects.filter(
-                id__in=tickets_to_replace.values_list("event", flat=True).distinct()
-            ).values("id", "name")
-        }
+        tickets_to_replace = tickets_to_replace.select_related("event")
 
-        # Process each ticket type and event
-        for ticket_class in tickets_to_replace.values("type", "event").annotate(
-            count=Count("id")
-        ):
-            available_tickets = (
-                Ticket.objects.filter(
-                    event=ticket_class["event"],
-                    type=ticket_class["type"],
-                    owner__isnull=True,
-                    holder__isnull=True,
-                )
-                .exclude(id__in=tickets_in_cart)
-                .select_related("event")[: ticket_class["count"]]
-            )
+        for ticket_class in tickets_to_replace.values(
+            "type", "event", "event__name"
+        ).annotate(count=Count("id")):
+            # we don't need to lock, since we aren't updating holder/owner
+            available_tickets = Ticket.objects.filter(
+                event=ticket_class["event"],
+                type=ticket_class["type"],
+                owner__isnull=True,
+                holder__isnull=True,
+            ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            shortage = ticket_class["count"] - available_tickets.count()
-            if shortage > 0:
+            num_short = ticket_class["count"] - available_tickets.count()
+            if num_short > 0:
                 sold_out_tickets.append(
                     {
-                        **ticket_class,
+                        "type": ticket_class["type"],
                         "event": {
                             "id": ticket_class["event"],
-                            "name": event_dict[ticket_class["event"]],
+                            "name": ticket_class["event__name"],
                         },
-                        "count": shortage,
+                        "count": num_short,
                     }
                 )
+
+            replacement_tickets.extend(list(available_tickets))
 
         cart.tickets.remove(*tickets_to_replace)
         if replacement_tickets:
