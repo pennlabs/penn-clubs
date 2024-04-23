@@ -13,7 +13,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "jsxImportSource": "@emotion/react",
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "strictBindCallApply": true,

@@ -28,7 +28,7 @@ export const CLUB_ALUMNI_ROUTE = (slug?: string): string =>
   slug
     ? `/${OBJECT_URL_SLUG}/${slug}/alumni`
     : `/${OBJECT_URL_SLUG}/[club]/alumni`
-export const CART_ROUTE = '/events/checkout'
+export const CART_ROUTE = '/tickets/checkout'
 export const SETTINGS_ROUTE = '/settings'
 export const USER_RENEWAL = '/renew'
 export const CREATE_ROUTE = '/create'

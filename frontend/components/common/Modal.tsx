@@ -35,8 +35,8 @@ const ModalCard = styled.div<{ $width?: string }>`
   width: ${({ $width }) => $width ?? '35%'};
 
   ${({ $width }) =>
-    !$width
-      ? `  
+    $width
+      ? `
   ${mediaMaxWidth(MD)} {
     width: 50%;
   }

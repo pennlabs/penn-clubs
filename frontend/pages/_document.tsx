@@ -1,5 +1,3 @@
-import { cache } from '@emotion/css'
-import createEmotionServer from '@emotion/server/create-instance'
 import Document, {
   DocumentContext,
   DocumentInitialProps,
@@ -11,42 +9,27 @@ import Document, {
 import { ReactElement } from 'react'
 import { ServerStyleSheet } from 'styled-components'
 
-export const renderStatic = async (html) => {
-  if (html === undefined) {
-    throw new Error('did you forget to return html from renderToString?')
-  }
-  const { extractCritical } = createEmotionServer(cache)
-  const { ids, css } = extractCritical(html)
-
-  return { html, ids, css }
-}
-
 class BaseDocument extends Document {
   static async getInitialProps(
     ctx: DocumentContext,
   ): Promise<DocumentInitialProps> {
     const sheet = new ServerStyleSheet()
     const originalRenderPage = ctx.renderPage
+
     try {
       ctx.renderPage = () =>
         originalRenderPage({
           enhanceApp: (App) => (props) =>
             sheet.collectStyles(<App {...props} />),
         })
-      const initialProps = await Document.getInitialProps(ctx)
-      const page = await ctx.renderPage()
-      const { css, ids } = await renderStatic(page.html)
 
+      const initialProps = await Document.getInitialProps(ctx)
       return {
         ...initialProps,
         styles: (
           <>
             {initialProps.styles}
             {sheet.getStyleElement()}
-            <style
-              data-emotion={`css ${ids.join(' ')}`}
-              dangerouslySetInnerHTML={{ __html: css }}
-            />
           </>
         ),
       }

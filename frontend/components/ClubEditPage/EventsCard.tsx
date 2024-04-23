@@ -465,13 +465,11 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         tableFields={eventTableFields}
         noun="Event"
         currentTitle={(obj) => (obj != null ? obj.name : 'Deleted Event')}
-        onEditPressed={() => {
+        onChange={(obj) => {
           eventDetailsRef.current?.scrollIntoView({
             behavior: 'smooth',
             block: 'start',
           })
-        }}
-        onChange={(obj) => {
           setDeviceContents(obj)
         }}
       />

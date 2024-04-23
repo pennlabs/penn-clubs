@@ -8,8 +8,6 @@ import {
 } from 'react'
 import styled from 'styled-components'
 
-import { mediaMaxWidth, mediaMinWidth, SM } from '~/constants'
-
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_APPLY_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
 import {
@@ -385,13 +383,13 @@ export const QuestionFollowUpAction = ({
 }
 
 export const DesktopActions = styled(Actions)`
-  ${mediaMaxWidth(SM)} {
+  @media (max-width: 768px) {
     display: none !important;
   }
 `
 
 export const MobileActions = styled(Actions)`
-  ${mediaMinWidth(SM)} {
+  @media (min-width: 769px) {
     display: none !important;
   }
 `

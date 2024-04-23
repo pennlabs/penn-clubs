@@ -159,7 +159,7 @@ type TicketItemProps = {
   onCountChange: (newCount: number) => void
 }
 
-const GetTicketItem: React.FC<TicketItemProps> = ({
+const TicketItem: React.FC<TicketItemProps> = ({
   ticket,
   name,
   price,
@@ -170,7 +170,7 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Round to nearest integer and clamp to min/max
     const value = Math.max(
-      1,
+      0,
       Math.min(Math.round(parseFloat(e.target.value)), parseInt(max, 10)),
     )
     setCount(value)
@@ -178,35 +178,27 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
   }
 
   return (
-    <div
-      style={{
-        padding: '5px 0px',
-        borderBottom: '1px solid #e0e0e0',
-        borderTop: '1px solid #e0e0e0',
-      }}
-    >
+    <div style={{ padding: '5px 0px' }}>
       <div
         style={{
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0px 16px',
         }}
       >
-        <p style={{ fontSize: '18px' }}>
+        <p style={{ flex: '1', fontSize: '18px' }}>
           {name} - ${price}
         </p>
         <Input
           type="number"
           className="input"
-          min={1}
+          min={0}
           max={max}
-          value={count ?? 1}
+          value={count ?? 0}
           step={1}
           placeholder="Ticket Count"
           onChange={handleCountChange}
-          style={{ flex: '0 0 auto', maxWidth: '48px' }}
+          style={{ flex: '0 0 auto', width: 'initial!important' }}
         />
       </div>
     </div>
@@ -259,7 +251,7 @@ const EventPage: React.FC<EventPageProps> = ({
       >
         <Subtitle>Get Tickets</Subtitle>
         {order.map((ticket, index) => (
-          <GetTicketItem
+          <TicketItem
             ticket={ticket}
             max={ticket.max}
             name={ticket.type}
@@ -288,7 +280,7 @@ const EventPage: React.FC<EventPageProps> = ({
               },
             ).then((res) => {
               if (res.ok) {
-                toast.success('Tickets added to cart')
+                toast.success('Tickets purchased successfully')
                 setShowTicketModal(false)
               }
             })
