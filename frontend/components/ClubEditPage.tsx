@@ -291,11 +291,7 @@ const ClubForm = ({
       {
         name: 'tickets',
         label: 'Tickets',
-        content: (
-          <>
-            <TicketsViewCard club={club} />
-          </>
-        ),
+        content: <TicketsViewCard club={club} />,
       },
       {
         name: 'recruitment',

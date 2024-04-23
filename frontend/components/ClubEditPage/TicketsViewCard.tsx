@@ -5,8 +5,13 @@ import { doApiRequest } from '~/utils'
 
 import Table from '../common/Table'
 import BaseCard from './BaseCard'
+import { Club } from '~/types'
 
-export default function TicketsViewCard({ club }): ReactElement {
+export default function TicketsViewCard({
+  club,
+}: {
+  club: Club
+}): ReactElement {
   const GetTicketsHolders = (id) => {
     doApiRequest(`/events/${id}/tickets?format=json`, {
       method: 'GET',
