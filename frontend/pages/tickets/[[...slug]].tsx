@@ -1,6 +1,8 @@
+import { css } from '@emotion/react'
 import { Center, Container, Icon, Metadata } from 'components/common'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { ReactElement, useState } from 'react'
+import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
 
@@ -15,7 +17,6 @@ import {
   mediaMaxWidth,
   SM,
 } from '../../constants/measurements'
-import CreatableSelect from 'react-select/creatable'
 
 type CardProps = {
   readonly hovering?: boolean
@@ -185,12 +186,7 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
   const [viewBuyers, setViewBuyers] = useState(false)
   return (
     <Card>
-      <div
-        style={{ display: 'flex', flexDirection: 'column' }}
-        onClick={() => {
-          setViewBuyers(!viewBuyers)
-        }}
-      >
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         <Title
           style={{
             marginTop: '0px',
@@ -207,8 +203,12 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
           <TicketIssueInput />
         </Card>
         {buyersPerm && (
-          <>
-            <Text>
+          <Card>
+            <Text
+              onClick={() => {
+                setViewBuyers(!viewBuyers)
+              }}
+            >
               View Buyers{' '}
               {ticket.total && `(${ticket.total - ticket.available})`}{' '}
               {ticket.buyers && (
@@ -219,13 +219,44 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
             </Text>
 
             {viewBuyers && ticket.buyers && (
-              <ul style={{ listStyle: 'disc' }}>
+              <div
+                css={css`
+                  display: grid;
+                  grid-template-columns: 1fr 4fr 4fr;
+                `}
+              >
+                <span
+                  css={css`
+                    font-weight: bold;
+                  `}
+                  title="Attendance"
+                >
+                  Attend.
+                </span>
+                <span
+                  css={css`
+                    font-weight: bold;
+                  `}
+                >
+                  Buyer
+                </span>
+                <span
+                  css={css`
+                    font-weight: bold;
+                  `}
+                >
+                  Type
+                </span>
                 {ticket.buyers.map((buyer) => (
-                  <ManageBuyer key={buyer.id} buyer={buyer} />
+                  <ManageBuyer
+                    key={buyer.id}
+                    buyer={buyer}
+                    onAttendedChange={() => {}}
+                  />
                 ))}
-              </ul>
+              </div>
             )}
-          </>
+          </Card>
         )}
       </div>
     </Card>
