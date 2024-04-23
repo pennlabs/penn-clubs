@@ -401,6 +401,7 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(resp_held.status_code, 400, resp_held.content)
 
         # Simulate purchase (transfer ticket)
+        self.tickets1[0].holder = None
         self.tickets1[0].owner = self.user1
         self.tickets1[0].save()
 
