@@ -5236,7 +5236,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                     total_amount=float(order_info["amountDetails"]["totalAmount"]),
                     buyer_first_name=order_info["billTo"]["firstName"],
                     buyer_last_name=order_info["billTo"]["lastName"],
-                    buyer_phone=order_info["billTo"]["phoneNumber"],
+                    # TODO: investigate why phone numbers don't show in test API
+                    buyer_phone=order_info["billTo"].get("phoneNumber", None),
                     buyer_email=order_info["billTo"]["email"],
                 )
             )
