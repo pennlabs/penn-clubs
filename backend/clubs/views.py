@@ -37,6 +37,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.signing import BadSignature, Signer
 from django.core.validators import validate_email
 from django.db import transaction
 from django.db.models import (
@@ -66,6 +67,7 @@ from django.views.decorators.vary import vary_on_cookie
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics.grammar import parse as ICSParse
+from identity.permissions import B2BPermission
 from jinja2 import Template
 from options.models import Option
 from rest_framework import filters, generics, parsers, serializers, status, viewsets
@@ -4754,6 +4756,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     qr:
     Get a ticket's QR code
+
+    validate:
+    Validate a ticket's QR code and mark attendance
     """
 
     permission_classes = [IsAuthenticated]
@@ -5159,8 +5164,130 @@ class TicketViewSet(viewsets.ModelViewSet):
         qr_image.save(response, "PNG")
         return response
 
+    @action(detail=False, methods=["post"])
+    def validate(self, request, *args, **kwargs):
+        """
+        Validate a ticket's QR code and mark attendance. Only accessible via B2B IPC.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                            token:
+                                type: string
+                        required:
+                            - username
+                            - token
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "204":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        user = (
+            get_user_model()
+            .objects.filter(username=request.data.get("username"))
+            .first()
+        )
+        token = request.data.get("token")
+
+        if not user or not token:
+            return Response(
+                {"detail": "Must provide username and token to validate QR code"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        signer = Signer()
+        try:
+            obj = signer.unsign_object(token)
+        except BadSignature:
+            return Response(
+                {"detail": "Invalid token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ticket = (
+            Ticket.objects.filter(id=obj.get("ticket_id"))
+            .select_related("event__club")
+            .first()
+        )
+        if not ticket:
+            return Response(
+                {"detail": "Ticket not found"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        is_officer = Membership.objects.filter(
+            person=user,
+            club=ticket.event.club,
+            role__lte=Membership.ROLE_OFFICER,
+            active=True,
+        ).exists()
+
+        if not is_officer:
+            return Response(
+                {"detail": "You do not have permission to scan this ticket!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if ticket.owner.id != obj.get("owner"):
+            return Response(
+                {"detail": "Stale token"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if ticket.attended:
+            return Response(
+                {"detail": "Ticket has already been scanned"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        ticket.attended = True
+        ticket.transferable = False
+        ticket.save()
+
+        return Response({"detail": "Successfully validated QR code"})
+
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
+
+    def get_permissions(self):
+        if self.action == "validate":
+            self.permission_classes = [
+                B2BPermission("urn:pennlabs:*")
+            ]  # TODO: change this to mobile slug
+        return super().get_permissions()
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
