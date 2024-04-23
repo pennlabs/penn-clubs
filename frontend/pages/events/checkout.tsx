@@ -52,7 +52,6 @@ const TicketsCheckoutPage: React.FC<Props> = ({
       </BaseLayout>
     )
   }
-
   return (
     <BaseLayout {...baseProps} authRequired>
       <Metadata title="Checkout" />

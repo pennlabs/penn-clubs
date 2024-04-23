@@ -1,55 +1,51 @@
 import Script from 'next/script'
-import React from 'react'
+import React, { useCallback, useRef } from 'react'
 
-type PaymentFormProps = {
-  token: string | null
+type PaymentProps = {
+  captureContext: string
+  onTrasientTokenReceived?: (transientToken: string) => void
 }
 
-const PaymentForm = ({ token }: PaymentFormProps) => {
-  const captureContext = token
+const Payment: React.FC<PaymentProps> = ({
+  captureContext,
+  onTrasientTokenReceived,
+}) => {
+  const checkoutButtonRef = useRef<HTMLDivElement>(null)
+  const paymentContainerRef = useRef<HTMLDivElement>(null)
+
+  const onLoad = useCallback(async () => {
+    const Accept = (window as any).Accept
+    if (typeof Accept !== 'function') {
+      throw new Error('Accept not found')
+    }
+    if (!checkoutButtonRef.current || !paymentContainerRef.current) {
+      throw new Error('Ref not found')
+    }
+    const showArgs = {
+      containers: {
+        paymentSelection: `#${checkoutButtonRef.current.id}`,
+        paymentScreen: `#${paymentContainerRef.current.id}`,
+      },
+    }
+    const acceptFn = await Accept(captureContext)
+    const up = await acceptFn.unifiedPayments(false)
+    const transientToken = await up.show(showArgs)
+    onTrasientTokenReceived?.(transientToken)
+  }, [])
+
   return (
     <>
       <Script
         src="https://apitest.cybersource.com/up/v1/assets/0.15/SecureAcceptance.js"
         async
-        onLoad={() => {
-          const acceptFn = (window as any).Accept
-          if (acceptFn) {
-            const showArgs = {
-              containers: {
-                paymentSelection: '#buttonPaymentListContainer',
-              },
-            }
-            acceptFn(captureContext)
-              .then((accept) => accept.unifiedPayments(false))
-              .then((up) => up.show(showArgs))
-              .then((tt) => {
-                // authForm.submit();
-              })
-              .catch((error) => {
-                // eslint-disable-next-line no-console
-                console.error('Error initializing payment:', error)
-              })
-          }
-        }}
+        onLoad={onLoad}
       />
-      <div style={{ width: '40vw' }}>
-        <div
-          id="buttonPaymentListContainer"
-          className="buttonPaymentListContainer"
-        ></div>
-        <form id="authForm">
-          {/* Your form elements here */}
-          <input
-            type="hidden"
-            id="captureContext"
-            name="captureContext"
-            value={captureContext ?? ''}
-          />
-        </form>
+      <div>
+        <div id="cybersource_checkout" ref={checkoutButtonRef}></div>
+        <div id="cybersource_payment_container" ref={paymentContainerRef}></div>
       </div>
     </>
   )
 }
 
-export default PaymentForm
+export default Payment

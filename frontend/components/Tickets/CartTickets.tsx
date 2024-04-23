@@ -127,14 +127,41 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] =>
     ),
   )
 
+const useCheckout = () => {
+  const [showModal, setShowModal] = useState(false)
+  const [captureContext, setCaptureContext] = useState<string>()
+
+  const fetchToken = async () => {
+    const res = await doApiRequest(`/tickets/initiate_checkout/?format=json`, {
+      method: 'POST',
+      body: null,
+    })
+    const data = await res.json()
+    if (!data.success) {
+      throw new Error(data.detail)
+    }
+    return data.detail
+  }
+
+  return {
+    showModal,
+    checkout: async () => {
+      setShowModal(true)
+      const token = await fetchToken()
+      setCaptureContext(token)
+    },
+    captureContext,
+  }
+}
+
 const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
-  const [showPaymentForm, setShowPaymentForm] = useState(false)
-  const [token, setToken] = useState('')
   const [removeModal, setRemoveModal] = useState<CountedEventTicket | null>(
     null,
   )
-
   const [countedTickets, setCountedTickets] = useState<CountedEventTicket[]>([])
+
+  const { showModal, checkout, captureContext } = useCheckout()
+
   useEffect(() => {
     setCountedTickets(combineTickets(tickets))
   }, [tickets])
@@ -160,20 +187,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
     if (countedTickets.length === 0) {
       return
     }
-    setShowPaymentForm(true)
-    doApiRequest(`/tickets/initiate_checkout/?format=json`, {
-      method: 'POST',
-      body: { tickets: countedTickets },
-    })
-      .then((resp) => resp.json())
-      .then((res) => {
-        if (!res.success) {
-          // eslint-disable-next-line no-console
-          console.error(res.detail)
-          return
-        }
-        setToken(res.detail)
-      })
+    checkout()
   }
 
   function handleUpdateTicket(ticket: CountedEventTicket, newCount?: number) {
@@ -336,8 +350,25 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           Proceed to Checkout
         </button>
       </div>
-      <Modal show={showPaymentForm}>
-        {token && <PaymentForm token={token} />}
+      <Modal show={showModal}>
+        {captureContext && (
+          <PaymentForm
+            captureContext={captureContext}
+            onTrasientTokenReceived={async (transientToken) => {
+              const res = await doApiRequest(
+                '/tickets/complete_checkout/?format=json',
+                {
+                  method: 'POST',
+                  body: {
+                    transient_token: transientToken,
+                  },
+                },
+              )
+              const data = await res.json()
+              console.log({ data })
+            }}
+          />
+        )}
       </Modal>
     </>
   )
