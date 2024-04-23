@@ -1,8 +1,12 @@
-import { Center, Container, Icon } from 'components/common'
+import { Center, Container, Icon, Metadata } from 'components/common'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { ReactElement, useState } from 'react'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
+
+import { BaseLayout } from '~/components/BaseLayout'
+import ManageBuyer from '~/components/Tickets/ManageBuyer'
+import { createBasePropFetcher } from '~/utils/getBaseProps'
 
 import { ALLBIRDS_GRAY, HOVER_GRAY, WHITE } from '../../constants/colors'
 import {
@@ -59,6 +63,7 @@ type TicketProps = InferGetServerSidePropsType<typeof getServerSideProps>
 // TODO: Add auth handling gracefully.
 
 const Ticket: React.FC<TicketProps> = ({
+  baseProps,
   tickets,
   buyers,
   event,
@@ -95,24 +100,35 @@ const Ticket: React.FC<TicketProps> = ({
   // Public should be able to access info about general tickets metrics, not specific buyers.
   if (buyers.buyers) {
     for (const buyer of buyers.buyers) {
-      tickTypes[buyer.type].buyers.push(buyer.fullname)
+      tickTypes[buyer.type].buyers.push(buyer)
     }
   }
 
   return (
     <>
-      <Container>
-        <Title>All Tickets for {event.name}</Title>
-        {Object.values(tickTypes).map((ticket, i) => (
-          <TicketCard
-            key={i}
-            ticket={ticket as Ticket}
-            buyersPerm={buyers.buyers != null}
-          />
-        ))}
-      </Container>
+      <BaseLayout {...baseProps}>
+        <Metadata title="Events" />
+        <Container>
+          <Title>All Tickets for {event.name}</Title>
+          {Object.values(tickTypes).map((ticket, i) => (
+            <TicketCard
+              key={i}
+              ticket={ticket as Ticket}
+              buyersPerm={buyers.buyers != null}
+            />
+          ))}
+        </Container>
+      </BaseLayout>
     </>
   )
+}
+
+export type Buyer = {
+  id: string
+  fullname: string
+  owner__email: string
+  owner_id: number
+  type: string
 }
 
 type Ticket = {
@@ -120,7 +136,7 @@ type Ticket = {
   total: number
   price: number
   available: number
-  buyers: string[]
+  buyers: Buyer[]
 }
 
 type TicketCardProps = {
@@ -128,6 +144,56 @@ type TicketCardProps = {
   buyersPerm: boolean
 }
 
+const TicketIssueInput = () => {
+  const [tags, setTags] = useState([] as string[])
+  const [input, setInput] = useState('')
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value)
+  }
+
+  const handleInputKeyDown = (e) => {
+    const val = input.trim()
+    if ((e.key === 'Enter' || e.key === ',') && val) {
+      e.preventDefault()
+      if (tags.find((tag) => tag.toLowerCase() === val.toLowerCase())) {
+        return
+      }
+      const vals = val.split(/[, ]+/)
+      setTags([...tags, ...vals])
+      setInput('')
+    }
+  }
+
+  const removeTag = (i) => {
+    const newTags = [...tags]
+    newTags.splice(i, 1)
+    setTags(newTags)
+  }
+
+  return (
+    <div>
+      <Text>Issue Tickets</Text>
+      <input
+        type="text"
+        placeholder="Enter pennkeys here, separated by commas or spaces"
+        value={input}
+        onChange={handleInputChange}
+        onKeyDown={handleInputKeyDown}
+      />
+      <div className="field is-grouped is-grouped-multiline">
+        {tags.map((tag, index) => (
+          <div className="control" key={index}>
+            <div className="tags has-addons">
+              <a className="tag is-link">{tag}</a>
+              <a className="tag is-delete" onClick={() => removeTag(index)}></a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
   const [viewBuyers, setViewBuyers] = useState(false)
   return (
@@ -150,6 +216,9 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
         </Title>
         <Text>Total Tickets: {ticket.total}</Text>
         <Text>Currently available: {ticket.available}</Text>
+        <Card>
+          <TicketIssueInput />
+        </Card>
         {buyersPerm && (
           <>
             <Text>
@@ -165,7 +234,7 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
             {viewBuyers && ticket.buyers && (
               <ul style={{ listStyle: 'disc' }}>
                 {ticket.buyers.map((buyer) => (
-                  <li style={{ marginLeft: '16px' }}>{buyer}</li>
+                  <ManageBuyer key={buyer.id} buyer={buyer} />
                 ))}
               </ul>
             )}
@@ -176,8 +245,10 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { query, req } = context
+const getBaseProps = createBasePropFetcher()
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { query, req } = ctx
   const headers = req ? { cookie: req.headers.cookie } : undefined
   if (!query || !query.slug) {
     return { props: { home: true, tickets: {}, event: {}, buyers: {} } }
@@ -190,7 +261,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       doApiRequest(`/events/${id}/buyers?format=json`, { headers }),
     ])
 
-    const [tickets, event, buyers] = await Promise.all([
+    const [baseProps, tickets, event, buyers] = await Promise.all([
+      getBaseProps(ctx),
       ticketsReq.json(),
       eventReq.json(),
       buyersReq.json(),
@@ -199,6 +271,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         home: false,
+        baseProps,
         tickets,
         event,
         buyers,

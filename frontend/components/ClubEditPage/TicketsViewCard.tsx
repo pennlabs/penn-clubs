@@ -1,27 +1,16 @@
 import Link from 'next/link'
 import React, { ReactElement } from 'react'
 
-import { doApiRequest } from '~/utils'
+import { Club } from '~/types'
 
 import Table from '../common/Table'
 import BaseCard from './BaseCard'
-import { Club } from '~/types'
 
 export default function TicketsViewCard({
   club,
 }: {
   club: Club
 }): ReactElement {
-  const GetTicketsHolders = (id) => {
-    doApiRequest(`/events/${id}/tickets?format=json`, {
-      method: 'GET',
-    })
-      .then((resp) => resp.json())
-      .then((res) => {
-        // console.log(res)
-      })
-  }
-
   const eventsTableFields = [
     { label: 'Event Name', name: 'name' },
     {
