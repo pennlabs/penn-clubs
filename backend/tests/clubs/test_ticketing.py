@@ -8,12 +8,20 @@ from django.contrib.auth import get_user_model
 from django.db.models import (
     Count,
 )
+from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from clubs.models import Cart, Club, Event, Ticket, TicketTransactionRecord
+from clubs.models import (
+    Cart,
+    Club,
+    Event,
+    Ticket,
+    TicketTransactionRecord,
+    TicketTransferRecord,
+)
 
 
 def commonSetUp(self):
@@ -978,3 +986,28 @@ class TicketTestCase(TestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, 403, resp.content)
+
+    def test_delete_ticket_after_purchase(self):
+        ticket = self.tickets1[0]
+        ticket.owner = self.user1
+        ticket.save()
+        TicketTransactionRecord.objects.create(
+            ticket=ticket,
+            buyer_first_name=self.user1.first_name,
+            buyer_last_name=self.user2.last_name,
+            total_amount=ticket.price,
+        )
+
+        with self.assertRaises(ProtectedError):
+            ticket.delete()
+
+    def test_delete_ticket_after_transfer(self):
+        ticket = self.tickets1[0]
+        ticket.owner = self.user2
+        ticket.save()
+        TicketTransferRecord.objects.create(
+            ticket=ticket, sender=self.user1, receiver=self.user2
+        )
+
+        with self.assertRaises(ProtectedError):
+            ticket.delete()

@@ -2630,13 +2630,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 content:
                     application/json:
                         schema:
-                            type: array
-                            items:
-                                type: object
-                                additionalProperties:
-                                    type: array
-                                    items:
-                                        type: string
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
         ---
         """
         event = self.get_object()
@@ -2697,6 +2694,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 price=item.get("price", 0),
                 group_discount=item.get("group_discount", 0),
                 group_size=item.get("group_size", None),
+                transferable=item.get("transferable", True),
             )
             for item in quantities
             for _ in range(item["count"])
