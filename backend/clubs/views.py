@@ -117,6 +117,7 @@ from clubs.models import (
     Testimonial,
     Ticket,
     TicketTransactionRecord,
+    TicketTransferRecord,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -332,19 +333,15 @@ def hour_to_string_helper(hour):
     return hour_string
 
 
-def validate_transient_token(tt: str) -> Tuple[bool, str]:
+def validate_transient_token(cc: str, tt: str) -> Tuple[bool, str]:
     """Validate the integrity of the transient token using
-    the public key (JWK) obtained from the public key endpoint"""
+    the public key (JWK) obtained from the capture context"""
 
-    cybersource_url = "https://" + settings.CYBERSOURCE_CONFIG["run_environment"]
     try:
-        header, payload, signature = tt.split(".")
-        decoded_header = json.loads(base64.b64decode(header + "=="))
-        kid = decoded_header["kid"]
-        resp = requests.get(f"{cybersource_url}/flex/v2/public-keys/{kid}")
-        if resp.status_code >= 400:
-            raise ApiException(reason=f"Public key retrieval failed {resp.json()}")
-        jwk = resp.json()
+        _, body, _ = cc.split(".")
+        decoded_body = json.loads(base64.b64decode(body + "==="))
+        jwk = decoded_body["flx"]["jwk"]
+
         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
         # This will throw if the key is invalid
         jwt.decode(tt, key=public_key, algorithms=["RS256"])
@@ -2395,6 +2392,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
+        # Cannot add tickets that haven't dropped yet
+        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+            return Response(
+                {"detail": "Ticket drop time has not yet elapsed"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         quantities = request.data.get("quantities")
         if not quantities:
             return Response(
@@ -2588,6 +2592,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
+        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+            return Response({"totals": [], "available": []})
+
         # Take price of first ticket of given type for now
         totals = (
             tickets.values("type")
@@ -2634,8 +2641,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: number
                                             format: float
                                             required: false
+                                        transferable:
+                                            type: boolean
                             order_limit:
                                 type: int
+                                required: false
+                            drop_time:
+                                type: string
+                                format: date-time
                                 required: false
         responses:
             "200":
@@ -2654,9 +2667,38 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
         ---
         """
         event = self.get_object()
+
+        # Tickets can't be edited after they've dropped
+        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
+            return Response(
+                {"detail": "Tickets cannot be edited after they have dropped"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Tickets can't be edited after they've been sold
+        if (
+            Ticket.objects.filter(event=event)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            return Response(
+                {
+                    "detail": "Tickets cannot be edited after they have been "
+                    "sold or checked out"
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         quantities = request.data.get("quantities", [])
         if not quantities:
@@ -2714,6 +2756,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 price=item.get("price", 0),
                 group_discount=item.get("group_discount", 0),
                 group_size=item.get("group_size", None),
+                transferable=item.get("transferable", True),
             )
             for item in quantities
             for _ in range(item["count"])
@@ -2726,7 +2769,26 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_order_limit = order_limit
             event.save()
 
-        return Response({"detail": "success"})
+        drop_time = request.data.get("drop_time", None)
+        if drop_time is not None:
+            try:
+                drop_time = datetime.datetime.strptime(drop_time, "%Y-%m-%dT%H:%M:%S%z")
+            except ValueError as e:
+                return Response(
+                    {"detail": f"Invalid drop time: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if drop_time < timezone.now():
+                return Response(
+                    {"detail": "Specified drop time has already elapsed"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            event.ticket_drop_time = drop_time
+            event.save()
+
+        return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -2899,7 +2961,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                         if "fair" in self.request.query_params
                         else Badge.objects.filter(visible=True)
                     ),
-                )
+                ),
+                "tickets",
             )
             .order_by("start_time")
         )
@@ -4776,6 +4839,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     qr:
     Get a ticket's QR code
+
+    transfer:
+    Transfer a ticket to another user
     """
 
     permission_classes = [IsAuthenticated]
@@ -5029,6 +5095,11 @@ class TicketViewSet(viewsets.ModelViewSet):
                     reason=f"Received {context} with HTTP status {http_status}",
                 )
 
+            # Tie generated capture context to user cart
+            if cart.checkout_context != context:
+                cart.checkout_context = context
+                cart.save()
+
             # Place hold on tickets for 10 mins
             holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
             tickets.update(
@@ -5081,10 +5152,19 @@ class TicketViewSet(viewsets.ModelViewSet):
             Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
 
-        ok, message = validate_transient_token(tt)
+        cc = cart.checkout_context
+        if cc is None:
+            return Response(
+                {"success": False, "detail": "Associated capture context not found"},
+                status=status.HTTP_500_BAD_REQUEST,
+            )
+
+        ok, message = validate_transient_token(cc, tt)
         if not ok:
             # Cleanup state since the purchase failed
             cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
             return Response(
                 {"success": False, "detail": message},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -5114,6 +5194,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         except ApiException as e:
             # Cleanup state since the purchase failed
             cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
 
             return Response(
                 {
@@ -5141,6 +5223,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         except ApiException as e:
             # Cleanup state since the purchase failed
             cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
 
             return Response(
                 {
@@ -5150,33 +5234,37 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        # Archive transaction data for historical purposes.
-        # We're explicitly using the response data over what's in self.request.user
-        orderInfo = transaction_data["orderInformation"]
-        transaction_record = TicketTransactionRecord.objects.create(
-            reconciliation_id=str(reconciliation_id),
-            total_amount=float(orderInfo["amountDetails"]["totalAmount"]),
-            buyer_first_name=orderInfo["billTo"]["firstName"],
-            buyer_last_name=orderInfo["billTo"]["lastName"],
-            buyer_phone=orderInfo["billTo"]["phoneNumber"],
-            buyer_email=orderInfo["billTo"]["email"],
-        )
-
         # At this point, we have validated that the payment was authorized
         # Give the tickets to the user
-        tickets = (
-            cart.tickets.select_for_update()
-            .filter(holder=self.request.user)
-            .prefetch_related("carts")
-        )
-        tickets.update(
-            owner=request.user, holder=None, transaction_record=transaction_record
-        )
+        tickets = cart.tickets.select_for_update().filter(holder=self.request.user)
+
+        # Archive transaction data for historical purposes.
+        # We're explicitly using the response data over what's in self.request.user
+        order_info = transaction_data["orderInformation"]
+        transaction_records = []
+        for ticket in tickets:
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    reconciliation_id=str(reconciliation_id),
+                    total_amount=float(order_info["amountDetails"]["totalAmount"]),
+                    buyer_first_name=order_info["billTo"]["firstName"],
+                    buyer_last_name=order_info["billTo"]["lastName"],
+                    buyer_phone=order_info["billTo"]["phoneNumber"],
+                    buyer_email=order_info["billTo"]["email"],
+                )
+            )
+
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+        tickets.update(owner=request.user, holder=None)
         cart.tickets.clear()
         for ticket in tickets:
             ticket.send_confirmation_email()
 
         Ticket.objects.update_holds()
+
+        cart.checkout_context = None
+        cart.save()
 
         return Response(
             {
@@ -5205,6 +5293,76 @@ class TicketViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type="image/png")
         qr_image.save(response, "PNG")
         return response
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def transfer(self, request, *args, **kwargs):
+        """
+        Transfer a ticket to another user
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                        required:
+                            - username
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "404":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        receiver = get_object_or_404(
+            get_user_model(), username=request.data.get("username")
+        )
+
+        # checking whether the request's user owns the ticket is handled by the queryset
+        ticket = self.get_object()
+        if not ticket.transferable:
+            return Response(
+                {"detail": "The ticket is non-transferable"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if self.request.user == receiver:
+            return Response(
+                {"detail": "You cannot transfer a ticket to yourself"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        ticket.owner = receiver
+        ticket.save()
+        TicketTransferRecord.objects.create(
+            ticket=ticket, sender=self.request.user, receiver=receiver
+        ).send_confirmation_email()
+        ticket.send_confirmation_email()  # send event details to recipient
+
+        return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
