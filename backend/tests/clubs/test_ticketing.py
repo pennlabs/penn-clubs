@@ -74,7 +74,7 @@ def commonSetUp(self):
 
 class TicketEventTestCase(TestCase):
     """
-    Test cases related to the methods on the EventViewSet
+    Test cases related to the methods on the ClubEventViewSet
     that correspond to the ticketing project:
 
     tickets (get), tickets (put), buyers, add_to_cart, remove_from_cart
@@ -514,6 +514,27 @@ class TicketEventTestCase(TestCase):
 
         cart = Cart.objects.get(owner=self.user1)
         self.assertEqual(cart.tickets.count(), 0, cart.tickets)
+
+    def test_delete_event_with_claimed_tickets(self):
+        # Simulate checkout (hold ticket)
+        self.tickets1[0].holder = self.user1
+        self.tickets1[0].save()
+
+        self.client.login(username=self.user1.username, password="test")
+        resp_held = self.client.delete(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
+        )
+        self.assertEqual(resp_held.status_code, 400, resp_held.content)
+
+        # Simulate purchase (transfer ticket)
+        self.tickets1[0].holder = None
+        self.tickets1[0].owner = self.user1
+        self.tickets1[0].save()
+
+        resp_bought = self.client.delete(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
+        )
+        self.assertEqual(resp_bought.status_code, 400, resp_bought.content)
 
 
 @dataclass

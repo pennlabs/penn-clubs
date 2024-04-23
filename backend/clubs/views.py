@@ -2917,9 +2917,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
+    @update_holds
     def destroy(self, request, *args, **kwargs):
         """
         Do not let non-superusers delete events with the FAIR type through the API.
+        Check if there are bought or held tickets before deletion.
         """
         event = self.get_object()
 
@@ -2927,6 +2929,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             raise DRFValidationError(
                 detail="You cannot delete activities fair events. "
                 f"If you would like to do this, email {settings.FROM_EMAIL}."
+            )
+
+        if (
+            Ticket.objects.filter(event=event)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            raise DRFValidationError(
+                detail=(
+                    "This event cannot be deleted because there are tickets "
+                    "that have been bought or are being checked out."
+                )
             )
 
         return super().destroy(request, *args, **kwargs)
@@ -3165,28 +3179,6 @@ class EventViewSet(ClubEventViewSet):
         )
 
         return Response(EventSerializer(events, many=True).data)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Checks if there are tickets linked to this event before deletion.
-        """
-        event = self.get_object()
-        now = timezone.now()
-
-        if (
-            now <= event.end_time
-            and Ticket.objects.filter(event=event, owner__isnull=False).exists()
-        ):
-            return Response(
-                {
-                    "detail": "Cannot delete event with active tickets \
-                          associated with it."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Proceed with deletion if no active tickets are linked
-        return super().destroy(request, *args, **kwargs)
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
