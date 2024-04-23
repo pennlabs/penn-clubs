@@ -1105,6 +1105,15 @@ class TicketTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
+class TicketModelTestCase(TestCase):
+    """
+    Test cases related to the models that correspond to the ticketing project:
+    Ticket, TicketTransactionRecord, TicketTransferRecord
+    """
+
+    def setUp(self):
+        commonSetUp(self)
+
     def test_delete_ticket_after_purchase(self):
         ticket = self.tickets1[0]
         ticket.owner = self.user1
