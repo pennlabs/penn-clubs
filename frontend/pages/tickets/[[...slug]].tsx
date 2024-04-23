@@ -15,6 +15,7 @@ import {
   mediaMaxWidth,
   SM,
 } from '../../constants/measurements'
+import CreatableSelect from 'react-select/creatable'
 
 type CardProps = {
   readonly hovering?: boolean
@@ -148,49 +149,35 @@ const TicketIssueInput = () => {
   const [tags, setTags] = useState([] as string[])
   const [input, setInput] = useState('')
 
-  const handleInputChange = (e) => {
-    setInput(e.target.value)
+  const handleInputChange = (newValues) => {
+    const newTags = newValues
+      .map((val) => val.value.trim().split(/, +|,| +/))
+      .flat()
+    setTags(newTags)
   }
 
   const handleInputKeyDown = (e) => {
     const val = input.trim()
     if ((e.key === 'Enter' || e.key === ',') && val) {
       e.preventDefault()
-      if (tags.find((tag) => tag.toLowerCase() === val.toLowerCase())) {
-        return
-      }
-      const vals = val.split(/[, ]+/)
+      const vals = val.trim().split(/, +|,| +/)
       setTags([...tags, ...vals])
       setInput('')
     }
   }
 
-  const removeTag = (i) => {
-    const newTags = [...tags]
-    newTags.splice(i, 1)
-    setTags(newTags)
-  }
-
   return (
     <div>
       <Text>Issue Tickets</Text>
-      <input
-        type="text"
-        placeholder="Enter pennkeys here, separated by commas or spaces"
-        value={input}
+      <CreatableSelect
+        isMulti
+        placeholder={'Enter pennkeys here, separated by commas or spaces'}
+        value={tags.map((tag) => ({ value: tag, label: tag }))}
         onChange={handleInputChange}
+        onInputChange={(newInput) => setInput(newInput)}
+        inputValue={input}
         onKeyDown={handleInputKeyDown}
       />
-      <div className="field is-grouped is-grouped-multiline">
-        {tags.map((tag, index) => (
-          <div className="control" key={index}>
-            <div className="tags has-addons">
-              <a className="tag is-link">{tag}</a>
-              <a className="tag is-delete" onClick={() => removeTag(index)}></a>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
