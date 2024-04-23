@@ -2791,6 +2791,164 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
+    @update_holds
+    def issue_tickets(self, request, *args, **kwargs):
+        """
+        Issue tickets to users based on their pennkeys and ticket classes.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        username:
+                                            type: string
+                                        ticket_class:
+                                            type: string
+
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        event = self.get_object()
+
+        quantities = request.data.get("quantities", [])
+
+        if not quantities:
+            return Response(
+                {"detail": "Quantities must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for item in quantities:
+            if not item.get("username") or not item.get("ticket_class"):
+                return Response(
+                    {"detail": "Specify username and ticket class to issue a ticket"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        usernames = [item.get("username") for item in quantities]
+        ticket_classes = [item.get("ticket_class") for item in quantities]
+
+        # Check that requested usernames are valid
+        invalid_users = set(usernames) - set(
+            get_user_model()
+            .objects.filter(username__in=usernames)
+            .values_list("username", flat=True)
+            .distinct()
+        )
+        if invalid_users:
+            return Response(
+                {"detail": f"Users not found: {', '.join(invalid_users)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check that requested ticket classes are valid
+        invalid_classes = set(ticket_classes) - set(
+            Ticket.objects.filter(event=event).values_list("type", flat=True).distinct()
+        )
+        if invalid_classes:
+            return Response(
+                {"detail": f"Invalid ticket classes: {', '.join(invalid_classes)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ticket_class_counts = collections.defaultdict(int)
+        for ticket_class in ticket_classes:
+            ticket_class_counts[ticket_class] += 1
+
+        tickets_to_allocate = []
+
+        with transaction.atomic():
+            for ticket_class, count in ticket_class_counts.items():
+                available_tickets = Ticket.objects.select_for_update(
+                    skip_locked=True
+                ).filter(
+                    event=event,
+                    type=ticket_class,
+                    owner__isnull=True,
+                    holder__isnull=True,
+                )[:count]
+
+                if available_tickets.count() < count:
+                    return Response(
+                        {
+                            "detail": "Not enough tickets "
+                            "available for class {ticket_class}"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                tickets_to_allocate.extend(available_tickets)
+
+            # Update holder for all allocated tickets
+            Ticket.objects.filter(
+                id__in=[ticket.id for ticket in tickets_to_allocate]
+            ).update(holder=request.user)
+
+        for username, ticket_class in zip(usernames, ticket_classes):
+            receiver = get_user_model().objects.get(username=username)
+
+            ticket_for_user = next(
+                (
+                    ticket
+                    for ticket in tickets_to_allocate
+                    if ticket.type == ticket_class
+                ),
+                None,
+            )
+            if ticket_for_user:
+                tickets_to_allocate.remove(ticket_for_user)
+
+            if not ticket_for_user:
+                return Response(
+                    {
+                        "detail": "No ticket available for "
+                        "{username} in class {ticket_class}"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # create transaction record
+            TicketTransactionRecord.objects.create(
+                ticket=ticket_for_user,
+                buyer_first_name=receiver.first_name,
+                buyer_last_name=receiver.last_name,
+                buyer_email=receiver.email,
+                reconciliation_id=None,
+            )
+
+            # release hold and transfer ownership
+            ticket_for_user.owner = receiver
+            ticket_for_user.holder = None
+            ticket_for_user.save()
+            ticket_for_user.send_confirmation_email()
+
+        return Response({"detail": "success"})
+
+    @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
         Upload a picture for the event.
