@@ -264,9 +264,11 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(resp.status_code, 200, resp.content)
 
         # Both tickets should belong to user2
-        self.assertTrue(Ticket.objects.filter(type="normal", owner=self.user2).exists())
-        self.assertTrue(
-            Ticket.objects.filter(type="premium", owner=self.user2).exists()
+        self.assertEqual(
+            Ticket.objects.filter(type="normal", owner=self.user2).count(), 1
+        )
+        self.assertEqual(
+            Ticket.objects.filter(type="premium", owner=self.user2).count(), 1
         )
 
     def test_issue_tickets_invalid_username_ticket_type(self):
