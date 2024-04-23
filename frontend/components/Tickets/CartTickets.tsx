@@ -5,7 +5,7 @@ import { toast } from 'react-toastify'
 import { EmptyState, Modal, Subtitle, Text } from '~/components/common'
 import PaymentForm from '~/components/Tickets/PaymentForm'
 import { TicketCard } from '~/components/Tickets/TicketCard'
-import { BORDER, BORDER_RADIUS, WHITE } from '~/constants'
+import { BORDER, BORDER_RADIUS, mediaMaxWidth, SM, WHITE } from '~/constants'
 import { CountedEventTicket, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
 
@@ -243,7 +243,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           border: 1px solid ${BORDER};
           border-radius: ${BORDER_RADIUS};
 
-          @media (max-width: 768px) {
+          ${mediaMaxWidth(SM)} {
             flex-direction: column;
           }
         `}

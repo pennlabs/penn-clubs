@@ -159,7 +159,7 @@ type TicketItemProps = {
   onCountChange: (newCount: number) => void
 }
 
-const TicketItem: React.FC<TicketItemProps> = ({
+const GetTicketItem: React.FC<TicketItemProps> = ({
   ticket,
   name,
   price,
@@ -178,15 +178,23 @@ const TicketItem: React.FC<TicketItemProps> = ({
   }
 
   return (
-    <div style={{ padding: '5px 0px' }}>
+    <div
+      style={{
+        padding: '5px 0px',
+        borderBottom: '1px solid #e0e0e0',
+        borderTop: '1px solid #e0e0e0',
+      }}
+    >
       <div
         style={{
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '0px 16px',
         }}
       >
-        <p style={{ flex: '1', fontSize: '18px' }}>
+        <p style={{ fontSize: '18px' }}>
           {name} - ${price}
         </p>
         <Input
@@ -198,7 +206,7 @@ const TicketItem: React.FC<TicketItemProps> = ({
           step={1}
           placeholder="Ticket Count"
           onChange={handleCountChange}
-          style={{ flex: '0 0 auto', width: 'initial!important' }}
+          style={{ flex: '0 0 auto', maxWidth: '48px' }}
         />
       </div>
     </div>
@@ -251,7 +259,7 @@ const EventPage: React.FC<EventPageProps> = ({
       >
         <Subtitle>Get Tickets</Subtitle>
         {order.map((ticket, index) => (
-          <TicketItem
+          <GetTicketItem
             ticket={ticket}
             max={ticket.max}
             name={ticket.type}
