@@ -146,6 +146,10 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
         (ticket) => {
           toast.error(
             `${ticket.event.name} - ${ticket.type} is sold out and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
+            {
+              style: { color: WHITE },
+              autoClose: false,
+            },
           )
         },
         [soldOut],
@@ -211,7 +215,9 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
       .then((res) => {
         if (!res.success) {
           // eslint-disable-next-line no-console
-          toast.error(res.detail)
+          toast.error(res.detail, {
+            style: { color: WHITE },
+          })
           return
         }
         toast.success(res.detail)

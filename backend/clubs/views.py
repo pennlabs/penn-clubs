@@ -4873,18 +4873,23 @@ class TicketViewSet(viewsets.ModelViewSet):
             ).values("id", "name")
         }
 
+        # Process each ticket type and event
         for ticket_class in tickets_to_replace.values("type", "event").annotate(
             count=Count("id")
         ):
-            available_tickets = Ticket.objects.filter(
-                event=ticket_class["event"],
-                type=ticket_class["type"],
-                owner__isnull=True,
-                holder__isnull=True,
-            ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
+            available_tickets = (
+                Ticket.objects.filter(
+                    event=ticket_class["event"],
+                    type=ticket_class["type"],
+                    owner__isnull=True,
+                    holder__isnull=True,
+                )
+                .exclude(id__in=tickets_in_cart)
+                .select_related("event")[: ticket_class["count"]]
+            )
 
-            available_count = available_tickets.count()
-            if available_count < ticket_class["count"]:
+            shortage = ticket_class["count"] - available_tickets.count()
+            if shortage > 0:
                 sold_out_tickets.append(
                     {
                         **ticket_class,
@@ -4892,11 +4897,9 @@ class TicketViewSet(viewsets.ModelViewSet):
                             "id": ticket_class["event"],
                             "name": event_dict[ticket_class["event"]],
                         },
-                        "count": ticket_class["count"] - available_count,
+                        "count": shortage,
                     }
                 )
-
-            replacement_tickets.extend(list(available_tickets))
 
         cart.tickets.remove(*tickets_to_replace)
         if replacement_tickets:

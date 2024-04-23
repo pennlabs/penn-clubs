@@ -94,7 +94,7 @@
     "babel-plugin-react-remove-properties": "^0.3.0",
     "codecov": "^3.8.3",
     "cypress": "^13.6.4",
-    "eslint": "^8.56.0",
+    "eslint": "^9.1.1",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-standard": "^17.1.0",

@@ -63,7 +63,7 @@ const formatTime = (startTime: string, endTime: string) => {
   const startDateTime = DateTime.fromISO(startTime)
   const endDateTime = DateTime.fromISO(endTime)
 
-  const dayDuration = endDateTime.day - startDateTime.day
+  const dayDuration = Math.floor(endDateTime.diff(startDateTime, 'days').days)
   const startFormatted = startDateTime.toFormat(
     dayDuration === 0 ? 'h:mm a' : 'MMM d, h:mm a',
   )
@@ -201,10 +201,12 @@ export const TicketCard = ({
           justify-content: center;
           align-items: center;
           padding: 16px;
+          min-width: 100px;
           background: ${CLUBS_BLUE};
           border-radius: 8px;
           color: ${WHITE};
           width: 80px;
+          position: relative;
         `}
       >
         <Title
@@ -220,9 +222,9 @@ export const TicketCard = ({
             <div
               css={css`
                 font-size: 12px;
-                position: relative;
-                right: 0;
-                top: 0;
+                position: absolute;
+                right: 12px;
+                top: 12px;
               `}
             >
               {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
@@ -252,7 +254,7 @@ export const TicketCard = ({
             fontWeight: 600,
           }}
         >
-          {ticket.event.name}
+          {ticket.event.name} {ticket.id}
         </Description>
         <Description>{ticket.event.club_name}</Description>
         <Description>
