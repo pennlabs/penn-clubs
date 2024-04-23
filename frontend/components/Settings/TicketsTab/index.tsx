@@ -1,15 +1,13 @@
-import moment from 'moment-timezone'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
+import { TicketCard } from '~/components/Tickets/TicketCard'
 import {
   ALLBIRDS_GRAY,
-  CLUBS_BLUE,
   CLUBS_GREY_LIGHT,
   H1_TEXT,
   HOVER_GRAY,
-  HUB_SNOW,
   WHITE,
 } from '~/constants'
 
@@ -23,15 +21,7 @@ import {
 import { UserInfo } from '../../../types'
 import { doApiRequest } from '../../../utils'
 import QRCodeCard, { QRCodeType } from '../../ClubEditPage/QRCodeCard'
-import {
-  Center,
-  EmptyState,
-  Icon,
-  Loading,
-  Modal,
-  Text,
-  Title,
-} from '../../common'
+import { Center, EmptyState, Loading, Modal, Text, Title } from '../../common'
 import TicketTransferModal from '../TicketTransferModal'
 
 const CardHeader = styled.div`
@@ -115,188 +105,6 @@ const TitleWrapper = styled.div`
 type TicketsTabProps = {
   className?: string
   userInfo: UserInfo
-}
-
-const formatTime = (startTime: string, endTime: string) => {
-  const date = new Date(startTime)
-  // return the month and date
-  const dayDuration = new Date(endTime).getDate() - date.getDate()
-  const timezone = moment.tz.guess()
-  const startFormatted = moment(startTime)
-    .tz(timezone)
-    .format(dayDuration === 0 ? 'h:mmA' : 'MMM D, h:mmA')
-  const endFormatted = moment(endTime)
-    .tz(timezone)
-    .format(dayDuration === 0 ? 'h:mmA z' : 'MMM D, h:mmA z')
-
-  return {
-    month: date.toLocaleString('default', { month: 'short' }),
-    day: date.getDate(),
-    timeRange: `${startFormatted} — ${endFormatted}`,
-    dayDuration,
-  }
-}
-
-const TicketCard = ({
-  collapsed = 0,
-  ticket,
-  showModal,
-  props,
-  onClick,
-  viewQRCode,
-}: {
-  collapsed?: number
-  ticket: any
-  showModal: () => void
-  props?: any
-  onClick?: () => void
-  viewQRCode?: () => void
-}) => {
-  const datetimeData = formatTime(
-    ticket.event.start_time,
-    ticket.event.end_time,
-  )
-  function generateBoxShadow(collapsed) {
-    let boxShadow = ''
-    boxShadow += '0 1px 6px rgba(0, 0, 0, 0.2),\n'
-    for (let i = 1; i <= collapsed; i++) {
-      boxShadow += `${i * 10}px -${i * 10}px 0 -1px ${HUB_SNOW}, ${i * 10}px -${i * 10}px rgba(0, 0, 0, 0.1)${
-        i !== collapsed ? ',\n' : ''
-      }`
-    }
-    return boxShadow
-  }
-  return (
-    <Card
-      className="card"
-      style={{
-        ...props,
-        display: 'flex',
-        cursor: 'pointer',
-        ...(collapsed !== 0
-          ? {
-              boxShadow: generateBoxShadow(collapsed),
-            }
-          : {}),
-        margin: collapsed !== 0 ? '4rem 0' : '1rem 0',
-      }}
-      onClick={(e) => {
-        onClick?.()
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '16px',
-          background: CLUBS_BLUE,
-          borderRadius: '8px',
-          color: WHITE,
-          width: '80px',
-        }}
-      >
-        <Title
-          style={{
-            marginBottom: 0,
-            color: WHITE,
-            display: 'flex',
-            alignItems: 'top',
-          }}
-        >
-          {datetimeData.day}
-          {datetimeData.dayDuration !== 0 && (
-            <div
-              style={{
-                fontSize: '12px',
-                position: 'relative',
-                right: 0,
-                top: 0,
-              }}
-            >
-              {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
-              {Math.abs(datetimeData.dayDuration)}
-            </div>
-          )}
-        </Title>
-        <Description
-          style={{
-            color: WHITE,
-            width: '100%',
-            textAlign: 'center',
-            marginBottom: 0,
-          }}
-        >
-          {datetimeData.month}
-        </Description>
-      </div>
-      <div style={{ width: '20px' }} />
-      <div style={{ flex: 1 }}>
-        <Description
-          style={{
-            fontWeight: 600,
-          }}
-        >
-          {ticket.event.name}
-        </Description>
-        <Description>{ticket.event.club_name}</Description>
-        <Description>
-          {ticket.type} | {datetimeData.timeRange}
-        </Description>
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div>
-          <button
-            className="button is-primary"
-            style={{
-              backgroundColor: CLUBS_BLUE,
-              padding: '16px',
-              border: '1px solid ' + CLUBS_BLUE,
-              cursor: 'pointer',
-            }}
-            onClick={(e) => {
-              e.stopPropagation()
-              viewQRCode?.()
-            }}
-          >
-            QR Code
-            <Icon
-              name="qr-code"
-              size="2rem"
-              style={{
-                color: WHITE,
-              }}
-            />
-          </button>
-        </div>
-        <div style={{ width: '12px' }} />
-        <button
-          className="button is-primary"
-          style={{ cursor: 'pointer' }}
-          onClick={(e) => {
-            e.stopPropagation()
-            showModal?.()
-          }}
-        >
-          Transfer Ownership
-          <Icon
-            name="swap-horiz"
-            size="2rem"
-            style={{
-              color: WHITE,
-            }}
-          />
-        </button>
-      </div>
-    </Card>
-  )
 }
 
 const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
@@ -383,7 +191,6 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
               Uncollapse
             </a>
           )}
-
           {expandedEvents.has(group[0]) || group[1].length === 1 ? (
             group[1].map((ticket, i) => (
               <TicketCard
