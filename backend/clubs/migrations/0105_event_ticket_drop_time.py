@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("clubs", "0103_ticket_group_discount_ticket_group_size"),
+        ("clubs", "0104_cart_checkout_context"),
     ]
 
     operations = [

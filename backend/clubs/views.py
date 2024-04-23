@@ -117,6 +117,7 @@ from clubs.models import (
     Testimonial,
     Ticket,
     TicketTransactionRecord,
+    TicketTransferRecord,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -2621,6 +2622,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                         group_discount:
                                             type: number
                                             required: false
+                                        transferable:
+                                            type: boolean
                             order_limit:
                                 type: int
                                 required: false
@@ -2734,6 +2737,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 price=item.get("price", 0),
                 group_discount=item.get("group_discount", 0),
                 group_size=item.get("group_size", None),
+                transferable=item.get("transferable", True),
             )
             for item in quantities
             for _ in range(item["count"])
@@ -2765,7 +2769,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_drop_time = drop_time
             event.save()
 
-        return Response({"detail": "success"})
+        return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -4816,6 +4820,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     qr:
     Get a ticket's QR code
+
+    transfer:
+    Transfer a ticket to another user
     """
 
     permission_classes = [IsAuthenticated]
@@ -5162,28 +5169,29 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        # Archive transaction data for historical purposes.
-        # We're explicitly using the response data over what's in self.request.user
-        orderInfo = transaction_data["orderInformation"]
-        transaction_record = TicketTransactionRecord.objects.create(
-            reconciliation_id=str(reconciliation_id),
-            total_amount=float(orderInfo["amountDetails"]["totalAmount"]),
-            buyer_first_name=orderInfo["billTo"]["firstName"],
-            buyer_last_name=orderInfo["billTo"]["lastName"],
-            buyer_phone=orderInfo["billTo"]["phoneNumber"],
-            buyer_email=orderInfo["billTo"]["email"],
-        )
-
         # At this point, we have validated that the payment was authorized
         # Give the tickets to the user
-        tickets = (
-            cart.tickets.select_for_update()
-            .filter(holder=self.request.user)
-            .prefetch_related("carts")
-        )
-        tickets.update(
-            owner=request.user, holder=None, transaction_record=transaction_record
-        )
+        tickets = cart.tickets.select_for_update().filter(holder=self.request.user)
+
+        # Archive transaction data for historical purposes.
+        # We're explicitly using the response data over what's in self.request.user
+        order_info = transaction_data["orderInformation"]
+        transaction_records = []
+        for ticket in tickets:
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    reconciliation_id=str(reconciliation_id),
+                    total_amount=float(order_info["amountDetails"]["totalAmount"]),
+                    buyer_first_name=order_info["billTo"]["firstName"],
+                    buyer_last_name=order_info["billTo"]["lastName"],
+                    buyer_phone=order_info["billTo"]["phoneNumber"],
+                    buyer_email=order_info["billTo"]["email"],
+                )
+            )
+
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+        tickets.update(owner=request.user, holder=None)
         cart.tickets.clear()
         for ticket in tickets:
             ticket.send_confirmation_email()
@@ -5220,6 +5228,76 @@ class TicketViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type="image/png")
         qr_image.save(response, "PNG")
         return response
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def transfer(self, request, *args, **kwargs):
+        """
+        Transfer a ticket to another user
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                        required:
+                            - username
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "404":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        receiver = get_object_or_404(
+            get_user_model(), username=request.data.get("username")
+        )
+
+        # checking whether the request's user owns the ticket is handled by the queryset
+        ticket = self.get_object()
+        if not ticket.transferable:
+            return Response(
+                {"detail": "The ticket is non-transferable"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if self.request.user == receiver:
+            return Response(
+                {"detail": "You cannot transfer a ticket to yourself"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        ticket.owner = receiver
+        ticket.save()
+        TicketTransferRecord.objects.create(
+            ticket=ticket, sender=self.request.user, receiver=receiver
+        ).send_confirmation_email()
+        ticket.send_confirmation_email()  # send event details to recipient
+
+        return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
