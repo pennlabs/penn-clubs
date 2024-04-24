@@ -2,7 +2,6 @@ import { css } from '@emotion/react'
 import { Center, Container, Icon, Metadata } from 'components/common'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import React, { ReactElement, useState } from 'react'
-import CreatableSelect from 'react-select/creatable'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
 
@@ -17,6 +16,9 @@ import {
   mediaMaxWidth,
   SM,
 } from '../../constants/measurements'
+import CSVTagInput from '~/components/common/CSVTagInput'
+import { toast } from 'react-toastify'
+import { Form, Formik } from 'formik'
 
 type CardProps = {
   readonly hovering?: boolean
@@ -87,6 +89,8 @@ const Ticket: React.FC<TicketProps> = ({
   // For given ticket type, get the total and available tickets, as well as buyers
   for (const ticket of totals) {
     tickTypes[ticket.type] = {
+      // TODO: right now grabbing no ids
+      id: ticket.id,
       type: ticket.type,
       total: ticket.count,
       price: ticket.price,
@@ -134,6 +138,7 @@ export type Buyer = {
 }
 
 type Ticket = {
+  id: string
   type: string
   total: number
   price: number
@@ -146,50 +151,35 @@ type TicketCardProps = {
   buyersPerm: boolean
 }
 
-const splitString = (s: string) =>
-  s
-    .trim()
-    .replace(/[^a-zA-Z0-9]+/g, ' ')
-    .split(/, +|,| +/)
-    .filter((v) => v.length > 0)
+const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
+  const [viewBuyers, setViewBuyers] = useState(false)
+  const [ticketRecipients, setTicketRecipients] = useState<string[]>([])
 
-// TODO: make generic component
-const TicketIssueInput = () => {
-  const [tags, setTags] = useState<string[]>([])
-  const [input, setInput] = useState<string>()
-
-  const handleInputChange = (newValues) => {
-    const newTags = newValues.flatMap((v) => splitString(v.value))
-    setTags(newTags)
-  }
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const val = input?.trim()
-    if ((e.key === 'Enter' || e.key === ',') && val) {
-      e.preventDefault()
-      const vals = splitString(val)
-      setTags([...tags, ...vals])
-      setInput('')
+  // TODO: link this when backend is done with this route
+  async function handleIssueTickets(data, { setSubmitting }) {
+    try {
+      const resp = await doApiRequest(`/events/${ticket.id}/issue_tickets`, {
+        method: 'POST',
+        body: JSON.stringify({
+          quantities: ticketRecipients.map((t) => ({
+            ticket_type: ticket.type,
+            username: t,
+          })),
+        }),
+      })
+      const contents = await resp.json()
+      if (contents.success) {
+        toast.info(contents.message, { hideProgressBar: true })
+      } else {
+        toast.error('Something went wrong with issuing tickets', {
+          hideProgressBar: true,
+        })
+      }
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  return (
-    <div>
-      <Text>Issue Tickets</Text>
-      <CreatableSelect
-        isMulti
-        placeholder={'Enter pennkeys here, separated by commas or spaces'}
-        value={tags.map((tag) => ({ value: tag, label: tag }))}
-        onChange={handleInputChange}
-        onInputChange={(newInput) => setInput(newInput)}
-        inputValue={input}
-        onKeyDown={handleInputKeyDown}
-      />
-    </div>
-  )
-}
-const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
-  const [viewBuyers, setViewBuyers] = useState(false)
   return (
     <Card>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -206,7 +196,27 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
         <Text>Total Tickets: {ticket.total}</Text>
         <Text>Currently available: {ticket.available}</Text>
         <Card>
-          <TicketIssueInput />
+          <Formik
+            initialValues={{ action: 'add' }}
+            onSubmit={handleIssueTickets}
+          >
+            {({ isSubmitting }) => (
+              <Form>
+                <Text>Issue Tickets</Text>
+                <CSVTagInput
+                  placeholder="Enter pennkeys here, separated by commas or spaces"
+                  onChange={(newValue) => setTicketRecipients(newValue)}
+                />
+                <button
+                  disabled={isSubmitting}
+                  className="button is-primary"
+                  type="submit"
+                >
+                  Issue Tickets
+                </button>
+              </Form>
+            )}
+          </Formik>
         </Card>
         {buyersPerm && (
           <Card>

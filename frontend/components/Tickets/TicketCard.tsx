@@ -254,7 +254,7 @@ export const TicketCard = ({
             fontWeight: 600,
           }}
         >
-          {ticket.event.name} {ticket.id}
+          {ticket.event.name}
         </Description>
         <Description>{ticket.event.club_name}</Description>
         <Description>
