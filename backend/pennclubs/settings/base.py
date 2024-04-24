@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "simple_history",
     "accounts.apps.AccountsConfig",
-    "identity.apps.IdentityConfig",
     "clubs.apps.ClubsConfig",
     "options.apps.OptionsConfig",
     "social_django",

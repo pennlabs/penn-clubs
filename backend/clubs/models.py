@@ -1876,7 +1876,11 @@ class Ticket(models.Model):
 
         signer = Signer()
         token = signer.sign_object({"owner": self.owner.id, "ticket_id": str(self.id)})
-        qr_image = qrcode.make(token, box_size=20, border=0)
+        qr_image = qrcode.make(
+            f"https://{settings.DOMAINS[0]}/api/tickets/validate/{token}/",
+            box_size=20,
+            border=0,
+        )
         return qr_image
 
     def send_confirmation_email(self):

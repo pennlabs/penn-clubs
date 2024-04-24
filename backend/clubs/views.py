@@ -67,7 +67,6 @@ from django.views.decorators.vary import vary_on_cookie
 from ics import Calendar as ICSCal
 from ics import Event as ICSEvent
 from ics.grammar import parse as ICSParse
-from identity.permissions import B2BPermission
 from jinja2 import Template
 from options.models import Option
 from rest_framework import filters, generics, parsers, serializers, status, viewsets
@@ -5163,41 +5162,22 @@ class TicketViewSet(viewsets.ModelViewSet):
         qr_image.save(response, "PNG")
         return response
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["get"], url_path="validate/(?P<token>[^/.]+)")
     def validate(self, request, *args, **kwargs):
         """
-        Validate a ticket's QR code and mark attendance. Only accessible via B2B IPC.
+        Validate a ticket's QR code and mark attendance.
         ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            username:
-                                type: string
-                            token:
-                                type: string
-                        required:
-                            - username
-                            - token
         responses:
             "200":
                 content:
                     application/json:
                         schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-            "204":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
+                            type: object
+                            properties:
+                                ticket:
+                                    $ref: '#/components/schemas/Ticket'
+                                previously_scanned:
+                                    type: boolean
             "400":
                 content:
                     application/json:
@@ -5216,19 +5196,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     type: string
         ---
         """
-        user = (
-            get_user_model()
-            .objects.filter(username=request.data.get("username"))
-            .first()
-        )
-        token = request.data.get("token")
-
-        if not user or not token:
-            return Response(
-                {"detail": "Must provide username and token to validate QR code"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        token = kwargs.get("token")
         signer = Signer()
         try:
             obj = signer.unsign_object(token)
@@ -5248,14 +5216,15 @@ class TicketViewSet(viewsets.ModelViewSet):
                 {"detail": "Ticket not found"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        is_owner = request.user == ticket.owner
         is_officer = Membership.objects.filter(
-            person=user,
+            person=request.user,
             club=ticket.event.club,
             role__lte=Membership.ROLE_OFFICER,
             active=True,
         ).exists()
 
-        if not is_officer:
+        if not (is_owner or is_officer):
             return Response(
                 {"detail": "You do not have permission to scan this ticket!"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -5266,27 +5235,21 @@ class TicketViewSet(viewsets.ModelViewSet):
                 {"detail": "Stale token"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if ticket.attended:
-            return Response(
-                {"detail": "Ticket has already been scanned"},
-                status=status.HTTP_204_NO_CONTENT,
-            )
+        previously_scanned = ticket.attended
+        if not previously_scanned and is_officer:
+            ticket.attended = True
+            ticket.transferable = False
+            ticket.save()
 
-        ticket.attended = True
-        ticket.transferable = False
-        ticket.save()
-
-        return Response({"detail": "Successfully validated QR code"})
+        return Response(
+            {
+                "ticket": TicketSerializer(ticket).data,
+                "previously_scanned": previously_scanned,
+            }
+        )
 
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
-
-    def get_permissions(self):
-        if self.action == "validate":
-            self.permission_classes = [
-                B2BPermission("urn:pennlabs:*")
-            ]  # TODO: change this to mobile slug
-        return super().get_permissions()
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
