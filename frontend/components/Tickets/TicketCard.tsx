@@ -18,6 +18,7 @@ import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
   mediaMaxWidth,
+  mediaMinWidth,
   SM,
 } from '~/constants/measurements'
 import { CountedEventTicket } from '~/types'
@@ -90,6 +91,14 @@ function generateBoxShadow(collapsed) {
   return boxShadow
 }
 
+const ResponsiveCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  ${mediaMinWidth(SM)} {
+    flex-direction: row;
+  }
+`
+
 export const TicketCard = ({
   collapsed = 0,
   ticket,
@@ -127,7 +136,7 @@ export const TicketCard = ({
   )
 
   return (
-    <Card
+    <ResponsiveCard
       className="card"
       id={`ticket-${ticket.id}`}
       style={{
@@ -143,105 +152,122 @@ export const TicketCard = ({
       }}
       onClick={onClick}
     >
-      {typeof ticket.count === 'number' && (
+      <div style={{ display: 'flex' }}>
+        {typeof ticket.count === 'number' && (
+          <div
+            css={css`
+              display: flex;
+              justify-content: center;
+              align-items: center;
+
+              width: 120px;
+              border-right: 2px dashed #dedede;
+
+              font-size: 32px;
+              font-weight: 800;
+              cursor: pointer;
+            `}
+            onDoubleClick={() => {
+              editable && setIsEditMode(true)
+            }}
+          >
+            {isEditMode && editable ? (
+              <input
+                style={{
+                  width: '70px',
+                  fontSize: '32px',
+                  fontWeight: 800,
+                  textAlign: 'center',
+                }}
+                type="number"
+                defaultValue={ticket.count}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditMode(false)
+                    onChange?.(parseInt(e.currentTarget.value ?? ticket.count))
+                  }
+                }}
+              />
+            ) : (
+              <span>{ticket.count}</span>
+            )}
+            <span
+              css={css`
+                font-size: 14px;
+                font-weight: 400;
+                margin-left: 4px;
+                color: #888;
+              `}
+            >
+              X
+            </span>
+          </div>
+        )}
         <div
           css={css`
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-
-            width: 120px;
-            border-right: 2px dashed #dedede;
-            margin-right: 20px;
-
-            font-size: 32px;
-            font-weight: 800;
-            cursor: pointer;
-          `}
-          onDoubleClick={() => {
-            editable && setIsEditMode(true)
-          }}
-        >
-          {isEditMode && editable ? (
-            <input
-              style={{
-                width: '70px',
-                fontSize: '32px',
-                fontWeight: 800,
-                textAlign: 'center',
-              }}
-              type="number"
-              defaultValue={ticket.count}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setIsEditMode(false)
-                  onChange?.(parseInt(e.currentTarget.value ?? ticket.count))
-                }
-              }}
-            />
-          ) : (
-            <span>{ticket.count}</span>
-          )}
-          <span
-            css={css`
-              font-size: 14px;
-              font-weight: 400;
-              margin-left: 4px;
-              color: #888;
-            `}
-          >
-            X
-          </span>
-        </div>
-      )}
-      <div
-        css={css`
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          padding: 16px;
-          min-width: 100px;
-          background: ${CLUBS_BLUE};
-          border-radius: 8px;
-          color: ${WHITE};
-          width: 80px;
-          position: relative;
-        `}
-      >
-        <Title
-          css={css`
-            display: flex;
-            align-items: top;
+            padding: 16px;
+            min-width: 100px;
+            background: ${CLUBS_BLUE};
+            border-radius: 8px;
             color: ${WHITE};
+            width: 80px;
+            position: relative;
+            margin-left: 20px;
+            @media (max-width: 768px) {
+              width: 100%;
+              margin-left: 8px;
+              border: ${CLUBS_BLUE} !important;
+              border-width: 2px !important;
+              border-style: dashed !important;
+              background: ${WHITE};
+              color: ${CLUBS_BLUE};
+            }
           `}
-          className="mb-0"
         >
-          {datetimeData.day}
-          {datetimeData.dayDuration !== 0 && (
-            <div
-              css={css`
-                font-size: 12px;
-                position: absolute;
-                right: 12px;
-                top: 12px;
-              `}
-            >
-              {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
-              {Math.abs(datetimeData.dayDuration)}
-            </div>
-          )}
-        </Title>
-        <Description
-          style={{
-            color: WHITE,
-            width: '100%',
-            textAlign: 'center',
-            marginBottom: 0,
-          }}
-        >
-          {datetimeData.month}
-        </Description>
+          <Title
+            css={css`
+              display: flex;
+              align-items: top;
+              @media (min-width: 768px) {
+                color: ${WHITE};
+              }
+            `}
+            className="mb-0"
+          >
+            {datetimeData.day}
+            {datetimeData.dayDuration !== 0 && (
+              <div
+                css={css`
+                  font-size: 12px;
+                  position: absolute;
+                  right: 12px;
+                  top: 12px;
+                `}
+              >
+                {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
+                {Math.abs(datetimeData.dayDuration)}
+              </div>
+            )}
+          </Title>
+          <Description
+            css={css`
+              @media (min-width: 768px) {
+                color: ${WHITE};
+              }
+            `}
+            style={{
+              width: '100%',
+              textAlign: 'center',
+              marginBottom: 0,
+            }}
+          >
+            {datetimeData.month}
+          </Description>
+        </div>
       </div>
       <div
         css={css`
@@ -355,6 +381,6 @@ export const TicketCard = ({
           </button>
         </div>
       )}
-    </Card>
+    </ResponsiveCard>
   )
 }
