@@ -285,7 +285,8 @@ class TicketEventTestCase(TestCase):
         self.client.login(username=self.user1.username, password="test")
         args = {
             "quantities": [
-                {"username": "invalid_user", "ticket_type": "normal"},
+                {"username": "invalid_user_1", "ticket_type": "normal"},
+                {"username": "invalid_user_2", "ticket_type": "premium"},
             ]
         }
         resp = self.client.post(
@@ -297,11 +298,14 @@ class TicketEventTestCase(TestCase):
         )
 
         self.assertEqual(resp.status_code, 400, resp.content)
+        data = resp.json()
+        self.assertEqual(data["errors"], ["invalid_user_1", "invalid_user_2"])
 
         # All requested ticket types must be valid
         args = {
             "quantities": [
-                {"username": self.user2.username, "ticket_type": "invalid_type"},
+                {"username": self.user2.username, "ticket_type": "invalid_type_1"},
+                {"username": self.user2.username, "ticket_type": "invalid_type_2"},
             ]
         }
         resp = self.client.post(
@@ -313,6 +317,8 @@ class TicketEventTestCase(TestCase):
         )
 
         self.assertEqual(resp.status_code, 400, resp.content)
+        data = resp.json()
+        self.assertEqual(data["errors"], ["invalid_type_1", "invalid_type_2"])
 
     def test_issue_tickets_insufficient_quantity(self):
         self.client.login(username=self.user1.username, password="test")

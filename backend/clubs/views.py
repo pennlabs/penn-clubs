@@ -2830,6 +2830,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
+                                errors:
+                                    type: array
+                                    items:
+                                        type: string
         ---
         """
         event = self.get_object()
@@ -2838,14 +2842,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         if not quantities:
             return Response(
-                {"detail": "Quantities must be specified"},
+                {"detail": "Quantities must be specified", "errors": []},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         for item in quantities:
             if not item.get("username") or not item.get("ticket_type"):
                 return Response(
-                    {"detail": "Specify username and ticket type to issue tickets"},
+                    {
+                        "detail": "Specify username and ticket type to issue tickets",
+                        "errors": [],
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -2853,14 +2860,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ticket_types = [item.get("ticket_type") for item in quantities]
 
         # Validate all usernames
-        invalid_users = set(usernames) - set(
+        invalid_usernames = set(usernames) - set(
             get_user_model()
             .objects.filter(username__in=usernames)
             .values_list("username", flat=True)
         )
-        if invalid_users:
+        if invalid_usernames:
             return Response(
-                {"detail": f"Users not found: {', '.join(invalid_users)}"},
+                {
+                    "detail": "Invalid usernames",
+                    "errors": sorted(list(invalid_usernames)),
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -2870,7 +2880,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         )
         if invalid_types:
             return Response(
-                {"detail": f"Invalid ticket classes: {', '.join(invalid_types)}"},
+                {
+                    "detail": "Invalid ticket classes",
+                    "errors": sorted(list(invalid_types)),
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -2884,7 +2897,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
             if available_tickets.count() < num_requested:
                 return Response(
-                    {"detail": f"Not enough tickets available for type: {ticket_type}"},
+                    {
+                        "detail": (
+                            f"Not enough tickets available for type: {ticket_type}"
+                        ),
+                        "errors": [],
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -2927,7 +2945,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         for ticket in tickets:
             ticket.send_confirmation_email()
 
-        return Response({"success": True, "detail": f"Issued {len(tickets)} tickets"})
+        return Response(
+            {"success": True, "detail": f"Issued {len(tickets)} tickets", "errors": []}
+        )
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
