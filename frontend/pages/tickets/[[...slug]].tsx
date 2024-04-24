@@ -9,7 +9,14 @@ import { BaseLayout } from '~/components/BaseLayout'
 import ManageBuyer from '~/components/Tickets/ManageBuyer'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
-import { ALLBIRDS_GRAY, HOVER_GRAY, WHITE } from '../../constants/colors'
+import {
+  ALLBIRDS_GRAY,
+  CLUBS_BLUE,
+  GREEN,
+  HOVER_GRAY,
+  MEDIUM_GRAY,
+  WHITE,
+} from '../../constants/colors'
 import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
@@ -50,10 +57,37 @@ const Card = styled.div<CardProps>`
   }
 `
 
+const TicketStatBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: ${WHITE};
+  background-color: ${GREEN};
+  border-radius: ${BORDER_RADIUS};
+  border: 1px solid ${ALLBIRDS_GRAY};
+  box-shadow: 0 0 0 ${WHITE};
+`
+
 const Title = styled.h1`
   font-weight: 600;
   font-size: 2rem;
-  margin: 1rem 0rem;
+  margin: 1rem 0;
+`
+
+const Subtitle = styled.h2`
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin: 0;
+`
+
+const HelperText = styled.p`
+  font-size: 0.8rem;
+  font-style: italic;
+  color: ${MEDIUM_GRAY};
+  margin: 0.5rem 0;
 `
 
 const Text = styled.h1`
@@ -183,7 +217,7 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
   return (
     <Card>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Title
+        <Subtitle
           style={{
             marginTop: '0px',
             paddingTop: '0px',
@@ -192,9 +226,20 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
           }}
         >
           {ticket.type}
-        </Title>
-        <Text>Total Tickets: {ticket.total}</Text>
-        <Text>Currently available: {ticket.available}</Text>
+        </Subtitle>
+        <TicketStatBox>
+          <progress
+            className="progress is-primary"
+            value={ticket.total}
+            max={ticket.available}
+          >
+            {ticket.total / ticket.available}
+          </progress>
+          <Subtitle>
+            {ticket.total} / {ticket.available}
+          </Subtitle>
+          <Text>tickets purchased</Text>
+        </TicketStatBox>
         <Card>
           <Formik
             initialValues={{ action: 'add' }}
@@ -202,14 +247,22 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
           >
             {({ isSubmitting }) => (
               <Form>
-                <Text>Issue Tickets</Text>
+                <Subtitle>Issue Tickets</Subtitle>
+                <HelperText>
+                  Issue Tickets by entering pennkeys below, separated by commas
+                  or spaces
+                </HelperText>
                 <CSVTagInput
+                  invalidTags={['yo']}
                   placeholder="Enter pennkeys here, separated by commas or spaces"
                   onChange={(newValue) => setTicketRecipients(newValue)}
                 />
                 <button
                   disabled={isSubmitting}
                   className="button is-primary"
+                  style={{
+                    marginTop: '10px',
+                  }}
                   type="submit"
                 >
                   Issue Tickets

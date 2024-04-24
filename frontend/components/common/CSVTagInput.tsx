@@ -1,5 +1,7 @@
 import React from 'react'
+import { components } from 'react-select'
 import CreatableSelect from 'react-select/creatable'
+import { CLUBS_RED } from '~/constants'
 
 function splitString(s: string): string[] {
   return s
@@ -12,9 +14,14 @@ function splitString(s: string): string[] {
 interface CSVTagInputProps {
   onChange: (newValue: string[]) => void
   placeholder?: string
+  invalidTags?: string[]
 }
 
-const CSVTagInput: React.FC<CSVTagInputProps> = ({ onChange, placeholder }) => {
+const CSVTagInput: React.FC<CSVTagInputProps> = ({
+  onChange,
+  placeholder,
+  invalidTags,
+}) => {
   const [tags, setTags] = React.useState<string[]>([])
   const [input, setInput] = React.useState<string>()
 
@@ -41,7 +48,28 @@ const CSVTagInput: React.FC<CSVTagInputProps> = ({ onChange, placeholder }) => {
 
   return (
     <CreatableSelect
+      components={
+        invalidTags
+          ? {
+              MultiValueContainer: (props) => {
+                const isInvalid = invalidTags.includes(props.data.value)
+                return (
+                  <div
+                    style={{
+                      backgroundColor: isInvalid ? CLUBS_RED : 'inherit',
+                      borderRadius: '2px',
+                      color: isInvalid ? CLUBS_RED : 'inherit',
+                    }}
+                  >
+                    <components.MultiValueContainer {...props} />
+                  </div>
+                )
+              },
+            }
+          : {}
+      }
       noOptionsMessage={() => null}
+      isClearable
       isMulti
       placeholder={placeholder}
       onChange={handleChange}
