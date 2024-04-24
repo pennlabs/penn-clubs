@@ -2897,6 +2897,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         )
 
         # Assign tickets to users
+        transaction_records = []
+
         for username, ticket_type in zip(usernames, ticket_types):
             user = get_user_model().objects.filter(username=username).first()
             ticket = next(
@@ -2907,14 +2909,25 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             ticket.owner = user
             ticket.holder = None
 
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    total_amount=0.0,
+                    buyer_first_name=user.first_name,
+                    buyer_last_name=user.last_name,
+                    buyer_email=user.email,
+                )
+            )
+
         Ticket.objects.bulk_update(tickets, ["owner", "holder"])
+        Ticket.objects.update_holds()
+
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
 
         for ticket in tickets:
             ticket.send_confirmation_email()
 
-        Ticket.objects.update_holds()
-
-        return Response({"success": True, "detail": "success"})
+        return Response({"success": True, "detail": f"Issued {len(tickets)} tickets"})
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):

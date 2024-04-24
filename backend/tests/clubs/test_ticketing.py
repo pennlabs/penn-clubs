@@ -271,6 +271,22 @@ class TicketEventTestCase(TestCase):
             Ticket.objects.filter(type="premium", owner=self.user2).count(), 1
         )
 
+        # Two transaction records (with 0 total price) should be created
+        self.assertTrue(
+            TicketTransactionRecord.objects.filter(
+                ticket__type="normal",
+                ticket__owner=self.user2,
+                total_amount=0.0,
+            ).exists()
+        )
+        self.assertTrue(
+            TicketTransactionRecord.objects.filter(
+                ticket__type="premium",
+                ticket__owner=self.user2,
+                total_amount=0.0,
+            ).exists()
+        )
+
     def test_issue_tickets_invalid_username_ticket_type(self):
         # All usernames must be valid
         self.client.login(username=self.user1.username, password="test")
