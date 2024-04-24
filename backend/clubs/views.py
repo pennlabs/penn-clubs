@@ -5055,6 +5055,9 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
             }
 
+            # Place hold on tickets for 10 mins
+            self.place_hold_on_tickets(tickets)
+
             self.give_tickets(order_info, cart, None)
 
             return Response(
@@ -5109,10 +5112,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 cart.save()
 
             # Place hold on tickets for 10 mins
-            holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
-            tickets.update(
-                holder=self.request.user, holding_expiration=holding_expiration
-            )
+            self.place_hold_on_tickets(tickets)
 
             return Response(
                 {
@@ -5249,6 +5249,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
         order_info = transaction_data["orderInformation"]
         self.give_tickets(order_info, cart, reconciliation_id)
 
@@ -5395,6 +5396,13 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         cart.checkout_context = None
         cart.save()
+
+    def place_hold_on_tickets(self, tickets):
+        """
+        Helper function that places a 10 minute hold on tickets for a user
+        """
+        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+        tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
