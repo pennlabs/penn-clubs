@@ -120,6 +120,7 @@ export const TicketCard = ({
   showModal?: () => void
 }) => {
   const [isEditMode, setIsEditMode] = useState(false)
+  const [ticketCount, setTicketCount] = useState(ticket.count)
 
   const datetimeData = formatTime(
     ticket.event.start_time,
@@ -143,7 +144,7 @@ export const TicketCard = ({
       }}
       onClick={onClick}
     >
-      {typeof ticket.count === 'number' && (
+      {typeof ticketCount === 'number' && (
         <div
           css={css`
             display: flex;
@@ -171,7 +172,10 @@ export const TicketCard = ({
                 textAlign: 'center',
               }}
               type="number"
-              defaultValue={ticket.count}
+              value={ticketCount}
+              onChange={(e) => {
+                setTicketCount(parseInt(e.currentTarget.value ?? ticket.count))
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setIsEditMode(false)
@@ -180,7 +184,7 @@ export const TicketCard = ({
               }}
             />
           ) : (
-            <span>{ticket.count}</span>
+            <span>{ticketCount}</span>
           )}
           <span
             css={css`
@@ -279,6 +283,9 @@ export const TicketCard = ({
             margin: 0 4px;
           `}
           onClick={() => {
+            if (isEditMode) {
+              onChange?.(ticketCount || ticket.count!)
+            }
             setIsEditMode(!isEditMode)
           }}
         >

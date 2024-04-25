@@ -1,17 +1,19 @@
 import { css } from '@emotion/react'
 import { Center, Container, Icon, Metadata } from 'components/common'
+import { Form, Formik } from 'formik'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import React, { ReactElement, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
 
 import { BaseLayout } from '~/components/BaseLayout'
+import CSVTagInput from '~/components/common/CSVTagInput'
 import ManageBuyer from '~/components/Tickets/ManageBuyer'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
 import {
   ALLBIRDS_GRAY,
-  CLUBS_BLUE,
   GREEN,
   HOVER_GRAY,
   MEDIUM_GRAY,
@@ -23,9 +25,6 @@ import {
   mediaMaxWidth,
   SM,
 } from '../../constants/measurements'
-import CSVTagInput from '~/components/common/CSVTagInput'
-import { toast } from 'react-toastify'
-import { Form, Formik } from 'formik'
 
 type CardProps = {
   readonly hovering?: boolean
@@ -345,9 +344,9 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const id = query.slug[0]
   try {
     const [ticketsReq, eventReq, buyersReq] = await Promise.all([
-      doApiRequest(`/events/${id}/tickets?format=json`, { headers }),
+      doApiRequest(`/events/${id}/tickets/?format=json`, { headers }),
       doApiRequest(`/events/${id}/?format=json`, { headers }),
-      doApiRequest(`/events/${id}/buyers?format=json`, { headers }),
+      doApiRequest(`/events/${id}/buyers/?format=json`, { headers }),
     ])
 
     const [baseProps, tickets, event, buyers] = await Promise.all([

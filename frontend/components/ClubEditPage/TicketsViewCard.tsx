@@ -26,7 +26,6 @@ export default function TicketsViewCard({
     },
   ]
 
-  // console.log(club.events)
   const ticketEvents = club.events.filter((event) => event.ticketed)
 
   return (
@@ -44,9 +43,11 @@ export default function TicketsViewCard({
         />
       ) : (
         <>
-          You don't have any ticketed events, to add create ticketed events or
-          add ticket offerings, to existing events, go to the events, click
-          create on the tickets section below the event details.
+          You don't have any ticketed events. To create a ticketed event or add
+          ticket offerings to existing events, go to{' '}
+          <Link href={`/club/${club.code}/edit/events`}>Events</Link> within
+          this dashboard and click "Create" in the tickets section below event
+          details.
         </>
       )}
     </BaseCard>

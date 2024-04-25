@@ -1,6 +1,7 @@
 import React from 'react'
 import { components } from 'react-select'
 import CreatableSelect from 'react-select/creatable'
+
 import { CLUBS_RED } from '~/constants'
 
 function splitString(s: string): string[] {
