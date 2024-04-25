@@ -168,6 +168,7 @@ export type Buyer = {
   owner__email: string
   owner_id: number
   type: string
+  attended: boolean
 }
 
 type Ticket = {
@@ -324,7 +325,12 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
                   <ManageBuyer
                     key={buyer.id}
                     buyer={buyer}
-                    onAttendedChange={() => {}}
+                    onAttendedChange={(value: boolean) => {
+                      doApiRequest(`/tickets/${buyer.id}/?format=json`, {
+                        method: 'PATCH',
+                        body: { attended: value },
+                      })
+                    }}
                   />
                 ))}
               </div>

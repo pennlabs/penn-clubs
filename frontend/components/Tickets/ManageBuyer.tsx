@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { Buyer } from '~/pages/tickets/[[...slug]]'
 
@@ -10,7 +11,7 @@ type BuyerProps = {
 }
 
 const ManageBuyer = ({ buyer, onAttendedChange }: BuyerProps) => {
-  const [attended, setAttended] = useState(false) // Change to buyer.attended once backend is updated
+  const [attended, setAttended] = useState(buyer.attended)
   return (
     <>
       <span>
@@ -18,8 +19,44 @@ const ManageBuyer = ({ buyer, onAttendedChange }: BuyerProps) => {
           checked={attended}
           onChange={(e) => {
             e.stopPropagation()
-            onAttendedChange(!attended)
-            setAttended(!attended)
+            if (attended) {
+              toast(
+                <div style={{ display: 'inline-flex', width: '300px' }}>
+                  <p>
+                    Are you sure you want to mark {buyer.fullname} as not
+                    attended?
+                  </p>
+                  <button
+                    className="button"
+                    style={{ marginRight: '10px', alignSelf: 'center' }}
+                    onClick={() => {
+                      onAttendedChange(!attended)
+                      setAttended(!attended)
+                      toast.dismiss()
+                    }}
+                  >
+                    Yes
+                  </button>
+                  <p
+                    style={{
+                      cursor: 'pointer',
+                      position: 'absolute',
+                      right: '4px',
+                      top: '0px',
+                    }}
+                    onClick={() => {
+                      toast.dismiss()
+                    }}
+                  >
+                    x
+                  </p>
+                </div>,
+                { autoClose: false },
+              )
+            } else {
+              onAttendedChange(!attended)
+              setAttended(!attended)
+            }
           }}
         />
       </span>
