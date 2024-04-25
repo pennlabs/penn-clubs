@@ -2908,12 +2908,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
             tickets.extend(available_tickets)
 
-        # Hold all selected tickets for 10 mins
-        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
-        Ticket.objects.filter(id__in=[ticket.id for ticket in tickets]).update(
-            holder=self.request.user, holding_expiration=holding_expiration
-        )
-
         # Assign tickets to users
         transaction_records = []
 
