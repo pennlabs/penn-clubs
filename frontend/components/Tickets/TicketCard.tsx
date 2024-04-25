@@ -23,6 +23,8 @@ import {
 } from '~/constants/measurements'
 import { CountedEventTicket } from '~/types'
 
+import { ModalType } from '../Settings/TicketsTab'
+
 Settings.defaultZone = 'America/New_York'
 
 type CardProps = {
@@ -102,7 +104,6 @@ const ResponsiveCard = styled(Card)`
 export const TicketCard = ({
   collapsed = 0,
   ticket,
-  showModal,
   style,
   removable,
   editable,
@@ -110,7 +111,7 @@ export const TicketCard = ({
   onRemove,
   onChange,
   onClick,
-  viewQRCode,
+  viewModal,
 }: {
   collapsed?: number
   ticket: CountedEventTicket
@@ -125,8 +126,7 @@ export const TicketCard = ({
   onChange?: (count: number) => void
   onClick?: () => void
 
-  viewQRCode?: () => void
-  showModal?: () => void
+  viewModal?: (type: ModalType) => void
 }) => {
   const [isEditMode, setIsEditMode] = useState(false)
   const [ticketCount, setTicketCount] = useState(ticket.count)
@@ -361,7 +361,7 @@ export const TicketCard = ({
               `}
               onClick={(e) => {
                 e.stopPropagation()
-                viewQRCode?.()
+                viewModal?.(ModalType.QR_CODE)
               }}
             >
               <span>QR Code</span>
@@ -382,7 +382,7 @@ export const TicketCard = ({
             `}
             onClick={(e) => {
               e.stopPropagation()
-              showModal?.()
+              viewModal?.(ModalType.TRANSFER)
             }}
           >
             <span>Transfer Ownership</span>
