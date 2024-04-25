@@ -1845,6 +1845,7 @@ class Ticket(models.Model):
     )
     group_size = models.PositiveIntegerField(null=True, blank=True)
     transferable = models.BooleanField(default=True)
+    attended = models.BooleanField(default=False)
     objects = TicketManager()
 
     def get_qr(self):

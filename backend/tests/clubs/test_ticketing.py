@@ -17,6 +17,7 @@ from clubs.models import (
     Cart,
     Club,
     Event,
+    Membership,
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
@@ -1311,6 +1312,42 @@ class TicketTestCase(TestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, 403, resp.content)
+
+    def test_update_attendance(self):
+        self.client.login(username=self.user1.username, password="test")
+        Membership.objects.create(
+            person=self.user1,
+            club=self.club1,
+            title="Officer",
+            role=Membership.ROLE_OFFICER,
+        )
+        ticket = self.tickets1[0]
+        ticket.owner = self.user2
+        ticket.save()
+
+        resp = self.client.patch(
+            reverse("tickets-detail", args=(ticket.id,)),
+            {"attended": True},
+            format="json",
+        )
+        ticket.refresh_from_db()
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(ticket.attended)
+
+    def test_update_attendance_non_officer(self):
+        self.client.login(username=self.user1.username, password="test")
+        ticket = self.tickets1[0]
+        ticket.owner = self.user1
+        ticket.save()
+
+        resp = self.client.patch(
+            reverse("tickets-detail", args=(ticket.id,)),
+            {"attended": True},
+            format="json",
+        )
+        ticket.refresh_from_db()
+        self.assertEqual(resp.status_code, 404, resp.content)
+        self.assertFalse(ticket.attended)
 
 
 class TicketModelTestCase(TestCase):
