@@ -4973,6 +4973,9 @@ class TicketViewSet(viewsets.ModelViewSet):
     list:
     List all tickets owned by a user
 
+    partial_update:
+    Update attendance for a ticket
+
     cart:
     List all unowned/unheld tickets currently in a user's cart
 
@@ -4991,7 +4994,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     permission_classes = [IsAuthenticated]
     serializer_class = TicketSerializer
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "patch"]
     lookup_field = "id"
 
     @staticmethod
@@ -5017,6 +5020,45 @@ class TicketViewSet(viewsets.ModelViewSet):
             for ticket in cart.tickets.all()
         )
         return cart_total
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Update a ticket's attendance (only accessible by club officers)
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            attendance:
+                                type: boolean
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Ticket'
+            "400":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        attended = request.data.get("attended")
+        if attended is None or not isinstance(attended, bool):
+            return Response(
+                {"detail": "Missing boolean attribute 'attended'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ticket = self.get_object()
+        ticket.attended = attended
+        ticket.save()
+        return Response(TicketSerializer(ticket).data)
 
     @transaction.atomic
     @update_holds
@@ -5505,6 +5547,13 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
+        if self.action == "partial_update":
+            officer_clubs = Membership.objects.filter(
+                person=self.request.user, role__lte=Membership.ROLE_OFFICER
+            ).values_list("club", flat=True)
+            return Ticket.objects.filter(event__club__in=officer_clubs).select_related(
+                "event__club"
+            )
         return Ticket.objects.filter(owner=self.request.user.id)
 
 
