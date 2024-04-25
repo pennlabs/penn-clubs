@@ -2790,7 +2790,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return Response({"detail": "Successfully created tickets"})
 
-    @action(detail=True, methods=["post"])
+    @tickets.mapping.put
     @transaction.atomic
     @update_holds
     def issue_tickets(self, request, *args, **kwargs):
