@@ -1335,6 +1335,7 @@ class TicketTestCase(TestCase):
         self.assertTrue(ticket.attended)
 
     def test_update_attendance_non_officer(self):
+        # user1 is no longer an officer for the ticket's club
         self.client.login(username=self.user1.username, password="test")
         ticket = self.tickets1[0]
         ticket.owner = self.user1
