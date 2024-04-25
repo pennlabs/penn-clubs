@@ -187,6 +187,8 @@ type TicketCardProps = {
 
 const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
   const [viewBuyers, setViewBuyers] = useState(false)
+
+  // PennKeys to issue tickets to
   const [ticketRecipients, setTicketRecipients] = useState<string[]>([])
 
   // TODO: link this when backend is done with this route
@@ -230,13 +232,13 @@ const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
         <TicketStatBox>
           <progress
             className="progress is-primary"
-            value={ticket.total}
-            max={ticket.available}
+            value={ticket.total - ticket.available}
+            max={ticket.total}
           >
-            {ticket.total / ticket.available}
+            {(ticket.total - ticket.available) / ticket.total}
           </progress>
           <Subtitle>
-            {ticket.total} / {ticket.available}
+            {ticket.total - ticket.available} / {ticket.total}
           </Subtitle>
           <Text>tickets purchased</Text>
         </TicketStatBox>
