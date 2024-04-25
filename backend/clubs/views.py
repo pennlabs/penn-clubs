@@ -2686,7 +2686,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Tickets can't be edited after they've been sold
+        # Tickets can't be edited after they've been sold or held
         if (
             Ticket.objects.filter(event=event)
             .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
@@ -2789,6 +2789,159 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.save()
 
         return Response({"detail": "Successfully created tickets"})
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    @update_holds
+    def issue_tickets(self, request, *args, **kwargs):
+        """
+        Issue tickets that have already been created to users in bulk.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            tickets:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        username:
+                                            type: string
+                                        ticket_type:
+                                            type: string
+
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                errors:
+                                    type: array
+                                    items:
+                                        type: string
+        ---
+        """
+        event = self.get_object()
+
+        tickets = request.data.get("tickets", [])
+
+        if not tickets:
+            return Response(
+                {"detail": "tickets must be specified", "errors": []},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for item in tickets:
+            if not item.get("username") or not item.get("ticket_type"):
+                return Response(
+                    {
+                        "detail": "Specify username and ticket type to issue tickets",
+                        "errors": [],
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        usernames = [item.get("username") for item in tickets]
+        ticket_types = [item.get("ticket_type") for item in tickets]
+
+        # Validate all usernames
+        invalid_usernames = set(usernames) - set(
+            get_user_model()
+            .objects.filter(username__in=usernames)
+            .values_list("username", flat=True)
+        )
+        if invalid_usernames:
+            return Response(
+                {
+                    "detail": "Invalid usernames",
+                    "errors": sorted(list(invalid_usernames)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate all ticket types
+        invalid_types = set(ticket_types) - set(
+            Ticket.objects.filter(event=event).values_list("type", flat=True)
+        )
+        if invalid_types:
+            return Response(
+                {
+                    "detail": "Invalid ticket classes",
+                    "errors": sorted(list(invalid_types)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tickets = []
+        for ticket_type, num_requested in collections.Counter(ticket_types).items():
+            available_tickets = Ticket.objects.select_for_update(
+                skip_locked=True
+            ).filter(
+                event=event, type=ticket_type, owner__isnull=True, holder__isnull=True
+            )[:num_requested]
+
+            if available_tickets.count() < num_requested:
+                return Response(
+                    {
+                        "detail": (
+                            f"Not enough tickets available for type: {ticket_type}"
+                        ),
+                        "errors": [],
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            tickets.extend(available_tickets)
+
+        # Assign tickets to users
+        transaction_records = []
+
+        for username, ticket_type in zip(usernames, ticket_types):
+            user = get_user_model().objects.filter(username=username).first()
+            ticket = next(
+                ticket
+                for ticket in tickets
+                if ticket.type == ticket_type and ticket.owner is None
+            )
+            ticket.owner = user
+            ticket.holder = None
+
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    total_amount=0.0,
+                    buyer_first_name=user.first_name,
+                    buyer_last_name=user.last_name,
+                    buyer_email=user.email,
+                )
+            )
+
+        Ticket.objects.bulk_update(tickets, ["owner", "holder"])
+        Ticket.objects.update_holds()
+
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+
+        for ticket in tickets:
+            ticket.send_confirmation_email()
+
+        return Response(
+            {"success": True, "detail": f"Issued {len(tickets)} tickets", "errors": []}
+        )
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):

@@ -245,6 +245,130 @@ class TicketEventTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
+    def test_issue_tickets(self):
+        self.client.login(username=self.user1.username, password="test")
+        args = {
+            "tickets": [
+                {"username": self.user1.username, "ticket_type": "normal"},
+                {"username": self.user1.username, "ticket_type": "premium"},
+                {"username": self.user2.username, "ticket_type": "normal"},
+                {"username": self.user2.username, "ticket_type": "premium"},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+            ),
+            args,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        for item in args["tickets"]:
+            username, ticket_type = item["username"], item["ticket_type"]
+            user = get_user_model().objects.get(username=username)
+
+            self.assertEqual(
+                Ticket.objects.filter(type=ticket_type, owner=user).count(), 1
+            )
+            self.assertTrue(
+                TicketTransactionRecord.objects.filter(
+                    ticket__type=ticket_type,
+                    ticket__owner=user,
+                    total_amount=0.0,
+                ).exists()
+            )
+
+    def test_issue_tickets_bad_perms(self):
+        # user2 is not a superuser or club officer+
+        self.client.login(username=self.user2.username, password="test")
+        args = {
+            "tickets": [
+                {"username": self.user1.username, "ticket_type": "normal"},
+                {"username": self.user2.username, "ticket_type": "normal"},
+            ]
+        }
+
+        resp = self.client.post(
+            reverse(
+                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+            ),
+            args,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+    def test_issue_tickets_invalid_username_ticket_type(self):
+        # All usernames must be valid
+        self.client.login(username=self.user1.username, password="test")
+        args = {
+            "tickets": [
+                {"username": "invalid_user_1", "ticket_type": "normal"},
+                {"username": "invalid_user_2", "ticket_type": "premium"},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+            ),
+            args,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 400, resp.content)
+        data = resp.json()
+        self.assertEqual(data["errors"], ["invalid_user_1", "invalid_user_2"])
+
+        # All requested ticket types must be valid
+        args = {
+            "tickets": [
+                {"username": self.user2.username, "ticket_type": "invalid_type_1"},
+                {"username": self.user2.username, "ticket_type": "invalid_type_2"},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+            ),
+            args,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 400, resp.content)
+        data = resp.json()
+        self.assertEqual(data["errors"], ["invalid_type_1", "invalid_type_2"])
+
+    def test_issue_tickets_insufficient_quantity(self):
+        self.client.login(username=self.user1.username, password="test")
+        args = {
+            "tickets": [
+                {"username": self.user2.username, "ticket_type": "normal"}
+                for _ in range(100)
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+            ),
+            args,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn(
+            "Not enough tickets available for type: normal", str(resp.content)
+        )
+
+        # No tickets should be transferred
+        self.assertEqual(Ticket.objects.filter(owner=self.user2).count(), 0)
+
+        # No holds should be given
+        self.assertEqual(
+            Ticket.objects.filter(type="normal", holder__isnull=False).count(), 0
+        )
+
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
         Ticket.objects.all().delete()

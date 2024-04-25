@@ -223,7 +223,7 @@ class EventPermission(permissions.BasePermission):
 
             if not old_type == FAIR_TYPE and new_type == FAIR_TYPE:
                 return False
-        elif view.action in ["buyers", "create_tickets"]:
+        elif view.action in ["buyers", "create_tickets", "issue_tickets"]:
             if not request.user.is_authenticated:
                 return False
             membership = find_membership_helper(request.user, obj.club)
