@@ -280,6 +280,26 @@ class TicketEventTestCase(TestCase):
                 ).exists()
             )
 
+    def test_issue_tickets_bad_perms(self):
+        # user2 is not a superuser or club officer+
+        self.client.login(username=self.user2.username, password="test")
+        args = {
+            "tickets": [
+                {"username": self.user1.username, "ticket_type": "normal"},
+                {"username": self.user2.username, "ticket_type": "normal"},
+            ]
+        }
+
+        resp = self.client.post(
+            reverse(
+                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+            ),
+            args,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 403, resp.content)
+
     def test_issue_tickets_invalid_username_ticket_type(self):
         # All usernames must be valid
         self.client.login(username=self.user1.username, password="test")
