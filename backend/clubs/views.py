@@ -2803,7 +2803,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
-                            quantities:
+                            tickets:
                                 type: array
                                 items:
                                     type: object
@@ -2838,15 +2838,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
 
-        quantities = request.data.get("quantities", [])
+        tickets = request.data.get("tickets", [])
 
-        if not quantities:
+        if not tickets:
             return Response(
-                {"detail": "Quantities must be specified", "errors": []},
+                {"detail": "tickets must be specified", "errors": []},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        for item in quantities:
+        for item in tickets:
             if not item.get("username") or not item.get("ticket_type"):
                 return Response(
                     {
@@ -2856,8 +2856,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        usernames = [item.get("username") for item in quantities]
-        ticket_types = [item.get("ticket_type") for item in quantities]
+        usernames = [item.get("username") for item in tickets]
+        ticket_types = [item.get("ticket_type") for item in tickets]
 
         # Validate all usernames
         invalid_usernames = set(usernames) - set(

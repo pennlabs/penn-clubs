@@ -248,7 +248,7 @@ class TicketEventTestCase(TestCase):
     def test_issue_tickets(self):
         self.client.login(username=self.user1.username, password="test")
         args = {
-            "quantities": [
+            "tickets": [
                 {"username": self.user1.username, "ticket_type": "normal"},
                 {"username": self.user1.username, "ticket_type": "premium"},
                 {"username": self.user2.username, "ticket_type": "normal"},
@@ -265,7 +265,7 @@ class TicketEventTestCase(TestCase):
 
         self.assertEqual(resp.status_code, 200, resp.content)
 
-        for item in args["quantities"]:
+        for item in args["tickets"]:
             username, ticket_type = item["username"], item["ticket_type"]
             user = get_user_model().objects.get(username=username)
 
@@ -284,7 +284,7 @@ class TicketEventTestCase(TestCase):
         # All usernames must be valid
         self.client.login(username=self.user1.username, password="test")
         args = {
-            "quantities": [
+            "tickets": [
                 {"username": "invalid_user_1", "ticket_type": "normal"},
                 {"username": "invalid_user_2", "ticket_type": "premium"},
             ]
@@ -303,7 +303,7 @@ class TicketEventTestCase(TestCase):
 
         # All requested ticket types must be valid
         args = {
-            "quantities": [
+            "tickets": [
                 {"username": self.user2.username, "ticket_type": "invalid_type_1"},
                 {"username": self.user2.username, "ticket_type": "invalid_type_2"},
             ]
@@ -323,7 +323,7 @@ class TicketEventTestCase(TestCase):
     def test_issue_tickets_insufficient_quantity(self):
         self.client.login(username=self.user1.username, password="test")
         args = {
-            "quantities": [
+            "tickets": [
                 {"username": self.user2.username, "ticket_type": "normal"}
                 for _ in range(100)
             ]
