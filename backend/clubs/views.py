@@ -2686,7 +2686,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Tickets can't be edited after they've been sold
+        # Tickets can't be edited after they've been sold or held
         if (
             Ticket.objects.filter(event=event)
             .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
@@ -2789,6 +2789,159 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.save()
 
         return Response({"detail": "Successfully created tickets"})
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    @update_holds
+    def issue_tickets(self, request, *args, **kwargs):
+        """
+        Issue tickets that have already been created to users in bulk.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            tickets:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        username:
+                                            type: string
+                                        ticket_type:
+                                            type: string
+
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                errors:
+                                    type: array
+                                    items:
+                                        type: string
+        ---
+        """
+        event = self.get_object()
+
+        tickets = request.data.get("tickets", [])
+
+        if not tickets:
+            return Response(
+                {"detail": "tickets must be specified", "errors": []},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for item in tickets:
+            if not item.get("username") or not item.get("ticket_type"):
+                return Response(
+                    {
+                        "detail": "Specify username and ticket type to issue tickets",
+                        "errors": [],
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        usernames = [item.get("username") for item in tickets]
+        ticket_types = [item.get("ticket_type") for item in tickets]
+
+        # Validate all usernames
+        invalid_usernames = set(usernames) - set(
+            get_user_model()
+            .objects.filter(username__in=usernames)
+            .values_list("username", flat=True)
+        )
+        if invalid_usernames:
+            return Response(
+                {
+                    "detail": "Invalid usernames",
+                    "errors": sorted(list(invalid_usernames)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate all ticket types
+        invalid_types = set(ticket_types) - set(
+            Ticket.objects.filter(event=event).values_list("type", flat=True)
+        )
+        if invalid_types:
+            return Response(
+                {
+                    "detail": "Invalid ticket classes",
+                    "errors": sorted(list(invalid_types)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tickets = []
+        for ticket_type, num_requested in collections.Counter(ticket_types).items():
+            available_tickets = Ticket.objects.select_for_update(
+                skip_locked=True
+            ).filter(
+                event=event, type=ticket_type, owner__isnull=True, holder__isnull=True
+            )[:num_requested]
+
+            if available_tickets.count() < num_requested:
+                return Response(
+                    {
+                        "detail": (
+                            f"Not enough tickets available for type: {ticket_type}"
+                        ),
+                        "errors": [],
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            tickets.extend(available_tickets)
+
+        # Assign tickets to users
+        transaction_records = []
+
+        for username, ticket_type in zip(usernames, ticket_types):
+            user = get_user_model().objects.filter(username=username).first()
+            ticket = next(
+                ticket
+                for ticket in tickets
+                if ticket.type == ticket_type and ticket.owner is None
+            )
+            ticket.owner = user
+            ticket.holder = None
+
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    total_amount=0.0,
+                    buyer_first_name=user.first_name,
+                    buyer_last_name=user.last_name,
+                    buyer_email=user.email,
+                )
+            )
+
+        Ticket.objects.bulk_update(tickets, ["owner", "holder"])
+        Ticket.objects.update_holds()
+
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+
+        for ticket in tickets:
+            ticket.send_confirmation_email()
+
+        return Response(
+            {"success": True, "detail": f"Issued {len(tickets)} tickets", "errors": []}
+        )
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -2917,9 +3070,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
+    @update_holds
     def destroy(self, request, *args, **kwargs):
         """
         Do not let non-superusers delete events with the FAIR type through the API.
+        Check if there are bought or held tickets before deletion.
         """
         event = self.get_object()
 
@@ -2927,6 +3082,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             raise DRFValidationError(
                 detail="You cannot delete activities fair events. "
                 f"If you would like to do this, email {settings.FROM_EMAIL}."
+            )
+
+        if (
+            Ticket.objects.filter(event=event)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            raise DRFValidationError(
+                detail=(
+                    "This event cannot be deleted because there are tickets "
+                    "that have been bought or are being checked out."
+                )
             )
 
         return super().destroy(request, *args, **kwargs)
@@ -3165,28 +3332,6 @@ class EventViewSet(ClubEventViewSet):
         )
 
         return Response(EventSerializer(events, many=True).data)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Checks if there are tickets linked to this event before deletion.
-        """
-        event = self.get_object()
-        now = timezone.now()
-
-        if (
-            now <= event.end_time
-            and Ticket.objects.filter(event=event, owner__isnull=False).exists()
-        ):
-            return Response(
-                {
-                    "detail": "Cannot delete event with active tickets \
-                          associated with it."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Proceed with deletion if no active tickets are linked
-        return super().destroy(request, *args, **kwargs)
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
@@ -4878,7 +5023,8 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def cart(self, request, *args, **kwargs):
         """
-        Validate tickets in a cart and return them
+        Validate tickets in a cart and return them. Replace in-cart tickets that
+        have been bought/held by someone else.
         ---
         requestBody:
             content: {}
@@ -4915,7 +5061,6 @@ class TicketViewSet(viewsets.ModelViewSet):
             owner=self.request.user
         )
 
-        # Replace in-cart tickets that have been bought/held by someone else
         tickets_to_replace = cart.tickets.filter(
             Q(owner__isnull=False) | Q(holder__isnull=False)
         ).exclude(holder=self.request.user)
@@ -4929,43 +5074,37 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
             )
 
-        sold_out_tickets, replacement_tickets = [], []
+        # Attempt to replace all tickets that have gone stale
+        replacement_tickets, sold_out_tickets = [], []
 
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
-        event_dict = {
-            event["id"]: event["name"]
-            for event in Event.objects.filter(
-                id__in=tickets_to_replace.values_list("event", flat=True).distinct()
-            ).values("id", "name")
-        }
+        tickets_to_replace = tickets_to_replace.select_related("event")
 
-        # Process each ticket type and event
-        for ticket_class in tickets_to_replace.values("type", "event").annotate(
-            count=Count("id")
-        ):
-            available_tickets = (
-                Ticket.objects.filter(
-                    event=ticket_class["event"],
-                    type=ticket_class["type"],
-                    owner__isnull=True,
-                    holder__isnull=True,
-                )
-                .exclude(id__in=tickets_in_cart)
-                .select_related("event")[: ticket_class["count"]]
-            )
+        for ticket_class in tickets_to_replace.values(
+            "type", "event", "event__name"
+        ).annotate(count=Count("id")):
+            # we don't need to lock, since we aren't updating holder/owner
+            available_tickets = Ticket.objects.filter(
+                event=ticket_class["event"],
+                type=ticket_class["type"],
+                owner__isnull=True,
+                holder__isnull=True,
+            ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
-            shortage = ticket_class["count"] - available_tickets.count()
-            if shortage > 0:
+            num_short = ticket_class["count"] - available_tickets.count()
+            if num_short > 0:
                 sold_out_tickets.append(
                     {
-                        **ticket_class,
+                        "type": ticket_class["type"],
                         "event": {
                             "id": ticket_class["event"],
-                            "name": event_dict[ticket_class["event"]],
+                            "name": ticket_class["event__name"],
                         },
-                        "count": shortage,
+                        "count": num_short,
                     }
                 )
+
+            replacement_tickets.extend(list(available_tickets))
 
         cart.tickets.remove(*tickets_to_replace)
         if replacement_tickets:
@@ -5250,7 +5389,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                     total_amount=float(order_info["amountDetails"]["totalAmount"]),
                     buyer_first_name=order_info["billTo"]["firstName"],
                     buyer_last_name=order_info["billTo"]["lastName"],
-                    buyer_phone=order_info["billTo"]["phoneNumber"],
+                    # TODO: investigate why phone numbers don't show in test API
+                    buyer_phone=order_info["billTo"].get("phoneNumber", None),
                     buyer_email=order_info["billTo"]["email"],
                 )
             )
