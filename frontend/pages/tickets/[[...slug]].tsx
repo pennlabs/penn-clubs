@@ -142,7 +142,6 @@ const Ticket: React.FC<TicketProps> = ({
       tickTypes[buyer.type].buyers.push(buyer)
     }
   }
-
   return (
     <>
       <BaseLayout {...baseProps}>
@@ -152,6 +151,7 @@ const Ticket: React.FC<TicketProps> = ({
           {Object.values(tickTypes).map((ticket, i) => (
             <TicketCard
               key={i}
+              event={event.id}
               ticket={ticket as Ticket}
               buyersPerm={buyers.buyers != null}
             />
@@ -181,27 +181,30 @@ type Ticket = {
 
 type TicketCardProps = {
   ticket: Ticket
+  event: string
   buyersPerm: boolean
 }
 
-const TicketCard = ({ ticket, buyersPerm }: TicketCardProps) => {
+const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
   const [viewBuyers, setViewBuyers] = useState(false)
 
   // PennKeys to issue tickets to
   const [ticketRecipients, setTicketRecipients] = useState<string[]>([])
 
-  // TODO: link this when backend is done with this route
   async function handleIssueTickets(data, { setSubmitting }) {
     try {
-      const resp = await doApiRequest(`/events/${ticket.id}/issue_tickets`, {
-        method: 'POST',
-        body: JSON.stringify({
-          quantities: ticketRecipients.map((t) => ({
-            ticket_type: ticket.type,
-            username: t,
-          })),
-        }),
-      })
+      const resp = await doApiRequest(
+        `/events/${event}/issue_tickets/?format=json`,
+        {
+          method: 'POST',
+          body: {
+            tickets: ticketRecipients.map((t) => ({
+              ticket_type: ticket.type,
+              username: t,
+            })),
+          },
+        },
+      )
       const contents = await resp.json()
       if (contents.success) {
         toast.info(contents.message, { hideProgressBar: true })
