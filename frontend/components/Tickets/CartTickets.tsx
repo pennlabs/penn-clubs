@@ -10,6 +10,7 @@ import { CountedEventTicket, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
 
 import { ModalContent } from '../ClubPage/Actions'
+import { useRouter } from 'next/navigation'
 
 const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
   return (
@@ -147,7 +148,11 @@ const useCheckout = () => {
 
   return {
     showModal,
-    onClose: () => {
+    onClose: (force: boolean) => {
+      if (force) {
+        setShowModal(false)
+        return
+      }
       const confirmed = confirm(
         'Are you sure you want to exit the checkout process?',
       )
@@ -165,6 +170,7 @@ const useCheckout = () => {
 }
 
 const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
+  const navigate = useRouter()
   const [removeModal, setRemoveModal] = useState<CountedEventTicket | null>(
     null,
   )
@@ -365,7 +371,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           Proceed to Checkout
         </button>
       </div>
-      <Modal show={showModal} closeModal={onModalClose}>
+      <Modal show={showModal} closeModal={() => onModalClose(false)}>
         {captureContext && (
           <PaymentForm
             captureContext={captureContext}
@@ -380,6 +386,13 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
                 },
               )
               const data = await res.json()
+              if (data.success) {
+                onModalClose(true)
+                toast.success('Tickets purchased successfully!')
+                setTimeout(() => {
+                  navigate.push('/settings#Tickets')
+                }, 500)
+              }
             }}
           />
         )}
