@@ -5028,7 +5028,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         # Assert that the filter succeeded in freezing all the tickets for checkout
-        if tickets.count() != cart.tickets.all().count():
+        if tickets.count() != cart.tickets.count():
             return Response(
                 {
                     "success": False,
@@ -5056,7 +5056,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             }
 
             # Place hold on tickets for 10 mins
-            self.place_hold_on_tickets(tickets)
+            self._place_hold_on_tickets(tickets)
             # Skip payment process and give tickets to user/buyer
             self._give_tickets(order_info, cart, None)
 
@@ -5112,7 +5112,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 cart.save()
 
             # Place hold on tickets for 10 mins
-            self.place_hold_on_tickets(tickets)
+            self._place_hold_on_tickets(tickets)
 
             return Response(
                 {
@@ -5362,11 +5362,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # At this point, we have validated that the payment was authorized
         # Give the tickets to the user
-        tickets = (
-            cart.tickets.select_for_update()
-            .filter(holder=self.request.user)
-            .prefetch_related("carts")
-        )
+        tickets = cart.tickets.select_for_update().filter(holder=self.request.user)
 
         # Archive transaction data for historical purposes.
         # We're explicitly using the response data over what's in self.request.user
@@ -5397,7 +5393,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         cart.checkout_context = None
         cart.save()
 
-    def place_hold_on_tickets(self, tickets):
+    def _place_hold_on_tickets(self, tickets):
         """
         Helper function that places a 10 minute hold on tickets for a user
         """
