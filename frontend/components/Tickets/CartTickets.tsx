@@ -138,7 +138,9 @@ const useCheckout = () => {
     })
     const data = await res.json()
     if (!data.success) {
-      throw new Error(data.detail)
+      toast.error(data.detail, {
+        style: { color: WHITE },
+      })
     }
     return data.detail
   }
