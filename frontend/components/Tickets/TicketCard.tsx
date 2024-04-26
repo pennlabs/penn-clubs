@@ -18,9 +18,12 @@ import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
   mediaMaxWidth,
+  mediaMinWidth,
   SM,
 } from '~/constants/measurements'
 import { CountedEventTicket } from '~/types'
+
+import { ModalType } from '../Settings/TicketsTab'
 
 Settings.defaultZone = 'America/New_York'
 
@@ -82,26 +85,40 @@ const formatTime = (startTime: string, endTime: string) => {
 function generateBoxShadow(collapsed) {
   let boxShadow = ''
   boxShadow += '0 1px 6px rgba(0, 0, 0, 0.2),\n'
-  for (let i = 1; i <= collapsed; i++) {
+  for (let i = 1; i < collapsed; i++) {
     boxShadow += `${i * 10}px -${i * 10}px 0 -1px ${HUB_SNOW}, ${i * 10}px -${i * 10}px rgba(0, 0, 0, 0.1)${
-      i !== collapsed ? ',\n' : ''
+      i !== collapsed - 1 ? ',\n' : ''
     }`
   }
   return boxShadow
 }
 
+const ResponsiveCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  ${mediaMinWidth(SM)} {
+    flex-direction: row;
+  }
+`
+
+// If you purchase more than 1 card for an event, display "Ticket 1 out of X" for each card
+type TicketCardIndexProps = {
+  index: number
+  length: number
+}
+
 export const TicketCard = ({
   collapsed = 0,
   ticket,
-  showModal,
   style,
   removable,
   editable,
   hideActions,
+  indexProps,
   onRemove,
   onChange,
   onClick,
-  viewQRCode,
+  viewModal,
 }: {
   collapsed?: number
   ticket: CountedEventTicket
@@ -112,14 +129,16 @@ export const TicketCard = ({
   removable?: boolean
   editable?: boolean
 
+  indexProps?: TicketCardIndexProps
+
   onRemove?: () => void
   onChange?: (count: number) => void
   onClick?: () => void
 
-  viewQRCode?: () => void
-  showModal?: () => void
+  viewModal?: (type: ModalType) => void
 }) => {
   const [isEditMode, setIsEditMode] = useState(false)
+  const [ticketCount, setTicketCount] = useState(ticket.count)
 
   const datetimeData = formatTime(
     ticket.event.start_time,
@@ -127,121 +146,140 @@ export const TicketCard = ({
   )
 
   return (
-    <Card
+    <ResponsiveCard
       className="card"
       id={`ticket-${ticket.id}`}
       style={{
         ...style,
+        position: 'relative',
         display: 'flex',
         cursor: typeof onClick === 'function' ? 'pointer' : 'default',
-        ...(collapsed !== 0
-          ? {
-              boxShadow: generateBoxShadow(collapsed),
-            }
-          : {}),
+        boxShadow: generateBoxShadow(Math.min(3, collapsed)),
         margin: collapsed !== 0 ? '4rem 0' : '1rem 0',
       }}
       onClick={onClick}
     >
-      {typeof ticket.count === 'number' && (
+      <div style={{ display: 'flex' }}>
+        {typeof ticketCount === 'number' && (
+          <div
+            css={css`
+              display: flex;
+              justify-content: center;
+              align-items: center;
+
+              width: 120px;
+              border-right: 2px dashed #dedede;
+
+              font-size: 32px;
+              font-weight: 800;
+              cursor: pointer;
+            `}
+            onDoubleClick={() => {
+              editable && setIsEditMode(true)
+            }}
+          >
+            {isEditMode && editable ? (
+              <input
+                style={{
+                  width: '70px',
+                  fontSize: '32px',
+                  fontWeight: 800,
+                  textAlign: 'center',
+                }}
+                type="number"
+                value={ticketCount}
+                onChange={(e) => {
+                  setTicketCount(
+                    parseInt(e.currentTarget.value ?? ticket.count),
+                  )
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditMode(false)
+                    onChange?.(parseInt(e.currentTarget.value ?? ticket.count))
+                  }
+                }}
+              />
+            ) : (
+              <span>{ticketCount}</span>
+            )}
+            <span
+              css={css`
+                font-size: 14px;
+                font-weight: 400;
+                margin-left: 4px;
+                color: #888;
+              `}
+            >
+              X
+            </span>
+          </div>
+        )}
         <div
           css={css`
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-
-            width: 120px;
-            border-right: 2px dashed #dedede;
-            margin-right: 20px;
-
-            font-size: 32px;
-            font-weight: 800;
-            cursor: pointer;
-          `}
-          onDoubleClick={() => {
-            editable && setIsEditMode(true)
-          }}
-        >
-          {isEditMode && editable ? (
-            <input
-              style={{
-                width: '70px',
-                fontSize: '32px',
-                fontWeight: 800,
-                textAlign: 'center',
-              }}
-              type="number"
-              defaultValue={ticket.count}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setIsEditMode(false)
-                  onChange?.(parseInt(e.currentTarget.value ?? ticket.count))
-                }
-              }}
-            />
-          ) : (
-            <span>{ticket.count}</span>
-          )}
-          <span
-            css={css`
-              font-size: 14px;
-              font-weight: 400;
-              margin-left: 4px;
-              color: #888;
-            `}
-          >
-            X
-          </span>
-        </div>
-      )}
-      <div
-        css={css`
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          padding: 16px;
-          min-width: 100px;
-          background: ${CLUBS_BLUE};
-          border-radius: 8px;
-          color: ${WHITE};
-          width: 80px;
-          position: relative;
-        `}
-      >
-        <Title
-          css={css`
-            display: flex;
-            align-items: top;
+            padding: 16px;
+            min-width: 100px;
+            background: ${CLUBS_BLUE};
+            border-radius: 8px;
             color: ${WHITE};
+            width: 80px;
+            position: relative;
+            margin-left: 20px;
+            @media (max-width: 768px) {
+              width: 100%;
+              margin-left: 8px;
+              border: ${CLUBS_BLUE} !important;
+              border-width: 2px !important;
+              border-style: dashed !important;
+              background: ${WHITE};
+              color: ${CLUBS_BLUE};
+            }
           `}
-          className="mb-0"
         >
-          {datetimeData.day}
-          {datetimeData.dayDuration !== 0 && (
-            <div
-              css={css`
-                font-size: 12px;
-                position: absolute;
-                right: 12px;
-                top: 12px;
-              `}
-            >
-              {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
-              {Math.abs(datetimeData.dayDuration)}
-            </div>
-          )}
-        </Title>
-        <Description
-          style={{
-            color: WHITE,
-            width: '100%',
-            textAlign: 'center',
-            marginBottom: 0,
-          }}
-        >
-          {datetimeData.month}
-        </Description>
+          <Title
+            css={css`
+              display: flex;
+              align-items: top;
+              @media (min-width: 768px) {
+                color: ${WHITE};
+              }
+            `}
+            className="mb-0"
+          >
+            {datetimeData.day}
+            {datetimeData.dayDuration !== 0 && (
+              <div
+                css={css`
+                  font-size: 12px;
+                  position: absolute;
+                  right: 12px;
+                  top: 12px;
+                `}
+              >
+                {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
+                {Math.abs(datetimeData.dayDuration)}
+              </div>
+            )}
+          </Title>
+          <Description
+            css={css`
+              @media (min-width: 768px) {
+                color: ${WHITE};
+              }
+            `}
+            style={{
+              width: '100%',
+              textAlign: 'center',
+              marginBottom: 0,
+            }}
+          >
+            {datetimeData.month}
+          </Description>
+        </div>
       </div>
       <div
         css={css`
@@ -254,7 +292,7 @@ export const TicketCard = ({
             fontWeight: 600,
           }}
         >
-          {ticket.event.name} {ticket.id}
+          {ticket.event.name}
         </Description>
         <Description>{ticket.event.club_name}</Description>
         <Description>
@@ -279,6 +317,9 @@ export const TicketCard = ({
             margin: 0 4px;
           `}
           onClick={() => {
+            if (isEditMode) {
+              onChange?.(ticketCount || ticket.count!)
+            }
             setIsEditMode(!isEditMode)
           }}
         >
@@ -326,7 +367,7 @@ export const TicketCard = ({
               `}
               onClick={(e) => {
                 e.stopPropagation()
-                viewQRCode?.()
+                viewModal?.(ModalType.QR_CODE)
               }}
             >
               <span>QR Code</span>
@@ -347,7 +388,7 @@ export const TicketCard = ({
             `}
             onClick={(e) => {
               e.stopPropagation()
-              showModal?.()
+              viewModal?.(ModalType.TRANSFER)
             }}
           >
             <span>Transfer Ownership</span>
@@ -355,6 +396,25 @@ export const TicketCard = ({
           </button>
         </div>
       )}
-    </Card>
+      {indexProps && (
+        <div
+          css={css`
+            font-size: 12px;
+            position: absolute;
+
+            ${mediaMaxWidth(SM)} {
+              right: 24px;
+              top: 24px;
+            }
+            ${mediaMinWidth(SM)} {
+              right: 12px;
+              bottom: 12px;
+            }
+          `}
+        >
+          {indexProps?.index + 1} / {indexProps?.length}
+        </div>
+      )}
+    </ResponsiveCard>
   )
 }

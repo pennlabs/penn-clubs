@@ -1,22 +1,16 @@
 import Link from 'next/link'
 import React, { ReactElement } from 'react'
 
-import { doApiRequest } from '~/utils'
+import { Club } from '~/types'
 
 import Table from '../common/Table'
 import BaseCard from './BaseCard'
 
-export default function TicketsViewCard({ club }): ReactElement {
-  const GetTicketsHolders = (id) => {
-    doApiRequest(`/events/${id}/tickets?format=json`, {
-      method: 'GET',
-    })
-      .then((resp) => resp.json())
-      .then((res) => {
-        // console.log(res)
-      })
-  }
-
+export default function TicketsViewCard({
+  club,
+}: {
+  club: Club
+}): ReactElement {
   const eventsTableFields = [
     { label: 'Event Name', name: 'name' },
     {
@@ -24,17 +18,14 @@ export default function TicketsViewCard({ club }): ReactElement {
       name: 'view',
       render: (id) => (
         <button className="button is-primary is-pulled-right">
-          <Link href={'/tickets/' + id}>
-            <a style={{ color: 'white' }} target="blank">
-              View
-            </a>
+          <Link style={{ color: 'white' }} href={`/tickets/${id}`}>
+            View
           </Link>
         </button>
       ),
     },
   ]
 
-  // console.log(club.events)
   const ticketEvents = club.events.filter((event) => event.ticketed)
 
   return (
@@ -47,14 +38,16 @@ export default function TicketsViewCard({ club }): ReactElement {
           columns={eventsTableFields}
           searchableColumns={['name']}
           filterOptions={[]}
-          hideSearch={true}
-          focusable={true}
+          hideSearch
+          focusable
         />
       ) : (
         <>
-          You don't have any ticketed events, to add create ticketed events or
-          add ticket offerings, to existing events, go to the events, click
-          create on the tickets section below the event details.
+          You don't have any ticketed events. To create a ticketed event or add
+          ticket offerings to existing events, go to{' '}
+          <Link href={`/club/${club.code}/edit/events`}>Events</Link> within
+          this dashboard and click "Create" in the tickets section below event
+          details.
         </>
       )}
     </BaseCard>
