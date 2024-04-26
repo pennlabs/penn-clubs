@@ -191,6 +191,7 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
 
   // PennKeys to issue tickets to
   const [ticketRecipients, setTicketRecipients] = useState<string[]>([])
+  const [errorPennKeys, setErrorPennKeys] = useState<string[]>([])
 
   async function handleIssueTickets(data, { setSubmitting }) {
     try {
@@ -210,9 +211,15 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
       if (contents.success) {
         toast.info(contents.message, { hideProgressBar: true })
       } else {
-        toast.error('Something went wrong with issuing tickets', {
-          hideProgressBar: true,
-        })
+        console.error(contents.errors)
+        setErrorPennKeys(contents.errors)
+        toast.error(
+          contents.detail ?? 'Something went wrong with issuing tickets',
+          {
+            hideProgressBar: true,
+            style: { color: WHITE },
+          },
+        )
       }
     } finally {
       setSubmitting(false)
@@ -258,7 +265,7 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
                   or spaces
                 </HelperText>
                 <CSVTagInput
-                  invalidTags={['yo']}
+                  invalidTags={errorPennKeys}
                   placeholder="Enter pennkeys here, separated by commas or spaces"
                   onChange={(newValue) => setTicketRecipients(newValue)}
                 />

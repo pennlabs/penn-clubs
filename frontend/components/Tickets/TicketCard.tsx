@@ -85,9 +85,9 @@ const formatTime = (startTime: string, endTime: string) => {
 function generateBoxShadow(collapsed) {
   let boxShadow = ''
   boxShadow += '0 1px 6px rgba(0, 0, 0, 0.2),\n'
-  for (let i = 1; i <= collapsed; i++) {
+  for (let i = 1; i < collapsed; i++) {
     boxShadow += `${i * 10}px -${i * 10}px 0 -1px ${HUB_SNOW}, ${i * 10}px -${i * 10}px rgba(0, 0, 0, 0.1)${
-      i !== collapsed ? ',\n' : ''
+      i !== collapsed - 1 ? ',\n' : ''
     }`
   }
   return boxShadow
@@ -101,6 +101,12 @@ const ResponsiveCard = styled(Card)`
   }
 `
 
+// If you purchase more than 1 card for an event, display "Ticket 1 out of X" for each card
+type TicketCardIndexProps = {
+  index: number
+  length: number
+}
+
 export const TicketCard = ({
   collapsed = 0,
   ticket,
@@ -108,6 +114,7 @@ export const TicketCard = ({
   removable,
   editable,
   hideActions,
+  indexProps,
   onRemove,
   onChange,
   onClick,
@@ -121,6 +128,8 @@ export const TicketCard = ({
 
   removable?: boolean
   editable?: boolean
+
+  indexProps?: TicketCardIndexProps
 
   onRemove?: () => void
   onChange?: (count: number) => void
@@ -142,13 +151,10 @@ export const TicketCard = ({
       id={`ticket-${ticket.id}`}
       style={{
         ...style,
+        position: 'relative',
         display: 'flex',
         cursor: typeof onClick === 'function' ? 'pointer' : 'default',
-        ...(collapsed !== 0
-          ? {
-              boxShadow: generateBoxShadow(collapsed),
-            }
-          : {}),
+        boxShadow: generateBoxShadow(Math.min(3, collapsed)),
         margin: collapsed !== 0 ? '4rem 0' : '1rem 0',
       }}
       onClick={onClick}
@@ -388,6 +394,25 @@ export const TicketCard = ({
             <span>Transfer Ownership</span>
             <Icon name="swap-horiz" size="1rem" />
           </button>
+        </div>
+      )}
+      {indexProps && (
+        <div
+          css={css`
+            font-size: 12px;
+            position: absolute;
+
+            ${mediaMaxWidth(SM)} {
+              right: 24px;
+              top: 24px;
+            }
+            ${mediaMinWidth(SM)} {
+              right: 12px;
+              bottom: 12px;
+            }
+          `}
+        >
+          {indexProps?.index + 1} / {indexProps?.length}
         </div>
       )}
     </ResponsiveCard>

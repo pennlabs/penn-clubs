@@ -293,7 +293,9 @@ const EventPage: React.FC<EventPageProps> = ({
                   toast.success('Tickets added to cart')
                   setShowTicketModal(false)
                 } else {
-                  toast.error(res.detail)
+                  toast.error(res.detail, {
+                    style: { color: WHITE },
+                  })
                 }
               })
           }}

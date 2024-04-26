@@ -23,6 +23,7 @@ import { doApiRequest } from '../../../utils'
 import QRCodeCard, { QRCodeType } from '../../ClubEditPage/QRCodeCard'
 import { Center, EmptyState, Loading, Modal, Text, Title } from '../../common'
 import TicketTransferModal from '../TicketTransferModal'
+import { toast } from 'react-toastify'
 
 const CardHeader = styled.div`
   display: flex;
@@ -156,9 +157,11 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
     setExpandedEvents(newExpandedEvents)
   }
 
-  // TODO: Make less naive.
-  const removeTicket = (id) => {
+  const handleSuccessfulTransfer = (id) => {
     setTickets(tickets.filter((ticket) => ticket.id !== id))
+    setShownModal(ModalType.NONE)
+    setSelectedTicket(undefined)
+    toast.success('Ticket successfully transferred!')
   }
 
   return tickets.length ? (
@@ -186,7 +189,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
         <ModalContainer>
           <ModalBody>
             <TicketTransferModal
-              removeTicket={removeTicket}
+              onSuccessfulTransfer={handleSuccessfulTransfer}
               id={selectedTicket ?? ''}
             />
           </ModalBody>
@@ -219,12 +222,16 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
                   }
                 }}
                 viewModal={(type) => viewModal(ticket.id, type)}
+                indexProps={{
+                  index: i,
+                  length: group[1].length,
+                }}
               />
             ))
           ) : (
             <TicketCard
               key={i}
-              collapsed={Math.min(3, group[1].length)}
+              collapsed={group[1].length}
               ticket={group[1][0]}
               onClick={() => {
                 if (group[1].length !== 1) {

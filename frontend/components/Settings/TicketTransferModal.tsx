@@ -6,12 +6,12 @@ import BaseCard from '../ClubEditPage/BaseCard'
 
 type TicketTransferModalProps = {
   id: string
-  removeTicket: (id: string) => void
+  onSuccessfulTransfer: (id: string) => void
 }
 
 const TicketTransferModal = ({
   id,
-  removeTicket,
+  onSuccessfulTransfer,
 }: TicketTransferModalProps): ReactElement => {
   const [recipient, setRecipient] = useState<string | undefined>()
   const [recipientError, setRecipientError] = useState<string | undefined>()
@@ -31,8 +31,7 @@ const TicketTransferModal = ({
       body: { username: recipient },
     }).then(async (resp) => {
       if (resp.ok) {
-        setRecipientError('Success!')
-        removeTicket(id)
+        onSuccessfulTransfer(id)
       } else {
         setRecipientError((await resp.json()).detail)
       }
@@ -52,12 +51,7 @@ const TicketTransferModal = ({
         }}
         placeholder="Recipient PennKey"
       />
-      {recipientError &&
-        (recipientError === 'Success!' ? (
-          <div className="has-text-success">{recipientError}</div>
-        ) : (
-          <p className="has-text-danger">{recipientError}</p>
-        ))}
+      {recipientError && <p className="has-text-danger">{recipientError}</p>}
       <button
         className="button is-success"
         onClick={transferTicket}
