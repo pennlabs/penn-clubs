@@ -154,7 +154,7 @@ const useCheckout = () => {
         return
       }
       const confirmed = confirm(
-        'Are you sure you want to exit the checkout process?',
+        'Are you sure you want to exit the checkout process? You could lose items in your cart!',
       )
       if (confirmed) {
         setShowModal(false)
