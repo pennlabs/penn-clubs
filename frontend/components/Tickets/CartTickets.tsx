@@ -392,6 +392,8 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
                 setTimeout(() => {
                   navigate.push('/settings#Tickets')
                 }, 500)
+              } else {
+                toast.error('An error occurred while processing your payment.')
               }
             }}
           />
