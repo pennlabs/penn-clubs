@@ -23,6 +23,8 @@ import {
 } from '~/constants/measurements'
 import { CountedEventTicket } from '~/types'
 
+import { ModalType } from '../Settings/TicketsTab'
+
 Settings.defaultZone = 'America/New_York'
 
 type CardProps = {
@@ -83,9 +85,9 @@ const formatTime = (startTime: string, endTime: string) => {
 function generateBoxShadow(collapsed) {
   let boxShadow = ''
   boxShadow += '0 1px 6px rgba(0, 0, 0, 0.2),\n'
-  for (let i = 1; i <= collapsed; i++) {
+  for (let i = 1; i < collapsed; i++) {
     boxShadow += `${i * 10}px -${i * 10}px 0 -1px ${HUB_SNOW}, ${i * 10}px -${i * 10}px rgba(0, 0, 0, 0.1)${
-      i !== collapsed ? ',\n' : ''
+      i !== collapsed - 1 ? ',\n' : ''
     }`
   }
   return boxShadow
@@ -99,18 +101,24 @@ const ResponsiveCard = styled(Card)`
   }
 `
 
+// If you purchase more than 1 card for an event, display "Ticket 1 out of X" for each card
+type TicketCardIndexProps = {
+  index: number
+  length: number
+}
+
 export const TicketCard = ({
   collapsed = 0,
   ticket,
-  showModal,
   style,
   removable,
   editable,
   hideActions,
+  indexProps,
   onRemove,
   onChange,
   onClick,
-  viewQRCode,
+  viewModal,
 }: {
   collapsed?: number
   ticket: CountedEventTicket
@@ -121,14 +129,16 @@ export const TicketCard = ({
   removable?: boolean
   editable?: boolean
 
+  indexProps?: TicketCardIndexProps
+
   onRemove?: () => void
   onChange?: (count: number) => void
   onClick?: () => void
 
-  viewQRCode?: () => void
-  showModal?: () => void
+  viewModal?: (type: ModalType) => void
 }) => {
   const [isEditMode, setIsEditMode] = useState(false)
+  const [ticketCount, setTicketCount] = useState(ticket.count)
 
   const datetimeData = formatTime(
     ticket.event.start_time,
@@ -141,19 +151,16 @@ export const TicketCard = ({
       id={`ticket-${ticket.id}`}
       style={{
         ...style,
+        position: 'relative',
         display: 'flex',
         cursor: typeof onClick === 'function' ? 'pointer' : 'default',
-        ...(collapsed !== 0
-          ? {
-              boxShadow: generateBoxShadow(collapsed),
-            }
-          : {}),
+        boxShadow: generateBoxShadow(Math.min(3, collapsed)),
         margin: collapsed !== 0 ? '4rem 0' : '1rem 0',
       }}
       onClick={onClick}
     >
       <div style={{ display: 'flex' }}>
-        {typeof ticket.count === 'number' && (
+        {typeof ticketCount === 'number' && (
           <div
             css={css`
               display: flex;
@@ -180,7 +187,12 @@ export const TicketCard = ({
                   textAlign: 'center',
                 }}
                 type="number"
-                defaultValue={ticket.count}
+                value={ticketCount}
+                onChange={(e) => {
+                  setTicketCount(
+                    parseInt(e.currentTarget.value ?? ticket.count),
+                  )
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     setIsEditMode(false)
@@ -189,7 +201,7 @@ export const TicketCard = ({
                 }}
               />
             ) : (
-              <span>{ticket.count}</span>
+              <span>{ticketCount}</span>
             )}
             <span
               css={css`
@@ -280,7 +292,7 @@ export const TicketCard = ({
             fontWeight: 600,
           }}
         >
-          {ticket.event.name} {ticket.id}
+          {ticket.event.name}
         </Description>
         <Description>{ticket.event.club_name}</Description>
         <Description>
@@ -305,6 +317,9 @@ export const TicketCard = ({
             margin: 0 4px;
           `}
           onClick={() => {
+            if (isEditMode) {
+              onChange?.(ticketCount || ticket.count!)
+            }
             setIsEditMode(!isEditMode)
           }}
         >
@@ -352,7 +367,7 @@ export const TicketCard = ({
               `}
               onClick={(e) => {
                 e.stopPropagation()
-                viewQRCode?.()
+                viewModal?.(ModalType.QR_CODE)
               }}
             >
               <span>QR Code</span>
@@ -373,12 +388,31 @@ export const TicketCard = ({
             `}
             onClick={(e) => {
               e.stopPropagation()
-              showModal?.()
+              viewModal?.(ModalType.TRANSFER)
             }}
           >
             <span>Transfer Ownership</span>
             <Icon name="swap-horiz" size="1rem" />
           </button>
+        </div>
+      )}
+      {indexProps && (
+        <div
+          css={css`
+            font-size: 12px;
+            position: absolute;
+
+            ${mediaMaxWidth(SM)} {
+              right: 24px;
+              top: 24px;
+            }
+            ${mediaMinWidth(SM)} {
+              right: 12px;
+              bottom: 12px;
+            }
+          `}
+        >
+          {indexProps?.index + 1} / {indexProps?.length}
         </div>
       )}
     </ResponsiveCard>

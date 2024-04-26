@@ -7,6 +7,7 @@ import { doApiRequest } from '../../utils'
 import { Contact, Icon, Text } from '../common'
 import { TextField } from '../FormComponents'
 import BaseCard from './BaseCard'
+import { WHITE } from '~/constants'
 
 type EventsImportCardProps = {
   club: Club
@@ -29,7 +30,9 @@ export default function EventsImportCard({
         onFetchEvents && onFetchEvents()
       })
       .catch(() => {
-        toast.error('Failed to fetch events, an unknown error occured.')
+        toast.error('Failed to fetch events, an unknown error occured.', {
+          style: { color: WHITE },
+        })
       })
       .finally(() => setFetching(false))
   }

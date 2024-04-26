@@ -13,6 +13,7 @@ import {
 import { Icon, Text } from '../common'
 import { DateTimeField, SelectField, TextField } from '../FormComponents'
 import { fixDeserialize } from '../reports/ReportForm'
+import { WHITE } from '~/constants'
 
 /**
  * A component where the user can enter a list of club names and get a list of club codes in response.
@@ -78,7 +79,10 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
       if (contents.message) {
         toast.info(contents.message, { hideProgressBar: true })
       } else if (contents.error) {
-        toast.error(contents.error, { hideProgressBar: true })
+        toast.error(contents.error, {
+          hideProgressBar: true,
+          style: { color: WHITE },
+        })
       }
     } finally {
       setSubmitting(false)

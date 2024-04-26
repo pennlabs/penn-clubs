@@ -23,6 +23,7 @@ import { doApiRequest } from '../../../utils'
 import QRCodeCard, { QRCodeType } from '../../ClubEditPage/QRCodeCard'
 import { Center, EmptyState, Loading, Modal, Text, Title } from '../../common'
 import TicketTransferModal from '../TicketTransferModal'
+import { toast } from 'react-toastify'
 
 const CardHeader = styled.div`
   display: flex;
@@ -107,14 +108,17 @@ type TicketsTabProps = {
   userInfo: UserInfo
 }
 
+export enum ModalType {
+  NONE,
+  TRANSFER,
+  QR_CODE,
+}
+
 const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
   const [tickets, setTickets] = useState<any>(null)
-  const [show, setShow] = useState<boolean>(false)
+  const [shownModal, setShownModal] = useState<ModalType>(ModalType.NONE)
   const [expandedEvents, setExpandedEvents] = useState(new Set())
   const [selectedTicket, setSelectedTicket] = useState<string | undefined>()
-
-  const showModal = () => setShow(true)
-  const hideModal = () => setShow(false)
 
   const getTickets = () => {
     return doApiRequest('/tickets?format=json')
@@ -138,8 +142,8 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
     return acc
   }, {})
 
-  const viewQRCode = (id: string) => {
-    showModal()
+  const viewModal = (id: string, type: ModalType) => {
+    setShownModal(type)
     setSelectedTicket(id)
   }
 
@@ -153,28 +157,44 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
     setExpandedEvents(newExpandedEvents)
   }
 
+  const handleSuccessfulTransfer = (id) => {
+    setTickets(tickets.filter((ticket) => ticket.id !== id))
+    setShownModal(ModalType.NONE)
+    setSelectedTicket(undefined)
+    toast.success('Ticket successfully transferred!')
+  }
+
   return tickets.length ? (
     <div>
-      {show && (
-        <Modal
-          width="50vw"
-          show={show}
-          closeModal={hideModal}
-          marginBottom={false}
-        >
-          <TicketTransferModal event={null} />
-          {selectedTicket && (
-            <ModalContainer>
-              <ModalBody>
-                <QRCodeCard
-                  id={selectedTicket ?? ''}
-                  type={QRCodeType.TICKET}
-                />
-              </ModalBody>
-            </ModalContainer>
-          )}
-        </Modal>
-      )}
+      <Modal
+        width="50vw"
+        show={shownModal === ModalType.QR_CODE}
+        closeModal={() => setShownModal(ModalType.NONE)}
+        marginBottom={false}
+      >
+        {selectedTicket && (
+          <ModalContainer>
+            <ModalBody>
+              <QRCodeCard id={selectedTicket ?? ''} type={QRCodeType.TICKET} />
+            </ModalBody>
+          </ModalContainer>
+        )}
+      </Modal>
+      <Modal
+        width="50vw"
+        show={shownModal === ModalType.TRANSFER}
+        closeModal={() => setShownModal(ModalType.NONE)}
+        marginBottom={false}
+      >
+        <ModalContainer>
+          <ModalBody>
+            <TicketTransferModal
+              onSuccessfulTransfer={handleSuccessfulTransfer}
+              id={selectedTicket ?? ''}
+            />
+          </ModalBody>
+        </ModalContainer>
+      </Modal>
       <TitleWrapper>
         <Title>Browse Your Tickets</Title>
       </TitleWrapper>
@@ -196,27 +216,29 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
               <TicketCard
                 key={i}
                 ticket={ticket}
-                showModal={showModal}
                 onClick={() => {
                   if (group[1].length !== 1) {
                     toggleGroup(group[0])
                   }
                 }}
-                viewQRCode={() => viewQRCode(ticket.id)}
+                viewModal={(type) => viewModal(ticket.id, type)}
+                indexProps={{
+                  index: i,
+                  length: group[1].length,
+                }}
               />
             ))
           ) : (
             <TicketCard
               key={i}
-              collapsed={Math.min(3, group[1].length)}
+              collapsed={group[1].length}
               ticket={group[1][0]}
-              showModal={showModal}
               onClick={() => {
                 if (group[1].length !== 1) {
                   toggleGroup(group[0])
                 }
               }}
-              viewQRCode={() => viewQRCode(group[1][0].id)}
+              viewModal={(type) => viewModal(group[1][0].id, type)}
             />
           )}
         </div>

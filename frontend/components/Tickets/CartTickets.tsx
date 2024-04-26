@@ -225,7 +225,9 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
         // TODO: a less naive approach to updating the cart
         setCountedTickets(
           countedTickets
-            .map((t) => (t.id === ticket.id ? { ...t, count: newCount } : t))
+            .map((t) =>
+              t.id === ticket.id ? { ...t, count: newCount ?? 0 } : t,
+            )
             .filter((t) => t.count !== 0),
         )
       })

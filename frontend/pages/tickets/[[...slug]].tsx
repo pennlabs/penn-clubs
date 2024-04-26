@@ -1,13 +1,24 @@
-import { Center, Container, Icon } from 'components/common'
-import { NextPageContext } from 'next'
-import { ReactElement, useState } from 'react'
-import renderPage from 'renderPage'
+import { css } from '@emotion/react'
+import { Center, Container, Icon, Metadata } from 'components/common'
+import { Form, Formik } from 'formik'
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import React, { ReactElement, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 import { doApiRequest } from 'utils'
 
-import { EventTicket } from '~/types'
+import { BaseLayout } from '~/components/BaseLayout'
+import CSVTagInput from '~/components/common/CSVTagInput'
+import ManageBuyer from '~/components/Tickets/ManageBuyer'
+import { createBasePropFetcher } from '~/utils/getBaseProps'
 
-import { ALLBIRDS_GRAY, HOVER_GRAY, WHITE } from '../../constants/colors'
+import {
+  ALLBIRDS_GRAY,
+  GREEN,
+  HOVER_GRAY,
+  MEDIUM_GRAY,
+  WHITE,
+} from '../../constants/colors'
 import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
@@ -15,38 +26,9 @@ import {
   SM,
 } from '../../constants/measurements'
 
-/*
-Ticket.getInitialProps = async ({ query }): Promise<any> => {
- const id = query.slug[0]
- return doApiRequest(`/events/${id}/tickets?format=json`, {
-   method: 'GET',
- })
-   .then((resp) => resp.json())
-   .then((res) => {
-     console.log(res)
-   })
-}
-*/
-
 type CardProps = {
   readonly hovering?: boolean
   className?: string
-}
-
-type TicketsResponse = {
-  totals: EventTicket[]
-  available: EventTicket[]
-}
-
-type Buyer = {
-  fullname: string
-  id: string
-  ownerId: string
-  type: string
-}
-
-type BuyerResponse = {
-  buyers: Buyer[]
 }
 
 const Card = styled.div<CardProps>`
@@ -74,10 +56,37 @@ const Card = styled.div<CardProps>`
   }
 `
 
+const TicketStatBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: ${WHITE};
+  background-color: ${GREEN};
+  border-radius: ${BORDER_RADIUS};
+  border: 1px solid ${ALLBIRDS_GRAY};
+  box-shadow: 0 0 0 ${WHITE};
+`
+
 const Title = styled.h1`
   font-weight: 600;
   font-size: 2rem;
-  margin: 1rem 0rem;
+  margin: 1rem 0;
+`
+
+const Subtitle = styled.h2`
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin: 0;
+`
+
+const HelperText = styled.p`
+  font-size: 0.8rem;
+  font-style: italic;
+  color: ${MEDIUM_GRAY};
+  margin: 0.5rem 0;
 `
 
 const Text = styled.h1`
@@ -85,11 +94,18 @@ const Text = styled.h1`
   font-size: 1rem;
   margin: 0.5rem 0rem;
 `
+
+type TicketProps = InferGetServerSidePropsType<typeof getServerSideProps>
+
 // TODO: Add auth handling gracefully.
 
-const Ticket = ({ tickets, buyers, event, home }): ReactElement => {
-  // const Ticket = ({ event }): ReactElement => {
-
+const Ticket: React.FC<TicketProps> = ({
+  baseProps,
+  tickets,
+  buyers,
+  event,
+  home,
+}): ReactElement => {
   if (home) {
     return (
       <Center>
@@ -97,111 +113,277 @@ const Ticket = ({ tickets, buyers, event, home }): ReactElement => {
         <a href="/events">here</a>.
       </Center>
     )
-  } else if (!tickets.totals) {
+  } else if (!tickets || !tickets.totals || !tickets.available) {
     return <Center>No tickets found with given user permissions.</Center>
   }
   const { totals, available } = tickets
-  const ticks = {}
+  const tickTypes = {}
 
-  // totals.forEach((tick) => {
-  //   if (ticks[tick.type] == null) {
-  //     ticks[tick.type] = { type: tick.type }
-  //   }
-  //   ticks[tick.type].total = tick.count
-  // })
+  // For given ticket type, get the total and available tickets, as well as buyers
+  for (const ticket of totals) {
+    tickTypes[ticket.type] = {
+      // TODO: right now grabbing no ids
+      id: ticket.id,
+      type: ticket.type,
+      total: ticket.count,
+      price: ticket.price,
+      available: 0,
+      buyers: [],
+    }
+  }
 
-  // available.forEach((tick) => {
-  //   if (ticks[tick.type] == null) {
-  //     ticks[tick.type] = { type: tick.type }
-  //   }
-  //   ticks[tick.type].available = tick.count
-  // })
+  for (const ticket of available) {
+    tickTypes[ticket.type].available = ticket.count
+  }
 
-  // buyers.forEach((tick) => {
-  //   if (ticks[tick.type] == null) {
-  //     ticks[tick.type] = { type: tick.type }
-  //   }
-  //   if (ticks[tick.type].buyers == null) {
-  //     ticks[tick.type].buyers = []
-  //   }
-
-  //   ticks[tick.type].buyers.push(tick.fullname)
-  // })
-
-  // tickets = []
-  // for (const [_, value] of Object.entries(ticks)) {
-  //   tickets.push(value)
-  // }
-
+  // Public should be able to access info about general tickets metrics, not specific buyers.
+  if (buyers.buyers) {
+    for (const buyer of buyers.buyers) {
+      tickTypes[buyer.type].buyers.push(buyer)
+    }
+  }
   return (
     <>
-      <Container>
-        <Title>All Tickets for {event.name}</Title>
-        {tickets.map((ticket, i) => (
-          <TicketCard key={i} ticket={ticket} />
-        ))}
-      </Container>
+      <BaseLayout {...baseProps}>
+        <Metadata title="Events" />
+        <Container>
+          <Title>All Tickets for {event.name}</Title>
+          {Object.values(tickTypes).map((ticket, i) => (
+            <TicketCard
+              key={i}
+              event={event.id}
+              ticket={ticket as Ticket}
+              buyersPerm={buyers.buyers != null}
+            />
+          ))}
+        </Container>
+      </BaseLayout>
     </>
   )
 }
 
-const TicketCard = ({ ticket }) => {
+export type Buyer = {
+  id: string
+  fullname: string
+  owner__email: string
+  owner_id: number
+  type: string
+  attended: boolean
+}
+
+type Ticket = {
+  id: string
+  type: string
+  total: number
+  price: number
+  available: number
+  buyers: Buyer[]
+}
+
+type TicketCardProps = {
+  ticket: Ticket
+  event: string
+  buyersPerm: boolean
+}
+
+const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
   const [viewBuyers, setViewBuyers] = useState(false)
+
+  // PennKeys to issue tickets to
+  const [ticketRecipients, setTicketRecipients] = useState<string[]>([])
+  const [errorPennKeys, setErrorPennKeys] = useState<string[]>([])
+
+  async function handleIssueTickets(data, { setSubmitting }) {
+    try {
+      const resp = await doApiRequest(
+        `/events/${event}/issue_tickets/?format=json`,
+        {
+          method: 'POST',
+          body: {
+            tickets: ticketRecipients.map((t) => ({
+              ticket_type: ticket.type,
+              username: t,
+            })),
+          },
+        },
+      )
+      const contents = await resp.json()
+      if (contents.success) {
+        toast.info(contents.message, { hideProgressBar: true })
+      } else {
+        console.error(contents.errors)
+        setErrorPennKeys(contents.errors)
+        toast.error(
+          contents.detail ?? 'Something went wrong with issuing tickets',
+          {
+            hideProgressBar: true,
+            style: { color: WHITE },
+          },
+        )
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <Card>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Title style={{ marginTop: '1rem', color: 'black', opacity: 0.95 }}>
-          {ticket.type}
-        </Title>
-        <Text>Total Tickets: {ticket.total}</Text>
-        <Text>Currently available: {ticket.available}</Text>
-        <Text
-          onClick={() => {
-            setViewBuyers(!viewBuyers)
+        <Subtitle
+          style={{
+            marginTop: '0px',
+            paddingTop: '0px',
+            color: 'black',
+            opacity: 0.95,
           }}
         >
-          View Buyers {ticket.total && `(${ticket.total - ticket.available})`}{' '}
-          {ticket.buyers && (
-            <span>
-              <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
-            </span>
-          )}
-        </Text>
+          {ticket.type}
+        </Subtitle>
+        <TicketStatBox>
+          <progress
+            className="progress is-primary"
+            value={ticket.total - ticket.available}
+            max={ticket.total}
+          >
+            {(ticket.total - ticket.available) / ticket.total}
+          </progress>
+          <Subtitle>
+            {ticket.total - ticket.available} / {ticket.total}
+          </Subtitle>
+          <Text>tickets purchased</Text>
+        </TicketStatBox>
+        <Card>
+          <Formik
+            initialValues={{ action: 'add' }}
+            onSubmit={handleIssueTickets}
+          >
+            {({ isSubmitting }) => (
+              <Form>
+                <Subtitle>Issue Tickets</Subtitle>
+                <HelperText>
+                  Issue Tickets by entering pennkeys below, separated by commas
+                  or spaces
+                </HelperText>
+                <CSVTagInput
+                  invalidTags={errorPennKeys}
+                  placeholder="Enter pennkeys here, separated by commas or spaces"
+                  onChange={(newValue) => setTicketRecipients(newValue)}
+                />
+                <button
+                  disabled={isSubmitting}
+                  className="button is-primary"
+                  style={{
+                    marginTop: '10px',
+                  }}
+                  type="submit"
+                >
+                  Issue Tickets
+                </button>
+              </Form>
+            )}
+          </Formik>
+        </Card>
+        {buyersPerm && (
+          <Card>
+            <Text
+              onClick={() => {
+                setViewBuyers(!viewBuyers)
+              }}
+            >
+              View Buyers{' '}
+              {ticket.total && `(${ticket.total - ticket.available})`}{' '}
+              {ticket.buyers && (
+                <span>
+                  <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
+                </span>
+              )}
+            </Text>
 
-        {viewBuyers &&
-          ticket.buyers &&
-          ticket.buyers.map((buyer) => <li>{buyer}</li>)}
+            {viewBuyers && ticket.buyers && (
+              <div
+                css={css`
+                  display: grid;
+                  grid-template-columns: 1fr 4fr 4fr;
+                `}
+              >
+                <span
+                  css={css`
+                    font-weight: bold;
+                  `}
+                  title="Attendance"
+                >
+                  Attend.
+                </span>
+                <span
+                  css={css`
+                    font-weight: bold;
+                  `}
+                >
+                  Buyer
+                </span>
+                <span
+                  css={css`
+                    font-weight: bold;
+                  `}
+                >
+                  Type
+                </span>
+                {ticket.buyers.map((buyer) => (
+                  <ManageBuyer
+                    key={buyer.id}
+                    buyer={buyer}
+                    onAttendedChange={(value: boolean) => {
+                      doApiRequest(`/tickets/${buyer.id}/?format=json`, {
+                        method: 'PATCH',
+                        body: { attended: value },
+                      })
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </Card>
   )
 }
 
-Ticket.getInitialProps = async ({ query, req }: NextPageContext) => {
-  const data = {
-    headers: req ? { cookie: req.headers.cookie } : undefined,
+const getBaseProps = createBasePropFetcher()
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { query, req } = ctx
+  const headers = req ? { cookie: req.headers.cookie } : undefined
+  if (!query || !query.slug) {
+    return { props: { home: true, tickets: {}, event: {}, buyers: {} } }
   }
+  const id = query.slug[0]
   try {
-    if (!query || !query.slug) {
-      return { home: true, tickets: {}, event: {}, buyers: [] }
-    }
-    const id = query && query.slug ? query.slug[0] : -1
-    const [ticketsReq, eventReq] = await Promise.all([
-      doApiRequest(`/events/${id}/tickets?format=json`, data),
-      doApiRequest(`/events/${id}/?format=json`, data),
+    const [ticketsReq, eventReq, buyersReq] = await Promise.all([
+      doApiRequest(`/events/${id}/tickets/?format=json`, { headers }),
+      doApiRequest(`/events/${id}/?format=json`, { headers }),
+      doApiRequest(`/events/${id}/buyers/?format=json`, { headers }),
     ])
 
-    const ticketsRes = await ticketsReq.json()
-    const eventRes = await eventReq.json()
+    const [baseProps, tickets, event, buyers] = await Promise.all([
+      getBaseProps(ctx),
+      ticketsReq.json(),
+      eventReq.json(),
+      buyersReq.json(),
+    ])
 
     return {
-      home: false,
-      tickets: ticketsRes,
-      event: eventRes,
-      buyers: buyersRes.buyers,
+      props: {
+        home: false,
+        baseProps,
+        tickets,
+        event,
+        buyers,
+      },
     }
-  } catch (err) {
-    // console.log(err)
+  } catch (error) {
+    return { props: { home: true, tickets: {}, event: {}, buyers: {} } }
   }
 }
 
-export default renderPage(Ticket)
+export default Ticket

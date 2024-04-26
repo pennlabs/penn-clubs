@@ -1,84 +1,65 @@
-import React, { ReactElement, useEffect, useState } from 'react'
-import { toast, TypeOptions } from 'react-toastify'
-import styled from 'styled-components'
+import { ReactElement, useEffect, useState } from 'react'
 
-import {
-  ALLBIRDS_GRAY,
-  CLUBS_GREY,
-  FOCUS_GRAY,
-  WHITE,
-} from '../../constants/colors'
-import { BORDER_RADIUS } from '../../constants/measurements'
-import { BODY_FONT } from '../../constants/styles'
-import { ClubEvent } from '../../types'
-import { SearchInput } from '../SearchBar'
+import { doApiRequest } from '~/utils'
 
-const ModalContainer = styled.div`
-  text-align: left;
-  position: relative;
-`
-const ModalBody = styled.div`
-  padding: 2rem;
-`
-const SectionContainer = styled.div`
-  margin-bottom: 1.5rem;
-`
+import BaseCard from '../ClubEditPage/BaseCard'
 
-const Input = styled.input`
-  border: 1px solid ${ALLBIRDS_GRAY};
-  outline: none;
-  color: ${CLUBS_GREY};
-  width: 100%;
-  font-size: 1em;
-  padding: 8px 10px;
-  margin: 0px 5px 0px 0px;
-  background: ${WHITE};
-  border-radius: ${BORDER_RADIUS};
-  font-family: ${BODY_FONT};
-  &:hover,
-  &:active,
-  &:focus {
-    background: ${FOCUS_GRAY};
-  }
-`
-
-const notify = (
-  msg: ReactElement | string,
-  type: TypeOptions = 'info',
-): void => {
-  toast[type](msg)
+type TicketTransferModalProps = {
+  id: string
+  onSuccessfulTransfer: (id: string) => void
 }
 
-const TicketTransferModal = (props: {
-  event: ClubEvent | null
-}): ReactElement => {
-  const [searchInput, setSearchInput] = useState<SearchInput>({})
+const TicketTransferModal = ({
+  id,
+  onSuccessfulTransfer,
+}: TicketTransferModalProps): ReactElement => {
+  const [recipient, setRecipient] = useState<string | undefined>()
+  const [recipientError, setRecipientError] = useState<string | undefined>()
 
-  const search = () => {
-    /*
-    return doApiRequest('/users?search=bfranklin')
-      .then((resp) => resp.json())
-      .then(() => {})
-    */
-  }
   useEffect(() => {
-    search()
-  }, [])
-  /*    
-      <CoverPhoto
-        image={large_image_url ?? image_url}
-        fallback={
-          <p>{club_name != null ? club_name.toLocaleUpperCase() : 'Event'}</p>
-        }
-      />
+    setRecipientError(undefined)
+  }, [id])
 
-      <Title>{name}</Title>
-      */
+  function transferTicket() {
+    if (!recipient) {
+      setRecipientError('Recipient PennKey is required')
+      return
+    }
+    setRecipientError(undefined)
+    doApiRequest(`/tickets/${id}/transfer/?format=json`, {
+      method: 'POST',
+      body: { username: recipient },
+    }).then(async (resp) => {
+      if (resp.ok) {
+        onSuccessfulTransfer(id)
+      } else {
+        setRecipientError((await resp.json()).detail)
+      }
+    })
+  }
 
   return (
-    <ModalContainer>
-      <ModalBody></ModalBody>
-    </ModalContainer>
+    <BaseCard title="Ticket Transfer">
+      <input
+        className="input"
+        value={recipient}
+        onChange={(e) => setRecipient(e.target.value)}
+        onKeyUp={(e) => {
+          if (e.key === 'Enter') {
+            transferTicket()
+          }
+        }}
+        placeholder="Recipient PennKey"
+      />
+      {recipientError && <p className="has-text-danger">{recipientError}</p>}
+      <button
+        className="button is-success"
+        onClick={transferTicket}
+        style={{ marginTop: '15px' }}
+      >
+        Transfer Ticket
+      </button>
+    </BaseCard>
   )
 }
 

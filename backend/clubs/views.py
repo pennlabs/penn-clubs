@@ -2540,6 +2540,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: integer
                                             type:
                                                 type: string
+                                            attended:
+                                                type: boolean
         ---
         """
         tickets = Ticket.objects.filter(event=self.get_object()).annotate(
@@ -2547,7 +2549,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         )
 
         buyers = tickets.filter(owner__isnull=False).values(
-            "fullname", "id", "owner_id", "type", "owner__email"
+            "fullname", "id", "owner_id", "type", "attended", "owner__email"
         )
 
         return Response({"buyers": buyers})
@@ -5031,7 +5033,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
-                            attendance:
+                            attended:
                                 type: boolean
         responses:
             "200":

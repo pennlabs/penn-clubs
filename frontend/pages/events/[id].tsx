@@ -279,19 +279,25 @@ const EventPage: React.FC<EventPageProps> = ({
               .filter((ticket) => ticket.count != null && ticket.count !== 0)
               .map(({ type, count }) => ({ type, count }))
             doApiRequest(
-              `/clubs/${event.club}/events/${event.id}/add_to_cart/?format=json`,
+              `/clubs/${event.club}/events/${event.id}/add_to_cart/`,
               {
                 method: 'POST',
                 body: {
                   quantities: orderToSend,
                 },
               },
-            ).then((res) => {
-              if (res.ok) {
-                toast.success('Tickets added to cart')
-                setShowTicketModal(false)
-              }
-            })
+            )
+              .then((resp) => resp.json())
+              .then((res) => {
+                if (res.success) {
+                  toast.success('Tickets added to cart')
+                  setShowTicketModal(false)
+                } else {
+                  toast.error(res.detail, {
+                    style: { color: WHITE },
+                  })
+                }
+              })
           }}
         >
           Purchase Tickets
