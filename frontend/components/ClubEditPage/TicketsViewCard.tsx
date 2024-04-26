@@ -18,7 +18,7 @@ export default function TicketsViewCard({
       name: 'view',
       render: (id) => (
         <button className="button is-primary is-pulled-right">
-          <Link style={{ color: 'white' }} href={'/tickets/' + id}>
+          <Link style={{ color: 'white' }} href={`/tickets/${id}`}>
             View
           </Link>
         </button>
@@ -38,8 +38,8 @@ export default function TicketsViewCard({
           columns={eventsTableFields}
           searchableColumns={['name']}
           filterOptions={[]}
-          hideSearch={true}
-          focusable={true}
+          hideSearch
+          focusable
         />
       ) : (
         <>
