@@ -5028,7 +5028,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         # Assert that the filter succeeded in freezing all the tickets for checkout
-        if tickets.count() != cart.tickets.all().count() or tickets.count() == 0:
+        if tickets.count() != cart.tickets.all().count():
             return Response(
                 {
                     "success": False,
@@ -5057,8 +5057,8 @@ class TicketViewSet(viewsets.ModelViewSet):
 
             # Place hold on tickets for 10 mins
             self.place_hold_on_tickets(tickets)
-
-            self.give_tickets(order_info, cart, None)
+            # Skip payment process and give tickets to user/buyer
+            self._give_tickets(order_info, cart, None)
 
             return Response(
                 {
@@ -5103,7 +5103,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
             if not context or http_status >= 400:
                 raise ApiException(
-                    reason=f"Received {context} with HTTP status {status}",
+                    reason=f"Received {context} with HTTP status {http_status}",
                 )
 
             # Tie generated capture context to user cart
@@ -5251,7 +5251,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
         order_info = transaction_data["orderInformation"]
-        self.give_tickets(order_info, cart, reconciliation_id)
+        self._give_tickets(order_info, cart, reconciliation_id)
 
         return Response(
             {
@@ -5354,10 +5354,10 @@ class TicketViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
 
-    def give_tickets(self, order_info, cart, reconciliation_id):
+    def _give_tickets(self, order_info, cart, reconciliation_id):
         """
-        Helper function that give the tickets to the user/buyer
-        and archive the transaction data
+        Helper function that gives user/buyer their held tickets
+        and archives the transaction data
         """
 
         # At this point, we have validated that the payment was authorized
@@ -5386,8 +5386,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                 )
             )
 
-        TicketTransactionRecord.objects.bulk_create(transaction_records)
         tickets.update(owner=self.request.user, holder=None)
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
         cart.tickets.clear()
         for ticket in tickets:
             ticket.send_confirmation_email()

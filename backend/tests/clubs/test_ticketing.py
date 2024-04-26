@@ -58,14 +58,8 @@ def commonSetUp(self):
     )
 
     self.ticket_totals = [
-        {"type": "free", "count": 30, "price": 0.0},
         {"type": "normal", "count": 20, "price": 15.0},
         {"type": "premium", "count": 10, "price": 30.0},
-    ]
-
-    self.tickets0 = [
-        Ticket.objects.create(type="free", event=self.event1, price=0.0)
-        for _ in range(30)
     ]
 
     self.tickets1 = [
@@ -116,12 +110,41 @@ class TicketEventTestCase(TestCase):
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+    def test_create_ticket_offerings_free_tickets(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        tickets = [Ticket(type="free", event=self.event1, price=0.0) for _ in range(10)]
+        Ticket.objects.bulk_create(tickets)
+
+        qts = {
+            "quantities": [
+                {"type": "_free", "count": 10, "price": 0},
+            ]
+        }
+
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            qts,
+            format="json",
+        )
+
+        aggregated_tickets = list(
+            Ticket.objects.filter(event=self.event1, type__contains="_")
+            .values("type", "price")
+            .annotate(count=Count("id"))
+        )
+        for t1, t2 in zip(qts["quantities"], aggregated_tickets):
+            self.assertEqual(t1["type"], t2["type"])
+            self.assertAlmostEqual(t1["price"], float(t2["price"]), 0.00)
+            self.assertEqual(t1["count"], t2["count"])
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
     def test_create_ticket_offerings_bad_perms(self):
         # user2 is not a superuser or club officer+
         self.client.login(username=self.user2.username, password="test")
         qts = {
             "quantities": [
-                {"type": "_free", "count": 30, "price": 0},
                 {"type": "_normal", "count": 20, "price": 10},
                 {"type": "_premium", "count": 10, "price": 20},
             ]
@@ -141,7 +164,6 @@ class TicketEventTestCase(TestCase):
             {
                 # Bad toplevel field
                 "quant1t13s": [
-                    {"type": "_free", "count": 30, "price": 0},
                     {"type": "_normal", "count": 20, "price": 10},
                     {"type": "_premium", "count": 10, "price": 20},
                 ]
@@ -175,7 +197,6 @@ class TicketEventTestCase(TestCase):
 
         args = {
             "quantities": [
-                {"type": "_free", "count": 30, "price": 0},
                 {"type": "_normal", "count": 20, "price": 10},
                 {"type": "_premium", "count": 10, "price": 20},
             ],
@@ -216,7 +237,6 @@ class TicketEventTestCase(TestCase):
         # Create ticket offerings
         args = {
             "quantities": [
-                {"type": "_free", "count": 4, "price": 0},
                 {"type": "_normal", "count": 5, "price": 10},
                 {"type": "_premium", "count": 3, "price": 20},
             ],
@@ -281,8 +301,8 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(data["totals"], self.ticket_totals, data["totals"])
         self.assertEqual(
             data["available"],
-            # Only premium and free tickets available
-            [t for t in self.ticket_totals if t["type"] in ["premium", "free"]],
+            # Only premium tickets available
+            [t for t in self.ticket_totals if t["type"] == "premium"],
             data["available"],
         )
 
@@ -336,7 +356,6 @@ class TicketEventTestCase(TestCase):
 
         tickets_to_add = {
             "quantities": [
-                {"type": "free", "count": 1},
                 {"type": "normal", "count": 2},
                 {"type": "premium", "count": 1},
             ]
@@ -349,8 +368,7 @@ class TicketEventTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 4, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="free").count(), 1, cart.tickets)
+        self.assertEqual(cart.tickets.count(), 3, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
 
@@ -361,7 +379,6 @@ class TicketEventTestCase(TestCase):
         for _ in range(2):
             tickets_to_add = {
                 "quantities": [
-                    {"type": "free", "count": 1},
                     {"type": "normal", "count": 2},
                     {"type": "premium", "count": 1},
                 ]
@@ -376,8 +393,7 @@ class TicketEventTestCase(TestCase):
             self.assertIn(resp.status_code, [200, 201], resp.content)
 
         cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 8, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="free").count(), 2, cart.tickets)
+        self.assertEqual(cart.tickets.count(), 6, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="normal").count(), 4, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="premium").count(), 2, cart.tickets)
 
@@ -386,7 +402,6 @@ class TicketEventTestCase(TestCase):
 
         tickets_to_add = {
             "quantities": [
-                {"type": "free", "count": 1},
                 {"type": "normal", "count": 200},
                 {"type": "premium", "count": 1},
             ]
@@ -451,7 +466,6 @@ class TicketEventTestCase(TestCase):
         # Add a few tickets
         tickets_to_add = {
             "quantities": [
-                {"type": "free", "count": 1},
                 {"type": "normal", "count": 2},
                 {"type": "premium", "count": 1},
             ]
@@ -464,15 +478,13 @@ class TicketEventTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 4, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="free").count(), 1, cart.tickets)
+        self.assertEqual(cart.tickets.count(), 3, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
 
         # Remove all but one from normal
         tickets_to_remove = {
             "quantities": [
-                {"type": "free", "count": 1},
                 {"type": "normal", "count": 1},
                 {"type": "premium", "count": 1},
             ]
@@ -516,7 +528,6 @@ class TicketEventTestCase(TestCase):
         # Remove more than what exists...still ok.
         tickets_to_remove = {
             "quantities": [
-                {"type": "free", "count": 300},
                 {"type": "normal", "count": 200},
                 {"type": "premium", "count": 100},
             ]
@@ -813,8 +824,54 @@ class TicketTestCase(TestCase):
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
         self.assertEqual(len(in_cart & to_add), 0, in_cart | to_add)
 
+    def test_initiate_checkout_non_free_tickets(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Add a few tickets to cart
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 1},
+                {"type": "premium", "count": 1},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Initiate checkout
+        with patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context:
+            cap_context_data = "abcde"
+            fake_cap_context.return_value = cap_context_data, 200, None
+            resp = self.client.post(reverse("tickets-initiate-checkout"))
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+            # No free tickets should be sold
+            self.assertFalse(resp.data["sold_free_tickets"])
+
+        # Capture context should be tied to cart
+        cart = Cart.objects.filter(owner=self.user1).first()
+        self.assertIsNotNone(cart.checkout_context)
+        self.assertEqual(cart.checkout_context, cap_context_data)
+
+        # Tickets should be held
+        held_tickets = Ticket.objects.filter(holder=self.user1)
+        self.assertEqual(held_tickets.count(), 2, held_tickets)
+        self.assertEqual(held_tickets.filter(type="normal").count(), 1, held_tickets)
+        self.assertEqual(held_tickets.filter(type="premium").count(), 1, held_tickets)
+
     def test_initiate_checkout_free_and_non_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
+        Ticket.objects.create(type="free", event=self.event1, price=0.0)
 
         # Add a few tickets to cart
         tickets_to_add = {
@@ -845,7 +902,7 @@ class TicketTestCase(TestCase):
             fake_cap_context.return_value = cap_context_data, 200, None
             resp = self.client.post(reverse("tickets-initiate-checkout"))
             self.assertIn(resp.status_code, [200, 201], resp.content)
-            # check that free tickets were sold
+            # Free ticket should be sold with non-free tickets if purchased together
             self.assertFalse(resp.data["sold_free_tickets"])
 
         # Capture context should be tied to cart
@@ -856,17 +913,20 @@ class TicketTestCase(TestCase):
         # Tickets should be held
         held_tickets = Ticket.objects.filter(holder=self.user1)
         self.assertEqual(held_tickets.count(), 3, held_tickets)
-        self.assertEqual(held_tickets.filter(type="normal").count(), 1, held_tickets)
+        self.assertEqual(held_tickets.filter(type="free").count(), 1, held_tickets)
         self.assertEqual(held_tickets.filter(type="normal").count(), 1, held_tickets)
         self.assertEqual(held_tickets.filter(type="premium").count(), 1, held_tickets)
 
     def test_initiate_checkout_only_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
 
-        # Add a few tickets to cart
+        tickets = [Ticket(type="free", event=self.event1, price=0.0) for _ in range(3)]
+        Ticket.objects.bulk_create(tickets)
+
+        # Add a few free tickets to cart
         tickets_to_add = {
             "quantities": [
-                {"type": "free", "count": 2},
+                {"type": "free", "count": 3},
             ]
         }
         resp = self.client.post(
@@ -895,7 +955,7 @@ class TicketTestCase(TestCase):
 
         # Ownership transferred
         owned_tickets = Ticket.objects.filter(owner=self.user1)
-        self.assertEqual(owned_tickets.count(), 2, owned_tickets)
+        self.assertEqual(owned_tickets.count(), 3, owned_tickets)
 
         # Cart empty
         user_cart = Cart.objects.get(owner=self.user1)
@@ -917,7 +977,6 @@ class TicketTestCase(TestCase):
         # Add tickets to cart
         tickets_to_add = {
             "quantities": [
-                {"type": "free", "count": 1},
                 {"type": "normal", "count": 1},
                 {"type": "premium", "count": 1},
             ]
@@ -1046,7 +1105,6 @@ class TicketTestCase(TestCase):
         # Add a few tickets to cart
         tickets_to_add = {
             "quantities": [
-                {"type": "free", "count": 1},
                 {"type": "normal", "count": 1},
                 {"type": "premium", "count": 1},
             ]
@@ -1063,7 +1121,7 @@ class TicketTestCase(TestCase):
             resp = self.client.post(reverse("tickets-initiate-checkout"))
             self.assertIn(resp.status_code, [200, 201], resp.content)
             held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 3, held_tickets)
+            self.assertEqual(held_tickets.count(), 2, held_tickets)
 
             # Complete checkout
             resp = self.client.post(
@@ -1076,7 +1134,7 @@ class TicketTestCase(TestCase):
 
             # Ownership transferred
             owned_tickets = Ticket.objects.filter(owner=self.user1)
-            self.assertEqual(owned_tickets.count(), 3, owned_tickets)
+            self.assertEqual(owned_tickets.count(), 2, owned_tickets)
 
             # Cart empty
             user_cart = Cart.objects.get(owner=self.user1)
