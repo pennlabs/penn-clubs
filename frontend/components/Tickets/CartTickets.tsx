@@ -147,6 +147,14 @@ const useCheckout = () => {
 
   return {
     showModal,
+    onClose: () => {
+      const confirmed = confirm(
+        'Are you sure you want to exit the checkout process?',
+      )
+      if (confirmed) {
+        setShowModal(false)
+      }
+    },
     checkout: async () => {
       setShowModal(true)
       const token = await fetchToken()
@@ -162,7 +170,12 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   )
   const [countedTickets, setCountedTickets] = useState<CountedEventTicket[]>([])
 
-  const { showModal, checkout, captureContext } = useCheckout()
+  const {
+    showModal,
+    onClose: onModalClose,
+    checkout,
+    captureContext,
+  } = useCheckout()
 
   useEffect(() => {
     setCountedTickets(combineTickets(tickets))
@@ -352,7 +365,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           Proceed to Checkout
         </button>
       </div>
-      <Modal show={showModal}>
+      <Modal show={showModal} closeModal={onModalClose}>
         {captureContext && (
           <PaymentForm
             captureContext={captureContext}
@@ -367,7 +380,6 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
                 },
               )
               const data = await res.json()
-              console.log({ data })
             }}
           />
         )}
