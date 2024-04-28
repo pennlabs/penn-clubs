@@ -251,6 +251,7 @@ const sites = {
   },
 }
 
+export const TICKETING_PAYMENT_ENABLED = false
 export const SITE_ID = site
 export const SITE_NAME = sites[site].SITE_NAME
 export const SITE_SUBTITLE = sites[site].SITE_SUBTITLE

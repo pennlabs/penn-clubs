@@ -2,6 +2,8 @@ import React, { ReactElement, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 import styled from 'styled-components'
 
+import { TICKETING_PAYMENT_ENABLED } from '~/utils/branding'
+
 import { Icon, Line, Text, Title } from '../../components/common'
 import {
   ALLBIRDS_GRAY,
@@ -113,18 +115,20 @@ const TicketItem: React.FC<TicketItemProps> = ({
             onChange?.({ ...ticket, count })
           }}
         />
-        <Input
-          type="number"
-          className="input"
-          value={ticket.price ?? ''}
-          placeholder="Ticket Price"
-          onChange={(e) => {
-            const price = e.target.value
-            setTicket({ ...ticket, price })
-            onChange?.({ ...ticket, price })
-          }}
-        />
-
+        {ticket.buyable && (
+          <Input
+            type="number"
+            className="input"
+            value={ticket.price ?? ''}
+            placeholder="Ticket Price"
+            disabled={!TICKETING_PAYMENT_ENABLED}
+            onChange={(e) => {
+              const price = e.target.value
+              setTicket({ ...ticket, price })
+              onChange?.({ ...ticket, price })
+            }}
+          />
+        )}
         <button
           className="button is-danger"
           disabled={!deletable}
@@ -147,6 +151,12 @@ const TicketItem: React.FC<TicketItemProps> = ({
             justifyContent: 'center',
           }}
         >
+          <button
+            className="button is-info is-small mr-2"
+            onClick={() => setTicket({ ...ticket, buyable: !ticket.buyable })}
+          >
+            {ticket.buyable ? 'Disable Buying' : 'Enable Buying'}
+          </button>
           {openGroupDiscount ? (
             <>
               <div style={{ maxWidth: '75px' }}>
@@ -205,6 +215,7 @@ type Ticket = {
   price: string | null // Free if null
   groupDiscount: string | null // If null, no group discount
   groupNumber: string | null // If null, no group discount
+  buyable: boolean
 }
 
 const TicketsModal = ({
@@ -222,9 +233,10 @@ const TicketsModal = ({
     {
       name: 'Regular Ticket',
       count: null,
-      price: null,
+      price: '0.00',
       groupDiscount: null,
       groupNumber: null,
+      buyable: true,
     },
   ])
 
@@ -235,9 +247,10 @@ const TicketsModal = ({
       {
         name: '',
         count: null,
-        price: null,
+        price: '0.00',
         groupDiscount: null,
         groupNumber: null,
+        buyable: true,
       },
     ])
   }
@@ -258,6 +271,7 @@ const TicketsModal = ({
             groupNumber: usingGroupPricing
               ? parseFloat(ticket.groupNumber!)
               : null,
+            buyable: ticket.buyable,
           }
         })
       doApiRequest(`/events/${id}/tickets/?format=json`, {
@@ -300,7 +314,10 @@ const TicketsModal = ({
       />
       <ModalBody>
         <Title>{name}</Title>
-        <Text>Create new tickets for this event.</Text>
+        <Text>
+          Create new tickets for this event. For our alpha, only free tickets
+          will be supported for now: stay tuned for payments integration!
+        </Text>
         <Line />
         <SectionContainer>
           <h1>Tickets</h1>
