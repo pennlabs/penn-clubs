@@ -5058,7 +5058,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             # Place hold on tickets for 10 mins
             self._place_hold_on_tickets(tickets)
             # Skip payment process and give tickets to user/buyer
-            self._give_tickets(order_info, cart, None)
+            self._give_tickets(self.request.user, order_info, cart, None)
 
             return Response(
                 {
@@ -5251,7 +5251,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
         order_info = transaction_data["orderInformation"]
-        self._give_tickets(order_info, cart, reconciliation_id)
+        self._give_tickets(self.request.user, order_info, cart, reconciliation_id)
 
         return Response(
             {
@@ -5354,7 +5354,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Ticket.objects.filter(owner=self.request.user.id)
 
-    def _give_tickets(self, order_info, cart, reconciliation_id):
+    def _give_tickets(self, user, order_info, cart, reconciliation_id):
         """
         Helper function that gives user/buyer their held tickets
         and archives the transaction data
@@ -5362,7 +5362,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # At this point, we have validated that the payment was authorized
         # Give the tickets to the user
-        tickets = cart.tickets.select_for_update().filter(holder=self.request.user)
+        tickets = cart.tickets.select_for_update().filter(holder=user)
 
         # Archive transaction data for historical purposes.
         # We're explicitly using the response data over what's in self.request.user
