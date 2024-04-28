@@ -1,4 +1,5 @@
 import { css } from '@emotion/react'
+import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
@@ -10,7 +11,6 @@ import { CountedEventTicket, EventTicket } from '~/types'
 import { doApiRequest } from '~/utils'
 
 import { ModalContent } from '../ClubPage/Actions'
-import { useRouter } from 'next/navigation'
 
 const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
   return (
@@ -139,6 +139,7 @@ const useCheckout = () => {
     })
     const data = await res.json()
     if (!data.success) {
+      // TODO: handle free ticket case
       toast.error(data.detail, {
         style: { color: WHITE },
       })

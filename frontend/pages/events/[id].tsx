@@ -148,6 +148,7 @@ type Ticket = {
   type: string
   price: string
   max: string
+  available: string
   count: number | null
 }
 
@@ -170,7 +171,7 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Round to nearest integer and clamp to min/max
     const value = Math.max(
-      1,
+      0,
       Math.min(Math.round(parseFloat(e.target.value)), parseInt(max, 10)),
     )
     setCount(value)
@@ -200,7 +201,7 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
         <Input
           type="number"
           className="input"
-          min={1}
+          min={0}
           max={max}
           value={count ?? 1}
           step={1}
@@ -242,6 +243,7 @@ const EventPage: React.FC<EventPageProps> = ({
       type,
       price: counts.price.toString(),
       max: counts.total.toString(),
+      available: counts.available.toString(),
       count: 0,
     })),
   )
@@ -261,7 +263,7 @@ const EventPage: React.FC<EventPageProps> = ({
         {order.map((ticket, index) => (
           <GetTicketItem
             ticket={ticket}
-            max={ticket.max}
+            max={ticket.available}
             name={ticket.type}
             price={ticket.price}
             onCountChange={(count: number | null) => {
@@ -273,6 +275,7 @@ const EventPage: React.FC<EventPageProps> = ({
         ))}
         <button
           className="button is-primary my-4"
+          disabled={order.every((ticket) => ticket.count === 0)}
           onClick={() => {
             // Select type and count properties
             const orderToSend = order

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { TicketCard } from '~/components/Tickets/TicketCard'
@@ -23,7 +24,6 @@ import { doApiRequest } from '../../../utils'
 import QRCodeCard, { QRCodeType } from '../../ClubEditPage/QRCodeCard'
 import { Center, EmptyState, Loading, Modal, Text, Title } from '../../common'
 import TicketTransferModal from '../TicketTransferModal'
-import { toast } from 'react-toastify'
 
 const CardHeader = styled.div`
   display: flex;

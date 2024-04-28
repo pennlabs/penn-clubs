@@ -211,6 +211,7 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
       if (contents.success) {
         toast.info(contents.message, { hideProgressBar: true })
       } else {
+        // eslint-disable-next-line no-console
         console.error(contents.errors)
         setErrorPennKeys(contents.errors)
         toast.error(

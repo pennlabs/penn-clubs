@@ -2,6 +2,8 @@ import { Field, Form, Formik } from 'formik'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
+import { WHITE } from '~/constants'
+
 import { Badge, ClubFair, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
@@ -13,7 +15,6 @@ import {
 import { Icon, Text } from '../common'
 import { DateTimeField, SelectField, TextField } from '../FormComponents'
 import { fixDeserialize } from '../reports/ReportForm'
-import { WHITE } from '~/constants'
 
 /**
  * A component where the user can enter a list of club names and get a list of club codes in response.

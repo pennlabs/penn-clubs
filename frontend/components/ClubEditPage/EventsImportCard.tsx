@@ -2,12 +2,13 @@ import { Field, Form, Formik } from 'formik'
 import { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
+import { WHITE } from '~/constants'
+
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
 import { Contact, Icon, Text } from '../common'
 import { TextField } from '../FormComponents'
 import BaseCard from './BaseCard'
-import { WHITE } from '~/constants'
 
 type EventsImportCardProps = {
   club: Club
