@@ -128,9 +128,23 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] =>
     ),
   )
 
-const useCheckout = () => {
+const useCheckout = (paid: boolean) => {
   const [showModal, setShowModal] = useState(false)
   const [captureContext, setCaptureContext] = useState<string>()
+  const navigate = useRouter()
+
+  const onModalClose = (force: boolean) => {
+    if (force) {
+      setShowModal(false)
+      return
+    }
+    const confirmed = confirm(
+      'Are you sure you want to exit the checkout process? You could lose items in your cart!',
+    )
+    if (confirmed) {
+      setShowModal(false)
+    }
+  }
 
   const fetchToken = async () => {
     const res = await doApiRequest(`/tickets/initiate_checkout/?format=json`, {
@@ -143,26 +157,24 @@ const useCheckout = () => {
       toast.error(data.detail, {
         style: { color: WHITE },
       })
+    } else if (data.sold_free_tickets) {
+      onModalClose(true)
+      toast.success('Free tickets purchased successfully!')
+      setTimeout(() => {
+        navigate.push('/settings#Tickets')
+      }, 500)
     }
     return data.detail
   }
 
   return {
     showModal,
-    onClose: (force: boolean) => {
-      if (force) {
-        setShowModal(false)
-        return
-      }
-      const confirmed = confirm(
-        'Are you sure you want to exit the checkout process? You could lose items in your cart!',
-      )
-      if (confirmed) {
-        setShowModal(false)
-      }
-    },
+    onClose: onModalClose,
     checkout: async () => {
-      setShowModal(true)
+      if (paid) {
+        // heuristic on frontend to skip modal if checking out free tickets
+        setShowModal(true)
+      }
       const token = await fetchToken()
       setCaptureContext(token)
     },
@@ -177,12 +189,13 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   )
   const [countedTickets, setCountedTickets] = useState<CountedEventTicket[]>([])
 
+  const atLeastOnePaid = tickets.some((ticket) => parseFloat(ticket.price) > 0)
   const {
     showModal,
     onClose: onModalClose,
     checkout,
     captureContext,
-  } = useCheckout()
+  } = useCheckout(atLeastOnePaid)
 
   useEffect(() => {
     setCountedTickets(combineTickets(tickets))
