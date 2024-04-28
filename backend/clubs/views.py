@@ -2427,7 +2427,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             # We don't need a lock since we aren't changing the holder or owner
             tickets = (
                 Ticket.objects.filter(
-                    event=event, type=type, owner__isnull=True, holder__isnull=True
+                    event=event,
+                    type=type,
+                    owner__isnull=True,
+                    holder__isnull=True,
+                    buyable=True,
                 )
                 .prefetch_related("carts")
                 .exclude(carts__owner=self.request.user)
@@ -2605,7 +2609,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             .order_by("type")
         )
         available = (
-            tickets.filter(owner__isnull=True, holder__isnull=True)
+            tickets.filter(owner__isnull=True, holder__isnull=True, buyable=True)
             .values("type")
             .annotate(price=Max("price"))
             .annotate(count=Count("type"))
@@ -2645,6 +2649,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             required: false
                                         transferable:
                                             type: boolean
+                                        buyable:
+                                            type: boolean
+                                            required: false
                             order_limit:
                                 type: int
                                 required: false
@@ -2759,6 +2766,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 group_discount=item.get("group_discount", 0),
                 group_size=item.get("group_size", None),
                 transferable=item.get("transferable", True),
+                buyable=item.get("buyable", True),
             )
             for item in quantities
             for _ in range(item["count"])
@@ -5131,6 +5139,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             available_tickets = Ticket.objects.filter(
                 event=ticket_class["event"],
                 type=ticket_class["type"],
+                buyable=True,  # should not be triggered as buyable is by ticket class
                 owner__isnull=True,
                 holder__isnull=True,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
@@ -5221,7 +5230,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         # skip_locked is important here because if any of the tickets in cart
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
-            Q(holder__isnull=True) | Q(holder=self.request.user), owner__isnull=True
+            Q(holder__isnull=True) | Q(holder=self.request.user),
+            owner__isnull=True,
+            buyable=True,
         )
 
         # Assert that the filter succeeded in freezing all the tickets for checkout

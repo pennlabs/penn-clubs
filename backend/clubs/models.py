@@ -1846,6 +1846,8 @@ class Ticket(models.Model):
     group_size = models.PositiveIntegerField(null=True, blank=True)
     transferable = models.BooleanField(default=True)
     attended = models.BooleanField(default=False)
+    # TODO: change to enum between All, Club, None
+    buyable = models.BooleanField(default=True)
     objects = TicketManager()
 
     def get_qr(self):
