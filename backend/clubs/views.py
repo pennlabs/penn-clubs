@@ -5189,6 +5189,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     type: string
                                 success:
                                     type: boolean
+                                sold_free_tickets:
+                                    type: boolean
             "403":
                 content:
                     application/json:
@@ -5198,6 +5200,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                                 detail:
                                     type: string
                                 success:
+                                    type: boolean
+                                sold_free_tickets:
                                     type: boolean
         ---
         """
@@ -5209,6 +5213,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 {
                     "success": False,
                     "detail": "No tickets selected for checkout.",
+                    "sold_free_tickets": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -5224,20 +5229,40 @@ class TicketViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
-                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                    "detail": (
+                        "Cart is stale or empty, invoke /api/tickets/cart to refresh"
+                    ),
+                    "sold_free_tickets": False,
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         cart_total = self._calculate_cart_total(cart)
 
+        # If all tickets are free, we can skip the payment process
         if not cart_total:
+            order_info = {
+                "amountDetails": {"totalAmount": "0.00"},
+                "billTo": {
+                    "reconciliationId": None,
+                    "firstName": self.request.user.first_name,
+                    "lastName": self.request.user.last_name,
+                    "phoneNumber": None,
+                    "email": self.request.user.email,
+                },
+            }
+
+            # Place hold on tickets for 10 mins
+            self._place_hold_on_tickets(tickets)
+            # Skip payment process and give tickets to user/buyer
+            self._give_tickets(self.request.user, order_info, cart, None)
+
             return Response(
                 {
-                    "success": False,
-                    "detail": "Cart total must be nonzero to generate capture context.",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+                    "success": True,
+                    "detail": "Free tickets sold.",
+                    "sold_free_tickets": True,
+                }
             )
 
         capture_context_request = {
@@ -5284,17 +5309,22 @@ class TicketViewSet(viewsets.ModelViewSet):
                 cart.save()
 
             # Place hold on tickets for 10 mins
-            holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
-            tickets.update(
-                holder=self.request.user, holding_expiration=holding_expiration
+            self._place_hold_on_tickets(tickets)
+
+            return Response(
+                {
+                    "success": True,
+                    "detail": context,
+                    "sold_free_tickets": False,
+                }
             )
 
-            return Response({"success": True, "detail": context})
         except ApiException as e:
             return Response(
                 {
                     "success": False,
                     "detail": f"Unable to generate capture context: {e}",
+                    "sold_free_tickets": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -5417,38 +5447,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        # At this point, we have validated that the payment was authorized
-        # Give the tickets to the user
-        tickets = cart.tickets.select_for_update().filter(holder=self.request.user)
-
-        # Archive transaction data for historical purposes.
-        # We're explicitly using the response data over what's in self.request.user
         order_info = transaction_data["orderInformation"]
-        transaction_records = []
-        for ticket in tickets:
-            transaction_records.append(
-                TicketTransactionRecord(
-                    ticket=ticket,
-                    reconciliation_id=str(reconciliation_id),
-                    total_amount=float(order_info["amountDetails"]["totalAmount"]),
-                    buyer_first_name=order_info["billTo"]["firstName"],
-                    buyer_last_name=order_info["billTo"]["lastName"],
-                    # TODO: investigate why phone numbers don't show in test API
-                    buyer_phone=order_info["billTo"].get("phoneNumber", None),
-                    buyer_email=order_info["billTo"]["email"],
-                )
-            )
-
-        TicketTransactionRecord.objects.bulk_create(transaction_records)
-        tickets.update(owner=request.user, holder=None)
-        cart.tickets.clear()
-        for ticket in tickets:
-            ticket.send_confirmation_email()
-
-        Ticket.objects.update_holds()
-
-        cart.checkout_context = None
-        cart.save()
+        self._give_tickets(self.request.user, order_info, cart, reconciliation_id)
 
         return Response(
             {
@@ -5557,6 +5557,52 @@ class TicketViewSet(viewsets.ModelViewSet):
                 "event__club"
             )
         return Ticket.objects.filter(owner=self.request.user.id)
+
+    def _give_tickets(self, user, order_info, cart, reconciliation_id):
+        """
+        Helper function that gives user/buyer their held tickets
+        and archives the transaction data
+        """
+
+        # At this point, we have validated that the payment was authorized
+        # Give the tickets to the user
+        tickets = cart.tickets.select_for_update().filter(holder=user)
+
+        # Archive transaction data for historical purposes.
+        # We're explicitly using the response data over what's in self.request.user
+        transaction_records = []
+
+        for ticket in tickets:
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    reconciliation_id=str(reconciliation_id),
+                    total_amount=float(order_info["amountDetails"]["totalAmount"]),
+                    buyer_first_name=order_info["billTo"]["firstName"],
+                    buyer_last_name=order_info["billTo"]["lastName"],
+                    # TODO: investigate why phone numbers don't show in test API
+                    buyer_phone=order_info["billTo"].get("phoneNumber", None),
+                    buyer_email=order_info["billTo"]["email"],
+                )
+            )
+
+        tickets.update(owner=self.request.user, holder=None)
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+        cart.tickets.clear()
+        for ticket in tickets:
+            ticket.send_confirmation_email()
+
+        Ticket.objects.update_holds()
+
+        cart.checkout_context = None
+        cart.save()
+
+    def _place_hold_on_tickets(self, tickets):
+        """
+        Helper function that places a 10 minute hold on tickets for a user
+        """
+        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+        tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
