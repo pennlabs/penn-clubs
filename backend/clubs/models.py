@@ -956,10 +956,6 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
-    @property
-    def tickets_count(self):
-        return Ticket.objects.count(event=self)
-
 
 class Favorite(models.Model):
     """
