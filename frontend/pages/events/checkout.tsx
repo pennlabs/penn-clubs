@@ -4,6 +4,7 @@ import React from 'react'
 import { BaseLayout } from '~/components/BaseLayout'
 import { Container, Metadata, Title } from '~/components/common'
 import AuthPrompt from '~/components/common/AuthPrompt'
+import { BetaTag } from '~/components/common/BetaTag'
 import CartTickets from '~/components/Tickets/CartTickets'
 import { SNOW } from '~/constants'
 import { CountedEventTicket, EventTicket } from '~/types'
@@ -56,7 +57,9 @@ const TicketsCheckoutPage: React.FC<Props> = ({
     <BaseLayout {...baseProps} authRequired>
       <Metadata title="Checkout" />
       <Container background={SNOW} fullHeight>
-        <Title>Checkout</Title>
+        <BetaTag>
+          <Title>Checkout</Title>
+        </BetaTag>
         <CartTickets tickets={initialCart} soldOut={soldOut} />
       </Container>
     </BaseLayout>
