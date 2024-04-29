@@ -2312,14 +2312,14 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
         now = timezone.now()
         for fair in ClubFair.objects.filter(end_time__gte=now):
             fields[f"Is participating in {fair.name}"] = f"custom_fair_{fair.id}_reg"
-            fields[
-                f"Registration time for {fair.name}"
-            ] = f"custom_fair_{fair.id}_reg_time"
+            fields[f"Registration time for {fair.name}"] = (
+                f"custom_fair_{fair.id}_reg_time"
+            )
             fields[f"Contact email for {fair.name}"] = f"custom_fair_{fair.id}_email"
             for i, question in enumerate(json.loads(fair.questions)):
-                fields[
-                    f"[{fair.name}] {question['label']}"
-                ] = f"custom_fair_{fair.id}_q_{i}"
+                fields[f"[{fair.name}] {question['label']}"] = (
+                    f"custom_fair_{fair.id}_q_{i}"
+                )
         return {"virtual_fair": fields}
 
     @staticmethod
