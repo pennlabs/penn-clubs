@@ -254,6 +254,8 @@ const EventPage: React.FC<EventPageProps> = ({
     .map((k) => k.available)
     .reduce((a, b) => a + b, 0)
 
+  const image = event.image_url ?? club.image_url
+
   return (
     <>
       <Modal
@@ -343,11 +345,14 @@ const EventPage: React.FC<EventPageProps> = ({
               </Card>
             </div>
             <Right>
-              {club.image_url && (
-                <LazyLoad width={450} height={280}>
-                  <img src={club.image_url} alt={`${club.name} Logo`} />
-                </LazyLoad>
-              )}
+              <LazyLoad width={450} height={280}>
+                <img
+                  width={450}
+                  height={200}
+                  src={image}
+                  alt={`${event.name} Event Image`}
+                />
+              </LazyLoad>
               {event.ticketed && (
                 <Card>
                   <StrongText>Tickets</StrongText>

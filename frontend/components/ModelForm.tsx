@@ -510,6 +510,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                   if (obj._status) {
                     if (currentlyEditing === null) {
                       objects.push(obj)
+                      onChange(currentObject)
                     }
                     changeObjects([...objects])
                     if (onUpdate) onUpdate(objects)
