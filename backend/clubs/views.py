@@ -1,4 +1,5 @@
 import argparse
+import base64
 import collections
 import datetime
 import functools
@@ -8,14 +9,23 @@ import os
 import re
 import secrets
 import string
+from functools import wraps
+from typing import Tuple
 from urllib.parse import urlparse
 
+import jwt
 import pandas as pd
 import pytz
 import qrcode
 import requests
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from CyberSource import (
+    PaymentsApi,
+    TransientTokenDataApi,
+    UnifiedCheckoutCaptureContextApi,
+)
+from CyberSource.rest import ApiException
 from dateutil.parser import parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -28,6 +38,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
+from django.db import transaction
 from django.db.models import (
     Case,
     CharField,
@@ -35,6 +46,7 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
+    Max,
     Prefetch,
     Q,
     TextField,
@@ -80,6 +92,7 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Cart,
     Club,
     ClubApplication,
     ClubFair,
@@ -102,6 +115,9 @@ from clubs.models import (
     Subscribe,
     Tag,
     Testimonial,
+    Ticket,
+    TicketTransactionRecord,
+    TicketTransferRecord,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -172,6 +188,7 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    TicketSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -188,6 +205,19 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
+
+
+def update_holds(func):
+    """
+    Decorator to update ticket holds
+    """
+
+    @wraps(func)
+    def wrap(self, request, *args, **kwargs):
+        Ticket.objects.update_holds()
+        return func(self, request, *args, **kwargs)
+
+    return wrap
 
 
 def file_upload_endpoint_helper(request, code):
@@ -301,6 +331,24 @@ def hour_to_string_helper(hour):
         hour_string = f"{hour - 12}pm"
 
     return hour_string
+
+
+def validate_transient_token(cc: str, tt: str) -> Tuple[bool, str]:
+    """Validate the integrity of the transient token using
+    the public key (JWK) obtained from the capture context"""
+
+    try:
+        _, body, _ = cc.split(".")
+        decoded_body = json.loads(base64.b64decode(body + "==="))
+        jwk = decoded_body["flx"]["jwk"]
+
+        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+        # This will throw if the key is invalid
+        jwt.decode(tt, key=public_key, algorithms=["RS256"])
+        return (True, "Successfully decoded the JWT")
+
+    except Exception as e:
+        return (False, str(e))
 
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -1576,7 +1624,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
         res = ClubFairBooth.objects.filter(club=club).select_related("club").all()
-
         return Response(ClubBoothSerializer(res, many=True).data)
 
     def get_operation_id(self, **kwargs):
@@ -2264,6 +2311,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     destroy:
     Delete an event.
+
+    tickets:
+    Get or create tickets for particular event
+
+    buyers:
+    Get information about the buyers of an event's ticket
+
+    remove_from_cart:
+    Remove a ticket for this event from cart
+
+    add_to_cart:
+    Add a ticket for this event to cart
+
     """
 
     permission_classes = [EventPermission | IsSuperuser]
@@ -2283,6 +2343,615 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if self.action in {"create", "update", "partial_update"}:
             return EventWriteSerializer
         return EventSerializer
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    @update_holds
+    def add_to_cart(self, request, *args, **kwargs):
+        """
+        Add a certain number of tickets to the cart
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            type: string
+                                        count:
+                                            type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+        ---
+        """
+        event = self.get_object()
+        cart, _ = Cart.objects.get_or_create(owner=self.request.user)
+
+        # Cannot add tickets that haven't dropped yet
+        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+            return Response(
+                {"detail": "Ticket drop time has not yet elapsed"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        quantities = request.data.get("quantities")
+        if not quantities:
+            return Response(
+                {"detail": "Quantities must be specified", "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        num_requested = sum(item["count"] for item in quantities)
+        num_carted = cart.tickets.filter(event=event).count()
+
+        if num_requested + num_carted > event.ticket_order_limit:
+            return Response(
+                {
+                    "detail": f"Order exceeds the maximum ticket limit of "
+                    f"{event.ticket_order_limit}.",
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        for item in quantities:
+            type = item["type"]
+            count = item["count"]
+
+            # Count unowned/unheld tickets of requested type
+            # We don't need a lock since we aren't changing the holder or owner
+            tickets = (
+                Ticket.objects.filter(
+                    event=event,
+                    type=type,
+                    owner__isnull=True,
+                    holder__isnull=True,
+                    buyable=True,
+                )
+                .prefetch_related("carts")
+                .exclude(carts__owner=self.request.user)
+            )
+
+            if tickets.count() < count:
+                return Response(
+                    {"detail": f"Not enough tickets of type {type} left!"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            cart.tickets.add(*tickets[:count])
+
+        cart.save()
+        return Response(
+            {"detail": f"Successfully added {count} to cart", "success": True}
+        )
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    @update_holds
+    def remove_from_cart(self, request, *args, **kwargs):
+        """
+        Remove a certain type/number of tickets from the cart
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            type: string
+                                        count:
+                                            type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+        ---
+        """
+        event = self.get_object()
+        quantities = request.data.get("quantities")
+        if not quantities:
+            return Response(
+                {
+                    "detail": "Quantities must be specified",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not all(isinstance(item, dict) for item in quantities):
+            return Response(
+                {
+                    "detail": "Quantities must be a list of dictionaries",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        cart = get_object_or_404(Cart, owner=self.request.user)
+
+        for item in quantities:
+            type = item["type"]
+            count = item["count"]
+            tickets_to_remove = cart.tickets.filter(type=type, event=event)
+
+            # Ensure we don't try to remove more tickets than we can
+            count = min(count, tickets_to_remove.count())
+            cart.tickets.remove(*tickets_to_remove[:count])
+
+        cart.save()
+        return Response(
+            {"detail": f"Successfully removed {count} from cart", "success": True}
+        )
+
+    @action(detail=True, methods=["get"])
+    def buyers(self, request, *args, **kwargs):
+        """
+        Get information about ticket buyers
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                buyers:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            fullname:
+                                                type: string
+                                            id:
+                                                type: string
+                                            owner_id:
+                                                type: integer
+                                            type:
+                                                type: string
+                                            attended:
+                                                type: boolean
+        ---
+        """
+        tickets = Ticket.objects.filter(event=self.get_object()).annotate(
+            fullname=Concat("owner__first_name", Value(" "), "owner__last_name")
+        )
+
+        buyers = tickets.filter(owner__isnull=False).values(
+            "fullname", "id", "owner_id", "type", "attended", "owner__email"
+        )
+
+        return Response({"buyers": buyers})
+
+    @action(detail=True, methods=["get"])
+    def tickets(self, request, *args, **kwargs):
+        """
+        Get information about tickets for particular event
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                totals:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            type:
+                                                type: string
+                                            count:
+                                                type: integer
+                                            price:
+                                                type: number
+                                available:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            type:
+                                                type: string
+                                            count:
+                                                type: integer
+                                            price:
+                                                type: number
+        ---
+        """
+        event = self.get_object()
+        tickets = Ticket.objects.filter(event=event)
+
+        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+            return Response({"totals": [], "available": []})
+
+        # Take price of first ticket of given type for now
+        totals = (
+            tickets.values("type")
+            .annotate(price=Max("price"))
+            .annotate(count=Count("type"))
+            .order_by("type")
+        )
+        available = (
+            tickets.filter(owner__isnull=True, holder__isnull=True, buyable=True)
+            .values("type")
+            .annotate(price=Max("price"))
+            .annotate(count=Count("type"))
+            .order_by("type")
+        )
+        return Response({"totals": list(totals), "available": list(available)})
+
+    @tickets.mapping.put
+    @transaction.atomic
+    def create_tickets(self, request, *args, **kwargs):
+        """
+        Create ticket offerings for event
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            type: string
+                                        count:
+                                            type: integer
+                                        price:
+                                            type: number
+                                        group_size:
+                                            type: number
+                                            required: false
+                                        group_discount:
+                                            type: number
+                                            format: float
+                                            required: false
+                                        transferable:
+                                            type: boolean
+                                        buyable:
+                                            type: boolean
+                                            required: false
+                            order_limit:
+                                type: int
+                                required: false
+                            drop_time:
+                                type: string
+                                format: date-time
+                                required: false
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        event = self.get_object()
+
+        # Tickets can't be edited after they've dropped
+        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
+            return Response(
+                {"detail": "Tickets cannot be edited after they have dropped"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Tickets can't be edited after they've been sold or held
+        if (
+            Ticket.objects.filter(event=event)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            return Response(
+                {
+                    "detail": "Tickets cannot be edited after they have been "
+                    "sold or checked out"
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        quantities = request.data.get("quantities", [])
+        if not quantities:
+            return Response(
+                {"detail": "Quantities must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for item in quantities:
+            if not item.get("type") or not item.get("count"):
+                return Response(
+                    {"detail": "Specify type and count to create some tickets."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Ticket prices must be non-negative
+            if item.get("price", 0) < 0:
+                return Response(
+                    {"detail": "Ticket price cannot be negative"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Group discounts must be between 0 and 1
+            if item.get("group_discount", 0) < 0 or item.get("group_discount", 0) > 1:
+                return Response(
+                    {"detail": "Group discount must be between 0 and 1"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Min group sizes must be greater than 1
+            if item.get("group_size", 2) <= 1:
+                return Response(
+                    {"detail": "Min group size must be greater than 1"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Tickets must specify both group_discount and group_size or neither
+            if ("group_discount" in item) != ("group_size" in item):
+                return Response(
+                    {
+                        "detail": (
+                            "Ticket must specify either both group_discount "
+                            "and group_size or neither"
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Atomicity ensures idempotency
+        Ticket.objects.filter(event=event).delete()  # Idempotency
+        tickets = [
+            Ticket(
+                event=event,
+                type=item["type"],
+                price=item.get("price", 0),
+                group_discount=item.get("group_discount", 0),
+                group_size=item.get("group_size", None),
+                transferable=item.get("transferable", True),
+                buyable=item.get("buyable", True),
+            )
+            for item in quantities
+            for _ in range(item["count"])
+        ]
+
+        Ticket.objects.bulk_create(tickets)
+
+        order_limit = request.data.get("order_limit", None)
+        if order_limit is not None:
+            event.ticket_order_limit = order_limit
+            event.save()
+
+        drop_time = request.data.get("drop_time", None)
+        if drop_time is not None:
+            try:
+                drop_time = datetime.datetime.strptime(drop_time, "%Y-%m-%dT%H:%M:%S%z")
+            except ValueError as e:
+                return Response(
+                    {"detail": f"Invalid drop time: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if drop_time < timezone.now():
+                return Response(
+                    {"detail": "Specified drop time has already elapsed"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            event.ticket_drop_time = drop_time
+            event.save()
+
+        return Response({"detail": "Successfully created tickets"})
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    @update_holds
+    def issue_tickets(self, request, *args, **kwargs):
+        """
+        Issue tickets that have already been created to users in bulk.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            tickets:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        username:
+                                            type: string
+                                        ticket_type:
+                                            type: string
+
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                errors:
+                                    type: array
+                                    items:
+                                        type: string
+        ---
+        """
+        event = self.get_object()
+
+        tickets = request.data.get("tickets", [])
+
+        if not tickets:
+            return Response(
+                {"detail": "tickets must be specified", "errors": []},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for item in tickets:
+            if not item.get("username") or not item.get("ticket_type"):
+                return Response(
+                    {
+                        "detail": "Specify username and ticket type to issue tickets",
+                        "errors": [],
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        usernames = [item.get("username") for item in tickets]
+        ticket_types = [item.get("ticket_type") for item in tickets]
+
+        # Validate all usernames
+        invalid_usernames = set(usernames) - set(
+            get_user_model()
+            .objects.filter(username__in=usernames)
+            .values_list("username", flat=True)
+        )
+        if invalid_usernames:
+            return Response(
+                {
+                    "detail": "Invalid usernames",
+                    "errors": sorted(list(invalid_usernames)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate all ticket types
+        invalid_types = set(ticket_types) - set(
+            Ticket.objects.filter(event=event).values_list("type", flat=True)
+        )
+        if invalid_types:
+            return Response(
+                {
+                    "detail": "Invalid ticket classes",
+                    "errors": sorted(list(invalid_types)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        tickets = []
+        for ticket_type, num_requested in collections.Counter(ticket_types).items():
+            available_tickets = Ticket.objects.select_for_update(
+                skip_locked=True
+            ).filter(
+                event=event, type=ticket_type, owner__isnull=True, holder__isnull=True
+            )[:num_requested]
+
+            if available_tickets.count() < num_requested:
+                return Response(
+                    {
+                        "detail": (
+                            f"Not enough tickets available for type: {ticket_type}"
+                        ),
+                        "errors": [],
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            tickets.extend(available_tickets)
+
+        # Assign tickets to users
+        transaction_records = []
+
+        for username, ticket_type in zip(usernames, ticket_types):
+            user = get_user_model().objects.filter(username=username).first()
+            ticket = next(
+                ticket
+                for ticket in tickets
+                if ticket.type == ticket_type and ticket.owner is None
+            )
+            ticket.owner = user
+            ticket.holder = None
+
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    total_amount=0.0,
+                    buyer_first_name=user.first_name,
+                    buyer_last_name=user.last_name,
+                    buyer_email=user.email,
+                )
+            )
+
+        Ticket.objects.bulk_update(tickets, ["owner", "holder"])
+        Ticket.objects.update_holds()
+
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+
+        for ticket in tickets:
+            ticket.send_confirmation_email()
+
+        return Response(
+            {"success": True, "detail": f"Issued {len(tickets)} tickets", "errors": []}
+        )
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -2411,9 +3080,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
+    @update_holds
     def destroy(self, request, *args, **kwargs):
         """
         Do not let non-superusers delete events with the FAIR type through the API.
+        Check if there are bought or held tickets before deletion.
         """
         event = self.get_object()
 
@@ -2421,6 +3092,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             raise DRFValidationError(
                 detail="You cannot delete activities fair events. "
                 f"If you would like to do this, email {settings.FROM_EMAIL}."
+            )
+
+        if (
+            Ticket.objects.filter(event=event)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            raise DRFValidationError(
+                detail=(
+                    "This event cannot be deleted because there are tickets "
+                    "that have been bought or are being checked out."
+                )
             )
 
         return super().destroy(request, *args, **kwargs)
@@ -2455,7 +3138,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                         if "fair" in self.request.query_params
                         else Badge.objects.filter(visible=True)
                     ),
-                )
+                ),
+                "tickets",
             )
             .order_by("start_time")
         )
@@ -2471,6 +3155,12 @@ class EventViewSet(ClubEventViewSet):
 
     destroy:
     Delete an event.
+
+    fair:
+    Get information about a fair listing
+
+    owned:
+    Return all events that the user has officer permissions over.
     """
 
     def get_operation_id(self, **kwargs):
@@ -4283,6 +4973,647 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
             "profile__major",
         )
         return user
+
+
+class TicketViewSet(viewsets.ModelViewSet):
+    """
+    get:
+    Get a specific ticket owned by a user
+
+    list:
+    List all tickets owned by a user
+
+    partial_update:
+    Update attendance for a ticket
+
+    cart:
+    List all unowned/unheld tickets currently in a user's cart
+
+    initiate_checkout:
+    Initiate a hold on the tickets in a user's cart and create a capture context
+
+    complete_checkout:
+    Complete the checkout process after we have obtained an auth on a user's card
+
+    qr:
+    Get a ticket's QR code
+
+    transfer:
+    Transfer a ticket to another user
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = TicketSerializer
+    http_method_names = ["get", "post", "patch"]
+    lookup_field = "id"
+
+    @staticmethod
+    def _calculate_cart_total(cart) -> float:
+        """
+        Calculate the total price of all tickets in a cart, applying discounts
+        where appropriate. Does not validate that the cart is valid.
+
+        :param cart: Cart object
+        :return: Total price of all tickets in the cart
+        """
+        ticket_type_counts = {
+            item["type"]: item["count"]
+            for item in cart.tickets.values("type").annotate(count=Count("type"))
+        }
+        cart_total = sum(
+            (
+                ticket.price * (1 - ticket.group_discount)
+                if ticket.group_size
+                and ticket_type_counts[ticket.type] >= ticket.group_size
+                else ticket.price
+            )
+            for ticket in cart.tickets.all()
+        )
+        return cart_total
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Update a ticket's attendance (only accessible by club officers)
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            attended:
+                                type: boolean
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Ticket'
+            "400":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        attended = request.data.get("attended")
+        if attended is None or not isinstance(attended, bool):
+            return Response(
+                {"detail": "Missing boolean attribute 'attended'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ticket = self.get_object()
+        ticket.attended = attended
+        ticket.save()
+        return Response(TicketSerializer(ticket).data)
+
+    @transaction.atomic
+    @update_holds
+    @action(detail=False, methods=["get"])
+    def cart(self, request, *args, **kwargs):
+        """
+        Validate tickets in a cart and return them. Replace in-cart tickets that
+        have been bought/held by someone else.
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                tickets:
+                                    allOf:
+                                        - $ref: "#/components/schemas/Ticket"
+                                sold_out:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            event:
+                                                type: object
+                                                properties:
+                                                    id:
+                                                        type: integer
+                                                    name:
+                                                        type: string
+                                            type:
+                                                type: string
+                                            count:
+                                                type: integer
+        ---
+        """
+
+        cart, _ = Cart.objects.prefetch_related("tickets").get_or_create(
+            owner=self.request.user
+        )
+
+        tickets_to_replace = cart.tickets.filter(
+            Q(owner__isnull=False) | Q(holder__isnull=False)
+        ).exclude(holder=self.request.user)
+
+        # In most cases, we won't need to replace, so exit early
+        if not tickets_to_replace.exists():
+            return Response(
+                {
+                    "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
+                    "sold_out": [],
+                },
+            )
+
+        # Attempt to replace all tickets that have gone stale
+        replacement_tickets, sold_out_tickets = [], []
+
+        tickets_in_cart = cart.tickets.values_list("id", flat=True)
+        tickets_to_replace = tickets_to_replace.select_related("event")
+
+        for ticket_class in tickets_to_replace.values(
+            "type", "event", "event__name"
+        ).annotate(count=Count("id")):
+            # we don't need to lock, since we aren't updating holder/owner
+            available_tickets = Ticket.objects.filter(
+                event=ticket_class["event"],
+                type=ticket_class["type"],
+                buyable=True,  # should not be triggered as buyable is by ticket class
+                owner__isnull=True,
+                holder__isnull=True,
+            ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
+
+            num_short = ticket_class["count"] - available_tickets.count()
+            if num_short > 0:
+                sold_out_tickets.append(
+                    {
+                        "type": ticket_class["type"],
+                        "event": {
+                            "id": ticket_class["event"],
+                            "name": ticket_class["event__name"],
+                        },
+                        "count": num_short,
+                    }
+                )
+
+            replacement_tickets.extend(list(available_tickets))
+
+        cart.tickets.remove(*tickets_to_replace)
+        if replacement_tickets:
+            cart.tickets.add(*replacement_tickets)
+        cart.save()
+
+        return Response(
+            {
+                "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
+                "sold_out": sold_out_tickets,
+            },
+        )
+
+    @action(detail=False, methods=["post"])
+    @update_holds
+    @transaction.atomic
+    def initiate_checkout(self, request, *args, **kwargs):
+        """
+        Checkout all tickets in cart and create a Cybersource capture context
+
+        NOTE: this does NOT buy tickets, it simply initiates a checkout process
+        which includes a 10-minute ticket hold
+
+        Once the user has entered their payment details and submitted the form
+        the request will be routed to complete_checkout
+
+        403 implies a stale cart.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+                                sold_free_tickets:
+                                    type: boolean
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+                                sold_free_tickets:
+                                    type: boolean
+        ---
+        """
+        cart = get_object_or_404(Cart, owner=self.request.user)
+
+        # Cart must have at least one ticket
+        if not cart.tickets.exists():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "No tickets selected for checkout.",
+                    "sold_free_tickets": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # skip_locked is important here because if any of the tickets in cart
+        # are locked, we shouldn't block.
+        tickets = cart.tickets.select_for_update(skip_locked=True).filter(
+            Q(holder__isnull=True) | Q(holder=self.request.user),
+            owner__isnull=True,
+            buyable=True,
+        )
+
+        # Assert that the filter succeeded in freezing all the tickets for checkout
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": (
+                        "Cart is stale or empty, invoke /api/tickets/cart to refresh"
+                    ),
+                    "sold_free_tickets": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        cart_total = self._calculate_cart_total(cart)
+
+        # If all tickets are free, we can skip the payment process
+        if not cart_total:
+            order_info = {
+                "amountDetails": {"totalAmount": "0.00"},
+                "billTo": {
+                    "reconciliationId": None,
+                    "firstName": self.request.user.first_name,
+                    "lastName": self.request.user.last_name,
+                    "phoneNumber": None,
+                    "email": self.request.user.email,
+                },
+            }
+
+            # Place hold on tickets for 10 mins
+            self._place_hold_on_tickets(tickets)
+            # Skip payment process and give tickets to user/buyer
+            self._give_tickets(self.request.user, order_info, cart, None)
+
+            return Response(
+                {
+                    "success": True,
+                    "detail": "Free tickets sold.",
+                    "sold_free_tickets": True,
+                }
+            )
+
+        capture_context_request = {
+            "_target_origins": [settings.CYBERSOURCE_TARGET_ORIGIN],
+            "_client_version": settings.CYBERSOURCE_CLIENT_VERSION,
+            "_allowed_card_networks": [
+                "VISA",
+                "MASTERCARD",
+                "AMEX",
+                "DISCOVER",
+            ],
+            "_allowed_payment_types": ["PANENTRY", "SRC"],
+            "_country": "US",
+            "_locale": "en_US",
+            "_capture_mandate": {
+                "_billing_type": "FULL",
+                "_request_email": True,
+                "_request_phone": True,
+                "_request_shipping": True,
+                "_show_accepted_network_icons": True,
+            },
+            "_order_information": {
+                "_amount_details": {
+                    "_total_amount": f"{cart_total:.2f}",
+                    "_currency": "USD",
+                }
+            },
+        }
+
+        try:
+            context, http_status, _ = UnifiedCheckoutCaptureContextApi(
+                settings.CYBERSOURCE_CONFIG
+            ).generate_unified_checkout_capture_context_with_http_info(
+                json.dumps(capture_context_request)
+            )
+            if not context or http_status >= 400:
+                raise ApiException(
+                    reason=f"Received {context} with HTTP status {http_status}",
+                )
+
+            # Tie generated capture context to user cart
+            if cart.checkout_context != context:
+                cart.checkout_context = context
+                cart.save()
+
+            # Place hold on tickets for 10 mins
+            self._place_hold_on_tickets(tickets)
+
+            return Response(
+                {
+                    "success": True,
+                    "detail": context,
+                    "sold_free_tickets": False,
+                }
+            )
+
+        except ApiException as e:
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Unable to generate capture context: {e}",
+                    "sold_free_tickets": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    @action(detail=False, methods=["post"])
+    @update_holds
+    @transaction.atomic
+    def complete_checkout(self, request, *args, **kwargs):
+        """
+        Complete the checkout after the user has entered their payment details
+        and obtained a transient token on the frontend.
+
+        403 implies a stale cart.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            transient_token:
+                                type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+        ---
+        """
+        tt = request.data.get("transient_token")
+        cart = get_object_or_404(
+            Cart.objects.prefetch_related("tickets"), owner=self.request.user
+        )
+
+        cc = cart.checkout_context
+        if cc is None:
+            return Response(
+                {"success": False, "detail": "Associated capture context not found"},
+                status=status.HTTP_500_BAD_REQUEST,
+            )
+
+        ok, message = validate_transient_token(cc, tt)
+        if not ok:
+            # Cleanup state since the purchase failed
+            cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
+            return Response(
+                {"success": False, "detail": message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # Guard against holds expiring before the capture context
+        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            _, http_status, transaction_data = TransientTokenDataApi(
+                settings.CYBERSOURCE_CONFIG
+            ).get_transaction_for_transient_token(tt)
+
+            if not transaction_data or http_status >= 400:
+                raise ApiException(
+                    reason=f"Received {transaction_data} with HTTP status {http_status}"
+                )
+            transaction_data = json.loads(transaction_data)
+        except ApiException as e:
+            # Cleanup state since the purchase failed
+            cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
+
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Transaction failed: {e}",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        create_payment_request = {"tokenInformation": {"transientTokenJwt": tt}}
+
+        try:
+            payment_response, http_status, _ = PaymentsApi(
+                settings.CYBERSOURCE_CONFIG
+            ).create_payment(json.dumps(create_payment_request))
+
+            if payment_response.status != "AUTHORIZED":
+                raise ApiException(reason="Payment response status is not authorized")
+            reconciliation_id = payment_response.reconciliation_id
+
+            if not payment_response or http_status >= 400:
+                raise ApiException(
+                    reason=f"Received {payment_response} with HTTP status {http_status}"
+                )
+        except ApiException as e:
+            # Cleanup state since the purchase failed
+            cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
+
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Transaction failed: {e}",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        order_info = transaction_data["orderInformation"]
+        self._give_tickets(self.request.user, order_info, cart, reconciliation_id)
+
+        return Response(
+            {
+                "success": True,
+                "detail": "Payment successful.",
+            }
+        )
+
+    @action(detail=True, methods=["get"])
+    def qr(self, request, *args, **kwargs):
+        """
+        Return a QR code png image representing a link to the ticket.
+        ---
+        operationId: Generate QR Code for ticket
+        responses:
+            "200":
+                description: Return a png image representing a QR code to the ticket.
+                content:
+                    image/png:
+                        schema:
+                            type: binary
+        ---
+        """
+        ticket = self.get_object()
+        qr_image = ticket.get_qr()
+        response = HttpResponse(content_type="image/png")
+        qr_image.save(response, "PNG")
+        return response
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def transfer(self, request, *args, **kwargs):
+        """
+        Transfer a ticket to another user
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                        required:
+                            - username
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+            "404":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        receiver = get_object_or_404(
+            get_user_model(), username=request.data.get("username")
+        )
+
+        # checking whether the request's user owns the ticket is handled by the queryset
+        ticket = self.get_object()
+        if not ticket.transferable:
+            return Response(
+                {"detail": "The ticket is non-transferable"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if self.request.user == receiver:
+            return Response(
+                {"detail": "You cannot transfer a ticket to yourself"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        ticket.owner = receiver
+        ticket.save()
+        TicketTransferRecord.objects.create(
+            ticket=ticket, sender=self.request.user, receiver=receiver
+        ).send_confirmation_email()
+        ticket.send_confirmation_email()  # send event details to recipient
+
+        return Response({"detail": "Successfully transferred ownership of ticket"})
+
+    def get_queryset(self):
+        if self.action == "partial_update":
+            officer_clubs = Membership.objects.filter(
+                person=self.request.user, role__lte=Membership.ROLE_OFFICER
+            ).values_list("club", flat=True)
+            return Ticket.objects.filter(event__club__in=officer_clubs).select_related(
+                "event__club"
+            )
+        return Ticket.objects.filter(owner=self.request.user.id)
+
+    def _give_tickets(self, user, order_info, cart, reconciliation_id):
+        """
+        Helper function that gives user/buyer their held tickets
+        and archives the transaction data
+        """
+
+        # At this point, we have validated that the payment was authorized
+        # Give the tickets to the user
+        tickets = cart.tickets.select_for_update().filter(holder=user)
+
+        # Archive transaction data for historical purposes.
+        # We're explicitly using the response data over what's in self.request.user
+        transaction_records = []
+
+        for ticket in tickets:
+            transaction_records.append(
+                TicketTransactionRecord(
+                    ticket=ticket,
+                    reconciliation_id=str(reconciliation_id),
+                    total_amount=float(order_info["amountDetails"]["totalAmount"]),
+                    buyer_first_name=order_info["billTo"]["firstName"],
+                    buyer_last_name=order_info["billTo"]["lastName"],
+                    # TODO: investigate why phone numbers don't show in test API
+                    buyer_phone=order_info["billTo"].get("phoneNumber", None),
+                    buyer_email=order_info["billTo"]["email"],
+                )
+            )
+
+        tickets.update(owner=self.request.user, holder=None)
+        TicketTransactionRecord.objects.bulk_create(transaction_records)
+        cart.tickets.clear()
+        for ticket in tickets:
+            ticket.send_confirmation_email()
+
+        Ticket.objects.update_holds()
+
+        cart.checkout_context = None
+        cart.save()
+
+    def _place_hold_on_tickets(self, tickets):
+        """
+        Helper function that places a 10 minute hold on tickets for a user
+        """
+        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+        tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):

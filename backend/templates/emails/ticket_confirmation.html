@@ -1,0 +1,49 @@
+<!-- TYPES:
+name:
+    type: string
+type:
+    type: string
+first_name:
+    type: string
+start_time:
+    type: string
+end_time:
+    type: string
+qr:
+    type: string
+-->
+
+{% extends 'emails/base.html' %}
+
+{% block content %}
+<h2>Thanks for using Penn Clubs!</h2>
+
+<p style="font-size: 1.2em">
+    {{ first_name }}, thank you for your recent purchase of a ticket to {{ name }} with ticket type {{type }}.
+</p>
+
+<p style="font-size: 1.2em">
+    As a reminder, the event starts at {{ start_time }} and ends at {{ end_time }}.
+
+
+</p>
+
+<p style="font-size: 1.2em">
+    Please be 10 minutes early for a smooth seating experience.
+</p>
+
+<p style="font-size: 1.2em"> Below is a
+    QR code for
+    your confirmation. </p>
+
+
+<img id="now" style="max-width: 60%; width: auto;" alt="" src="data:image/png;base64,{{ qr}}" />
+
+<p style="font-size: 1.2em"> Note: all tickets issued by us are <b>non-refundable</b>. </p>
+
+
+
+<p style="font-size: 1.2em">
+    If you have any questions, feel free to respond to this email.
+</p>
+{% endblock %}

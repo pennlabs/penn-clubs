@@ -55,6 +55,7 @@ from clubs.models import (
     TargetStudentType,
     TargetYear,
     Testimonial,
+    Ticket,
     Year,
 )
 from clubs.utils import clean
@@ -362,7 +363,11 @@ class ClubEventSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     large_image_url = serializers.SerializerMethodField("get_large_image_url")
     url = serializers.SerializerMethodField("get_event_url")
+    ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def get_ticketed(self, obj) -> bool:
+        return obj.tickets.count() > 0
 
     def get_event_url(self, obj):
         # if no url, return that
@@ -501,6 +506,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "location",
             "name",
             "start_time",
+            "ticketed",
             "type",
             "url",
         ]
@@ -1745,6 +1751,22 @@ class UserMembershipSerializer(serializers.ModelSerializer):
         fields = ("club", "role", "title", "active", "public")
 
 
+class TicketSerializer(serializers.ModelSerializer):
+    """
+    Used to return a ticket object
+    """
+
+    owner = serializers.SerializerMethodField("get_owner_name")
+    event = EventSerializer()
+
+    def get_owner_name(self, obj):
+        return obj.owner.get_full_name() if obj.owner else "None"
+
+    class Meta:
+        model = Ticket
+        fields = ("id", "event", "type", "owner", "price")
+
+
 class UserUUIDSerializer(serializers.ModelSerializer):
     """
     Used to get the uuid of a user (for ICS Calendar export)
@@ -2809,6 +2831,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                     "You cannot edit committees once the application is open"
                 )
             # nasty hack for idempotency
+            prev_committee_names = prev_committees.values("name")
             for prev_committee in prev_committees:
                 if prev_committee.name not in committees:
                     prev_committee.delete()

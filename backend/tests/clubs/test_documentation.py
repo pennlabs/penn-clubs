@@ -204,8 +204,8 @@ class DocumentationTestCase(TestCase):
                         )
                         if "application/json" in content["content"]:
                             json_content = content["content"]["application/json"]
-                            self.assertTrue("schema" in json_content)
                             try:
+                                self.assertTrue("schema" in json_content)
                                 self.verify_schema(json_content["schema"])
                             except AssertionError as e:
                                 raise AssertionError(

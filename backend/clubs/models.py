@@ -1,11 +1,14 @@
+import base64
 import datetime
 import os
 import re
 import uuid
 import warnings
+from io import BytesIO
 from urllib.parse import urlparse
 
 import pytz
+import qrcode
 import requests
 import yaml
 from django.conf import settings
@@ -325,7 +328,6 @@ class Club(models.Model):
     # cache club aggregation counts
     favorite_count = models.IntegerField(default=0)
     membership_count = models.IntegerField(default=0)
-
     # cache club rankings
     rank = models.IntegerField(default=0)
 
@@ -922,6 +924,8 @@ class Event(models.Model):
     parent_recurring_event = models.ForeignKey(
         RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
     )
+    ticket_order_limit = models.IntegerField(default=10)
+    ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -1772,6 +1776,174 @@ class ApplicationQuestionResponse(models.Model):
 
     class Meta:
         unique_together = (("question", "submission"),)
+
+
+class Cart(models.Model):
+    """
+    Represents an instance of a ticket cart for a user
+    """
+
+    owner = models.OneToOneField(
+        get_user_model(), related_name="cart", on_delete=models.CASCADE
+    )
+    # Capture context from Cybersource should be 8297 chars
+    checkout_context = models.CharField(max_length=8297, blank=True, null=True)
+
+
+class TicketManager(models.Manager):
+    # Update holds for all tickets
+    def update_holds(self):
+        expired_tickets = self.select_for_update().filter(
+            holder__isnull=False, holding_expiration__lte=timezone.now()
+        )
+
+        if not expired_tickets:
+            return
+
+        with transaction.atomic():
+            for ticket in expired_tickets:
+                ticket.holder = None
+            self.bulk_update(expired_tickets, ["holder"])
+
+
+class Ticket(models.Model):
+    """
+    Represents an instance of a ticket for an event
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(
+        Event, related_name="tickets", on_delete=models.DO_NOTHING
+    )
+    type = models.CharField(max_length=100)
+    owner = models.ForeignKey(
+        get_user_model(),
+        related_name="owned_tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    holder = models.ForeignKey(
+        get_user_model(),
+        related_name="held_tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    holding_expiration = models.DateTimeField(null=True, blank=True)
+    carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    group_discount = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0,
+        blank=True,
+    )
+    group_size = models.PositiveIntegerField(null=True, blank=True)
+    transferable = models.BooleanField(default=True)
+    attended = models.BooleanField(default=False)
+    # TODO: change to enum between All, Club, None
+    buyable = models.BooleanField(default=True)
+    objects = TicketManager()
+
+    def get_qr(self):
+        """
+        Return a QR code image linking to the ticket page
+        """
+        if not self.owner:
+            return None
+
+        url = f"https://{settings.DOMAINS[0]}/api/tickets/{self.id}"
+        qr_image = qrcode.make(url, box_size=20, border=0)
+        return qr_image
+
+    def send_confirmation_email(self):
+        """
+        Send a confirmation email to the ticket owner after purchase
+        """
+        owner = self.owner
+
+        output = BytesIO()
+        qr_image = self.get_qr()
+        qr_image.save(output, format="PNG")
+        decoded_image = base64.b64encode(output.getvalue()).decode("ascii")
+
+        context = {
+            "first_name": self.owner.first_name,
+            "name": self.event.name,
+            "type": self.type,
+            "start_time": self.event.start_time,
+            "end_time": self.event.end_time,
+            "qr": decoded_image,
+        }
+
+        if self.owner.email:
+            send_mail_helper(
+                name="ticket_confirmation",
+                subject=f"Ticket confirmation for {owner.get_full_name()}",
+                emails=[owner.email],
+                context=context,
+            )
+
+
+class TicketTransactionRecord(models.Model):
+    """
+    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    """
+
+    ticket = models.ForeignKey(
+        Ticket, related_name="transaction_records", on_delete=models.PROTECT
+    )
+    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+    buyer_first_name = models.CharField(max_length=100)
+    buyer_last_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField(blank=True, null=True)
+
+
+class TicketTransferRecord(models.Model):
+    """
+    Represents a transfer of ticket ownership, used for bookkeeping
+    """
+
+    ticket = models.ForeignKey(
+        Ticket, related_name="transfer_records", on_delete=models.PROTECT
+    )
+    sender = models.ForeignKey(
+        get_user_model(),
+        related_name="sent_transfers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    receiver = models.ForeignKey(
+        get_user_model(),
+        related_name="received_transfers",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def send_confirmation_email(self):
+        """
+        Send confirmation email to the sender and recipient of the transfer.
+        """
+        context = {
+            "sender_first_name": self.sender.first_name,
+            "receiver_first_name": self.receiver.first_name,
+            "receiver_username": self.receiver.username,
+            "event_name": self.ticket.event.name,
+            "type": self.ticket.event.type,
+        }
+
+        send_mail_helper(
+            name="ticket_transfer",
+            subject=f"Ticket transfer confirmation for {self.ticket.event.name}",
+            emails=[self.sender.email, self.receiver.email],
+            context=context,
+        )
 
 
 @receiver(models.signals.pre_delete, sender=Asset)
