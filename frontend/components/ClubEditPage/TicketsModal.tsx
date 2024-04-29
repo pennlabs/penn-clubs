@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router'
 import React, { ReactElement, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 import styled from 'styled-components'
@@ -229,6 +230,8 @@ const TicketsModal = ({
 
   const [submitting, setSubmitting] = useState(false)
 
+  const router = useRouter()
+
   const [tickets, setTickets] = useState<Ticket[]>([
     {
       name: 'Regular Ticket',
@@ -284,6 +287,9 @@ const TicketsModal = ({
           notify(<>Tickets Created!</>, 'success')
           setSubmitting(false)
           onSuccessfulSubmit()
+          setTimeout(() => {
+            router.push(`/tickets/${id}`)
+          }, 500)
         } else {
           notify(<>Error creating tickets</>, 'error')
           setSubmitting(false)

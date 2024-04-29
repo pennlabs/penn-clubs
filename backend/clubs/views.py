@@ -2798,6 +2798,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_drop_time = drop_time
             event.save()
 
+        cache.delete(f"clubs:{event.club.id}")
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
