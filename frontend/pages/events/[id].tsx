@@ -2,6 +2,7 @@ import { DateTime, Settings } from 'luxon'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
 import React, { useState } from 'react'
+import LazyLoad from 'react-lazy-load'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
@@ -30,7 +31,7 @@ import {
   WHITE,
 } from '~/constants'
 import { Club, ClubEvent, TicketAvailability } from '~/types'
-import { doApiRequest } from '~/utils'
+import { doApiRequest, EMPTY_DESCRIPTION } from '~/utils'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
 Settings.defaultZone = 'America/New_York'
@@ -326,17 +327,27 @@ const EventPage: React.FC<EventPageProps> = ({
                 ))}
               </div>
               <Card>
-                <p>{event.description}</p>
+                <div
+                  className="content"
+                  dangerouslySetInnerHTML={{
+                    __html: event.description || EMPTY_DESCRIPTION,
+                  }}
+                />
                 <Divider />
-                <p>{club.description}</p>
+                <div
+                  className="content"
+                  dangerouslySetInnerHTML={{
+                    __html: club.description || EMPTY_DESCRIPTION,
+                  }}
+                />
               </Card>
             </div>
             <Right>
-              <img
-                // TODO: Replace with actual image
-                src={'https://placehold.co/450x280/black/white'}
-                alt={event.name}
-              />
+              {club.image_url && (
+                <LazyLoad width={450} height={280}>
+                  <img src={club.image_url} alt={`${club.name} Logo`} />
+                </LazyLoad>
+              )}
               {event.ticketed && (
                 <Card>
                   <StrongText>Tickets</StrongText>
