@@ -14,6 +14,7 @@ import {
   Text,
   Title,
 } from '~/components/common'
+import { BetaTag } from '~/components/common/BetaTag'
 import {
   ALLBIRDS_GRAY,
   BODY_FONT,
@@ -259,7 +260,11 @@ const EventPage: React.FC<EventPageProps> = ({
         closeModal={() => setShowTicketModal(false)}
         marginBottom={false}
       >
-        <Subtitle>Get Tickets</Subtitle>
+        <BetaTag>
+          <Subtitle style={{ marginLeft: '12px', marginBottom: '20px' }}>
+            Get Tickets
+          </Subtitle>
+        </BetaTag>
         {order.map((ticket, index) => (
           <GetTicketItem
             ticket={ticket}

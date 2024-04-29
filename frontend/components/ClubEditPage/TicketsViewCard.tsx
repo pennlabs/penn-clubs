@@ -29,7 +29,7 @@ export default function TicketsViewCard({
   const ticketEvents = club.events.filter((event) => event.ticketed)
 
   return (
-    <BaseCard title="Tickets">
+    <BaseCard title="Tickets (beta)">
       {ticketEvents.length > 0 ? (
         <Table
           data={ticketEvents.map((item, index) =>

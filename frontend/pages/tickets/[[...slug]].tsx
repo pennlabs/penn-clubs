@@ -8,6 +8,8 @@ import styled from 'styled-components'
 import { doApiRequest } from 'utils'
 
 import { BaseLayout } from '~/components/BaseLayout'
+import AuthPrompt from '~/components/common/AuthPrompt'
+import { BetaTag } from '~/components/common/BetaTag'
 import CSVTagInput from '~/components/common/CSVTagInput'
 import ManageBuyer from '~/components/Tickets/ManageBuyer'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
@@ -115,7 +117,15 @@ const Ticket: React.FC<TicketProps> = ({
     )
   } else if (!tickets || !tickets.totals || !tickets.available) {
     return <Center>No tickets found with given user permissions.</Center>
+  } else if (!baseProps.auth.authenticated) {
+    return (
+      <BaseLayout {...baseProps} authRequired>
+        <Metadata title="Checkout" />
+        <AuthPrompt title="Please sign in for ticketing." />{' '}
+      </BaseLayout>
+    )
   }
+
   const { totals, available } = tickets
   const tickTypes = {}
 
@@ -147,7 +157,9 @@ const Ticket: React.FC<TicketProps> = ({
       <BaseLayout {...baseProps}>
         <Metadata title="Events" />
         <Container>
-          <Title>All Tickets for {event.name}</Title>
+          <BetaTag>
+            <Title>All Tickets for {event.name}</Title>
+          </BetaTag>
           {Object.values(tickTypes).map((ticket, i) => (
             <TicketCard
               key={i}
@@ -253,97 +265,99 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
           </Subtitle>
           <Text>tickets purchased</Text>
         </TicketStatBox>
-        <Card>
-          <Formik
-            initialValues={{ action: 'add' }}
-            onSubmit={handleIssueTickets}
-          >
-            {({ isSubmitting }) => (
-              <Form>
-                <Subtitle>Issue Tickets</Subtitle>
-                <HelperText>
-                  Issue Tickets by entering pennkeys below, separated by commas
-                  or spaces
-                </HelperText>
-                <CSVTagInput
-                  invalidTags={errorPennKeys}
-                  placeholder="Enter pennkeys here, separated by commas or spaces"
-                  onChange={(newValue) => setTicketRecipients(newValue)}
-                />
-                <button
-                  disabled={isSubmitting}
-                  className="button is-primary"
-                  style={{
-                    marginTop: '10px',
-                  }}
-                  type="submit"
-                >
-                  Issue Tickets
-                </button>
-              </Form>
-            )}
-          </Formik>
-        </Card>
         {buyersPerm && (
-          <Card>
-            <Text
-              onClick={() => {
-                setViewBuyers(!viewBuyers)
-              }}
-            >
-              View Buyers{' '}
-              {ticket.total && `(${ticket.total - ticket.available})`}{' '}
-              {ticket.buyers && (
-                <span>
-                  <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
-                </span>
-              )}
-            </Text>
-
-            {viewBuyers && ticket.buyers && (
-              <div
-                css={css`
-                  display: grid;
-                  grid-template-columns: 1fr 4fr 4fr;
-                `}
+          <>
+            <Card>
+              <Formik
+                initialValues={{ action: 'add' }}
+                onSubmit={handleIssueTickets}
               >
-                <span
+                {({ isSubmitting }) => (
+                  <Form>
+                    <Subtitle>Issue Tickets</Subtitle>
+                    <HelperText>
+                      Issue Tickets by entering pennkeys below, separated by
+                      commas or spaces
+                    </HelperText>
+                    <CSVTagInput
+                      invalidTags={errorPennKeys}
+                      placeholder="Enter pennkeys here, separated by commas or spaces"
+                      onChange={(newValue) => setTicketRecipients(newValue)}
+                    />
+                    <button
+                      disabled={isSubmitting}
+                      className="button is-primary"
+                      style={{
+                        marginTop: '10px',
+                      }}
+                      type="submit"
+                    >
+                      Issue Tickets
+                    </button>
+                  </Form>
+                )}
+              </Formik>
+            </Card>
+            <Card>
+              <Text
+                onClick={() => {
+                  setViewBuyers(!viewBuyers)
+                }}
+              >
+                View Buyers{' '}
+                {ticket.total && `(${ticket.total - ticket.available})`}{' '}
+                {ticket.buyers && (
+                  <span>
+                    <Icon name={viewBuyers ? 'chevron-up' : 'chevron-down'} />
+                  </span>
+                )}
+              </Text>
+
+              {viewBuyers && ticket.buyers && (
+                <div
                   css={css`
-                    font-weight: bold;
-                  `}
-                  title="Attendance"
-                >
-                  Attend.
-                </span>
-                <span
-                  css={css`
-                    font-weight: bold;
+                    display: grid;
+                    grid-template-columns: 1fr 4fr 4fr;
                   `}
                 >
-                  Buyer
-                </span>
-                <span
-                  css={css`
-                    font-weight: bold;
-                  `}
-                >
-                  Type
-                </span>
-                {ticket.buyers.map((buyer) => (
-                  <ManageBuyer
-                    key={buyer.id}
-                    buyer={buyer}
-                    onAttendedChange={(value: boolean) => {
-                      doApiRequest(`/tickets/${buyer.id}/?format=json`, {
-                        method: 'PATCH',
-                        body: { attended: value },
-                      })
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </Card>
+                  <span
+                    css={css`
+                      font-weight: bold;
+                    `}
+                    title="Attendance"
+                  >
+                    Attend.
+                  </span>
+                  <span
+                    css={css`
+                      font-weight: bold;
+                    `}
+                  >
+                    Buyer
+                  </span>
+                  <span
+                    css={css`
+                      font-weight: bold;
+                    `}
+                  >
+                    Type
+                  </span>
+                  {ticket.buyers.map((buyer) => (
+                    <ManageBuyer
+                      key={buyer.id}
+                      buyer={buyer}
+                      onAttendedChange={(value: boolean) => {
+                        doApiRequest(`/tickets/${buyer.id}/?format=json`, {
+                          method: 'PATCH',
+                          body: { attended: value },
+                        })
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </Card>
+          </>
         )}
       </div>
     </Card>
