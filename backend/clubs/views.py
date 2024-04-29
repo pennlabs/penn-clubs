@@ -5560,20 +5560,17 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
+        officer_clubs = Membership.objects.filter(
+            person=self.request.user, role__lte=Membership.ROLE_OFFICER
+        ).values_list("club", flat=True)
         if self.action == "partial_update":
-            officer_clubs = Membership.objects.filter(
-                person=self.request.user, role__lte=Membership.ROLE_OFFICER
-            ).values_list("club", flat=True)
             return Ticket.objects.filter(event__club__in=officer_clubs).select_related(
                 "event__club"
             )
-        elif self.action == "get":
-            officer_clubs = Membership.objects.filter(
-                person=self.request.user, role__lte=Membership.ROLE_OFFICER
-            ).values_list("club", flat=True)
+        elif self.action == "retrieve":
             return Ticket.objects.filter(
                 Q(owner=self.request.user.id) | Q(event__club__in=officer_clubs)
-            )
+            ).select_related("event__club")
         return Ticket.objects.filter(owner=self.request.user.id)
 
     def _give_tickets(self, user, order_info, cart, reconciliation_id):
