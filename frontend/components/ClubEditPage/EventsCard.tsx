@@ -410,7 +410,7 @@ const CreateTickets = ({ event }: { event: ClubEvent }) => {
     <CreateContainer>
       <div className="is-pulled-left">
         <Text style={{ padding: 0, margin: 0 }}>
-          Create ticket offerings for this event
+          {event.ticketed ? 'Add' : 'Create'} ticket offerings for this event
         </Text>
       </div>
       <div className="is-pulled-right">
