@@ -2,7 +2,6 @@ import { DateTime, Settings } from 'luxon'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
 import React, { useState } from 'react'
-import LazyLoad from 'react-lazy-load'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
@@ -345,14 +344,7 @@ const EventPage: React.FC<EventPageProps> = ({
               </Card>
             </div>
             <Right>
-              <LazyLoad width={450} height={280}>
-                <img
-                  width={450}
-                  height={200}
-                  src={image}
-                  alt={`${event.name} Event Image`}
-                />
-              </LazyLoad>
+              <img width={450} src={image} alt={`${event.name} Event Image`} />
               {event.ticketed && (
                 <Card>
                   <StrongText>Tickets</StrongText>
