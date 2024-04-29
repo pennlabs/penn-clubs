@@ -3080,7 +3080,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
-    @update_holds
     def destroy(self, request, *args, **kwargs):
         """
         Do not let non-superusers delete events with the FAIR type through the API.
