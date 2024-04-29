@@ -1486,11 +1486,45 @@ class TicketTestCase(TestCase):
 class TicketModelTestCase(TestCase):
     """
     Test cases related to the models that correspond to the ticketing project:
-    Ticket, TicketTransactionRecord, TicketTransferRecord
+    Ticket, TicketTransactionRecord, TicketTransferRecord, TicketManager
     """
 
     def setUp(self):
         commonSetUp(self)
+
+    def test_update_holds(self):
+        expired_time = timezone.now() - timedelta(hours=1)
+        valid_time = timezone.now() + timedelta(hours=1)
+
+        # Apply exired holds
+        for ticket in self.tickets1[:5]:
+            ticket.holder = self.user1
+            ticket.holding_expiration = expired_time
+            ticket.save()
+
+        # Apply valid holds
+        for ticket in self.tickets2[:5]:
+            ticket.holder = self.user1
+            ticket.holding_expiration = valid_time
+            ticket.save()
+
+        Ticket.objects.update_holds()
+
+        # Expired holds should be cleared
+        self.assertEqual(
+            Ticket.objects.filter(
+                holder__isnull=False, holding_expiration__lte=timezone.now()
+            ).count(),
+            0,
+        )
+
+        # Valid holds should be in place
+        self.assertEqual(
+            Ticket.objects.filter(
+                holder__isnull=False, holding_expiration__gt=timezone.now()
+            ).count(),
+            5,
+        )
 
     def test_delete_tickets_without_transaction_record(self):
         # check that delete on queryset still works

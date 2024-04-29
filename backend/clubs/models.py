@@ -1803,17 +1803,10 @@ class TicketQuerySet(models.query.QuerySet):
 class TicketManager(models.Manager):
     # Update holds for all tickets
     def update_holds(self):
-        expired_tickets = self.select_for_update().filter(
+        expired_tickets = self.get_queryset().filter(
             holder__isnull=False, holding_expiration__lte=timezone.now()
         )
-
-        if not expired_tickets:
-            return
-
-        with transaction.atomic():
-            for ticket in expired_tickets:
-                ticket.holder = None
-            self.bulk_update(expired_tickets, ["holder"])
+        expired_tickets.update(holder=None)
 
     def get_queryset(self):
         return TicketQuerySet(self.model)
