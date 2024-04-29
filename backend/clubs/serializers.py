@@ -2338,6 +2338,8 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
                     label = json.loads(fair.questions)[index]["label"]
                     return f"[{fair.name}] {label}"
                 return f"Registered for {fair.name}"
+        else:
+            return key
 
     class Meta(AuthenticatedClubSerializer.Meta):
         pass

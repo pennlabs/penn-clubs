@@ -1,4 +1,5 @@
 import os
+import traceback
 
 import requests
 from django.conf import settings
@@ -41,6 +42,7 @@ class Command(BaseCommand):
                             "{} has broken image {}".format(club.code, club.image.url)
                         )
                     )
+                    self.stdout.write(self.style.ERROR(traceback.format_exc()))
                     if not self.dry_run:
                         club.image.delete(save=True)
                     broken_list.append(

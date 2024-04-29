@@ -1,3 +1,5 @@
+import traceback
+
 from django.core.management.base import BaseCommand
 from django.db.models import Count, Q
 
@@ -26,11 +28,10 @@ class Command(BaseCommand):
                     "Successfully updated all club favorite and membership counts!"
                 )
             )
-        except Exception as e:
+        except Exception:
             self.stdout.write(
                 self.style.ERROR(
-                    "An error was encountered while updating"
-                    + "club favorite and membership counts!"
+                    "Error while updating club favorite & membership counts!"
                 )
             )
-            self.stdout.write(e)
+            self.stdout.write(self.style.ERROR(traceback.format_exc()))
