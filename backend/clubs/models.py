@@ -339,7 +339,7 @@ class Club(models.Model):
     favorite_count = models.IntegerField(default=0)
     membership_count = models.IntegerField(default=0)
     # cache club rankings
-    rank = models.IntegerField(default=0)
+    rank = models.IntegerField(default=0, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
