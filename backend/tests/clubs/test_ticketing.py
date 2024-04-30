@@ -301,14 +301,12 @@ class TicketEventTestCase(TestCase):
             user = get_user_model().objects.get(username=username)
 
             self.assertEqual(
-                Ticket.objects.filter(type=ticket_type, owner=user).count(), 1
-            )
-            self.assertTrue(
-                TicketTransactionRecord.objects.filter(
-                    ticket__type=ticket_type,
-                    ticket__owner=user,
-                    total_amount=0.0,
-                ).exists()
+                Ticket.objects.filter(
+                    type=ticket_type, owner=user, transaction_record__total_amount=0.0
+                )
+                .select_related("transaction_record")
+                .count(),
+                1,
             )
 
     def test_issue_tickets_bad_perms(self):
@@ -1488,25 +1486,77 @@ class TicketTestCase(TestCase):
 class TicketModelTestCase(TestCase):
     """
     Test cases related to the models that correspond to the ticketing project:
-    Ticket, TicketTransactionRecord, TicketTransferRecord
+    Ticket, TicketTransactionRecord, TicketTransferRecord, TicketManager
     """
 
     def setUp(self):
         commonSetUp(self)
 
+    def test_update_holds(self):
+        expired_time = timezone.now() - timedelta(hours=1)
+        valid_time = timezone.now() + timedelta(hours=1)
+
+        # Apply exired holds
+        for ticket in self.tickets1[:5]:
+            ticket.holder = self.user1
+            ticket.holding_expiration = expired_time
+            ticket.save()
+
+        # Apply valid holds
+        for ticket in self.tickets2[:5]:
+            ticket.holder = self.user1
+            ticket.holding_expiration = valid_time
+            ticket.save()
+
+        Ticket.objects.update_holds()
+
+        # Expired holds should be cleared
+        self.assertEqual(
+            Ticket.objects.filter(
+                holder__isnull=False, holding_expiration__lte=timezone.now()
+            ).count(),
+            0,
+        )
+
+        # Valid holds should be in place
+        self.assertEqual(
+            Ticket.objects.filter(
+                holder__isnull=False, holding_expiration__gt=timezone.now()
+            ).count(),
+            5,
+        )
+
+    def test_delete_tickets_without_transaction_record(self):
+        # check that delete on queryset still works
+        tickets = Ticket.objects.filter(type="normal")
+        tickets.delete()
+        self.assertFalse(Ticket.objects.filter(type="normal").exists())
+
     def test_delete_ticket_after_purchase(self):
         ticket = self.tickets1[0]
         ticket.owner = self.user1
-        ticket.save()
-        TicketTransactionRecord.objects.create(
-            ticket=ticket,
+        transaction_record = TicketTransactionRecord.objects.create(
             buyer_first_name=self.user1.first_name,
             buyer_last_name=self.user2.last_name,
             total_amount=ticket.price,
         )
+        ticket.transaction_record = transaction_record
+        ticket.save()
 
         with self.assertRaises(ProtectedError):
             ticket.delete()
+
+    def test_bulk_delete_tickets_after_purchase(self):
+        transaction_record = TicketTransactionRecord.objects.create(
+            buyer_first_name=self.user1.first_name,
+            buyer_last_name=self.user2.last_name,
+            total_amount=0,
+        )
+        tickets = Ticket.objects.filter(type="normal")
+        tickets.update(owner=self.user1, transaction_record=transaction_record)
+
+        with self.assertRaises(ProtectedError):
+            tickets.delete()
 
     def test_delete_ticket_after_transfer(self):
         ticket = self.tickets1[0]

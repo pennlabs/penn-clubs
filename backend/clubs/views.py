@@ -2932,20 +2932,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             ticket.owner = user
             ticket.holder = None
 
-            transaction_records.append(
-                TicketTransactionRecord(
-                    ticket=ticket,
-                    total_amount=0.0,
-                    buyer_first_name=user.first_name,
-                    buyer_last_name=user.last_name,
-                    buyer_email=user.email,
-                )
+            transaction_record = TicketTransactionRecord(
+                total_amount=0.0,
+                buyer_first_name=user.first_name,
+                buyer_last_name=user.last_name,
+                buyer_email=user.email,
             )
-
-        Ticket.objects.bulk_update(tickets, ["owner", "holder"])
-        Ticket.objects.update_holds()
+            ticket.transaction_record = transaction_record
+            transaction_records.append(transaction_record)
 
         TicketTransactionRecord.objects.bulk_create(transaction_records)
+        Ticket.objects.bulk_update(tickets, ["owner", "holder", "transaction_record"])
+        Ticket.objects.update_holds()
 
         for ticket in tickets:
             ticket.send_confirmation_email()
@@ -5585,24 +5583,19 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # Archive transaction data for historical purposes.
         # We're explicitly using the response data over what's in self.request.user
-        transaction_records = []
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=str(reconciliation_id),
+            total_amount=float(order_info["amountDetails"]["totalAmount"]),
+            buyer_first_name=order_info["billTo"]["firstName"],
+            buyer_last_name=order_info["billTo"]["lastName"],
+            # TODO: investigate why phone numbers don't show in test API
+            buyer_phone=order_info["billTo"].get("phoneNumber", None),
+            buyer_email=order_info["billTo"]["email"],
+        )
 
-        for ticket in tickets:
-            transaction_records.append(
-                TicketTransactionRecord(
-                    ticket=ticket,
-                    reconciliation_id=str(reconciliation_id),
-                    total_amount=float(order_info["amountDetails"]["totalAmount"]),
-                    buyer_first_name=order_info["billTo"]["firstName"],
-                    buyer_last_name=order_info["billTo"]["lastName"],
-                    # TODO: investigate why phone numbers don't show in test API
-                    buyer_phone=order_info["billTo"].get("phoneNumber", None),
-                    buyer_email=order_info["billTo"]["email"],
-                )
-            )
-
-        tickets.update(owner=self.request.user, holder=None)
-        TicketTransactionRecord.objects.bulk_create(transaction_records)
+        tickets.update(
+            owner=self.request.user, holder=None, transaction_record=transaction_record
+        )
         cart.tickets.clear()
         for ticket in tickets:
             ticket.send_confirmation_email()

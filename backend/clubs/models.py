@@ -18,6 +18,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models, transaction
 from django.db.models import Sum
+from django.db.models.deletion import ProtectedError
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -1790,20 +1791,38 @@ class Cart(models.Model):
     checkout_context = models.CharField(max_length=8297, blank=True, null=True)
 
 
+class TicketQuerySet(models.query.QuerySet):
+    def delete(self):
+        if self.filter(transaction_record__isnull=False).exists():
+            raise ProtectedError(
+                "Cannot delete tickets with an associated transaction record.", self
+            )
+        super().delete()
+
+
 class TicketManager(models.Manager):
     # Update holds for all tickets
     def update_holds(self):
-        expired_tickets = self.select_for_update().filter(
-            holder__isnull=False, holding_expiration__lte=timezone.now()
-        )
-
-        if not expired_tickets:
-            return
-
         with transaction.atomic():
-            for ticket in expired_tickets:
-                ticket.holder = None
-            self.bulk_update(expired_tickets, ["holder"])
+            self.get_queryset().select_for_update().filter(
+                holder__isnull=False, holding_expiration__lte=timezone.now()
+            ).update(holder=None)
+
+    def get_queryset(self):
+        return TicketQuerySet(self.model)
+
+
+class TicketTransactionRecord(models.Model):
+    """
+    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    """
+
+    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+    buyer_first_name = models.CharField(max_length=100)
+    buyer_last_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField(blank=True, null=True)
 
 
 class Ticket(models.Model):
@@ -1830,7 +1849,7 @@ class Ticket(models.Model):
         blank=True,
         null=True,
     )
-    holding_expiration = models.DateTimeField(null=True, blank=True)
+    holding_expiration = models.DateTimeField(null=True, blank=True, db_index=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     group_discount = models.DecimalField(
@@ -1844,7 +1863,21 @@ class Ticket(models.Model):
     attended = models.BooleanField(default=False)
     # TODO: change to enum between All, Club, None
     buyable = models.BooleanField(default=True)
+    transaction_record = models.ForeignKey(
+        TicketTransactionRecord,
+        related_name="tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
     objects = TicketManager()
+
+    def delete(self, *args, **kwargs):
+        if self.transaction_record:
+            raise ProtectedError(
+                "Cannot delete a ticket with an associated transaction record.", [self]
+            )
+        super().delete(*args, **kwargs)
 
     def get_qr(self):
         """
@@ -1884,22 +1917,6 @@ class Ticket(models.Model):
                 emails=[owner.email],
                 context=context,
             )
-
-
-class TicketTransactionRecord(models.Model):
-    """
-    Represents an instance of a transaction record for an ticket, used for bookkeeping
-    """
-
-    ticket = models.ForeignKey(
-        Ticket, related_name="transaction_records", on_delete=models.PROTECT
-    )
-    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    buyer_phone = PhoneNumberField(null=True, blank=True)
-    buyer_first_name = models.CharField(max_length=100)
-    buyer_last_name = models.CharField(max_length=100)
-    buyer_email = models.EmailField(blank=True, null=True)
 
 
 class TicketTransferRecord(models.Model):
