@@ -5000,10 +5000,14 @@ class TicketViewSet(viewsets.ModelViewSet):
     Transfer a ticket to another user
     """
 
-    permission_classes = [IsAuthenticated]
     serializer_class = TicketSerializer
     http_method_names = ["get", "post", "patch"]
     lookup_field = "id"
+
+    def get_permissions(self):
+        if self.action == "qr":
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     @staticmethod
     def _calculate_cart_total(cart) -> float:
@@ -5558,6 +5562,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
+        if self.action == "qr":
+            return Ticket.objects
         officer_clubs = Membership.objects.filter(
             person=self.request.user, role__lte=Membership.ROLE_OFFICER
         ).values_list("club", flat=True)
@@ -5569,8 +5575,6 @@ class TicketViewSet(viewsets.ModelViewSet):
             return Ticket.objects.filter(
                 Q(owner=self.request.user.id) | Q(event__club__in=officer_clubs)
             ).select_related("event__club")
-        elif self.action == "qr":
-            return Ticket.objects()
         return Ticket.objects.filter(owner=self.request.user.id)
 
     def _give_tickets(self, user, order_info, cart, reconciliation_id):
