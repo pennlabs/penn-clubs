@@ -11,6 +11,8 @@ end_time:
     type: string
 cid:
     type: string
+ticket_url:
+    type: string
 -->
 
 {% extends 'emails/base.html' %}
@@ -41,5 +43,9 @@ cid:
 
 <p style="font-size: 1.2em">
     If you have any questions, feel free to respond to this email.
+</p>
+
+<p style="font-size: 1.2em">
+    You can view your tickets and transfer them to other users <a href="{{ ticket_url }}">here</a>.
 </p>
 {% endblock %}
