@@ -222,10 +222,14 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
                   }
                 }}
                 viewModal={(type) => viewModal(ticket.id, type)}
-                indexProps={{
-                  index: i,
-                  length: group[1].length,
-                }}
+                indexProps={
+                  group[1].length !== 1
+                    ? {
+                        index: i,
+                        length: group[1].length,
+                      }
+                    : undefined
+                }
               />
             ))
           ) : (
@@ -238,7 +242,12 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
                   toggleGroup(group[0])
                 }
               }}
+              indexProps={{
+                index: 0,
+                length: group[1].length,
+              }}
               viewModal={(type) => viewModal(group[1][0].id, type)}
+              hideActions
             />
           )}
         </div>
