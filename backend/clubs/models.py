@@ -1350,12 +1350,14 @@ class MembershipInvite(models.Model):
             "name": self.club.name,
             "id": self.id,
             "club_id": self.club.code,
-            "sender": request.user
-            if request is not None
-            else {
-                "username": settings.BRANDING_SITE_NAME,
-                "email": settings.BRANDING_SITE_EMAIL,
-            },
+            "sender": (
+                request.user
+                if request is not None
+                else {
+                    "username": settings.BRANDING_SITE_NAME,
+                    "email": settings.BRANDING_SITE_EMAIL,
+                }
+            ),
             "role": self.role,
             "title": self.title,
             "url": settings.INVITE_URL.format(
@@ -1916,6 +1918,7 @@ class Ticket(models.Model):
             "start_time": self.event.start_time,
             "end_time": self.event.end_time,
             "cid": "qr_code",
+            "ticket_url": f"https://{settings.DOMAINS[0]}/settings#Tickets",
         }
 
         if self.owner.email:

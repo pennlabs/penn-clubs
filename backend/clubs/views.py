@@ -2831,6 +2831,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                         schema:
                             type: object
                             properties:
+                                success:
+                                    type: boolean
                                 detail:
                                     type: string
             "400":
