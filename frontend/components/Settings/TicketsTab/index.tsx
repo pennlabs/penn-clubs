@@ -200,7 +200,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
       </TitleWrapper>
       {Object.entries(groupedTickets).map((group: [string, any[]], i) => (
         <div key={i}>
-          {expandedEvents.has(group[0] || group[1].length === 1) && (
+          {group[1].length !== 1 && (
             <a
               style={{
                 display: 'flex',
@@ -208,7 +208,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
               }}
               onClick={() => toggleGroup(group[0])}
             >
-              Uncollapse
+              {expandedEvents.has(group[0]) ? 'Collapse' : 'Expand'}
             </a>
           )}
           {expandedEvents.has(group[0]) || group[1].length === 1 ? (
@@ -222,10 +222,14 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
                   }
                 }}
                 viewModal={(type) => viewModal(ticket.id, type)}
-                indexProps={{
-                  index: i,
-                  length: group[1].length,
-                }}
+                indexProps={
+                  group[1].length !== 1
+                    ? {
+                        index: i,
+                        length: group[1].length,
+                      }
+                    : undefined
+                }
               />
             ))
           ) : (
@@ -238,7 +242,12 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
                   toggleGroup(group[0])
                 }
               }}
+              indexProps={{
+                index: 0,
+                length: group[1].length,
+              }}
               viewModal={(type) => viewModal(group[1][0].id, type)}
+              hideActions
             />
           )}
         </div>

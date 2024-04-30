@@ -155,7 +155,7 @@ export const TicketCard = ({
         display: 'flex',
         cursor: typeof onClick === 'function' ? 'pointer' : 'default',
         boxShadow: generateBoxShadow(Math.min(3, collapsed)),
-        margin: collapsed !== 0 ? '4rem 0' : '1rem 0',
+        margin: collapsed !== 0 ? '2rem 0' : '1rem 0',
       }}
       onClick={onClick}
     >
