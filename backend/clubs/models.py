@@ -1,9 +1,9 @@
-import base64
 import datetime
 import os
 import re
 import uuid
 import warnings
+from email.mime.image import MIMEImage
 from io import BytesIO
 from urllib.parse import urlparse
 
@@ -103,14 +103,23 @@ def send_mail_helper(name, subject, emails, context, attachment=None):
         subject, text_content, settings.FROM_EMAIL, list(set(emails))
     )
 
-    if attachment is not None and "filename" in attachment and "path" in attachment:
-        with open(attachment["path"], "rb") as file:
-            msg.attach(
-                attachment["filename"],
-                file.read(),
-                "application/vnd.openxmlformats-officedocument."
-                + "wordprocessingml.document",
+    if attachment is not None:
+        if "filename" in attachment and "path" in attachment:
+            with open(attachment["path"], "rb") as file:
+                msg.attach(
+                    attachment["filename"],
+                    file.read(),
+                    "application/vnd.openxmlformats-officedocument."
+                    + "wordprocessingml.document",
+                )
+        else:  # assumes attachment is an image
+            image = MIMEImage(attachment["content"], _subtype=attachment["mimetype"])
+            image.add_header("Content-ID", f'<{context["cid"]}>')
+            image.add_header(
+                "Content-Disposition", "inline", filename=attachment["filename"]
             )
+            msg.attach(image)
+            msg.mixed_subtype = "related"
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
@@ -1899,7 +1908,6 @@ class Ticket(models.Model):
         output = BytesIO()
         qr_image = self.get_qr()
         qr_image.save(output, format="PNG")
-        decoded_image = base64.b64encode(output.getvalue()).decode("ascii")
 
         context = {
             "first_name": self.owner.first_name,
@@ -1907,7 +1915,7 @@ class Ticket(models.Model):
             "type": self.type,
             "start_time": self.event.start_time,
             "end_time": self.event.end_time,
-            "qr": decoded_image,
+            "cid": "qr_code",
         }
 
         if self.owner.email:
@@ -1916,6 +1924,11 @@ class Ticket(models.Model):
                 subject=f"Ticket confirmation for {owner.get_full_name()}",
                 emails=[owner.email],
                 context=context,
+                attachment={
+                    "filename": "qr_code.png",
+                    "content": output.getvalue(),
+                    "mimetype": "image/png",
+                },
             )
 
 
