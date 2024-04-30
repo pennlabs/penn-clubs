@@ -1803,10 +1803,10 @@ class TicketQuerySet(models.query.QuerySet):
 class TicketManager(models.Manager):
     # Update holds for all tickets
     def update_holds(self):
-        expired_tickets = self.get_queryset().filter(
-            holder__isnull=False, holding_expiration__lte=timezone.now()
-        )
-        expired_tickets.update(holder=None)
+        with transaction.atomic():
+            self.get_queryset().select_for_update().filter(
+                holder__isnull=False, holding_expiration__lte=timezone.now()
+            ).update(holder=None)
 
     def get_queryset(self):
         return TicketQuerySet(self.model)
@@ -1849,7 +1849,7 @@ class Ticket(models.Model):
         blank=True,
         null=True,
     )
-    holding_expiration = models.DateTimeField(null=True, blank=True)
+    holding_expiration = models.DateTimeField(null=True, blank=True, db_index=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)
     group_discount = models.DecimalField(
