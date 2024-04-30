@@ -1968,7 +1968,7 @@ class TicketTransferRecord(models.Model):
             "receiver_first_name": self.receiver.first_name,
             "receiver_username": self.receiver.username,
             "event_name": self.ticket.event.name,
-            "type": self.ticket.event.type,
+            "type": self.ticket.type,
         }
 
         send_mail_helper(
