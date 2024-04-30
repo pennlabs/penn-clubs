@@ -5569,6 +5569,8 @@ class TicketViewSet(viewsets.ModelViewSet):
             return Ticket.objects.filter(
                 Q(owner=self.request.user.id) | Q(event__club__in=officer_clubs)
             ).select_related("event__club")
+        elif self.action == "qr":
+            return Ticket.objects()
         return Ticket.objects.filter(owner=self.request.user.id)
 
     def _give_tickets(self, user, order_info, cart, reconciliation_id):

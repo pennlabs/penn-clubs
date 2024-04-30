@@ -111,6 +111,15 @@ def send_mail_helper(name, subject, emails, context, attachment=None):
                 "application/vnd.openxmlformats-officedocument."
                 + "wordprocessingml.document",
             )
+    elif (
+        attachment is not None and "filename" in attachment and "content" in attachment
+    ):
+        msg.attach(
+            attachment["filename"],
+            attachment["content"],
+            # Assume that we just use this for PNGs for now
+            "image/png",
+        )
 
     msg.attach_alternative(html_content, "text/html")
     msg.send(fail_silently=False)
@@ -1895,11 +1904,12 @@ class Ticket(models.Model):
         Send a confirmation email to the ticket owner after purchase
         """
         owner = self.owner
+        qr_url = f"https://{settings.DOMAINS[0]}/api/tickets/{self.id}/qr"
 
         output = BytesIO()
         qr_image = self.get_qr()
         qr_image.save(output, format="PNG")
-        decoded_image = base64.b64encode(output.getvalue()).decode("ascii")
+        image = base64.b64encode(output.getvalue())
 
         context = {
             "first_name": self.owner.first_name,
@@ -1907,7 +1917,7 @@ class Ticket(models.Model):
             "type": self.type,
             "start_time": self.event.start_time,
             "end_time": self.event.end_time,
-            "qr": decoded_image,
+            "qr": qr_url,
         }
 
         if self.owner.email:
@@ -1916,6 +1926,7 @@ class Ticket(models.Model):
                 subject=f"Ticket confirmation for {owner.get_full_name()}",
                 emails=[owner.email],
                 context=context,
+                attachment={"filename": "ticket.png", "content": image},
             )
 
 
