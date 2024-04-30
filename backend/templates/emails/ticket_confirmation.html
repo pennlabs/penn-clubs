@@ -11,6 +11,8 @@ end_time:
     type: string
 qr:
     type: string
+ticket_url:
+    type: string
 -->
 
 {% extends 'emails/base.html' %}
@@ -32,9 +34,7 @@ qr:
     Please be 10 minutes early for a smooth seating experience.
 </p>
 
-<p style="font-size: 1.2em"> Below is a
-    QR code for
-    your confirmation. </p>
+<p style="font-size: 1.2em"> Below is a QR code for your confirmation. </p>
 
 
 <img id="now" style="max-width: 60%; width: auto;" alt="" src="data:image/png;base64,{{ qr}}" />
@@ -45,5 +45,9 @@ qr:
 
 <p style="font-size: 1.2em">
     If you have any questions, feel free to respond to this email.
+</p>
+
+<p style="font-size: 1.2em">
+    You can view your tickets and transfer them to other users <a href="{{ ticket_url }}">here</a>.
 </p>
 {% endblock %}
