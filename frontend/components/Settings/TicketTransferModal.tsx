@@ -41,7 +41,7 @@ const TicketTransferModal = ({
   return (
     <BaseCard title="Ticket Transfer">
       <p className="has-text-info" style={{ marginBottom: '10px' }}>
-        Recipient must have a PennClubs account.
+        Recipient must have a Penn Clubs account.
       </p>
       <input
         className="input"
