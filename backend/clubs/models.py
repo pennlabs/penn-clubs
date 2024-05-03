@@ -52,7 +52,7 @@ def get_mail_type_annotation(name):
     return None
 
 
-def send_mail_helper(name, subject, emails, context, attachment=None):
+def send_mail_helper(name, subject, emails, context, attachment=None, reply_to=None):
     """
     A helper to send out an email given the template name, subject, to emails,
     and context. Returns true if an email was sent out, or false if no emails
@@ -100,7 +100,7 @@ def send_mail_helper(name, subject, emails, context, attachment=None):
     text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(
-        subject, text_content, settings.FROM_EMAIL, list(set(emails))
+        subject, text_content, settings.FROM_EMAIL, list(set(emails)), reply_to=reply_to
     )
 
     if attachment is not None:
@@ -576,6 +576,7 @@ class Club(models.Model):
                 ),
                 emails=emails,
                 context=context,
+                reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
 
     def send_renewal_reminder_email(self, request=None):
@@ -601,6 +602,7 @@ class Club(models.Model):
                 ),
                 emails=emails,
                 context=context,
+                reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
 
     def get_officer_emails(self):
@@ -651,6 +653,7 @@ class Club(models.Model):
                 subject=f"{self.name} has been queued for approval",
                 emails=emails,
                 context=context,
+                reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
 
     def send_approval_email(self, request=None, change=False):
@@ -683,6 +686,7 @@ class Club(models.Model):
                 ),
                 emails=emails,
                 context=context,
+                reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
 
     class Meta:
