@@ -202,6 +202,7 @@ QUESTION_URL = "https://{domain}/club/{club}/edit/questions"
 RENEWAL_URL = "https://{domain}/club/{club}/renew"
 APPLY_URL = "https://{domain}/club/{club}/apply"
 
+OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
 
 # File upload settings
 
