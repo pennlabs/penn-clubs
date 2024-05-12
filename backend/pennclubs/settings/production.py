@@ -23,12 +23,11 @@ SENTRY_URL = os.environ.get("SENTRY_URL")
 if SENTRY_URL:
     sentry_sdk.init(
         dsn=SENTRY_URL,
-        integrations=[DjangoIntegration()],
+        integrations=[DjangoIntegration(cache_spans=True)],
         send_default_pii=False,
         enable_tracing=True,
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
-        cache_spans=True,
     )
 
 # DLA settings
