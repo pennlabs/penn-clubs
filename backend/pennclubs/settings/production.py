@@ -28,6 +28,7 @@ if SENTRY_URL:
         enable_tracing=True,
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
+        cache_spans=True,
     )
 
 # DLA settings
