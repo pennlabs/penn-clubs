@@ -1103,12 +1103,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     queryset=Membership.objects.filter(person=person),
                     to_attr="user_membership_set",
                 ),
+                "badges",
             )
 
             if self.action in {"retrieve"}:
                 queryset = queryset.prefetch_related(
                     "asset_set",
-                    Prefetch("badges", queryset=Badge.objects.filter(visible=True)),
                     "student_types",
                     "target_majors",
                     "target_schools",

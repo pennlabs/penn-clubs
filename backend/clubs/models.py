@@ -355,8 +355,7 @@ class Club(models.Model):
 
     @cached_property
     def is_wharton(self):
-        wc_badge = Badge.objects.filter(label="Wharton Council").first()
-        return wc_badge in self.badges.all()
+        return any(badge.label == "Wharton Council" for badge in self.badges.all())
 
     def add_ics_events(self):
         """
