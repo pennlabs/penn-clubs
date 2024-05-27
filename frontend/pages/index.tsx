@@ -450,7 +450,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('badges') && (
             <SearchBarTagItem
               param="badges__in"
-              label="Badges"
+              label="Filters"
               options={badgeOptions}
             />
           )}
