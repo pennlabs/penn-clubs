@@ -25,8 +25,8 @@ if SENTRY_URL:
         dsn=SENTRY_URL,
         integrations=[DjangoIntegration(cache_spans=True)],
         send_default_pii=False,
-        enable_tracing=False,
-        traces_sample_rate=1.0,
+        enable_tracing=True,
+        traces_sample_rate=0.1,
         profiles_sample_rate=1.0,
     )
 
