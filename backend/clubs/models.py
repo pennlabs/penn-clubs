@@ -130,11 +130,11 @@ def send_mail_helper(
     for attempt in range(num_retries):
         try:
             msg.send(fail_silently=False)
+            return True
         except (SMTPServerDisconnected, SMTPAuthenticationError) as e:
             if attempt == num_retries - 1:
                 raise e
-
-    return True
+    return False
 
 
 def get_asset_file_name(instance, fname):
