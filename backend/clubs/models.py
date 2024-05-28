@@ -54,7 +54,7 @@ def get_mail_type_annotation(name):
 
 
 def send_mail_helper(
-    name, subject, emails, context, attachment=None, reply_to=None, num_retries=3
+    name, subject, emails, context, attachment=None, reply_to=None, num_retries=2
 ):
     """
     A helper to send out an email given the template name, subject, to emails,
@@ -127,14 +127,13 @@ def send_mail_helper(
     msg.attach_alternative(html_content, "text/html")
 
     # Retry to avoid one-off SMTP errors
-    for attempt in range(num_retries):
+    for attempt in range(num_retries + 1):
         try:
             msg.send(fail_silently=False)
             return True
         except (SMTPServerDisconnected, SMTPAuthenticationError) as e:
-            if attempt == num_retries - 1:
+            if attempt == num_retries:
                 raise e
-    return False
 
 
 def get_asset_file_name(instance, fname):
