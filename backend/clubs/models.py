@@ -5,6 +5,7 @@ import uuid
 import warnings
 from email.mime.image import MIMEImage
 from io import BytesIO
+from smtplib import SMTPAuthenticationError, SMTPServerDisconnected
 from urllib.parse import urlparse
 
 import pytz
@@ -52,7 +53,9 @@ def get_mail_type_annotation(name):
     return None
 
 
-def send_mail_helper(name, subject, emails, context, attachment=None, reply_to=None):
+def send_mail_helper(
+    name, subject, emails, context, attachment=None, reply_to=None, num_retries=2
+):
     """
     A helper to send out an email given the template name, subject, to emails,
     and context. Returns true if an email was sent out, or false if no emails
@@ -122,8 +125,15 @@ def send_mail_helper(name, subject, emails, context, attachment=None, reply_to=N
             msg.mixed_subtype = "related"
 
     msg.attach_alternative(html_content, "text/html")
-    msg.send(fail_silently=False)
-    return True
+
+    # Retry to avoid one-off SMTP errors
+    for attempt in range(num_retries + 1):
+        try:
+            msg.send(fail_silently=False)
+            return True
+        except (SMTPServerDisconnected, SMTPAuthenticationError) as e:
+            if attempt == num_retries:
+                raise e
 
 
 def get_asset_file_name(instance, fname):

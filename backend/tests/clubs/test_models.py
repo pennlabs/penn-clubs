@@ -3,6 +3,8 @@ Test cases related to models and their fields in the clubs models.py.
 """
 
 import datetime
+from smtplib import SMTPAuthenticationError, SMTPServerDisconnected
+from unittest import mock
 
 import pytz
 from django.contrib.auth import get_user_model
@@ -18,6 +20,7 @@ from clubs.models import (
     Note,
     Tag,
     Year,
+    send_mail_helper,
 )
 
 
@@ -175,3 +178,37 @@ class NoteTestCase(TestCase):
         self.assertEqual(self.note1, self.club1.note_by_club.first())
         self.assertEqual(self.note1.subject_club, self.club2)
         self.assertEqual(self.note1, self.club2.note_of_club.first())
+
+
+class UtilsTestCase(TestCase):
+    def test_send_mail_retry_logic(self):
+        with mock.patch("django.core.mail.EmailMultiAlternatives.send") as mocked_send:
+            mocked_send.side_effect = [
+                SMTPServerDisconnected("Server disconnected"),
+                SMTPAuthenticationError(535, "Authentication failed"),
+                True,
+            ]
+
+            success = send_mail_helper(
+                name="base",  # use existing template
+                subject="Test Subject",
+                emails=["test@example.com"],
+                context={},
+                num_retries=2,
+            )
+
+            self.assertTrue(success)
+            self.assertEqual(mocked_send.call_count, 3)
+
+        with mock.patch("django.core.mail.EmailMultiAlternatives.send") as mocked_send:
+            mocked_send.side_effect = SMTPServerDisconnected()
+            with self.assertRaises(SMTPServerDisconnected):
+                send_mail_helper(
+                    name="base",  # use existing template
+                    subject="Test Subject",
+                    emails=["test@example.com"],
+                    context={},
+                    num_retries=2,
+                )
+
+            self.assertEqual(mocked_send.call_count, 3)
