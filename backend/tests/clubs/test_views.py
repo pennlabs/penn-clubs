@@ -1359,7 +1359,11 @@ class ClubTestCase(TestCase):
         """
         tag3 = Tag.objects.create(name="College")
 
-        self.client.login(username=self.user5.username, password="test")
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        self.client.login(username=self.user1.username, password="test")
 
         with mock.patch("django.conf.settings.QUEUE_OPEN", True):
             resp = self.client.patch(
@@ -1981,6 +1985,20 @@ class ClubTestCase(TestCase):
 
         # login to officer user
         self.client.login(username=self.user4.username, password="test")
+
+        with mock.patch("django.conf.settings.QUEUE_OPEN", False):
+            for field in {"name", "description"}:
+                # edit sensitive field
+                resp = self.client.patch(
+                    reverse("clubs-detail", args=(club.code,)),
+                    {field: "New Club Name/Description"},
+                    content_type="application/json",
+                )
+                self.assertIn(resp.status_code, [400], resp.content)
+
+                # ensure club is marked as approved (request didn't go through)
+                club.refresh_from_db()
+                self.assertTrue(club.approved)
 
         with mock.patch("django.conf.settings.QUEUE_OPEN", True):
             for field in {"name", "description"}:
