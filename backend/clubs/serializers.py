@@ -1505,6 +1505,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                     field
                 ] == getattr(self.instance, field, None):
                     needs_reapproval = True
+                    if not settings.QUEUE_OPEN:
+                        raise serializers.ValidationError(
+                            "The approval queue is not currently open."
+                        )
                     break
 
         # if the editing user has approval permissions, skip the approval process
