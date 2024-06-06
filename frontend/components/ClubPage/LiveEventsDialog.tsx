@@ -13,7 +13,7 @@ import { ClubEventType, MembershipRank } from '../../types'
 import { doApiRequest, useSetting } from '../../utils'
 import { FAIR_NAME, MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 
-const LiveBanner = styled.div`
+export const LiveBanner = styled.div`
   padding: 20px;
   border-radius: 5px;
   background-image: radial-gradient(
@@ -37,13 +37,13 @@ const LiveBanner = styled.div`
   margin-bottom: 10px;
 `
 
-const LiveTitle = styled.div`
+export const LiveTitle = styled.div`
   font-size: ${M4};
   font-weight: bold;
   color: white;
 `
 
-const LiveSub = styled.div`
+export const LiveSub = styled.div`
   margin-top: -3px;
   margin-bottom: 3px;
   font-size: ${M2};
