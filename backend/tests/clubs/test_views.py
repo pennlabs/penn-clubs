@@ -1358,16 +1358,22 @@ class ClubTestCase(TestCase):
         """
         tag3 = Tag.objects.create(name="College")
 
-        self.client.login(username=self.user5.username, password="test")
-        resp = self.client.patch(
-            reverse("clubs-detail", args=(self.club1.code,)),
-            {
-                "description": "We do stuff.",
-                "tags": [{"name": tag3.name}, {"name": "Graduate"}],
-            },
-            content_type="application/json",
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
         )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.client.login(username=self.user1.username, password="test")
+
+        with patch("django.conf.settings.QUEUE_OPEN", True):
+            resp = self.client.patch(
+                reverse("clubs-detail", args=(self.club1.code,)),
+                {
+                    "description": "We do stuff.",
+                    "tags": [{"name": tag3.name}, {"name": "Graduate"}],
+                },
+                content_type="application/json",
+            )
+            self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure that changes were made
         resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
@@ -1979,22 +1985,37 @@ class ClubTestCase(TestCase):
         # login to officer user
         self.client.login(username=self.user4.username, password="test")
 
-        for field in {"name", "description"}:
-            # edit sensitive field
-            resp = self.client.patch(
-                reverse("clubs-detail", args=(club.code,)),
-                {field: "New Club Name/Description"},
-                content_type="application/json",
-            )
-            self.assertIn(resp.status_code, [200, 201], resp.content)
+        with patch("django.conf.settings.QUEUE_OPEN", False):
+            for field in {"name", "description"}:
+                # edit sensitive field
+                resp = self.client.patch(
+                    reverse("clubs-detail", args=(club.code,)),
+                    {field: "New Club Name/Description"},
+                    content_type="application/json",
+                )
+                self.assertIn(resp.status_code, [400], resp.content)
 
-            # ensure club is marked as not approved
-            club.refresh_from_db()
-            self.assertFalse(club.approved)
+                # ensure club is marked as approved (request didn't go through)
+                club.refresh_from_db()
+                self.assertTrue(club.approved)
 
-            # reset to approved
-            club.approved = True
-            club.save(update_fields=["approved"])
+        with patch("django.conf.settings.QUEUE_OPEN", True):
+            for field in {"name", "description"}:
+                # edit sensitive field
+                resp = self.client.patch(
+                    reverse("clubs-detail", args=(club.code,)),
+                    {field: "New Club Name/Description"},
+                    content_type="application/json",
+                )
+                self.assertIn(resp.status_code, [200, 201], resp.content)
+
+                # ensure club is marked as not approved
+                club.refresh_from_db()
+                self.assertFalse(club.approved)
+
+                # reset to approved
+                club.approved = True
+                club.save(update_fields=["approved"])
 
         # login to superuser account
         self.client.login(username=self.user5.username, password="test")

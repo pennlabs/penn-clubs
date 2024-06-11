@@ -373,8 +373,11 @@ class SendInvitesTestCase(TestCase):
             "django.utils.timezone.now",
             return_value=now,
         ):
-            call_command("daily_notifications", stderr=errors)
-
+            with mock.patch("django.conf.settings.QUEUE_OPEN", False):
+                call_command("daily_notifications", stderr=errors)
+            self.assertFalse(any(m.to == [self.user1.email] for m in mail.outbox))
+            with mock.patch("django.conf.settings.QUEUE_OPEN", True):
+                call_command("daily_notifications", stderr=errors)
         # ensure approval email was sent out
         self.assertTrue(any(m.to == [self.user1.email] for m in mail.outbox))
 

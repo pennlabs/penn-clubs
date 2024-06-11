@@ -1512,6 +1512,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if request and request.user.has_perm("clubs.approve_club"):
             needs_reapproval = False
 
+        if needs_reapproval and not settings.QUEUE_OPEN:
+            raise serializers.ValidationError(
+                "The approval queue is not currently open."
+            )
+
         has_approved_version = (
             self.instance and self.instance.history.filter(approved=True).exists()
         )

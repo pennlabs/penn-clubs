@@ -643,6 +643,7 @@ export const FileField = useFieldWrapper(
     value,
     isImage = false,
     canDelete = false,
+    disabled = false,
   }: BasicFormField & AnyHack): ReactElement => {
     const { setFieldValue } = useFormikContext()
 
@@ -681,7 +682,12 @@ export const FileField = useFieldWrapper(
             <img style={{ maxWidth: 300 }} src={imageUrl} />
           ))}
         <div className="file">
-          <label className="file-label">
+          <label
+            className="file-label"
+            style={{
+              cursor: disabled ? 'not-allowed' : 'pointer',
+            }}
+          >
             <input
               className="file-input"
               type="file"
@@ -693,11 +699,14 @@ export const FileField = useFieldWrapper(
               }}
               onBlur={onBlur}
               placeholder={placeholder}
+              onClick={(e) => {
+                if (disabled) {
+                  e.preventDefault()
+                }
+              }}
             />
             <span className="file-cta">
-              <span className="file-label">
-                Choose a {isImage ? 'image' : 'file'}...
-              </span>
+              Choose a {isImage ? 'image' : 'file'}...
             </span>
           </label>
           {imageUrl && (canDelete || isImage) && (
