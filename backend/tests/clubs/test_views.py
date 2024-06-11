@@ -3,7 +3,6 @@ import io
 import json
 import os
 from collections import Counter
-from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
@@ -1365,7 +1364,7 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user1.username, password="test")
 
-        with mock.patch("django.conf.settings.QUEUE_OPEN", True):
+        with patch("django.conf.settings.QUEUE_OPEN", True):
             resp = self.client.patch(
                 reverse("clubs-detail", args=(self.club1.code,)),
                 {
@@ -1986,7 +1985,7 @@ class ClubTestCase(TestCase):
         # login to officer user
         self.client.login(username=self.user4.username, password="test")
 
-        with mock.patch("django.conf.settings.QUEUE_OPEN", False):
+        with patch("django.conf.settings.QUEUE_OPEN", False):
             for field in {"name", "description"}:
                 # edit sensitive field
                 resp = self.client.patch(
@@ -2000,7 +1999,7 @@ class ClubTestCase(TestCase):
                 club.refresh_from_db()
                 self.assertTrue(club.approved)
 
-        with mock.patch("django.conf.settings.QUEUE_OPEN", True):
+        with patch("django.conf.settings.QUEUE_OPEN", True):
             for field in {"name", "description"}:
                 # edit sensitive field
                 resp = self.client.patch(
