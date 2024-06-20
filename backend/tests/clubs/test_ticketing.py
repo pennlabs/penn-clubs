@@ -955,8 +955,7 @@ class TicketTestCase(TestCase):
         # Add a few tickets
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
         tickets_to_add = self.tickets1[:3]
-        for ticket in tickets_to_add:
-            cart.tickets.add(ticket)
+        cart.tickets.add(*tickets_to_add)
         cart.save()
 
         TicketViewSet._place_hold_on_tickets(self.user1, cart.tickets)
@@ -986,8 +985,7 @@ class TicketTestCase(TestCase):
         # Add a few tickets
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
         tickets_to_add = self.tickets1[:3]
-        for ticket in tickets_to_add:
-            cart.tickets.add(ticket)
+        cart.tickets.add(*tickets_to_add)
         cart.save()
 
         order_info = {
