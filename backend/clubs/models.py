@@ -698,6 +698,31 @@ class Club(models.Model):
                 reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
 
+    def get_latest_and_latest_approved_versions(self):
+        """
+        Returns the latest and latest approved versions of club key fields
+        [name, description, image] contents that trigger reapproval.
+        """
+        latest_approved_version = (
+            self.history.filter(approved=True).order_by("-history_date").first()
+        )
+        latest_version = self.history.order_by("-history_date").first()
+
+        if (
+            not latest_version
+            or not latest_approved_version
+            or (latest_approved_version == latest_version)
+        ):
+            return {}
+
+        diff = latest_version.diff_against(latest_approved_version)
+
+        return {
+            change.field: {"old": change.old, "new": change.new}
+            for change in diff.changes
+            if change.field in ["name", "description", "image"]
+        }
+
     class Meta:
         ordering = ["name"]
         permissions = [

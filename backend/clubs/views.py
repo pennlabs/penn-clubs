@@ -2059,6 +2059,58 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
     @action(detail=False, methods=["GET"])
+    def pending_clubs(self, request, *args, **kwargs):
+        """
+        Return old and new data for clubs that are pending approval.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: object
+                                        description: Changes in the name field
+                                        properties:
+                                            old:
+                                                type: string
+                                                description: Old name of the club
+                                            new:
+                                                type: string
+                                                description: New name of the club
+                                    description:
+                                        type: object
+                                        description: Changes in the club description
+                                        properties:
+                                            old:
+                                                type: string
+                                                description: Old description of the club
+                                            new:
+                                                type: string
+                                                description: New description of the club
+                                    image:
+                                        type: object
+                                        description: Changes in the image of the club
+                                        properties:
+                                            old:
+                                                type: string
+                                                description: Old image URL of the club
+                                            new:
+                                                type: string
+                                                description: New image URL of the club
+        ---
+        """
+        pending_clubs = Club.objects.filter(approved=None, active=True)
+
+        return Response(
+            [club.get_latest_and_latest_approved_versions() for club in pending_clubs]
+        )
+
+    @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
         """
         Return the list of fields that can be exported in the Excel file.
