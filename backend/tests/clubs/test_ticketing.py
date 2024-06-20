@@ -992,14 +992,17 @@ class TicketTestCase(TestCase):
             "billTo": {
                 "firstName": self.user1.first_name,
                 "lastName": self.user1.last_name,
-                "phoneNumber": None,
+                "phoneNumber": "3021239234",
                 "email": self.user1.email,
             },
         }
 
         TicketViewSet._place_hold_on_tickets(self.user1, cart.tickets)
         TicketViewSet._give_tickets(
-            self.user1, order_info, cart, reconciliation_id=None
+            self.user1,
+            order_info,
+            cart,
+            reconciliation_id=MockPaymentResponse().reconciliation_id,
         )
 
         # Check that tickets are assigned their owner
@@ -1009,6 +1012,12 @@ class TicketTestCase(TestCase):
 
         # Check that the cart is empty
         self.assertEqual(0, cart.tickets.count())
+
+        # Transaction record created
+        record_exists = TicketTransactionRecord.objects.filter(
+            reconciliation_id=MockPaymentResponse().reconciliation_id
+        ).exists()
+        self.assertTrue(record_exists)
 
     def test_initiate_checkout_non_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
