@@ -976,7 +976,6 @@ class TicketTestCase(TestCase):
             for ticket in cart.tickets.all():
                 self.assertIsNone(ticket.owner)
                 self.assertIsNone(ticket.holder)
-                # TODO: Ask whether to reset holding expiration to None
 
     def test_give_tickets(self):
         from clubs.views import TicketViewSet
