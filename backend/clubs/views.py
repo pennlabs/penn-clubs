@@ -2059,6 +2059,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
     @action(detail=False, methods=["GET"])
+    def pending_clubs(self, request, *args, **kwargs):
+        """
+        Return old and new data for clubs that are pending approval.
+        """
+        pending_clubs = Club.objects.filter(approved=None, active=True)
+
+        return Response(
+            [club.get_latest_and_latest_approved_versions() for club in pending_clubs]
+        )
+
+    @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
         """
         Return the list of fields that can be exported in the Excel file.
