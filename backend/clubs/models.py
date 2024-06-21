@@ -1886,6 +1886,7 @@ class Ticket(models.Model):
     transferable = models.BooleanField(default=True)
     attended = models.BooleanField(default=False)
     buyable = models.BooleanField(default=True)
+    # TODO: change to enum between All, Club, None
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
