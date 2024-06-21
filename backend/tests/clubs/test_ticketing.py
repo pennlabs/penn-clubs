@@ -947,6 +947,78 @@ class TicketTestCase(TestCase):
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
         self.assertEqual(len(in_cart & to_add), 0, in_cart | to_add)
 
+    def test_place_hold_on_tickets(self):
+        from clubs.views import TicketViewSet
+
+        self.client.login(username=self.user1.username, password="test")
+
+        # Add a few tickets
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        tickets_to_add = self.tickets1[:3]
+        cart.tickets.add(*tickets_to_add)
+        cart.save()
+
+        TicketViewSet._place_hold_on_tickets(self.user1, cart.tickets)
+        holding_expiration = timezone.now() + timezone.timedelta(minutes=10)
+
+        for ticket in cart.tickets.all():
+            self.assertIsNone(ticket.owner)
+            self.assertEqual(self.user1, ticket.holder)
+            self.assertAlmostEqual(
+                holding_expiration,
+                ticket.holding_expiration,
+                delta=timedelta(seconds=10),
+            )
+
+        # Move Django's internal clock 10 minutes forward
+        with freezegun.freeze_time(holding_expiration):
+            Ticket.objects.update_holds()
+            for ticket in cart.tickets.all():
+                self.assertIsNone(ticket.owner)
+                self.assertIsNone(ticket.holder)
+
+    def test_give_tickets(self):
+        from clubs.views import TicketViewSet
+
+        self.client.login(username=self.user1.username, password="test")
+        # Add a few tickets
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        tickets_to_add = self.tickets1[:3]
+        cart.tickets.add(*tickets_to_add)
+        cart.save()
+
+        order_info = {
+            "amountDetails": {"totalAmount": TicketViewSet._calculate_cart_total(cart)},
+            "billTo": {
+                "firstName": self.user1.first_name,
+                "lastName": self.user1.last_name,
+                "phoneNumber": "3021239234",
+                "email": self.user1.email,
+            },
+        }
+
+        TicketViewSet._place_hold_on_tickets(self.user1, cart.tickets)
+        TicketViewSet._give_tickets(
+            self.user1,
+            order_info,
+            cart,
+            reconciliation_id=MockPaymentResponse().reconciliation_id,
+        )
+
+        # Check that tickets are assigned their owner
+        for ticket in cart.tickets.all():
+            self.assertEqual(self.user1, ticket.owner)
+            self.assertIsNone(ticket.holder)
+
+        # Check that the cart is empty
+        self.assertEqual(0, cart.tickets.count())
+
+        # Check that transaction record is created
+        record_exists = TicketTransactionRecord.objects.filter(
+            reconciliation_id=MockPaymentResponse().reconciliation_id
+        ).exists()
+        self.assertTrue(record_exists)
+
     def test_initiate_checkout_non_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
 
@@ -1088,7 +1160,7 @@ class TicketTestCase(TestCase):
         held_tickets = Ticket.objects.filter(holder=self.user1)
         self.assertEqual(held_tickets.count(), 0, held_tickets)
 
-        # Transaction record created
+        # Check that transaction record is created
         record_exists = TicketTransactionRecord.objects.filter(
             reconciliation_id="None"
         ).exists()
@@ -1267,7 +1339,7 @@ class TicketTestCase(TestCase):
             held_tickets = Ticket.objects.filter(holder=self.user1)
             self.assertEqual(held_tickets.count(), 0, held_tickets)
 
-            # Transaction record created
+            # Check that transaction record is created
             record_exists = TicketTransactionRecord.objects.filter(
                 reconciliation_id=MockPaymentResponse().reconciliation_id
             ).exists()
