@@ -1013,7 +1013,7 @@ class TicketTestCase(TestCase):
         # Check that the cart is empty
         self.assertEqual(0, cart.tickets.count())
 
-        # Transaction record created
+        # Check that transaction record is created
         record_exists = TicketTransactionRecord.objects.filter(
             reconciliation_id=MockPaymentResponse().reconciliation_id
         ).exists()
@@ -1160,7 +1160,7 @@ class TicketTestCase(TestCase):
         held_tickets = Ticket.objects.filter(holder=self.user1)
         self.assertEqual(held_tickets.count(), 0, held_tickets)
 
-        # Transaction record created
+        # Check that transaction record is created
         record_exists = TicketTransactionRecord.objects.filter(
             reconciliation_id="None"
         ).exists()
@@ -1339,7 +1339,7 @@ class TicketTestCase(TestCase):
             held_tickets = Ticket.objects.filter(holder=self.user1)
             self.assertEqual(held_tickets.count(), 0, held_tickets)
 
-            # Transaction record created
+            # Check that transaction record is created
             record_exists = TicketTransactionRecord.objects.filter(
                 reconciliation_id=MockPaymentResponse().reconciliation_id
             ).exists()
