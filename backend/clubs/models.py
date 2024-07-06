@@ -708,20 +708,26 @@ class Club(models.Model):
         )
         latest_version = self.history.order_by("-history_date").first()
 
-        if (
-            not latest_version
-            or not latest_approved_version
-            or (latest_approved_version == latest_version)
-        ):
-            return {}
+        # if this is the first time the club is being approved
+        if not latest_approved_version:
+            return {
+                self.code: {
+                    field: {"old": None, "new": getattr(latest_version, field)}
+                    for field in ["name", "description", "image"]
+                }
+            }
 
-        diff = latest_version.diff_against(latest_approved_version)
-
-        return {
-            change.field: {"old": change.old, "new": change.new}
-            for change in diff.changes
-            if change.field in ["name", "description", "image"]
-        }
+        # if the current version is not approvedthe and it has been approved before
+        if not self.approved and latest_approved_version:
+            return {
+                self.code: {
+                    field: {
+                        "old": getattr(latest_approved_version, field),
+                        "new": getattr(latest_version, field),
+                    }
+                    for field in ["name", "description", "image"]
+                }
+            }
 
     class Meta:
         ordering = ["name"]

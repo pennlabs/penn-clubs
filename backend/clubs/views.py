@@ -2059,7 +2059,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
     @action(detail=False, methods=["GET"])
-    def pending_clubs(self, request, *args, **kwargs):
+    def pending_clubs_old_new_data(self, request, *args, **kwargs):
         """
         Return old and new data for clubs that are pending approval.
         ---
@@ -2072,36 +2072,48 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                             items:
                                 type: object
                                 properties:
-                                    name:
-                                        type: object
-                                        description: Changes in the name field
+                                id:
+                                    type: object
+                                        description: club id
                                         properties:
-                                            old:
-                                                type: string
-                                                description: Old name of the club
-                                            new:
-                                                type: string
-                                                description: New name of the club
-                                    description:
-                                        type: object
-                                        description: Changes in the club description
-                                        properties:
-                                            old:
-                                                type: string
-                                                description: Old description of the club
-                                            new:
-                                                type: string
-                                                description: New description of the club
-                                    image:
-                                        type: object
-                                        description: Changes in the image of the club
-                                        properties:
-                                            old:
-                                                type: string
-                                                description: Old image URL of the club
-                                            new:
-                                                type: string
-                                                description: New image URL of the club
+                                            name:
+                                                type: object
+                                                description: Changes in the name field
+                                                properties:
+                                                    old:
+                                                        type: string
+                                                        description: Old name of the
+                                                                    club
+                                                    new:
+                                                        type: string
+                                                        description: New name of the
+                                                                    club
+                                            description:
+                                                type: object
+                                                description: Changes in the club
+                                                            description
+                                                properties:
+                                                    old:
+                                                        type: string
+                                                        description: Old description of
+                                                                    the club
+                                                    new:
+                                                        type: string
+                                                        description: New description of
+                                                                    the club
+                                            image:
+                                                type: object
+                                                description: Changes in the image of the
+                                                            club
+                                                properties:
+                                                    old:
+                                                        type: string
+                                                        description: Old image URL of
+                                                            the club
+                                                    new:
+                                                        type: string
+                                                        description: New image URL of
+                                                                    the club
         ---
         """
         pending_clubs = Club.objects.filter(approved=None, active=True)
