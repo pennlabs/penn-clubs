@@ -1306,6 +1306,66 @@ class ClubTestCase(TestCase):
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
 
+    def test_pending_clubs_old_new_data(self):
+        """
+        Test that pending_clubs_old_new returns the correct data for new and clubs
+        seeking reapproval
+        """
+
+        # create club that requires approval
+        new_club = Club.objects.create(
+            code="new-club",
+            name="New Club",
+            description="We're the spirits of open source.",
+            approved=None,
+            active=True,
+            email="example@example.com",
+        )
+
+        # add officer to club
+        Membership.objects.create(
+            person=self.user4, club=new_club, role=Membership.ROLE_OFFICER
+        )
+
+        # login to officer user
+        self.client.login(username=self.user4.username, password="test")
+
+        # New club should not have any old data
+        resp = self.client.get(reverse("clubs-pending-clubs-old-new-data"))
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(data[0]["new-club"]["name"]["new"], "New Club")
+        self.assertEqual(data[0]["new-club"]["name"]["old"], None)
+
+        # approve club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        self.assertTrue(new_club.approved)
+
+        # Make a change that edit description (requires reapproval)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"description": "We are open source, expect us."},
+            content_type="application/json",
+        )
+        # Ensure change successful
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Ensure club is marked as not approved
+        new_club.refresh_from_db()
+        self.assertFalse(new_club.approved)
+
+        # Should now have old and new data
+        resp = self.client.get(reverse("clubs-pending-clubs-old-new-data"))
+        new_data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(
+            new_data[0]["new-club"]["description"]["new"],
+            "We are open source, expect us.",
+        )
+        self.assertEqual(
+            new_data[0]["new-club"]["description"]["old"],
+            "We're the spirits of open source.",
+        )
+
     def test_club_modify_wrong_auth(self):
         """
         Outsiders should not be able to modify a club.
