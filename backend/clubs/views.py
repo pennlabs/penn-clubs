@@ -5255,7 +5255,6 @@ class TicketViewSet(viewsets.ModelViewSet):
             order_info = {
                 "amountDetails": {"totalAmount": "0.00"},
                 "billTo": {
-                    "reconciliationId": None,
                     "firstName": self.request.user.first_name,
                     "lastName": self.request.user.last_name,
                     "phoneNumber": None,
@@ -5264,7 +5263,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             }
 
             # Place hold on tickets for 10 mins
-            self._place_hold_on_tickets(tickets)
+            self._place_hold_on_tickets(self.request.user, tickets)
             # Skip payment process and give tickets to user/buyer
             self._give_tickets(self.request.user, order_info, cart, None)
 
@@ -5320,7 +5319,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 cart.save()
 
             # Place hold on tickets for 10 mins
-            self._place_hold_on_tickets(tickets)
+            self._place_hold_on_tickets(self.request.user, tickets)
 
             return Response(
                 {
@@ -5573,7 +5572,8 @@ class TicketViewSet(viewsets.ModelViewSet):
             ).select_related("event__club")
         return Ticket.objects.filter(owner=self.request.user.id)
 
-    def _give_tickets(self, user, order_info, cart, reconciliation_id):
+    @staticmethod
+    def _give_tickets(user, order_info, cart, reconciliation_id):
         """
         Helper function that gives user/buyer their held tickets
         and archives the transaction data
@@ -5595,9 +5595,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             buyer_email=order_info["billTo"]["email"],
         )
 
-        tickets.update(
-            owner=self.request.user, holder=None, transaction_record=transaction_record
-        )
+        tickets.update(owner=user, holder=None, transaction_record=transaction_record)
         cart.tickets.clear()
         for ticket in tickets:
             ticket.send_confirmation_email()
@@ -5607,12 +5605,13 @@ class TicketViewSet(viewsets.ModelViewSet):
         cart.checkout_context = None
         cart.save()
 
-    def _place_hold_on_tickets(self, tickets):
+    @staticmethod
+    def _place_hold_on_tickets(user, tickets):
         """
         Helper function that places a 10 minute hold on tickets for a user
         """
         holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
-        tickets.update(holder=self.request.user, holding_expiration=holding_expiration)
+        tickets.update(holder=user, holding_expiration=holding_expiration)
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
