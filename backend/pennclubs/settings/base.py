@@ -203,7 +203,8 @@ RENEWAL_URL = "https://{domain}/club/{club}/renew"
 APPLY_URL = "https://{domain}/club/{club}/apply"
 
 OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
-QUEUE_OPEN = False
+QUEUE_OPEN = True
+NEW_QUEUE_OPEN = False
 
 # File upload settings
 

@@ -1285,6 +1285,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # New clubs created through the API must always be approved.
         validated_data["approved"] = None
 
+        request = self.context.get("request", None)
+        perms = request and request.user.has_perm("clubs.approve_club")
+
+        if not perms and (not settings.QUEUE_OPEN or not settings.NEW_QUEUE_OPEN):
+            raise serializers.ValidationError(
+                "The approval queue is not currently open."
+            )
+
         obj = super().create(validated_data)
 
         # assign user who created as owner
@@ -1500,7 +1508,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # if key fields were edited, require re-approval
         needs_reapproval = False
         if self.instance:
-            for field in {"name", "image", "description"}:
+            for field in {"name", "image"}:
                 if field in self.validated_data and not self.validated_data[
                     field
                 ] == getattr(self.instance, field, None):

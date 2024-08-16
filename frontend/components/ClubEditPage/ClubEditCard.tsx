@@ -31,6 +31,7 @@ import {
   FORM_TAG_DESCRIPTION,
   FORM_TARGET_DESCRIPTION,
   MEMBERSHIP_ROLE_NAMES,
+  NEW_QUEUE_ENABLED,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_ADMISSION_LABEL,
@@ -823,8 +824,17 @@ export default function ClubEditCard({
             <LiveBanner>
               <LiveTitle>Queue Closed for Summer Break</LiveTitle>
               <LiveSub>
-                No new edits to club name, image, or description will be
+                No edits to existing clubs or applications for new clubs will be
                 submitted for review to OSA.
+              </LiveSub>
+            </LiveBanner>
+          )}
+          {!NEW_QUEUE_ENABLED && QUEUE_ENABLED && !isEdit && (
+            <LiveBanner>
+              <LiveTitle>Queue Closed for New Clubs</LiveTitle>
+              <LiveSub>
+                Submissions for new clubs are closed until the school year
+                begins.
               </LiveSub>
             </LiveBanner>
           )}
@@ -885,7 +895,9 @@ export default function ClubEditCard({
               )
             })}
             <button
-              disabled={!dirty || isSubmitting}
+              disabled={
+                !dirty || isSubmitting || (!NEW_QUEUE_ENABLED && !isEdit)
+              }
               type="submit"
               className="button is-primary is-large"
             >
