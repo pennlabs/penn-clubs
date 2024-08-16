@@ -96,7 +96,7 @@ class Command(BaseCommand):
         group_name = "Approvers"
 
         # only send notifications if it is currently a weekday
-        if now.isoweekday() not in range(1, 6) or not settings.QUEUE_OPEN:
+        if now.isoweekday() not in range(1, 6) or not settings.REAPPROVAL_QUEUE_OPEN:
             return False
 
         # get users in group to send notification to

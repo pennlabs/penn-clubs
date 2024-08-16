@@ -1288,7 +1288,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         request = self.context.get("request", None)
         perms = request and request.user.has_perm("clubs.approve_club")
 
-        if not perms and (not settings.QUEUE_OPEN or not settings.NEW_QUEUE_OPEN):
+        if not perms and (
+            not settings.REAPPROVAL_QUEUE_OPEN or not settings.NEW_APPROVAL_QUEUE_OPEN
+        ):
             raise serializers.ValidationError(
                 "The approval queue is not currently open."
             )
@@ -1520,7 +1522,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if request and request.user.has_perm("clubs.approve_club"):
             needs_reapproval = False
 
-        if needs_reapproval and not settings.QUEUE_OPEN:
+        if needs_reapproval and not settings.REAPPROVAL_QUEUE_OPEN:
             raise serializers.ValidationError(
                 "The approval queue is not currently open."
             )
