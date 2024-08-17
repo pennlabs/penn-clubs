@@ -447,7 +447,6 @@ export default function ClubEditCard({
         {
           name: 'description',
           required: true,
-          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
           type: 'html',
           hidden: !REAPPROVAL_QUEUE_ENABLED,
