@@ -475,7 +475,7 @@ class Command(BaseCommand):
             for club in clubs:
                 if action == "semesterly_email":
                     context = {"code": club.code}
-                elif action == "update_officers":
+                elif action == "update_officers" or action == "revised_fair_date":
                     context = {
                         "name": club.name,
                         "url": f"https://pennclubs.com/club/{club.code}/edit/member",

@@ -1,5 +1,10 @@
 <!-- SUBJECT: [CORRECTION] Updated information on Fall Activities Fair registration -->
-<!-- TYPES: {} -->
+<!-- TYPES:
+name:
+    type: string
+url:
+    type: string
+-->
 {% extends 'emails/base.html' %} {% block content %}
 <p style="font-size: 1.2em">Hello,</p>
 <p style="font-size: 1.2em">
@@ -22,7 +27,11 @@
 </p>
 <p style="font-size: 1.2em">
   We have also enabled editing existing clubs and removed the need to re-queue
-  after updating club description.
+  after updating club description. In addition, we've received a large number of
+  requests to transfer club ownership. While we are working through these,
+  existing owners can also transfer ownership <a href="{{ url }}">here</a> at
+  any time (please let us know if you do so and had already submitted a
+  request).
 </p>
 <p style="font-size: 1.2em">
   Please refer to the official email sent from the Office of Student Affairs for

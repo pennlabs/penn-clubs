@@ -8,8 +8,6 @@ React/Next.js frontend and Django-based REST API.
 
 ## Installation
 
-You will need to start both the backend and the frontend to do Penn Clubs development.
-
 You will need to start both the backend and the frontend to develop on Penn Clubs. Clubs supports Mac and Linux/WSL development.
 
 Questions? Check out our [extended guide](https://github.com/pennlabs/penn-clubs/wiki/Development-Guide) for FAQs.
