@@ -7219,6 +7219,7 @@ class OptionListView(APIView):
             options["FAIR_NAME"] = fair.name
             options["FAIR_ID"] = fair.id
             options["FAIR_OPEN"] = happening
+            options["FAIR_VIRTUAL"] = fair.virtual
             options["PRE_FAIR"] = not happening and close
         else:
             options["FAIR_OPEN"] = False
