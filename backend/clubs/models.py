@@ -826,6 +826,7 @@ class ClubFair(models.Model):
     organization = models.TextField()
     contact = models.TextField()
     time = models.TextField(blank=True)
+    virtual = models.BooleanField(default=False)
 
     # these fields are rendered as raw html
     information = models.TextField(blank=True)

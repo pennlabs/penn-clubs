@@ -73,13 +73,16 @@ const WhiteButton = styled.a`
 interface LiveEventsDialogProps {
   isPreFair: boolean
   isFair: boolean
+  isVirtual: boolean
 }
 
 const LiveEventsDialog = ({
   isPreFair,
   isFair,
+  isVirtual,
 }: LiveEventsDialogProps): ReactElement | null => {
   const fairName = useSetting('FAIR_NAME')
+  const fairContactEmail = useSetting('FAIR_CONTACT')
   const [liveEventCount, setLiveEventCount] = useState<number>(0)
 
   useEffect(() => {
@@ -99,7 +102,7 @@ const LiveEventsDialog = ({
 
   return (
     <LiveBanner>
-      {isPreFair && (
+      {isPreFair && isVirtual && (
         <Link
           legacyBehavior
           href={FAIR_OFFICER_GUIDE_ROUTE}
@@ -111,7 +114,7 @@ const LiveEventsDialog = ({
           </WhiteButton>
         </Link>
       )}
-      {isFair && (
+      {isFair && isVirtual && (
         <Link href={LIVE_EVENTS} as={LIVE_EVENTS} passHref legacyBehavior>
           <WhiteButton>See Live Events</WhiteButton>
         </Link>
@@ -121,8 +124,8 @@ const LiveEventsDialog = ({
       </Link>
       <LiveTitle>{fairName}</LiveTitle>
       <LiveSub>
-        {liveEventCount === 0 ? (
-          `Get ready for the virtual ${FAIR_NAME} fair! If you need help registering email contact@pennclubs.com`
+        {liveEventCount === 0 || !isVirtual ? (
+          `Get ready for the ${isVirtual ? 'virtual ' : ''}${FAIR_NAME} fair! For any issues with registering, email ${fairContactEmail}.`
         ) : (
           <>
             {liveEventCount}{' '}

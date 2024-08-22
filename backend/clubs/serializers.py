@@ -2956,6 +2956,7 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "registration_start_time",
             "start_time",
             "time",
+            "virtual",
         )
 
 
