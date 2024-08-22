@@ -12,7 +12,7 @@ import { ReactElement, useEffect, useState } from 'react'
 import renderPage from 'renderPage'
 import { ClubFair } from 'types'
 import { cache, doApiRequest, useSetting } from 'utils'
-import { FAIR_NAME } from 'utils/branding'
+import { SUPPORT_EMAIL } from 'utils/branding'
 
 import { CLUB_ROUTE, SNOW } from '~/constants'
 
@@ -39,6 +39,8 @@ const FairPage = ({
   )
   const isPreFair = useSetting('PRE_FAIR')
   const fairName = fair?.name ?? useSetting('FAIR_NAME') ?? 'Upcoming Fair'
+  const fairContact =
+    fair?.contact ?? useSetting('FAIR_CONTACT') ?? SUPPORT_EMAIL
 
   /**
    * Open up the fair on the designated time client side if we're close.
@@ -60,58 +62,76 @@ const FairPage = ({
     }
   }, [])
 
+  if (!isPreFair && !isFairOpen && !isOverride) {
+    return (
+      <Container background={SNOW}>
+        <Metadata title="Upcoming Fair Guide" />
+        <InfoPageTitle>Upcoming Fair Student Guide</InfoPageTitle>
+        <div className="content">
+          <div className="notification is-warning">
+            <Icon name="alert-triangle" /> There is currently no fair currently
+            occurring or upcoming. If you believe this is an error, please
+            contact <Contact />.
+          </div>
+        </div>
+      </Container>
+    )
+  }
   return (
     <Container background={SNOW}>
       <Metadata title={fairName as string} />
       <InfoPageTitle>{fairName} – Student Guide</InfoPageTitle>
       <div className="content">
-        {!isPreFair && !isFairOpen && !isOverride && (
-          <div className="notification is-warning">
-            <Icon name="alert-triangle" /> There is currently no {FAIR_NAME}{' '}
-            fair that is currently occurring or upcoming. If you believe this is
-            an error, please contact <Contact />.
-          </div>
+        {fair ? (
+          <>
+            <p>
+              The {fair.name} sponsored by the {fair.organization}, will be held
+              from {fair.start_time.split('T')[0]} to{' '}
+              {fair.end_time.split('T')[0]}!
+            </p>
+
+            {fair.information.trim().length !== 0 && (
+              <div>
+                <h3>Student Information</h3>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: fair.information,
+                  }}
+                />
+              </div>
+            )}
+
+            <br />
+
+            {fair.registration_information.trim().length !== 0 && (
+              <div>
+                <h3>Registration Information</h3>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: fair.registration_information,
+                  }}
+                />
+              </div>
+            )}
+
+            <br />
+
+            <p>
+              To secure your club’s spot, be sure to register before the
+              deadline on {fair.registration_end_time.split('T')[0]}.
+            </p>
+            <p>
+              For any inquiries or clarifications about the Fair, don't hesitate
+              to reach out to {fair.contact}. We look forward to seeing you
+              there!
+            </p>
+          </>
+        ) : (
+          <p>
+            The {fairName} is currently ongoing! Please check with {fairContact}{' '}
+            for more information.
+          </p>
         )}
-
-        <p>
-          The {fair?.name} sponsored by {fair?.organization}, will be held from{' '}
-          {fair?.start_time.split('T')[0]} to {fair?.end_time.split('T')[0]}!
-        </p>
-
-        {fair?.information && (
-          <div>
-            <h3>Student Information</h3>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: fair?.information,
-              }}
-            />
-          </div>
-        )}
-
-        <br />
-
-        {fair?.registration_information && (
-          <div>
-            <h3>Registration Information</h3>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: fair?.registration_information,
-              }}
-            />
-          </div>
-        )}
-
-        <br />
-
-        <p>
-          To secure your club’s spot, be sure to register before the deadline on{' '}
-          {fair?.registration_end_time.split('T')[0]}.
-        </p>
-        <p>
-          For any inquiries or clarifications about the Fair, don't hesitate to
-          reach out to {fair?.contact}. We look forward to seeing you there!
-        </p>
         <div className="columns mt-3">
           {events.map(({ start_time, end_time, events }, i): ReactElement => {
             const parsedDate = moment(start_time).tz('America/New_York')

@@ -2367,6 +2367,7 @@ class ClubTestCase(TestCase):
             end_time=now + datetime.timedelta(days=14),
             registration_start_time=now - datetime.timedelta(days=1),
             registration_end_time=now + datetime.timedelta(days=1),
+            virtual=True,
             questions=json.dumps(
                 [
                     {

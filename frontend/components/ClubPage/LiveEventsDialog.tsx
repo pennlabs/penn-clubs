@@ -82,6 +82,7 @@ const LiveEventsDialog = ({
   isVirtual,
 }: LiveEventsDialogProps): ReactElement | null => {
   const fairName = useSetting('FAIR_NAME')
+  const fairContactEmail = useSetting('FAIR_CONTACT')
   const [liveEventCount, setLiveEventCount] = useState<number>(0)
 
   useEffect(() => {
@@ -124,7 +125,7 @@ const LiveEventsDialog = ({
       <LiveTitle>{fairName}</LiveTitle>
       <LiveSub>
         {liveEventCount === 0 || !isVirtual ? (
-          `Get ready for the ${isVirtual ? 'virtual ' : ''}${FAIR_NAME} fair!`
+          `Get ready for the ${isVirtual ? 'virtual ' : ''}${FAIR_NAME} fair! For any issues with registering, email ${fairContactEmail}.`
         ) : (
           <>
             {liveEventCount}{' '}

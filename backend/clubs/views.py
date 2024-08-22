@@ -7217,6 +7217,7 @@ class OptionListView(APIView):
             happening = fair.start_time <= now - datetime.timedelta(minutes=3)
             close = fair.start_time >= now - datetime.timedelta(weeks=1)
             options["FAIR_NAME"] = fair.name
+            options["FAIR_CONTACT"] = fair.contact
             options["FAIR_ID"] = fair.id
             options["FAIR_OPEN"] = happening
             options["FAIR_VIRTUAL"] = fair.virtual
