@@ -1,4 +1,5 @@
 import { ReactElement, useEffect } from 'react'
+import Masonry from 'react-masonry-css'
 import styled from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
@@ -11,6 +12,25 @@ const ClubTableRowWrapper = styled.div`
     margin-left: -1rem;
     margin-right: 1rem;
     width: calc(100vw);
+  }
+`
+
+const StyledMasonry = styled(Masonry)`
+  display: flex;
+  width: auto;
+
+  .masonry-column {
+    background-clip: padding-box;
+  }
+
+  .masonry-column > div {
+    width: 100% !important;
+  }
+
+  @media (max-width: 960px) {
+    .masonry-column {
+      width: 100% !important;
+    }
   }
 `
 
@@ -50,11 +70,18 @@ const ClubDisplay = ({
 
   if (display === 'cards') {
     return (
-      <div className="columns is-multiline is-desktop is-tablet">
+      <StyledMasonry
+        breakpointCols={{
+          default: 2,
+          960: 1,
+        }}
+        className="masonry-grid"
+        columnClassName="masonry-column"
+      >
         {displayClubs.map((club) => (
           <ClubCard key={club.code} club={club} />
         ))}
-      </div>
+      </StyledMasonry>
     )
   }
 
