@@ -1,6 +1,8 @@
 import sys
 
+from django.core.cache import cache
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from clubs.models import Club
 
@@ -74,21 +76,27 @@ class Command(BaseCommand):
 
         # deactivate all clubs
         if deactivate_clubs:
-            clubs.update(active=False, approved=None, approved_by=None)
+            with transaction.atomic():
+                clubs.update(active=False, approved=None, approved_by=None)
 
-            # allow existing approved version to stay on penn clubs website for now
-            ghosted = 0
-            for club in clubs:
-                if club.history.filter(approved=True).exists():
-                    club.ghost = True
-                    club._change_reason = (
-                        "Mark pending approval (yearly renewal process)"
-                    )
-                    club.save(update_fields=["ghost"])
-                    ghosted += 1
+                # allow existing approved version to stay on penn clubs website for now
+                club_ids_to_ghost = []
+                for club in clubs:
+                    if club.history.filter(approved=True).exists():
+                        club_ids_to_ghost.append(club.id)
+
+                Club.objects.filter(id__in=club_ids_to_ghost).update(
+                    ghost=True,
+                    _change_reason="Mark pending approval (yearly renewal process)",
+                )
+
+                # Clear cache for all affected clubs
+                cache_keys = [f"clubs:{club.id}" for club in clubs]
+                cache.delete_many(cache_keys)
 
             self.stdout.write(
-                f"{clubs.count()} clubs deactivated! {ghosted} clubs ghosted!"
+                f"{clubs.count()} clubs deactivated! "
+                f"{len(club_ids_to_ghost)} clubs ghosted!"
             )
 
         # send out renewal emails to all clubs
