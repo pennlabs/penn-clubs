@@ -15,9 +15,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
+from django.core.cache import cache
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 from ics import Calendar
 from ics import Event as ICSEvent
@@ -592,6 +594,29 @@ class RenewalTestCase(TestCase):
         call_command("deactivate", "remind", "--force")
 
         self.assertGreater(len(mail.outbox), current_email_count)
+
+    def test_deactivate_invalidates_cache(self):
+        with open(os.devnull, "w") as f:
+            call_command("populate", stdout=f)
+
+        club = Club.objects.first()
+
+        # make request to the club detail view to cache it
+        self.client.get(reverse("clubs-detail", args=(club.code,)))
+
+        # club should now be cached
+        cache_key = f"clubs:{club.id}"
+        self.assertIsNotNone(cache.get(cache_key))
+
+        call_command("deactivate", "all", "--force")
+
+        # club should no longer be cached
+        self.assertIsNone(cache.get(cache_key))
+
+        # club should be deactivated and inactive
+        club.refresh_from_db()
+        self.assertFalse(club.active)
+        self.assertIsNone(club.approved)
 
 
 class MergeDuplicatesTestCase(TestCase):
