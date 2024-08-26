@@ -76,27 +76,29 @@ class Command(BaseCommand):
 
         # deactivate all clubs
         if deactivate_clubs:
+            num_deactivated = 0
+            num_ghosted = 0
+
             with transaction.atomic():
-                clubs.update(active=False, approved=None, approved_by=None)
-
-                # allow existing approved version to stay on penn clubs website for now
-                club_ids_to_ghost = []
                 for club in clubs:
+                    club.active = False
+                    club.approved = None
+                    club.approved_by = None
+                    num_deactivated += 1
+
+                    # allow existing approved version to stay on website for now
                     if club.history.filter(approved=True).exists():
-                        club_ids_to_ghost.append(club.id)
+                        club.ghost = True
+                        club._change_reason = (
+                            "Mark pending approval (yearly renewal process)"
+                        )
+                        num_ghosted += 1
 
-                Club.objects.filter(id__in=club_ids_to_ghost).update(
-                    ghost=True,
-                    _change_reason="Mark pending approval (yearly renewal process)",
-                )
-
-                # Clear cache for all affected clubs
-                cache_keys = [f"clubs:{club.id}" for club in clubs]
-                cache.delete_many(cache_keys)
+                    club.save()
+                    cache.delete(f"clubs:{club.id}")  # clear cache
 
             self.stdout.write(
-                f"{clubs.count()} clubs deactivated! "
-                f"{len(club_ids_to_ghost)} clubs ghosted!"
+                f"{num_deactivated} clubs deactivated! " f"{num_ghosted} clubs ghosted!"
             )
 
         # send out renewal emails to all clubs
