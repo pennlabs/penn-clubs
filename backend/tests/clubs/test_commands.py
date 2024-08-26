@@ -15,10 +15,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
-from django.core.cache import cache
+from django.core.cache import caches
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from ics import Calendar
@@ -595,7 +596,17 @@ class RenewalTestCase(TestCase):
 
         self.assertGreater(len(mail.outbox), current_email_count)
 
+    @override_settings(
+        CACHES={  # don't want to clear prod cache while testing
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            }
+        }
+    )
     def test_deactivate_invalidates_cache(self):
+        # Clear the cache before starting the test
+        caches["default"].clear()
+
         with open(os.devnull, "w") as f:
             call_command("populate", stdout=f)
 
@@ -606,12 +617,12 @@ class RenewalTestCase(TestCase):
 
         # club should now be cached
         cache_key = f"clubs:{club.id}"
-        self.assertIsNotNone(cache.get(cache_key))
+        self.assertIsNotNone(caches["default"].get(cache_key))
 
         call_command("deactivate", "all", "--force")
 
         # club should no longer be cached
-        self.assertIsNone(cache.get(cache_key))
+        self.assertIsNone(caches["default"].get(cache_key))
 
         # club should be deactivated and inactive
         club.refresh_from_db()
