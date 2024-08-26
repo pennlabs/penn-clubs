@@ -76,7 +76,6 @@ class Command(BaseCommand):
 
         # deactivate all clubs
         if deactivate_clubs:
-            num_deactivated = 0
             num_ghosted = 0
 
             with transaction.atomic():
@@ -84,7 +83,6 @@ class Command(BaseCommand):
                     club.active = False
                     club.approved = None
                     club.approved_by = None
-                    num_deactivated += 1
 
                     # allow existing approved version to stay on website for now
                     if club.history.filter(approved=True).exists():
@@ -98,7 +96,7 @@ class Command(BaseCommand):
                     cache.delete(f"clubs:{club.id}")  # clear cache
 
             self.stdout.write(
-                f"{num_deactivated} clubs deactivated! " f"{num_ghosted} clubs ghosted!"
+                f"{clubs.count()} clubs deactivated! {num_ghosted} clubs ghosted!"
             )
 
         # send out renewal emails to all clubs
