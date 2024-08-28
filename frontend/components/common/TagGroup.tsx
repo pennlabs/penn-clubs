@@ -30,24 +30,30 @@ export const TagGroup = ({ tags = [] }: TagGroupProps): ReactElement | null => {
 
   return (
     <>
-      {Array.from(uniqueTags.values()).map((tag) =>
-        isBadge(tag) ? (
-          <DefaultTag
-            key={`${tag.id}-badge`}
-            color={tag.color}
-            className="tag is-rounded"
-          >
-            {tag.label}
-          </DefaultTag>
-        ) : (
-          <BlueTag
-            key={`${tag.id}-tag`}
-            className="tag is-rounded has-text-white"
-          >
-            {tag.name}
-          </BlueTag>
-        ),
-      )}
+      {Array.from(uniqueTags.values()) // display badges after tags
+        .sort((a, b) => {
+          if (isBadge(a) && !isBadge(b)) return 1
+          if (!isBadge(a) && isBadge(b)) return -1
+          return 0
+        })
+        .map((tag) =>
+          isBadge(tag) ? (
+            <DefaultTag
+              key={`${tag.id}-badge`}
+              color={tag.color}
+              className="tag is-rounded"
+            >
+              {tag.label}
+            </DefaultTag>
+          ) : (
+            <BlueTag
+              key={`${tag.id}-tag`}
+              className="tag is-rounded has-text-white"
+            >
+              {tag.name}
+            </BlueTag>
+          ),
+        )}
     </>
   )
 }
