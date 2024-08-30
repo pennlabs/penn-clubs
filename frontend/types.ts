@@ -126,6 +126,7 @@ export interface Badge {
   color: string
   purpose: string
   description: string
+  message?: string
 }
 
 export interface QuestionAnswer {

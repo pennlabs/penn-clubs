@@ -1454,6 +1454,9 @@ class Badge(models.Model):
     # whether or not users can view and filter by this badge
     visible = models.BooleanField(default=False)
 
+    # optional message to display on club pages with the badge
+    message = models.TextField(null=True, blank=True)
+
     def __str__(self):
         return self.label
 
