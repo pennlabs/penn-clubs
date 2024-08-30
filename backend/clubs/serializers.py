@@ -132,7 +132,7 @@ class BadgeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Badge
-        fields = ("id", "purpose", "label", "color", "description")
+        fields = ("id", "purpose", "label", "color", "description", "message")
 
 
 class SchoolSerializer(serializers.ModelSerializer):

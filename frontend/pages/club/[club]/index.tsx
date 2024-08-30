@@ -178,13 +178,21 @@ const ClubPage = ({
     testimonials,
     signature_events: signatureEvents,
   } = club
-
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
       {userInfo != null && (
         <ClubApprovalDialog club={club} userInfo={userInfo} />
       )}
+      {club.badges.length > 0 &&
+        club.badges
+          .filter((badge) => badge.message && badge.message.length > 0)
+          .map((badge) => (
+            <div className="notification is-info is-light" key={badge.id}>
+              <Icon name="alert-circle" style={{ marginTop: '-3px' }} />{' '}
+              {badge.message}
+            </div>
+          ))}
       <div className="columns">
         <div className="column">
           {isActive || (
