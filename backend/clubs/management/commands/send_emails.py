@@ -80,6 +80,7 @@ class Command(BaseCommand):
                 "hap_intro_remind",
                 "hap_second_round",
                 "hap_partner_communication",
+                "revised_fair_date",
                 "wc_intro",
                 "osa_email_communication",
                 "ics_calendar_ingestation",
@@ -452,6 +453,7 @@ class Command(BaseCommand):
             "admin_outreach",
             "semesterly_email",
             "update_officers",
+            "revised_fair_date",
         }:
             clubs = Club.objects.all()
             attachment = None
@@ -473,7 +475,7 @@ class Command(BaseCommand):
             for club in clubs:
                 if action == "semesterly_email":
                     context = {"code": club.code}
-                elif action == "update_officers":
+                elif action == "update_officers" or action == "revised_fair_date":
                     context = {
                         "name": club.name,
                         "url": f"https://pennclubs.com/club/{club.code}/edit/member",

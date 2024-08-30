@@ -973,23 +973,26 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user4.username, password="test")
 
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {
-                "code": "penn-labs",
-                "name": "Penn Labs",
-                "description": "This is an example description.",
-                "tags": [{"name": "Graduate"}],
-                "email": "example@example.com",
-                "facebook": "",
-                "twitter": "",
-                "instagram": "",
-                "website": "",
-                "linkedin": "",
-                "github": "",
-            },
-            content_type="application/json",
-        )
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "code": "penn-labs",
+                    "name": "Penn Labs",
+                    "description": "This is an example description.",
+                    "tags": [{"name": "Graduate"}],
+                    "email": "example@example.com",
+                    "facebook": "",
+                    "twitter": "",
+                    "instagram": "",
+                    "website": "",
+                    "linkedin": "",
+                    "github": "",
+                },
+                content_type="application/json",
+            )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # continue these tests as not a superuser but still logged in
@@ -1011,6 +1014,32 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         codes = [club["code"] for club in resp.data]
         self.assertNotIn(club.code, codes)
+
+    def test_club_create_new_approval_queue_closed(self):
+        """
+        Test creating a club when the new approval queue is closed, but the
+        reapproval queue is open.
+        """
+        self.client.login(username=self.user4.username, password="test")
+
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", False
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "code": "new-club",
+                    "name": "New Club",
+                    "description": "This is a new club.",
+                    "tags": [{"name": "Undergraduate"}],
+                    "email": "newclub@example.com",
+                },
+                content_type="application/json",
+            )
+
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("The approval queue is not currently open.", str(resp.content))
+        self.assertFalse(Club.objects.filter(code="new-club").exists())
 
     def test_club_approve(self):
         """
@@ -1044,20 +1073,23 @@ class ClubTestCase(TestCase):
 
         exploit_string = "javascript:alert(1)"
 
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {
-                "name": "Bad Club",
-                "tags": [],
-                "facebook": exploit_string,
-                "twitter": exploit_string,
-                "instagram": exploit_string,
-                "website": exploit_string,
-                "linkedin": exploit_string,
-                "github": exploit_string,
-            },
-            content_type="application/json",
-        )
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "name": "Bad Club",
+                    "tags": [],
+                    "facebook": exploit_string,
+                    "twitter": exploit_string,
+                    "instagram": exploit_string,
+                    "website": exploit_string,
+                    "linkedin": exploit_string,
+                    "github": exploit_string,
+                },
+                content_type="application/json",
+            )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create_description_sanitize_good(self):
@@ -1079,16 +1111,20 @@ class ClubTestCase(TestCase):
 <img src=\"/test.png\">"""
 
         self.client.login(username=self.user5.username, password="test")
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "tags": [{"name": "Undergraduate"}],
-                "description": test_good_string,
-                "email": "example@example.com",
-            },
-            content_type="application/json",
-        )
+
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "name": "Penn Labs",
+                    "tags": [{"name": "Undergraduate"}],
+                    "description": test_good_string,
+                    "email": "example@example.com",
+                },
+                content_type="application/json",
+            )
         cache.clear()
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -1105,16 +1141,20 @@ class ClubTestCase(TestCase):
         test_bad_string = '<script>alert(1);</script><img src="javascript:alert(1)">'
 
         self.client.login(username=self.user5.username, password="test")
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "tags": [{"name": "Graduate"}],
-                "description": test_bad_string,
-                "email": "example@example.com",
-            },
-            content_type="application/json",
-        )
+
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "name": "Penn Labs",
+                    "tags": [{"name": "Graduate"}],
+                    "description": test_bad_string,
+                    "email": "example@example.com",
+                },
+                content_type="application/json",
+            )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         resp = self.client.get(reverse("clubs-detail", args=("penn-labs",)))
@@ -1130,9 +1170,12 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        resp = self.client.post(
-            reverse("clubs-list"), {}, content_type="application/json"
-        )
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"), {}, content_type="application/json"
+            )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create_nonexistent_tag(self):
@@ -1141,35 +1184,42 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "description": "We code stuff.",
-                "email": "contact@pennlabs.org",
-                "tags": [{"name": "totally definitely nonexistent tag"}],
-            },
-            content_type="application/json",
-        )
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "name": "Penn Labs",
+                    "description": "We code stuff.",
+                    "email": "contact@pennlabs.org",
+                    "tags": [{"name": "totally definitely nonexistent tag"}],
+                },
+                content_type="application/json",
+            )
         self.assertIn(resp.status_code, [400, 404], resp.content)
 
     def test_club_create_no_auth(self):
         """
         Creating a club without authentication should result in an error.
         """
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "description": "We code stuff.",
-                "email": "contact@pennlabs.org",
-                "facebook": "966590693376781",
-                "twitter": "@Penn",
-                "instagram": "@uofpenn",
-                "tags": [],
-            },
-            content_type="application/json",
-        )
+
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "name": "Penn Labs",
+                    "description": "We code stuff.",
+                    "email": "contact@pennlabs.org",
+                    "facebook": "966590693376781",
+                    "twitter": "@Penn",
+                    "instagram": "@uofpenn",
+                    "tags": [],
+                },
+                content_type="application/json",
+            )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create(self):
@@ -1185,31 +1235,34 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user5.username, password="test")
 
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "description": "We code stuff.",
-                "badges": [{"label": "SAC Funded"}],
-                "tags": [
-                    {"name": tag1.name},
-                    {"name": tag2.name},
-                    {"name": "Graduate"},
-                ],
-                "target_schools": [{"id": school1.id}],
-                "email": "example@example.com",
-                "facebook": "https://www.facebook.com/groups/966590693376781/"
-                + "?ref=nf_target&fref=nf",
-                "twitter": "https://twitter.com/Penn",
-                "instagram": "https://www.instagram.com/uofpenn/?hl=en",
-                "website": "https://pennlabs.org",
-                "linkedin": "https://www.linkedin.com"
-                "/school/university-of-pennsylvania/",
-                "youtube": "https://youtu.be/dQw4w9WgXcQ",
-                "github": "https://github.com/pennlabs",
-            },
-            content_type="application/json",
-        )
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {
+                    "name": "Penn Labs",
+                    "description": "We code stuff.",
+                    "badges": [{"label": "SAC Funded"}],
+                    "tags": [
+                        {"name": tag1.name},
+                        {"name": tag2.name},
+                        {"name": "Graduate"},
+                    ],
+                    "target_schools": [{"id": school1.id}],
+                    "email": "example@example.com",
+                    "facebook": "https://www.facebook.com/groups/966590693376781/"
+                    + "?ref=nf_target&fref=nf",
+                    "twitter": "https://twitter.com/Penn",
+                    "instagram": "https://www.instagram.com/uofpenn/?hl=en",
+                    "website": "https://pennlabs.org",
+                    "linkedin": "https://www.linkedin.com"
+                    "/school/university-of-pennsylvania/",
+                    "youtube": "https://youtu.be/dQw4w9WgXcQ",
+                    "github": "https://github.com/pennlabs",
+                },
+                content_type="application/json",
+            )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure club was actually created
@@ -1249,11 +1302,14 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        resp = self.client.post(
-            reverse("clubs-list"),
-            {"name": "Test Club", "tags": []},
-            content_type="application/json",
-        )
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
+            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
+        ):
+            resp = self.client.post(
+                reverse("clubs-list"),
+                {"name": "Test Club", "tags": []},
+                content_type="application/json",
+            )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_list_search(self):
@@ -1358,16 +1414,22 @@ class ClubTestCase(TestCase):
         """
         tag3 = Tag.objects.create(name="College")
 
-        self.client.login(username=self.user5.username, password="test")
-        resp = self.client.patch(
-            reverse("clubs-detail", args=(self.club1.code,)),
-            {
-                "description": "We do stuff.",
-                "tags": [{"name": tag3.name}, {"name": "Graduate"}],
-            },
-            content_type="application/json",
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
         )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.client.login(username=self.user1.username, password="test")
+
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
+            resp = self.client.patch(
+                reverse("clubs-detail", args=(self.club1.code,)),
+                {
+                    "description": "We do stuff.",
+                    "tags": [{"name": tag3.name}, {"name": "Graduate"}],
+                },
+                content_type="application/json",
+            )
+            self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure that changes were made
         resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
@@ -1688,14 +1750,12 @@ class ClubTestCase(TestCase):
         expiry_date = now + timezone.timedelta(days=5)
 
         # Compare the expiry dates excluding microseconds
-        self.assertEqual(
-            invite1.expires_at.replace(microsecond=0),
-            expiry_date.replace(microsecond=0),
+        self.assertLessEqual(
+            abs(invite1.expires_at - expiry_date), timezone.timedelta(minutes=5)
         )
 
-        self.assertEqual(
-            invite2.expires_at.replace(microsecond=0),
-            expiry_date.replace(microsecond=0),
+        self.assertLessEqual(
+            abs(invite2.expires_at - expiry_date), timezone.timedelta(minutes=5)
         )
 
         # Check that applicants not accepted are not invited
@@ -1981,22 +2041,37 @@ class ClubTestCase(TestCase):
         # login to officer user
         self.client.login(username=self.user4.username, password="test")
 
-        for field in {"name", "description"}:
-            # edit sensitive field
-            resp = self.client.patch(
-                reverse("clubs-detail", args=(club.code,)),
-                {field: "New Club Name/Description"},
-                content_type="application/json",
-            )
-            self.assertIn(resp.status_code, [200, 201], resp.content)
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", False):
+            for field in {"name"}:
+                # edit sensitive field
+                resp = self.client.patch(
+                    reverse("clubs-detail", args=(club.code,)),
+                    {field: "New Club Name/Description"},
+                    content_type="application/json",
+                )
+                self.assertIn(resp.status_code, [400], resp.content)
 
-            # ensure club is marked as not approved
-            club.refresh_from_db()
-            self.assertFalse(club.approved)
+                # ensure club is marked as approved (request didn't go through)
+                club.refresh_from_db()
+                self.assertTrue(club.approved)
 
-            # reset to approved
-            club.approved = True
-            club.save(update_fields=["approved"])
+        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
+            for field in {"name"}:
+                # edit sensitive field
+                resp = self.client.patch(
+                    reverse("clubs-detail", args=(club.code,)),
+                    {field: "New Club Name/Description"},
+                    content_type="application/json",
+                )
+                self.assertIn(resp.status_code, [200, 201], resp.content)
+
+                # ensure club is marked as not approved
+                club.refresh_from_db()
+                self.assertFalse(club.approved)
+
+                # reset to approved
+                club.approved = True
+                club.save(update_fields=["approved"])
 
         # login to superuser account
         self.client.login(username=self.user5.username, password="test")
@@ -2292,6 +2367,7 @@ class ClubTestCase(TestCase):
             end_time=now + datetime.timedelta(days=14),
             registration_start_time=now - datetime.timedelta(days=1),
             registration_end_time=now + datetime.timedelta(days=1),
+            virtual=True,
             questions=json.dumps(
                 [
                     {

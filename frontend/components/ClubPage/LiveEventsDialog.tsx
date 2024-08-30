@@ -13,7 +13,7 @@ import { ClubEventType, MembershipRank } from '../../types'
 import { doApiRequest, useSetting } from '../../utils'
 import { FAIR_NAME, MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 
-const LiveBanner = styled.div`
+export const LiveBanner = styled.div`
   padding: 20px;
   border-radius: 5px;
   background-image: radial-gradient(
@@ -37,13 +37,13 @@ const LiveBanner = styled.div`
   margin-bottom: 10px;
 `
 
-const LiveTitle = styled.div`
+export const LiveTitle = styled.div`
   font-size: ${M4};
   font-weight: bold;
   color: white;
 `
 
-const LiveSub = styled.div`
+export const LiveSub = styled.div`
   margin-top: -3px;
   margin-bottom: 3px;
   font-size: ${M2};
@@ -73,13 +73,16 @@ const WhiteButton = styled.a`
 interface LiveEventsDialogProps {
   isPreFair: boolean
   isFair: boolean
+  isVirtual: boolean
 }
 
 const LiveEventsDialog = ({
   isPreFair,
   isFair,
+  isVirtual,
 }: LiveEventsDialogProps): ReactElement | null => {
   const fairName = useSetting('FAIR_NAME')
+  const fairContactEmail = useSetting('FAIR_CONTACT')
   const [liveEventCount, setLiveEventCount] = useState<number>(0)
 
   useEffect(() => {
@@ -99,7 +102,7 @@ const LiveEventsDialog = ({
 
   return (
     <LiveBanner>
-      {isPreFair && (
+      {isPreFair && isVirtual && (
         <Link
           legacyBehavior
           href={FAIR_OFFICER_GUIDE_ROUTE}
@@ -111,7 +114,7 @@ const LiveEventsDialog = ({
           </WhiteButton>
         </Link>
       )}
-      {isFair && (
+      {isFair && isVirtual && (
         <Link href={LIVE_EVENTS} as={LIVE_EVENTS} passHref legacyBehavior>
           <WhiteButton>See Live Events</WhiteButton>
         </Link>
@@ -121,8 +124,8 @@ const LiveEventsDialog = ({
       </Link>
       <LiveTitle>{fairName}</LiveTitle>
       <LiveSub>
-        {liveEventCount === 0 ? (
-          `Get ready for the virtual ${FAIR_NAME} fair! If you need help registering email contact@pennclubs.com`
+        {liveEventCount === 0 || !isVirtual ? (
+          `Get ready for the ${isVirtual ? 'virtual ' : ''}${FAIR_NAME} fair! For any issues with registering, email ${fairContactEmail}.`
         ) : (
           <>
             {liveEventCount}{' '}

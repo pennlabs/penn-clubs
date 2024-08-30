@@ -2,6 +2,8 @@ import { Field, Form, Formik } from 'formik'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
+import { WHITE } from '~/constants'
+
 import { Badge, ClubFair, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
@@ -78,7 +80,10 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
       if (contents.message) {
         toast.info(contents.message, { hideProgressBar: true })
       } else if (contents.error) {
-        toast.error(contents.error, { hideProgressBar: true })
+        toast.error(contents.error, {
+          hideProgressBar: true,
+          style: { color: WHITE },
+        })
       }
     } finally {
       setSubmitting(false)
@@ -121,9 +126,9 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
                 choices={badges}
                 deserialize={({ id, label, description, purpose }) => ({
                   value: id,
-                  label: label,
-                  description: description,
-                  purpose: purpose,
+                  label,
+                  description,
+                  purpose,
                 })}
                 formatOptionLabel={({ label, description, purpose }) => (
                   <>

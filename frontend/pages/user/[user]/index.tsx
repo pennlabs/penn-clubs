@@ -82,8 +82,7 @@ const UserProfilePage = ({
         <Metadata title="User Profile" />
         <AuthPrompt title="Oh no!" hasLogin={!authenticated}>
           You cannot view the profile for this user. This user might not exist
-          or have set their profile to private.{' '}
-          <span className="has-text-grey">{profile.detail}</span>
+          or have set their profile to private.
         </AuthPrompt>
       </>
     )

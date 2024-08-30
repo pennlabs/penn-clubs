@@ -22,7 +22,12 @@ SECRET_KEY = os.environ.get("SECRET_KEY", None)
 SENTRY_URL = os.environ.get("SENTRY_URL")
 if SENTRY_URL:
     sentry_sdk.init(
-        dsn=SENTRY_URL, integrations=[DjangoIntegration()], send_default_pii=False
+        dsn=SENTRY_URL,
+        integrations=[DjangoIntegration(cache_spans=True)],
+        send_default_pii=False,
+        enable_tracing=True,
+        traces_sample_rate=0.1,
+        profiles_sample_rate=1.0,
     )
 
 # DLA settings
@@ -74,3 +79,13 @@ CACHES = {
         "KEY_PREFIX": "django",
     }
 }
+
+# Cybersource settings
+CYBERSOURCE_CONFIG = {
+    "authentication_type": "http_signature",
+    "merchantid": os.getenv("MERCHANT_ID"),
+    "merchant_keyid": os.getenv("MERCHANT_KEYID"),
+    "merchant_secretkey": os.getenv("MERCHANT_SECRETKEY"),
+    "run_environment": "api.cybersource.com",
+}
+CYBERSOURCE_TARGET_ORIGIN = "https://pennclubs.com"

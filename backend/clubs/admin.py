@@ -22,6 +22,7 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Cart,
     Club,
     ClubApplication,
     ClubFair,
@@ -50,6 +51,9 @@ from clubs.models import (
     TargetStudentType,
     TargetYear,
     Testimonial,
+    Ticket,
+    TicketTransactionRecord,
+    TicketTransferRecord,
     Year,
     ZoomMeetingVisit,
 )
@@ -451,4 +455,8 @@ admin.site.register(NoteTag)
 admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
 admin.site.register(AdminNote)
+admin.site.register(Ticket)
+admin.site.register(TicketTransactionRecord)
+admin.site.register(TicketTransferRecord)
+admin.site.register(Cart)
 admin.site.register(ApplicationCycle)

@@ -18,7 +18,7 @@ import {
   MD,
   mediaMaxWidth,
 } from '../../constants/measurements'
-import { SETTINGS_ROUTE } from '../../constants/routes'
+import { CART_ROUTE, SETTINGS_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
@@ -26,7 +26,7 @@ import { Icon } from '../common'
 
 const StyledIcon = styled(Icon)`
   opacity: 0.5;
-  margin-right: 4px;
+  display: inline-block;
 `
 
 const LoginButton = styled.a`
@@ -58,7 +58,10 @@ const LoginButton = styled.a`
 const StyledLinkAnchor = styled.a`
   padding: ${LINK_MARGIN} 20px;
   color: ${BANNER_TEXT} !important;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+
   cursor: pointer;
 
   ${mediaMaxWidth(MD)} {
@@ -121,10 +124,28 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
             Login
           </LoginButton>
         )}
-        {userInfo && (
+        {authenticated && userInfo && (
           <StyledLink href={SETTINGS_ROUTE}>
-            <StyledIcon name="user" alt="settings" />
+            <StyledIcon
+              name="user"
+              alt="settings"
+              style={{
+                marginRight: '0.5rem',
+              }}
+            />
             {userInfo.name || userInfo.username}
+          </StyledLink>
+        )}
+        {authenticated === true && (
+          <StyledLink href={CART_ROUTE}>
+            <StyledIcon
+              name="shopping-cart"
+              alt="settings"
+              style={{
+                marginRight: '0.5rem',
+              }}
+            />
+            Cart
           </StyledLink>
         )}
       </div>

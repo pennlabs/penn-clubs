@@ -602,7 +602,7 @@ export default function ApplicationsPage({
                         {
                           method: 'POST',
                           body: {
-                            status: status,
+                            status,
                             submissions: selectedSubmissions,
                           },
                         },

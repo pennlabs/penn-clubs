@@ -1,3 +1,5 @@
+import traceback
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -17,10 +19,10 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS("Successfully marked all stale invites as expired!")
             )
-        except Exception as e:
+        except Exception:
             self.stdout.write(
                 self.style.ERROR(
                     "An error was encountered while expiring stale membership invites!"
                 )
             )
-            self.stdout.write(e)
+            self.stdout.write(self.style.ERROR(traceback.format_exc()))

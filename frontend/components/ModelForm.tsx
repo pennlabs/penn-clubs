@@ -68,6 +68,7 @@ type ModelFormProps = {
   baseUrl: string
   keyField?: string
   onUpdate?: (objects: ModelObject[]) => void
+  onEditPressed?: () => void
   onChange?: (object: ModelObject) => void
   defaultObject?: ModelObject
   fileFields?: string[]
@@ -272,6 +273,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
     actions,
     keyField = 'id',
     onChange: parentComponentChange,
+    onEditPressed = () => undefined,
     draggable = false,
   } = props
 
@@ -464,6 +466,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
       <>
         <ModelTable
           onEdit={(object): void => {
+            onEditPressed()
             changeCurrentlyEditing(object[keyField])
             onChange(object)
           }}
@@ -507,6 +510,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
                   if (obj._status) {
                     if (currentlyEditing === null) {
                       objects.push(obj)
+                      onChange(currentObject)
                     }
                     changeObjects([...objects])
                     if (onUpdate) onUpdate(objects)

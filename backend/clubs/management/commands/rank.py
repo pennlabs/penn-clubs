@@ -60,7 +60,17 @@ class Command(BaseCommand):
 
     def rank(self):
         count = 0
-        for club in Club.objects.all():
+
+        clubs = Club.objects.prefetch_related(
+            "favorite_set",
+            "tags",
+            "membership_set",
+            "clubapplication_set",
+            "events",
+            "testimonials",
+        ).all()
+
+        for club in clubs:
             ranking = 0
 
             # inactive clubs get deprioritized
@@ -215,7 +225,8 @@ class Command(BaseCommand):
 
             club.rank = floor(ranking)
             club.skip_history_when_saving = True
-            club.save(update_fields=["rank"])
             count += 1
+
+        Club.objects.bulk_update(clubs, ["rank"])
 
         self.stdout.write(self.style.SUCCESS(f"Computed rankings for {count} clubs!"))

@@ -278,6 +278,7 @@ const searchIsEmpty = (input: SearchInput): boolean => {
 
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
+  const fairIsVirtual = useSetting('FAIR_VIRTUAL')
   const preFair = useSetting('PRE_FAIR')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
   const currentSearch = useRef<SearchInput>({})
@@ -450,7 +451,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('badges') && (
             <SearchBarTagItem
               param="badges__in"
-              label="Badges"
+              label="Filters"
               options={badgeOptions}
             />
           )}
@@ -595,7 +596,11 @@ const Splash = (props: SplashProps): ReactElement => {
             />
 
             {(preFair || fairIsOpen) && (
-              <LiveEventsDialog isPreFair={!!preFair} isFair={!!fairIsOpen} />
+              <LiveEventsDialog
+                isPreFair={!!preFair}
+                isFair={!!fairIsOpen}
+                isVirtual={!!fairIsVirtual}
+              />
             )}
 
             {renewalBanner && <ListRenewalDialog />}

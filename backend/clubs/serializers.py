@@ -55,6 +55,7 @@ from clubs.models import (
     TargetStudentType,
     TargetYear,
     Testimonial,
+    Ticket,
     Year,
 )
 from clubs.utils import clean
@@ -362,7 +363,11 @@ class ClubEventSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField("get_image_url")
     large_image_url = serializers.SerializerMethodField("get_large_image_url")
     url = serializers.SerializerMethodField("get_event_url")
+    ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def get_ticketed(self, obj) -> bool:
+        return obj.tickets.count() > 0
 
     def get_event_url(self, obj):
         # if no url, return that
@@ -501,6 +506,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "location",
             "name",
             "start_time",
+            "ticketed",
             "type",
             "url",
         ]
@@ -1279,6 +1285,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # New clubs created through the API must always be approved.
         validated_data["approved"] = None
 
+        request = self.context.get("request", None)
+        perms = request and request.user.has_perm("clubs.approve_club")
+
+        if not perms and (
+            not settings.REAPPROVAL_QUEUE_OPEN or not settings.NEW_APPROVAL_QUEUE_OPEN
+        ):
+            raise serializers.ValidationError(
+                "The approval queue is not currently open."
+            )
+
         obj = super().create(validated_data)
 
         # assign user who created as owner
@@ -1494,7 +1510,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # if key fields were edited, require re-approval
         needs_reapproval = False
         if self.instance:
-            for field in {"name", "image", "description"}:
+            for field in {"name", "image"}:
                 if field in self.validated_data and not self.validated_data[
                     field
                 ] == getattr(self.instance, field, None):
@@ -1505,6 +1521,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         request = self.context.get("request", None)
         if request and request.user.has_perm("clubs.approve_club"):
             needs_reapproval = False
+
+        if needs_reapproval and not settings.REAPPROVAL_QUEUE_OPEN:
+            raise serializers.ValidationError(
+                "The approval queue is not currently open."
+            )
 
         has_approved_version = (
             self.instance and self.instance.history.filter(approved=True).exists()
@@ -1743,6 +1764,22 @@ class UserMembershipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Membership
         fields = ("club", "role", "title", "active", "public")
+
+
+class TicketSerializer(serializers.ModelSerializer):
+    """
+    Used to return a ticket object
+    """
+
+    owner = serializers.SerializerMethodField("get_owner_name")
+    event = EventSerializer()
+
+    def get_owner_name(self, obj):
+        return obj.owner.get_full_name() if obj.owner else "None"
+
+    class Meta:
+        model = Ticket
+        fields = ("id", "event", "type", "owner", "attended", "price")
 
 
 class UserUUIDSerializer(serializers.ModelSerializer):
@@ -2316,6 +2353,8 @@ class ReportClubSerializer(AuthenticatedClubSerializer):
                     label = json.loads(fair.questions)[index]["label"]
                     return f"[{fair.name}] {label}"
                 return f"Registered for {fair.name}"
+        else:
+            return key
 
     class Meta(AuthenticatedClubSerializer.Meta):
         pass
@@ -2807,6 +2846,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                     "You cannot edit committees once the application is open"
                 )
             # nasty hack for idempotency
+            prev_committee_names = prev_committees.values("name")
             for prev_committee in prev_committees:
                 if prev_committee.name not in committees:
                     prev_committee.delete()
@@ -2916,6 +2956,7 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "registration_start_time",
             "start_time",
             "time",
+            "virtual",
         )
 
 

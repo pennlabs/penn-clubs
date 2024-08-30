@@ -13,7 +13,7 @@ import styled from 'styled-components'
 import { ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
-import SubmissionsPage from '~/components/Submissions'
+import TicketsTab from '~/components/Settings/TicketsTab'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
 import { BORDER_RADIUS } from '~/constants/measurements'
 import { doBulkLookup } from '~/utils'
@@ -81,6 +81,11 @@ const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
       icon: 'user-check',
       content: <MembershipRequestsTab />,
       disabled: !SHOW_MEMBERSHIP_REQUEST,
+    },
+    {
+      name: 'Tickets',
+      icon: 'empty_cart',
+      content: <TicketsTab userInfo={userInfo} />,
     },
     {
       name: 'Profile',

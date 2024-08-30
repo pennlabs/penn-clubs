@@ -31,13 +31,16 @@ import {
   FORM_TAG_DESCRIPTION,
   FORM_TARGET_DESCRIPTION,
   MEMBERSHIP_ROLE_NAMES,
+  NEW_APPROVAL_QUEUE_ENABLED,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_ADMISSION_LABEL,
+  REAPPROVAL_QUEUE_ENABLED,
   SHOW_RANK_ALGORITHM,
   SITE_ID,
   SITE_NAME,
 } from '../../utils/branding'
+import { LiveBanner, LiveSub, LiveTitle } from '../ClubPage/LiveEventsDialog'
 import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
 import {
   CheckboxField,
@@ -400,6 +403,7 @@ export default function ClubEditCard({
           type: 'text',
           required: true,
           label: `${OBJECT_NAME_TITLE_SINGULAR} Name`,
+          disabled: !REAPPROVAL_QUEUE_ENABLED,
           help: isEdit ? (
             <>
               If you would like to change your {OBJECT_NAME_SINGULAR} URL in
@@ -443,9 +447,9 @@ export default function ClubEditCard({
         {
           name: 'description',
           required: true,
-          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
           type: 'html',
+          hidden: !REAPPROVAL_QUEUE_ENABLED,
         },
         {
           name: 'tags',
@@ -461,6 +465,7 @@ export default function ClubEditCard({
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
+          disabled: !REAPPROVAL_QUEUE_ENABLED,
         },
         {
           name: 'size',
@@ -814,6 +819,26 @@ export default function ClubEditCard({
     <Formik initialValues={initialValues} onSubmit={submit} enableReinitialize>
       {({ dirty, isSubmitting }) => (
         <Form>
+          {!REAPPROVAL_QUEUE_ENABLED && (
+            <LiveBanner>
+              <LiveTitle>Queue Closed for Summer Break</LiveTitle>
+              <LiveSub>
+                No edits to existing clubs or applications for new clubs will be
+                submitted for review to OSA.
+              </LiveSub>
+            </LiveBanner>
+          )}
+          {!NEW_APPROVAL_QUEUE_ENABLED &&
+            REAPPROVAL_QUEUE_ENABLED &&
+            !isEdit && (
+              <LiveBanner>
+                <LiveTitle>Queue Closed for New Clubs</LiveTitle>
+                <LiveSub>
+                  Submissions for new clubs are closed until the school year
+                  begins.
+                </LiveSub>
+              </LiveBanner>
+            )}
           <FormStyle isHorizontal>
             {fields.map(({ name, description, fields, hidden }, i) => {
               if (hidden) {
@@ -871,7 +896,11 @@ export default function ClubEditCard({
               )
             })}
             <button
-              disabled={!dirty || isSubmitting}
+              disabled={
+                !dirty ||
+                isSubmitting ||
+                (!NEW_APPROVAL_QUEUE_ENABLED && !isEdit)
+              }
               type="submit"
               className="button is-primary is-large"
             >
