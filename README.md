@@ -84,3 +84,13 @@ Use `$ yarn test` to run Cypress tests.
 ### Development
 
 Click `Login` to log in as a test user. The `./manage.py populate` command creates a test user for you with username `bfranklin` and password `test`. Go to `/api/admin` to login to this account.
+
+#### Ticketing
+
+To test ticketing locally, you will need to [install](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) `mkcert`, enter the `frontend` directory, and run the following commands:
+
+- `$ mkcert -install`
+- `$ mkcert localhost 127.0.0.1 ::1`
+- `$ export DOMAIN=https://localhost:3001 NODE_TLS_REJECT_UNAUTHORIZED=0`
+
+Then, after the frontend is running, run `yarn ssl-proxy` **in a new terminal window** and access the application at [https://localhost:3001](https://localhost:3001).

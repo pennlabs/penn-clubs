@@ -15,7 +15,6 @@ from clubs.views import (
     ClubBoothsViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
-    ClubRankViewSet,
     ClubViewSet,
     ClubVisitViewSet,
     EmailInvitesAPIView,
@@ -44,6 +43,7 @@ from clubs.views import (
     SubscribeViewSet,
     TagViewSet,
     TestimonialViewSet,
+    TicketViewSet,
     UserGroupAPIView,
     UserPermissionAPIView,
     UserUpdateAPIView,
@@ -70,6 +70,7 @@ router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
 router.register(r"searches", SearchQueryViewSet, basename="searches")
 router.register(r"memberships", MembershipViewSet, basename="members")
 router.register(r"requests", MembershipRequestViewSet, basename="requests")
+router.register(r"tickets", TicketViewSet, basename="tickets")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
@@ -91,7 +92,6 @@ router.register(
     basename="wharton",
 )
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
-router.register(r"clubrank", ClubRankViewSet, basename="clubrank")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")

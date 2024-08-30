@@ -1,15 +1,7 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
 import { LiveEventsDialog } from 'components/ClubPage/LiveEventsDialog'
-import {
-  AlertDesc,
-  AlertText,
-  Card,
-  Icon,
-  Metadata,
-  Title,
-  WideContainer,
-} from 'components/common'
+import { Icon, Metadata, Title, WideContainer } from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
 import { FuseTag } from 'components/FilterSearch'
 import { ActionLink } from 'components/Header/Feedback'
@@ -23,7 +15,6 @@ import SearchBar, {
   SearchInput,
 } from 'components/SearchBar'
 import equal from 'deep-equal'
-import Link from 'next/link'
 import {
   createContext,
   ReactElement,
@@ -55,7 +46,6 @@ import {
   TAG_BACKGROUND_COLOR_MAP,
   TAG_TEXT_COLOR_MAP,
 } from '~/constants/colors'
-import { M2, M3 } from '~/constants/measurements'
 
 const ClearAllLink = styled.span`
   cursor: pointer;
@@ -90,13 +80,7 @@ const Divider = styled.div`
   background: #000f3a;
 `
 
-const NotifCard = styled(Card)`
-  background-color: ${CLUBS_PURPLE};
-  margin-bottom: ${M3};
-  padding-left: ${M2};
-`
-
-export type SplashProps = {
+type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
   tags: Tag[]
@@ -294,6 +278,7 @@ const searchIsEmpty = (input: SearchInput): boolean => {
 
 const Splash = (props: SplashProps): ReactElement => {
   const fairIsOpen = useSetting('FAIR_OPEN')
+  const fairIsVirtual = useSetting('FAIR_VIRTUAL')
   const preFair = useSetting('PRE_FAIR')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
   const currentSearch = useRef<SearchInput>({})
@@ -466,7 +451,7 @@ const Splash = (props: SplashProps): ReactElement => {
           {isClubFieldShown('badges') && (
             <SearchBarTagItem
               param="badges__in"
-              label="Badges"
+              label="Filters"
               options={badgeOptions}
             />
           )}
@@ -581,26 +566,6 @@ const Splash = (props: SplashProps): ReactElement => {
                 <ScrollTopButton />
               </>
             )}
-
-            <NotifCard
-              $bordered
-              style={{
-                paddingLeft: '1rem',
-              }}
-            >
-              <AlertText>
-                <Icon name="award" style={{ marginRight: 4 }} />
-                Penn Club Rank Released!
-              </AlertText>
-              <AlertDesc>
-                Check out our new{' '}
-                <Link href="/clubrank">
-                  <u>Club Rank</u>
-                </Link>{' '}
-                feature to see how clubs stack up against each other.
-              </AlertDesc>
-            </NotifCard>
-
             <ResultsText>
               {' '}
               {exclusiveClubs ? (
@@ -631,7 +596,11 @@ const Splash = (props: SplashProps): ReactElement => {
             />
 
             {(preFair || fairIsOpen) && (
-              <LiveEventsDialog isPreFair={!!preFair} isFair={!!fairIsOpen} />
+              <LiveEventsDialog
+                isPreFair={!!preFair}
+                isFair={!!fairIsOpen}
+                isVirtual={!!fairIsVirtual}
+              />
             )}
 
             {renewalBanner && <ListRenewalDialog />}

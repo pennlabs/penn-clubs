@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ReactElement } from 'react'
 import LazyLoad from 'react-lazy-load'
 import styled from 'styled-components'
 
@@ -93,58 +94,50 @@ const shorten = (desc: string): string => {
 type ClubCardProps = {
   club: Club
   fullWidth?: boolean
-  clickable?: boolean
 }
 
-const ClubCard: React.FC<ClubCardProps> = ({ club, fullWidth, clickable }) => {
+const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
   const { name, active, approved, subtitle, tags, enables_subscription, code } =
     club
   const img = club.image_url
   const textDescription = shorten(subtitle || 'This club has no description.')
-  const cardContent = (
-    <Card className="card">
-      <div style={{ display: 'flex' }}>
-        <div style={{ flex: 1 }}>
-          <div>
-            <CardHeader>
-              <CardTitle className="is-size-5">{name}</CardTitle>
-            </CardHeader>
-          </div>
-          {!active && (
-            <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
-          )}
-          {approved === null && (
-            <InactiveTag className="tag is-rounded">
-              Pending Approval
-            </InactiveTag>
-          )}
-          {approved === false && (
-            <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
-          )}
-          <TagGroup tags={tags} />
-        </div>
-        {img && (
-          <LazyLoad height={62} offset={800}>
-            <Image src={img} alt={`${name} Logo`} />
-          </LazyLoad>
-        )}
-      </div>
-
-      <Description>{textDescription}</Description>
-
-      <ClubDetails club={club} />
-    </Card>
-  )
 
   return (
     <CardWrapper className={fullWidth ? '' : 'column is-half-desktop'}>
-      {!clickable ? (
-        <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} target="_blank">
-          {cardContent}
-        </Link>
-      ) : (
-        cardContent
-      )}
+      <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} target="_blank">
+        <Card className="card">
+          <div style={{ display: 'flex' }}>
+            <div style={{ flex: 1 }}>
+              <div>
+                <CardHeader>
+                  <CardTitle className="is-size-5">{name}</CardTitle>
+                </CardHeader>
+              </div>
+              {!active && (
+                <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
+              )}
+              {approved === null && (
+                <InactiveTag className="tag is-rounded">
+                  Pending Approval
+                </InactiveTag>
+              )}
+              {approved === false && (
+                <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
+              )}
+              <TagGroup tags={tags} />
+            </div>
+            {img && (
+              <LazyLoad height={62} offset={800}>
+                <Image src={img} alt={`${name} Logo`} />
+              </LazyLoad>
+            )}
+          </div>
+
+          <Description>{textDescription}</Description>
+
+          <ClubDetails club={club} />
+        </Card>
+      </Link>
     </CardWrapper>
   )
 }

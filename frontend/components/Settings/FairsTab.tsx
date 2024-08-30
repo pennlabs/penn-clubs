@@ -11,6 +11,7 @@ import {
 } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import {
+  CheckboxField,
   DateTimeField,
   DynamicQuestionField,
   RichTextField,
@@ -83,6 +84,11 @@ const FairsTab = ({ fairs }: FairsTabProps): ReactElement => {
               helpText={`This will be shown to ${OBJECT_NAME_SINGULAR} ${MEMBERSHIP_ROLE_NAMES[
                 MembershipRank.Officer
               ].toLowerCase()}s on the registration page.`}
+            />
+            <Field
+              name="virtual"
+              as={CheckboxField}
+              helpText="Check this box if your fair is virtual."
             />
             <Field
               name="questions"

@@ -67,46 +67,6 @@ export class MyChart extends PennLabsChart {
       ingressProps,
     });
 
-    /** FYH */
-    const fyhSecret = 'hub-at-penn';
-    const fyhDomain = 'hub.provost.upenn.edu';
-
-    new RedisApplication(this, 'hub-redis', {});
-
-    new DjangoApplication(this, 'hub-django-asgi', {
-      deployment: {
-        image: backendImage,
-        cmd: ['/usr/local/bin/asgi-run'],
-        replicas: 1,
-        secret: fyhSecret,
-        env: [
-          { name: 'REDIS_HOST', value: 'penn-clubs-hub-redis' },
-          { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
-        ],
-      },
-      ingressProps: {
-        annotations: {
-          ["ingress.kubernetes.io/protocol"]: "https",
-          ["traefik.ingress.kubernetes.io/router.middlewares"]: "default-redict-http@kubernetescrd"
-        }
-      },
-      djangoSettingsModule: 'pennclubs.settings.production',
-      domains: [{ host: fyhDomain, paths: ['/api'] }],
-    });
-
-    new ReactApplication(this, 'hub-react', {
-      deployment: {
-        image: frontendImage,
-        replicas: 1,
-        env: [
-          { name: 'NEXT_PUBLIC_SITE_NAME', value: 'fyh' },
-        ],
-      },
-      domain: { host: fyhDomain, paths: ['/'] },
-      ingressProps,
-      port: 80,
-    });
-
     /** Cronjobs **/
     new CronJob(this, 'rank-clubs', {
       schedule: cronTime.everyDayAt(8),
@@ -122,39 +82,11 @@ export class MyChart extends PennLabsChart {
       cmd: ['python', 'manage.py', 'daily_notifications'],
     });
 
-    new CronJob(this, 'hub-daily-notifications', {
-      schedule: cronTime.everyDayAt(13),
-      image: backendImage,
-      secret: fyhSecret,
-      cmd: ['python', 'manage.py', 'daily_notifications'],
-    });
-
     new CronJob(this, 'calendar-import', {
       schedule: cronTime.everyDayAt(12),
       image: backendImage,
       secret: clubsSecret,
       cmd: ['python', 'manage.py', 'import_calendar_events'],
-    });
-
-    new CronJob(this, 'hub-calendar-import', {
-      schedule: cronTime.everyDayAt(12),
-      image: backendImage,
-      secret: fyhSecret,
-      cmd: ['python', 'manage.py', 'import_calendar_events'],
-    });
-
-    new CronJob(this, 'hub-paideia-calendar-import', {
-      schedule: cronTime.everyDayAt(12),
-      image: backendImage,
-      secret: fyhSecret,
-      cmd: ["python", "manage.py", "import_paideia_events"],
-    });
-
-    new CronJob(this, 'expire-stale-membership-invites', {
-      schedule: cronTime.everyDayAt(12),
-      image: backendImage,
-      secret: fyhSecret,
-      cmd: ["python", "manage.py", "expire_membership_invites"],
     });
   }
 }

@@ -202,6 +202,13 @@ QUESTION_URL = "https://{domain}/club/{club}/edit/questions"
 RENEWAL_URL = "https://{domain}/club/{club}/renew"
 APPLY_URL = "https://{domain}/club/{club}/apply"
 
+OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
+
+
+# Controls whether existing clubs can submit for reapproval
+REAPPROVAL_QUEUE_OPEN = True
+# Controls whether new clubs can submit for initial approval
+NEW_APPROVAL_QUEUE_OPEN = False
 
 # File upload settings
 
@@ -255,3 +262,6 @@ ZOOM_VERIFICATION_TOKEN = os.environ.get("ZOOM_VERIFICATION_TOKEN")
 
 PHONENUMBER_DB_FORMAT = "NATIONAL"
 PHONENUMBER_DEFAULT_REGION = "US"
+
+# Cybersource settings
+CYBERSOURCE_CLIENT_VERSION = "0.15"

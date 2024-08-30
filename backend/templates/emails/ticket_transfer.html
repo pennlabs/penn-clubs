@@ -1,0 +1,27 @@
+<!-- TYPES:
+sender_first_name:
+    type: string
+receiver_first_name:
+    type: string
+receiver_username:
+    type: string
+event_name:
+    type: string
+type:
+    type: string
+-->
+
+{% extends 'emails/base.html' %}
+
+{% block content %}
+<h2>Ticket Transfer Confirmation</h2>
+
+<p style="font-size: 1.2em">
+    <b>{{ sender_first_name }}</b>, this is confirmation that you have transferred a ticket to <b>{{ receiver_first_name }}</b> (<b>{{ receiver_username }}</b>) for <b>{{ event_name }}</b> with ticket type <b>{{ type }}</b>.
+</p>
+
+
+<p style="font-size: 1.2em">
+    If you believe that this was sent in error or have any questions, feel free to respond to this email.
+</p>
+{% endblock %}

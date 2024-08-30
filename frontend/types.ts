@@ -61,10 +61,23 @@ export interface ClubEvent {
   large_image_url: string | null
   location: string | null
   name: string
+  ticketed: string
   pinned: boolean
   start_time: string
   type: ClubEventType
   url: string | null
+}
+
+export interface EventTicket {
+  id: string
+  event: ClubEvent
+  type: ClubEventType
+  owner: string
+  price: string
+}
+
+export interface CountedEventTicket extends EventTicket {
+  count?: number
 }
 
 export interface ClubApplication {
@@ -149,8 +162,6 @@ export interface Club {
   badges: Badge[]
   code: string
   description: string
-  elo: number
-  elo_rank?: number
   email: string
   enables_subscription: boolean
   events: ClubEvent[]
@@ -188,7 +199,6 @@ export interface Club {
   target_schools: School[]
   target_years: Year[]
   testimonials: Testimonial[]
-  tier?: string
   twitter: string
   website: string
 }
@@ -396,4 +406,15 @@ export type ApplicationResponse = {
   }
   question_type: string
   question: ApplicationQuestion
+}
+
+export type TicketEntry = {
+  type: string
+  count: number
+  price: number
+}
+
+export type TicketAvailability = {
+  totals: TicketEntry[]
+  available: TicketEntry[]
 }

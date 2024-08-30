@@ -63,7 +63,6 @@ const Name = ({ children }) => (
 
 type ClubTableRowProps = {
   club: Club
-  showElo?: boolean
 }
 
 class ClubTableRow extends React.Component<ClubTableRowProps> {
@@ -75,7 +74,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
   }
 
   render(): ReactElement {
-    const { club, showElo } = this.props
+    const { club } = this.props
     const { name, tags, code } = club
 
     return (
@@ -85,10 +84,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
             <div className="column">
               <div className="columns is-gapless">
                 <div className="column is-4-desktop is-12-mobile">
-                  <Name>
-                    {showElo && club.elo_rank + '. '}
-                    {name}
-                  </Name>
+                  <Name>{name}</Name>
                   <div>
                     <TagGroup tags={tags} />
                   </div>
@@ -96,7 +92,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
                 <div className="column is-8-desktop is-12-mobile">
                   <Content>
                     <Subtitle>{this.getSubtitle()}</Subtitle>
-                    <ClubDetails club={club} showElo={showElo} />
+                    <ClubDetails club={club} />
                   </Content>
                 </div>
               </div>
