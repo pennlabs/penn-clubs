@@ -1067,40 +1067,41 @@ class ClubTestCase(TestCase):
         self.assertIsNotNone(self.club1.approved_on)
         self.assertIsNotNone(self.club1.approved_by)
 
-    def test_club_display_after_deactivation(self):
+    def test_club_display_after_deactivation_for_permissioned_vs_non_permissioned(self):
         """
-        Test club retrieval after yearly deactivation. Non-admins should see
-        the last approved version of the club. Admins should see the most
-        up-to-date version in the database. This should be true even with caching.
+        Test club retrieval after deactivation script runs. Non-permissioned users
+        should see the last approved version of the club. Permissioned users (e.g.
+        admins, club members) should see the most up-to-date version.
         """
-        club = self.club1
+        # club is approved before deactivation
+        self.assertTrue(self.club1.approved)
 
         call_command("deactivate", "all", "--force")
 
-        cache.clear()
+        club = self.club1
         club.refresh_from_db()
 
-        # club should not be approved and should have no approver in DB
+        # after deactivation, club should not be approved and should not have approver
         self.assertIsNone(club.approved)
         self.assertIsNone(club.approved_by)
 
-        # Case 1: non-admin user views the club first, admin views the club after
-        # Non-admin should see "ghost" version, e.g. most recently approved
-        # Admin should see most up to date version
+        # non-permissioned users should see the last approved version
         non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
         self.assertEqual(non_admin_resp.status_code, 200)
         non_admin_data = non_admin_resp.json()
         self.assertTrue(non_admin_data["approved"])
 
+        # permissioned users should see the club as it is in the DB
         self.client.login(username=self.user5.username, password="test")
         admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
         self.assertEqual(admin_resp.status_code, 200)
         admin_data = admin_resp.json()
         self.assertIsNone(admin_data["approved"])
+        self.client.logout()
 
-        cache.clear()  # clear cache
+        cache.clear()
 
-        # Case 2: admin user views the club first, non-admin views the club after
+        # reversing the order of operations shouldn't change anything
         self.client.login(username=self.user5.username, password="test")
         admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
         self.assertEqual(admin_resp.status_code, 200)
@@ -1113,7 +1114,7 @@ class ClubTestCase(TestCase):
         non_admin_data = non_admin_resp.json()
         self.assertTrue(non_admin_data["approved"])
 
-        # Club object itself in DB should not have changed
+        # club object itself shouldn't have changed
         club.refresh_from_db()
         self.assertFalse(club.active)
         self.assertIsNone(club.approved)
