@@ -13,6 +13,7 @@ import styled from 'styled-components'
 import { ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
+import ApplicationsPage from '~/components/ClubEditPage/ApplicationsPage'
 import TicketsTab from '~/components/Settings/TicketsTab'
 import SubmissionsPage from '~/components/Submissions'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
@@ -76,6 +77,13 @@ const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
       name: 'submissions',
       label: 'Submissions',
       content: () => <SubmissionsPage initialSubmissions={submissions} />,
+    },
+    {
+      name: 'applications',
+      label: 'Applications',
+      content: () => (
+        <ApplicationsPage whartonapplications={whartonapplications} />
+      ),
     },
     {
       name: 'Requests',
