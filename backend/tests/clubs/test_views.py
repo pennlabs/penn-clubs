@@ -167,6 +167,8 @@ class ClubTestCase(TestCase):
         Tag.objects.create(name="Undergraduate")
 
     def setUp(self):
+        cache.clear()  # clear the cache between tests
+
         self.client = Client()
 
         self.club1 = Club.objects.create(
