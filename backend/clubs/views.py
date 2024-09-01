@@ -2015,8 +2015,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def retrieve(self, *args, **kwargs):
         """
         Retrieve data about a specific club. Responses cached for 1 hour. Caching is
-        disabled for users with elevated view perms so that changes made before approval
-        don't spill over.
+        disabled for users with elevated view perms so that changes without approval
+        granted don't spill over to public.
         """
         club = self.get_object()
 
