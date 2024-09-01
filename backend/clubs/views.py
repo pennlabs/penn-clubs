@@ -1151,6 +1151,33 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             return queryset.filter(Q(approved=True) | Q(ghost=True))
 
+    def has_permission(self, instance):
+        user = self.request.user
+        return (
+            user.has_perm("clubs.see_pending_clubs")
+            or user.has_perm("clubs.manage_club")
+            or (
+                user.is_authenticated
+                and instance.membership_set.filter(person=user).exists()
+            )
+        )
+
+    def get_object(self):
+        instance = super().get_object()
+        if (
+            instance.ghost
+            and not instance.approved
+            and not self.has_permission(instance)
+        ):
+            historical_club = (
+                instance.history.filter(approved=True).order_by("-approved_on").first()
+            )
+            if historical_club:
+                approved_instance = historical_club.instance
+                approved_instance._is_historical = True
+                return approved_instance
+        return instance
+
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
@@ -2002,15 +2029,25 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def retrieve(self, *args, **kwargs):
         """
-        Retrieve data about a specific club. Responses cached for 1 hour
+        Retrieve data about a specific club. Responses cached for 1 hour for
+        non-permissioned users. Permissioned users should see the most
+        up-to-date version of the club (no caching).
         """
-        key = f"clubs:{self.get_object().id}"
-        cached = cache.get(key)
-        if cached:
-            return Response(cached)
+        club = self.get_object()
+        key = f"clubs:{club.id}"
+
+        is_permissioned = self.has_permission(club)
+
+        if not is_permissioned:  # don't use cache for permissioned users
+            cached = cache.get(key)
+            if cached:
+                return Response(cached)
 
         resp = super().retrieve(*args, **kwargs)
-        cache.set(key, resp.data, 60 * 60)
+
+        if not is_permissioned:  # cache for non-permissioned users
+            cache.set(key, resp.data, 60 * 60)
+
         return resp
 
     def update(self, request, *args, **kwargs):
