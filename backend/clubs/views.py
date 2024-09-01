@@ -2031,7 +2031,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         resp = super().retrieve(*args, **kwargs)
         cache.set(key, resp.data, 60 * 60)
-
         return resp
 
     def update(self, request, *args, **kwargs):
