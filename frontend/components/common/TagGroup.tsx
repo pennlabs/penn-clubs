@@ -34,6 +34,10 @@ export const TagGroup = ({ tags = [] }: TagGroupProps): ReactElement | null => {
         .sort((a, b) => {
           if (isBadge(a) && !isBadge(b)) return 1
           if (!isBadge(a) && isBadge(b)) return -1
+          if (isBadge(a) && isBadge(b)) {
+            // badges should be sorted by color
+            return a.color.localeCompare(b.color)
+          }
           return 0
         })
         .map((tag) =>
