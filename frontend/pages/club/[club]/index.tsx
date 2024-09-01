@@ -186,7 +186,7 @@ const ClubPage = ({
         <ClubApprovalDialog club={club} userInfo={userInfo} />
       )}
       <div className="columns">
-        <div className="column">
+        <div className="column is-two-thirds">
           {isActive || (
             <InactiveCard
               $bordered
