@@ -1065,6 +1065,57 @@ class ClubTestCase(TestCase):
         self.assertIsNotNone(self.club1.approved_on)
         self.assertIsNotNone(self.club1.approved_by)
 
+    def test_club_display_after_deactivation(self):
+        """
+        Test club retrieval after yearly deactivation. Non-admins should see
+        the last approved version of the club. Admins should see the most
+        up-to-date version in the database. This should be true even with caching.
+        """
+        club = self.club1
+
+        call_command("deactivate", "all", "--force")
+
+        cache.clear()
+        club.refresh_from_db()
+
+        # club should not be approved and should have no approver in DB
+        self.assertIsNone(club.approved)
+        self.assertIsNone(club.approved_by)
+
+        # Case 1: non-admin user views the club first, admin views the club after
+        # Non-admin should see "ghost" version, e.g. most recently approved
+        # Admin should see most up to date version
+        non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(non_admin_resp.status_code, 200)
+        non_admin_data = non_admin_resp.json()
+        self.assertTrue(non_admin_data["approved"])
+
+        self.client.login(username=self.user5.username, password="test")
+        admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(admin_resp.status_code, 200)
+        admin_data = admin_resp.json()
+        self.assertIsNone(admin_data["approved"])
+
+        cache.clear()  # clear cache
+
+        # Case 2: admin user views the club first, non-admin views the club after
+        self.client.login(username=self.user5.username, password="test")
+        admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(admin_resp.status_code, 200)
+        admin_data = admin_resp.json()
+        self.assertIsNone(admin_data["approved"])
+        self.client.logout()
+
+        non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(non_admin_resp.status_code, 200)
+        non_admin_data = non_admin_resp.json()
+        self.assertTrue(non_admin_data["approved"])
+
+        # Club object itself in DB should not have changed
+        club.refresh_from_db()
+        self.assertFalse(club.active)
+        self.assertIsNone(club.approved)
+
     def test_club_create_url_sanitize(self):
         """
         Test creating clubs with malicious URLs.
