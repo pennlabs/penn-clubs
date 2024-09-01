@@ -1151,32 +1151,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             return queryset.filter(Q(approved=True) | Q(ghost=True))
 
-    def has_permission(self, instance):
-        user = self.request.user
-        return (
-            user.has_perm("clubs.see_pending_clubs")
-            or user.has_perm("clubs.manage_club")
-            or (
-                user.is_authenticated
-                and instance.membership_set.filter(person=user).exists()
-            )
+    def _has_elevated_view_perms(self, instance):
+        """
+        Determine if the current user has elevated view privileges.
+        """
+        see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
+        manage_club = self.request.user.has_perm("clubs.manage_club")
+        is_member = (
+            self.request.user.is_authenticated
+            and instance.membership_set.filter(person=self.request.user).exists()
         )
-
-    def get_object(self):
-        instance = super().get_object()
-        if (
-            instance.ghost
-            and not instance.approved
-            and not self.has_permission(instance)
-        ):
-            historical_club = (
-                instance.history.filter(approved=True).order_by("-approved_on").first()
-            )
-            if historical_club:
-                approved_instance = historical_club.instance
-                approved_instance._is_historical = True
-                return approved_instance
-        return instance
+        return see_pending or manage_club or is_member
 
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
@@ -2029,24 +2014,23 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def retrieve(self, *args, **kwargs):
         """
-        Retrieve data about a specific club. Responses cached for 1 hour for
-        non-permissioned users. Permissioned users should see the most
-        up-to-date version of the club (no caching).
+        Retrieve data about a specific club. Responses cached for 1 hour. Caching is
+        disabled for users with elevated view perms so that changes made before approval
+        don't spill over.
         """
         club = self.get_object()
+
+        # don't cache if user has elevated view perms
+        if self._has_elevated_view_perms(club):
+            return super().retrieve(*args, **kwargs)
+
         key = f"clubs:{club.id}"
-
-        is_permissioned = self.has_permission(club)
-
-        if not is_permissioned:  # don't use cache for permissioned users
-            cached = cache.get(key)
-            if cached:
-                return Response(cached)
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
 
         resp = super().retrieve(*args, **kwargs)
-
-        if not is_permissioned:  # cache for non-permissioned users
-            cache.set(key, resp.data, 60 * 60)
+        cache.set(key, resp.data, 60 * 60)
 
         return resp
 
@@ -2185,15 +2169,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     return ClubSerializer
             return ClubListSerializer
         if self.request is not None and self.request.user.is_authenticated:
-            see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
-            manage_club = self.request.user.has_perm("clubs.manage_club")
-            is_member = (
-                "code" in self.kwargs
-                and Membership.objects.filter(
-                    person=self.request.user, club__code=self.kwargs["code"]
-                ).exists()
-            )
-            if see_pending or manage_club or is_member:
+            club = self.get_object() if "code" in self.kwargs else None
+            if club and self._has_elevated_view_perms(club):
                 return AuthenticatedClubSerializer
         return ClubSerializer
 
