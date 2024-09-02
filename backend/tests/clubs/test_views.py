@@ -1306,10 +1306,9 @@ class ClubTestCase(TestCase):
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
 
-    def test_pending_clubs_old_new_data(self):
+    def test_diff(self):
         """
-        Test that pending_clubs_old_new returns the correct data for new and clubs
-        seeking reapproval
+        Test that diff returns the correct old and new club for a club in approval queue
         """
 
         # create club that requires approval
@@ -1331,10 +1330,10 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user4.username, password="test")
 
         # New club should not have any old data
-        resp = self.client.get(reverse("clubs-pending-clubs-old-new-data"))
+        resp = self.client.get(reverse("clubs-diff", args=(new_club.code,)))
         data = json.loads(resp.content.decode("utf-8"))
-        self.assertEqual(data[0]["new-club"]["name"]["new"], "New Club")
-        self.assertEqual(data[0]["new-club"]["name"]["old"], None)
+        self.assertEqual(data["new-club"]["name"]["new"], "New Club")
+        self.assertEqual(data["new-club"]["name"]["old"], None)
 
         # approve club
         new_club.approved = True
@@ -1355,14 +1354,14 @@ class ClubTestCase(TestCase):
         self.assertFalse(new_club.approved)
 
         # Should now have old and new data
-        resp = self.client.get(reverse("clubs-pending-clubs-old-new-data"))
+        resp = self.client.get(reverse("clubs-diff", args=(new_club.code,)))
         new_data = json.loads(resp.content.decode("utf-8"))
         self.assertEqual(
-            new_data[0]["new-club"]["description"]["new"],
+            new_data["new-club"]["description"]["new"],
             "We are open source, expect us.",
         )
         self.assertEqual(
-            new_data[0]["new-club"]["description"]["old"],
+            new_data["new-club"]["description"]["old"],
             "We're the spirits of open source.",
         )
 

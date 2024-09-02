@@ -698,37 +698,6 @@ class Club(models.Model):
                 reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
 
-    def get_latest_and_latest_approved_versions(self):
-        """
-        Returns the latest and latest approved versions of club key fields
-        [name, description, image] contents that trigger reapproval.
-        """
-        latest_approved_version = (
-            self.history.filter(approved=True).order_by("-history_date").first()
-        )
-        latest_version = self.history.order_by("-history_date").first()
-
-        # if this is the first time the club is being approved
-        if not latest_approved_version:
-            return {
-                self.code: {
-                    field: {"old": None, "new": getattr(latest_version, field)}
-                    for field in ["name", "description", "image"]
-                }
-            }
-
-        # if the current version is not approvedthe and it has been approved before
-        if not self.approved and latest_approved_version:
-            return {
-                self.code: {
-                    field: {
-                        "old": getattr(latest_approved_version, field),
-                        "new": getattr(latest_version, field),
-                    }
-                    for field in ["name", "description", "image"]
-                }
-            }
-
     class Meta:
         ordering = ["name"]
         permissions = [

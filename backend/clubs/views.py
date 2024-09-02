@@ -2058,69 +2058,93 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             context=context,
         )
 
-    @action(detail=False, methods=["GET"])
-    def pending_clubs_old_new_data(self, request, *args, **kwargs):
+    @action(detail=True, methods=["GET"])
+    def diff(self, request, *args, **kwargs):
         """
-        Return old and new data for clubs that are pending approval.
+        Return old and new data for a club that is pending approval.
         ---
         responses:
             "200":
                 content:
                     application/json:
                         schema:
-                            type: array
-                            items:
-                                type: object
-                                properties:
-                                    code:
-                                        type: object
-                                        description: club code
-                                        properties:
-                                            name:
-                                                type: object
-                                                description: Changes in the name field
-                                                properties:
-                                                    old:
-                                                        type: string
-                                                        description: >
-                                                            Old name of the club
-                                                    new:
-                                                        type: string
-                                                        description: >
-                                                            New name of the club
-                                            description:
-                                                type: object
-                                                description: >
-                                                    Changes in the club description
-                                                properties:
-                                                    old:
-                                                        type: string
-                                                        description: >
-                                                            Old description of the club
-                                                    new:
-                                                        type: string
-                                                        description: >
-                                                            New description of the club
-                                            image:
-                                                type: object
-                                                description: >
-                                                    Changes in the image of the club
-                                                properties:
-                                                    old:
-                                                        type: string
-                                                        description: >
-                                                            Old image URL of the club
-                                                    new:
-                                                        type: string
-                                                        description: >
-                                                            New image URL of the club
+                            type: object
+                            properties:
+                                club_code:
+                                    type: object
+                                    description: club code
+                                    properties:
+                                        name:
+                                            type: object
+                                            description: Changes in the name field
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old name of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New name of the club
+                                        description:
+                                            type: object
+                                            description: >
+                                                Changes in the club description
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old description of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New description of the club
+                                        image:
+                                            type: object
+                                            description: >
+                                                Changes in the image of the club
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old image URL of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New image URL of the club
         ---
         """
-        pending_clubs = Club.objects.filter(approved=None, active=True)
+        club = self.get_object()
 
-        return Response(
-            [club.get_latest_and_latest_approved_versions() for club in pending_clubs]
+        latest_approved_version = (
+            club.history.filter(approved=True).order_by("-history_date").first()
         )
+        latest_version = club.history.order_by("-history_date").first()
+
+        # if this is the first time the club is being approved
+        if not latest_approved_version:
+            return Response(
+                {
+                    club.code: {
+                        field: {"old": None, "new": getattr(latest_version, field)}
+                        for field in ["name", "description", "image"]
+                    }
+                }
+            )
+
+        # if the current version is not approvedthe and it has been approved before
+        if not club.approved and latest_approved_version:
+            return Response(
+                {
+                    club.code: {
+                        field: {
+                            "old": getattr(latest_approved_version, field),
+                            "new": getattr(latest_version, field),
+                        }
+                        for field in ["name", "description", "image"]
+                    }
+                }
+            )
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
