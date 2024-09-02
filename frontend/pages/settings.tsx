@@ -13,7 +13,7 @@ import styled from 'styled-components'
 import { ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
-import ApplicationsPage from '~/components/ClubEditPage/ApplicationsPage'
+import ApplicationsPage from '~/components/Applications'
 import TicketsTab from '~/components/Settings/TicketsTab'
 import SubmissionsPage from '~/components/Submissions'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
@@ -38,9 +38,15 @@ type SettingsProps = {
   userInfo?: UserInfo
   authenticated: boolean | null
   submissions: ApplicationSubmission[]
+  whartonapplications: any
 }
 
-const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
+const Settings = ({
+  userInfo,
+  authenticated,
+  submissions,
+  whartonapplications,
+}: SettingsProps) => {
   /**
    * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
@@ -121,12 +127,13 @@ const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
 }
 
 type BulkResp = {
+  whartonapplications: any
   submissions: Array<ApplicationSubmission>
 }
 
 Settings.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
-    ['submissions', '/submissions/?format=json'],
+    ['whartonapplications', ['submissions', '/submissions/?format=json']],
     ctx,
   )) as BulkResp
   return {
