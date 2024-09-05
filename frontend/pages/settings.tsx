@@ -13,6 +13,7 @@ import styled from 'styled-components'
 import { ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
+import ApplicationsPage from '~/components/Applications'
 import TicketsTab from '~/components/Settings/TicketsTab'
 import SubmissionsPage from '~/components/Submissions'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
@@ -37,9 +38,15 @@ type SettingsProps = {
   userInfo?: UserInfo
   authenticated: boolean | null
   submissions: ApplicationSubmission[]
+  whartonapplications: any
 }
 
-const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
+const Settings = ({
+  userInfo,
+  authenticated,
+  whartonapplications,
+  submissions,
+}: SettingsProps) => {
   /**
    * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
@@ -76,6 +83,13 @@ const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
       name: 'submissions',
       label: 'Submissions',
       content: () => <SubmissionsPage initialSubmissions={submissions} />,
+    },
+    {
+      name: 'applications',
+      label: 'Applications',
+      content: () => (
+        <ApplicationsPage whartonapplications={whartonapplications} />
+      ),
     },
     {
       name: 'Requests',
@@ -118,7 +132,10 @@ type BulkResp = {
 }
 
 Settings.getInitialProps = async (ctx: NextPageContext) => {
-  const data: BulkResp = (await doBulkLookup(['submissions'], ctx)) as BulkResp
+  const data: BulkResp = (await doBulkLookup(
+    ['whartonapplications', 'submissions'],
+    ctx,
+  )) as BulkResp
   return {
     ...data,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
