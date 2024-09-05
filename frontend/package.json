@@ -56,7 +56,6 @@
     "react-toastify": "^10.0.4",
     "react-tooltip": "^5.26.3",
     "react-vis": "^1.12.1",
-    "ruff": "^1.5.4",
     "showdown": "^2.1.0",
     "styled-components": "^6.1.8",
     "use-places-autocomplete": "^4.0.1",
