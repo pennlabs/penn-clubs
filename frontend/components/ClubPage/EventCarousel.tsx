@@ -1,5 +1,11 @@
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
+
 import React, { useState } from 'react'
 import styled from 'styled-components'
+import { Navigation, Pagination } from 'swiper/modules'
+import { Swiper, SwiperSlide } from 'swiper/react'
 
 import { ClubEvent } from '../../types'
 import { Icon, StrongText } from '../common'
@@ -12,29 +18,17 @@ const Arrow = styled.div`
   opacity: 0.6;
   transition-duration: 300ms;
   cursor: pointer;
-  padding: 12px
+  padding: 12px;
+  position: absolute;
+  top: 50%;
+
   &:hover {
     opacity: 1;
   }
 `
 
-const EventWrapper = styled.div`
-  padding: 25px;
-  display: inline-block;
-  transition: transform 0.5s ease-in-out;
-`
-
-const Carousel = styled.div`
-  position: relative;
-  display: flex;
-  white-space: nowrap;
-  left: -15px;
-`
-
 const CarouselWrapper = styled.div`
-  width: 100%;
-  overflow: hidden;
-  position: relative;
+  padding: 10px 35px;
 `
 
 type EventsProps = {
@@ -44,88 +38,51 @@ type EventsProps = {
 const EventCarousel = ({ data }: EventsProps) => {
   const [show, setShow] = useState(false)
   const [modalData, setModalData] = useState<ClubEvent>()
-  const [dataChange, setDataChange] = useState(data)
 
   const showModal = (entry: ClubEvent) => {
     setModalData(entry)
     setShow(true)
   }
   const hideModal = () => setShow(false)
-  const responsive = {
-    superLargeDesktop: {
-      breakpoint: { max: 4000, min: 1400 },
-      items: 3,
-    },
-    tablet: {
-      breakpoint: { max: 1400, min: 580 },
-      items: 2,
-    },
-    mobile: {
-      breakpoint: { max: 580, min: 0 },
-      items: 1,
-    },
-  }
 
-  const changeRight = () => {
-    setDataChange((prevData) => {
-      const newData = [...prevData]
-      const firstElement = newData.shift()
-      newData.push(firstElement)
-      return newData
-    })
-  }
-
-  const changeLeft = () => {
-    setDataChange((prevData) => {
-      const newData = [...prevData]
-      const lastElement = newData.pop()
-      newData.unshift(lastElement)
-      return newData
-    })
-  }
   return (
     <div
       style={{
         position: 'relative',
       }}
     >
-      <div className="">
+      <div>
         <StrongText className="mb-0">Events</StrongText>
         <small>Click on an event to get more details.</small>
       </div>
-      <div
-        style={{
-          height: '260px',
-          width: '100%',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <Arrow onClick={changeLeft}>
-          <Icon name="chevron-left" size={'2.2rem'} />
-        </Arrow>
 
-        <CarouselWrapper>
-          <Carousel>
-            {dataChange.map((entry, index) => (
-              <div key={index}>
-                <EventWrapper>
-                  <EventCard
-                    event={entry}
-                    key={index}
-                    onClick={() => showModal(entry)}
-                    onLinkClicked={() => hideModal()}
-                  />
-                </EventWrapper>
-              </div>
-            ))}
-          </Carousel>
-        </CarouselWrapper>
-        <Arrow onClick={changeRight}>
-          <Icon name="chevron-right" size={'2.2rem'} />
-        </Arrow>
-      </div>
+      <CarouselWrapper>
+        <Swiper
+          modules={[Navigation, Pagination]}
+          spaceBetween={60}
+          loop={true}
+          navigation={{ nextEl: '.arrow-left', prevEl: '.arrow-right' }}
+          draggable={true}
+          scrollbar={{ draggable: true }}
+          slidesPerView={'auto'}
+        >
+          {data.map((entry, index) => (
+            <SwiperSlide
+              key={index}
+              style={{ maxWidth: '250px', cursor: 'pointer' }}
+              onClick={() => showModal(entry)}
+            >
+              <EventCard event={entry} key={index} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </CarouselWrapper>
+      <Arrow className="arrow-left" style={{ right: '-15px' }}>
+        <Icon name="chevron-right" size={'2.2rem'} />
+      </Arrow>
+      <Arrow className=" arrow-right" style={{ left: '-15px' }}>
+        <Icon name="chevron-left" size={'2.2rem'} />
+      </Arrow>
       {show && (
         <Modal show={show} closeModal={hideModal} marginBottom={false}>
           {modalData && (
