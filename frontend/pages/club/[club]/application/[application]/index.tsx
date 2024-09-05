@@ -112,7 +112,9 @@ const ApplicationPage = ({
   questions,
   initialValues,
 }: ApplicationPageProps): ReactElement => {
-  if (new Date() < new Date(application.application_start_time)) {
+  // Second condition will be replaced with perms check or question nullity check once backend is updated
+  // eslint-disable-next-line no-constant-condition
+  if (new Date() < new Date(application.application_start_time) && false) {
     return (
       <Container paddingTop>
         <Title>Application Not Open</Title>
