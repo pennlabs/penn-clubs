@@ -118,10 +118,7 @@ type BulkResp = {
 }
 
 Settings.getInitialProps = async (ctx: NextPageContext) => {
-  const data: BulkResp = (await doBulkLookup(
-    [['submissions', '/submissions/?format=json']],
-    ctx,
-  )) as BulkResp
+  const data: BulkResp = (await doBulkLookup(['submissions'], ctx)) as BulkResp
   return {
     ...data,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
