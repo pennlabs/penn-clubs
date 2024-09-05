@@ -5,7 +5,8 @@ import { Container, Icon, Title } from 'components/common'
 import { Field, Form, Formik } from 'formik'
 import moment from 'moment'
 import { NextPageContext } from 'next'
-import React, { ReactElement, useState } from 'react'
+import { ReactElement, useState } from 'react'
+import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import {
@@ -111,6 +112,18 @@ const ApplicationPage = ({
   questions,
   initialValues,
 }: ApplicationPageProps): ReactElement => {
+  if (new Date() < new Date(application.application_start_time)) {
+    return (
+      <Container paddingTop>
+        <Title>Application Not Open</Title>
+        <p>
+          This application is not open yet. Please check back{' '}
+          <TimeAgo date={application.application_start_time} />.
+        </p>
+      </Container>
+    )
+  }
+
   const [errors, setErrors] = useState<string | null>(null)
   const [saved, setSaved] = useState<boolean>(false)
   const [currentCommittee, setCurrentCommittee] = useState<{
