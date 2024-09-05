@@ -82,14 +82,12 @@ const Settings = ({
     {
       name: 'submissions',
       label: 'Submissions',
-      content: () => <SubmissionsPage initialSubmissions={submissions} />,
+      content: <SubmissionsPage initialSubmissions={submissions} />,
     },
     {
       name: 'applications',
       label: 'Applications',
-      content: () => (
-        <ApplicationsPage whartonapplications={whartonapplications} />
-      ),
+      content: <ApplicationsPage whartonapplications={whartonapplications} />,
     },
     {
       name: 'Requests',
