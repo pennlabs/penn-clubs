@@ -294,7 +294,7 @@ const Actions = ({
                 updateRequests={updateRequests}
               />
             )}
-          {SHOW_APPLICATIONS && !isMembershipOpen && club.accepting_members && (
+          {SHOW_APPLICATIONS && !isMembershipOpen && !inClub && (
             <Link
               legacyBehavior
               href={CLUB_APPLY_ROUTE()}
