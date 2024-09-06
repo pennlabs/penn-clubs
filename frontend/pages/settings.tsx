@@ -38,13 +38,13 @@ type SettingsProps = {
   userInfo?: UserInfo
   authenticated: boolean | null
   submissions: ApplicationSubmission[]
-  whartonapplications: any
+  whartonApplications: any
 }
 
 const Settings = ({
   userInfo,
   authenticated,
-  whartonapplications,
+  whartonApplications,
   submissions,
 }: SettingsProps) => {
   /**
@@ -87,7 +87,7 @@ const Settings = ({
     {
       name: 'applications',
       label: 'Applications',
-      content: <ApplicationsPage whartonapplications={whartonapplications} />,
+      content: <ApplicationsPage whartonapplications={whartonApplications} />,
     },
     {
       name: 'Requests',
@@ -134,8 +134,14 @@ Settings.getInitialProps = async (ctx: NextPageContext) => {
     ['whartonapplications', 'submissions'],
     ctx,
   )) as BulkResp
+
+  const returner = {
+    whartonApplications: data.whartonapplications,
+    submissions: data.submissions,
+  }
+
   return {
-    ...data,
+    ...returner,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }

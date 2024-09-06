@@ -103,41 +103,44 @@ function ApplicationsPage({ whartonapplications }): ReactElement {
     <AppsContainer>
       <div className="columns is-multiline is-desktop is-tablet">
         {whartonapplications != null && whartonapplications.length > 0 ? (
-          whartonapplications.map((application) => (
-            <CardWrapper className={'column is-half-desktop'}>
-              <Link href={application.external_url} target="_blank">
-                <Card className="card">
-                  <MainInfo>
-                    <div>
-                      <ClubName>{application.name}</ClubName>
-                      <DateInterval
-                        start={application.application_start_time}
-                        end={application.application_end_time}
-                      />
-                    </div>
-                    <div>
-                      {application.club_image_url != null &&
-                        application.club_image_url !== '' && (
-                          <LazyLoad>
-                            <Image src={application.club_image_url} />
-                          </LazyLoad>
-                        )}
-                    </div>
-                  </MainInfo>
-                  {application.description &&
-                    application.description.length && (
-                      <DescriptionWrapper
-                        dangerouslySetInnerHTML={{
-                          __html: application.description,
-                        }}
-                      ></DescriptionWrapper>
-                    )}
-                </Card>
-              </Link>
-            </CardWrapper>
-          ))
+          <div>
+            <Text>Only Wharton applications displayed here!</Text>
+            {whartonapplications.map((application) => (
+              <CardWrapper className={'column is-half-desktop'}>
+                <Link href={application.external_url} target="_blank">
+                  <Card className="card">
+                    <MainInfo>
+                      <div>
+                        <ClubName>{application.name}</ClubName>
+                        <DateInterval
+                          start={application.application_start_time}
+                          end={application.application_end_time}
+                        />
+                      </div>
+                      <div>
+                        {application.club_image_url != null &&
+                          application.club_image_url !== '' && (
+                            <LazyLoad>
+                              <Image src={application.club_image_url} />
+                            </LazyLoad>
+                          )}
+                      </div>
+                    </MainInfo>
+                    {application.description &&
+                      application.description.length && (
+                        <DescriptionWrapper
+                          dangerouslySetInnerHTML={{
+                            __html: application.description,
+                          }}
+                        ></DescriptionWrapper>
+                      )}
+                  </Card>
+                </Link>
+              </CardWrapper>
+            ))}
+          </div>
         ) : (
-          <Text>No applications are currently available.</Text>
+          <Text>No Wharton applications are currently available.</Text>
         )}
       </div>
     </AppsContainer>
