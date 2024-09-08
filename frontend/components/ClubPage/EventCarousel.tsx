@@ -60,13 +60,12 @@ const EventCarousel = ({ data }: EventsProps) => {
         <Swiper
           modules={[Navigation, Pagination]}
           spaceBetween={50}
-          loop={true}
           navigation={{ nextEl: '.arrow-left', prevEl: '.arrow-right' }}
-          draggable={true}
+          draggable
           scrollbar={{ draggable: true }}
           slidesPerView={'auto'}
-          centeredSlidesBounds={true}
-          centeredSlides={true}
+          centeredSlides
+          centeredSlidesBounds
         >
           {data.map((entry, index) => (
             <SwiperSlide
