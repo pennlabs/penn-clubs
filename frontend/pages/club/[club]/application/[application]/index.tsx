@@ -17,6 +17,7 @@ import {
 } from 'types'
 import { doApiRequest } from 'utils'
 
+import AuthPrompt from '~/components/common/AuthPrompt'
 import { SelectField, TextField } from '~/components/FormComponents'
 
 type ApplicationPageProps = {
@@ -107,11 +108,16 @@ export function formatQuestionType(
 }
 
 const ApplicationPage = ({
+  userInfo,
   club,
   application,
   questions,
   initialValues,
-}: ApplicationPageProps): ReactElement => {
+}): ReactElement => {
+  if (!userInfo) {
+    return <AuthPrompt />
+  }
+
   // Second condition will be replaced with perms check or question nullity check once backend is updated
   // eslint-disable-next-line no-constant-condition
   if (new Date() < new Date(application.application_start_time) && false) {

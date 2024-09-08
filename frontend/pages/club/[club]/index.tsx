@@ -225,14 +225,11 @@ const ClubPage = ({
               pending approval from the {APPROVAL_AUTHORITY}.
             </div>
           )}
-
-          {userInfo != null && (
-            <MobileActions
-              club={club}
-              userInfo={userInfo}
-              updateRequests={updateRequests}
-            />
-          )}
+          <MobileActions
+            club={club}
+            authenticated={userInfo !== undefined}
+            updateRequests={updateRequests}
+          />
           <StyledCard $bordered>
             <Description club={club} />
           </StyledCard>
@@ -278,13 +275,11 @@ const ClubPage = ({
           )}
         </div>
         <div className="column is-one-third">
-          {userInfo && (
-            <DesktopActions
-              club={club}
-              userInfo={userInfo}
-              updateRequests={updateRequests}
-            />
-          )}
+          <DesktopActions
+            club={club}
+            authenticated={userInfo !== undefined}
+            updateRequests={updateRequests}
+          />
           <QAButton onClick={scrollToQuestions}>
             {questions.length > 0
               ? `Click here to see the ${questions.length} question${
