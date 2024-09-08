@@ -63,9 +63,9 @@ const EventCarousel = ({ data }: EventsProps) => {
           navigation={{ nextEl: '.arrow-left', prevEl: '.arrow-right' }}
           draggable
           scrollbar={{ draggable: true }}
-          slidesPerView={'auto'}
           centeredSlides
           centeredSlidesBounds
+          slidesPerView="auto"
         >
           {data.map((entry, index) => (
             <SwiperSlide
