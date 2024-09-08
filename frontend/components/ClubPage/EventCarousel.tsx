@@ -59,17 +59,23 @@ const EventCarousel = ({ data }: EventsProps) => {
       <CarouselWrapper>
         <Swiper
           modules={[Navigation, Pagination]}
-          spaceBetween={60}
+          spaceBetween={50}
           loop={true}
           navigation={{ nextEl: '.arrow-left', prevEl: '.arrow-right' }}
           draggable={true}
           scrollbar={{ draggable: true }}
           slidesPerView={'auto'}
+          centeredSlidesBounds={true}
+          centeredSlides={true}
         >
           {data.map((entry, index) => (
             <SwiperSlide
               key={index}
-              style={{ maxWidth: '250px', cursor: 'pointer' }}
+              style={{
+                maxWidth: '250px',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+              }}
               onClick={() => showModal(entry)}
             >
               <EventCard event={entry} key={index} />
