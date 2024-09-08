@@ -3,7 +3,6 @@ import { DesktopActions, MobileActions } from 'components/ClubPage/Actions'
 import AdvisorList from 'components/ClubPage/AdvisorList'
 import ClubApprovalDialog from 'components/ClubPage/ClubApprovalDialog'
 import Description from 'components/ClubPage/Description'
-import Events from 'components/ClubPage/Events'
 import FilesList from 'components/ClubPage/FilesList'
 import Header from 'components/ClubPage/Header'
 import InfoBox from 'components/ClubPage/InfoBox'
@@ -43,6 +42,7 @@ import {
   SITE_NAME,
 } from 'utils/branding'
 
+import EventCarousel from '~/components/ClubPage/EventCarousel'
 import { CLUB_ALUMNI_ROUTE, CLUB_ORG_ROUTE } from '~/constants'
 import { CLUBS_RED, SNOW, WHITE } from '~/constants/colors'
 import { M0, M2, M3 } from '~/constants/measurements'
@@ -194,7 +194,7 @@ const ClubPage = ({
             </div>
           ))}
       <div className="columns">
-        <div className="column">
+        <div className="column is-two-thirds">
           {isActive || (
             <InactiveCard
               $bordered
@@ -273,6 +273,7 @@ const ClubPage = ({
               <MemberList club={club} />
             </>
           )}
+          {events.length > 0 && <EventCarousel data={events} />}
         </div>
         <div className="column is-one-third">
           <DesktopActions
@@ -299,7 +300,6 @@ const ClubPage = ({
               <div dangerouslySetInnerHTML={{ __html: involvement }} />
             </StyledCard>
           )}
-          <Events data={events} />
           {isClubFieldShown('signature_events') &&
             signatureEvents &&
             !!signatureEvents.length && (
