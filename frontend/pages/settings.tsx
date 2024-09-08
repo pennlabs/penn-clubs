@@ -87,7 +87,7 @@ const Settings = ({
     {
       name: 'applications',
       label: 'Applications',
-      content: <ApplicationsPage whartonapplications={whartonApplications} />,
+      content: <ApplicationsPage whartonApplications={whartonApplications} />,
     },
     {
       name: 'Requests',

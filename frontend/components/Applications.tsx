@@ -94,18 +94,20 @@ const AppsContainer = styled.div`
   min-height: 60vh;
 `
 
-function ApplicationsPage({ whartonapplications }): ReactElement {
-  if ('detail' in whartonapplications) {
-    return <Text>{whartonapplications.detail}</Text>
+function ApplicationsPage({ whartonApplications }): ReactElement {
+  if ('detail' in whartonApplications) {
+    return <Text>{whartonApplications.detail}</Text>
   }
 
   return (
     <AppsContainer>
       <div className="columns is-multiline is-desktop is-tablet">
-        {whartonapplications != null && whartonapplications.length > 0 ? (
+        {whartonApplications != null && whartonApplications.length > 0 ? (
           <div>
-            <Text>Only Wharton applications displayed here!</Text>
-            {whartonapplications.map((application) => (
+            <Text>
+              Note: only current Wharton applications are displayed on this page{' '}
+            </Text>
+            {whartonApplications.map((application) => (
               <CardWrapper className={'column is-half-desktop'}>
                 <Link href={application.external_url} target="_blank">
                   <Card className="card">
@@ -156,8 +158,12 @@ ApplicationsPage.getInitialProps = async (ctx: NextPageContext) => {
     ['whartonapplications'],
     ctx,
   )) as BulkResp
+
+  const returner = {
+    whartonApplications: data.whartonapplications,
+  }
   return {
-    ...data,
+    ...returner,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }
