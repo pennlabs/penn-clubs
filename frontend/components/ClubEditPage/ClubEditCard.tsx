@@ -834,8 +834,9 @@ export default function ClubEditCard({
               <LiveBanner>
                 <LiveTitle>Queue Closed for New Clubs</LiveTitle>
                 <LiveSub>
-                  Submissions for new clubs are closed until the school year
-                  begins.
+                  Submissions for new clubs are closed for the time being.
+                  Please reach out to the Office of Student Affairs at
+                  vpul-pennosa@pobox.upenn.edu with any questions.
                 </LiveSub>
               </LiveBanner>
             )}

@@ -12,12 +12,7 @@ import { mediaMaxWidth, mediaMinWidth, SM } from '~/constants'
 
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_APPLY_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
-import {
-  Club,
-  ClubApplicationRequired,
-  QuestionAnswer,
-  UserInfo,
-} from '../../types'
+import { Club, ClubApplicationRequired, QuestionAnswer } from '../../types'
 import { apiCheckPermission, apiSetLikeStatus, doApiRequest } from '../../utils'
 import {
   FIELD_PARTICIPATION_LABEL,
@@ -85,7 +80,7 @@ const ActionButton = styled.a`
 
 type ActionsProps = {
   club: Club
-  userInfo: UserInfo
+  authenticated: boolean
   style?: CSSProperties
   className?: string
   updateRequests: (code: string) => Promise<void>
@@ -294,7 +289,7 @@ const Actions = ({
                 updateRequests={updateRequests}
               />
             )}
-          {SHOW_APPLICATIONS && !isMembershipOpen && club.accepting_members && (
+          {SHOW_APPLICATIONS && !isMembershipOpen && !inClub && (
             <Link
               legacyBehavior
               href={CLUB_APPLY_ROUTE()}

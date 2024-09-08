@@ -1,6 +1,6 @@
 # Penn Clubs
 
-[![Build and Deploy](https://github.com/pennlabs/penn-clubs/workflows/Build%20and%20Deploy/badge.svg)](https://github.com/pennlabs/penn-clubs/actions)
+[![Build and Deploy Clubs](https://github.com/pennlabs/penn-clubs/workflows/Build%20and%20Deploy%20Clubs/badge.svg)](https://github.com/pennlabs/penn-clubs/actions)
 [![Coverage Status](https://codecov.io/gh/pennlabs/penn-clubs/branch/master/graph/badge.svg)](https://codecov.io/gh/pennlabs/penn-clubs)
 
 Official platform for club discovery, recruitment, and events at Penn.

@@ -1151,6 +1151,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             return queryset.filter(Q(approved=True) | Q(ghost=True))
 
+    def _has_elevated_view_perms(self, instance):
+        """
+        Determine if the current user has elevated view privileges.
+        """
+        see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
+        manage_club = self.request.user.has_perm("clubs.manage_club")
+        is_member = (
+            self.request.user.is_authenticated
+            and instance.membership_set.filter(person=self.request.user).exists()
+        )
+        return see_pending or manage_club or is_member
+
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
@@ -2002,9 +2014,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def retrieve(self, *args, **kwargs):
         """
-        Retrieve data about a specific club. Responses cached for 1 hour
+        Retrieve data about a specific club. Responses cached for 1 hour. Caching is
+        disabled for users with elevated view perms so that changes without approval
+        granted don't spill over to public.
         """
-        key = f"clubs:{self.get_object().id}"
+        club = self.get_object()
+
+        # don't cache if user has elevated view perms
+        if self._has_elevated_view_perms(club):
+            return super().retrieve(*args, **kwargs)
+
+        key = f"clubs:{club.id}"
         cached = cache.get(key)
         if cached:
             return Response(cached)

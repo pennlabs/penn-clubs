@@ -178,13 +178,21 @@ const ClubPage = ({
     testimonials,
     signature_events: signatureEvents,
   } = club
-
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
       {userInfo != null && (
         <ClubApprovalDialog club={club} userInfo={userInfo} />
       )}
+      {club.badges.length > 0 &&
+        club.badges
+          .filter((badge) => badge.message && badge.message.length > 0)
+          .map((badge) => (
+            <div className="notification is-info is-light" key={badge.id}>
+              <Icon name="alert-circle" style={{ marginTop: '-3px' }} />{' '}
+              {badge.message}
+            </div>
+          ))}
       <div className="columns">
         <div className="column is-two-thirds">
           {isActive || (
@@ -217,14 +225,11 @@ const ClubPage = ({
               pending approval from the {APPROVAL_AUTHORITY}.
             </div>
           )}
-
-          {userInfo != null && (
-            <MobileActions
-              club={club}
-              userInfo={userInfo}
-              updateRequests={updateRequests}
-            />
-          )}
+          <MobileActions
+            club={club}
+            authenticated={userInfo !== undefined}
+            updateRequests={updateRequests}
+          />
           <StyledCard $bordered>
             <Description club={club} />
           </StyledCard>
@@ -271,13 +276,11 @@ const ClubPage = ({
           {events.length > 0 && <EventCarousel data={events} />}
         </div>
         <div className="column is-one-third">
-          {userInfo && (
-            <DesktopActions
-              club={club}
-              userInfo={userInfo}
-              updateRequests={updateRequests}
-            />
-          )}
+          <DesktopActions
+            club={club}
+            authenticated={userInfo !== undefined}
+            updateRequests={updateRequests}
+          />
           <QAButton onClick={scrollToQuestions}>
             {questions.length > 0
               ? `Click here to see the ${questions.length} question${
