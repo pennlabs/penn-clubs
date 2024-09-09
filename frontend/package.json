@@ -58,6 +58,7 @@
     "react-vis": "^1.12.1",
     "showdown": "^2.1.0",
     "styled-components": "^6.1.8",
+    "swiper": "^11.1.12",
     "use-places-autocomplete": "^4.0.1",
     "yarn": "^1.22.21"
   },

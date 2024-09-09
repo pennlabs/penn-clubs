@@ -132,7 +132,7 @@ class BadgeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Badge
-        fields = ("id", "purpose", "label", "color", "description")
+        fields = ("id", "purpose", "label", "color", "description", "message")
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -1263,19 +1263,21 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
 
     def get_target_years(self, obj):
-        qset = TargetYear.objects.filter(club=obj)
+        qset = TargetYear.objects.filter(club=obj).select_related("target_years")
         return [TargetYearSerializer(m).data for m in qset]
 
     def get_target_majors(self, obj):
-        qset = TargetMajor.objects.filter(club=obj)
+        qset = TargetMajor.objects.filter(club=obj).select_related("target_majors")
         return [TargetMajorSerializer(m).data for m in qset]
 
     def get_target_schools(self, obj):
-        qset = TargetSchool.objects.filter(club=obj)
+        qset = TargetSchool.objects.filter(club=obj).select_related("target_schools")
         return [TargetSchoolSerializer(m).data for m in qset]
 
     def get_target_student_types(self, obj):
-        qset = TargetStudentType.objects.filter(club=obj)
+        qset = TargetStudentType.objects.filter(club=obj).select_related(
+            "target_student_types"
+        )
         return [TargetStudentTypeSerializer(m).data for m in qset]
 
     def create(self, validated_data):

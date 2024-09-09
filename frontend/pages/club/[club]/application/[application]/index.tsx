@@ -5,7 +5,8 @@ import { Container, Icon, Title } from 'components/common'
 import { Field, Form, Formik } from 'formik'
 import moment from 'moment'
 import { NextPageContext } from 'next'
-import React, { ReactElement, useState } from 'react'
+import { ReactElement, useState } from 'react'
+import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import {
@@ -16,6 +17,7 @@ import {
 } from 'types'
 import { doApiRequest } from 'utils'
 
+import AuthPrompt from '~/components/common/AuthPrompt'
 import { SelectField, TextField } from '~/components/FormComponents'
 
 type ApplicationPageProps = {
@@ -106,11 +108,30 @@ export function formatQuestionType(
 }
 
 const ApplicationPage = ({
+  userInfo,
   club,
   application,
   questions,
   initialValues,
-}: ApplicationPageProps): ReactElement => {
+}): ReactElement => {
+  if (!userInfo) {
+    return <AuthPrompt />
+  }
+
+  // Second condition will be replaced with perms check or question nullity check once backend is updated
+  // eslint-disable-next-line no-constant-condition
+  if (new Date() < new Date(application.application_start_time) && false) {
+    return (
+      <Container paddingTop>
+        <Title>Application Not Open</Title>
+        <p>
+          This application is not open yet. Please check back{' '}
+          <TimeAgo date={application.application_start_time} />.
+        </p>
+      </Container>
+    )
+  }
+
   const [errors, setErrors] = useState<string | null>(null)
   const [saved, setSaved] = useState<boolean>(false)
   const [currentCommittee, setCurrentCommittee] = useState<{
