@@ -6700,26 +6700,25 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         """
 
         app_id = self.kwargs["application_pk"]
+        serializer = kwargs.get("serializer", self.get_serializer_class())
         key = f"applicationsubmissions:{app_id}"
 
         cached = cache.get(key)
         if cached is not None:
-            return Response(cached)
+            return Response(serializer(cached, many=True).data)
         else:
-            serializer = self.get_serializer_class()
             qs = self.get_queryset()
+            cache.set(key, qs, 60 * 60)
             data = serializer(qs, many=True).data
-            cache.set(key, data, 60 * 60)
 
         return Response(data)
 
-    @method_decorator(cache_page(60 * 60 * 2))
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
         """
         Given some application submissions, export them to CSV.
 
-        Cached for 2 hours.
+        Uses potentially cached data from the list method.
         ---
         requestBody:
             content:
@@ -6741,22 +6740,12 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
                             type: string
         ---
         """
-        app_id = int(self.kwargs["application_pk"])
-        data = (
-            ApplicationSubmission.objects.filter(application=app_id)
-            .select_related("user__profile", "committee", "application__club")
-            .prefetch_related(
-                Prefetch(
-                    "responses",
-                    queryset=ApplicationQuestionResponse.objects.select_related(
-                        "multiple_choice", "question"
-                    ),
-                ),
-                "responses__question__committees",
-                "responses__question__multiple_choice",
-            )
-        )
-        df = pd.DataFrame(ApplicationSubmissionCSVSerializer(data, many=True).data)
+        data = self.list(
+            serializer=ApplicationSubmissionCSVSerializer, *args, **kwargs
+        ).data
+
+        df = pd.DataFrame(data)
+
         resp = HttpResponse(
             content_type="text/csv",
             headers={"Content-Disposition": "attachment;filename=submissions.csv"},
