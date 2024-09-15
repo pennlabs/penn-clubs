@@ -203,6 +203,18 @@ const ApplicationPage = ({
           onSubmit={(values: { [id: number]: any }, actions) => {
             let submitErrors: string | null = null
 
+            // check for unanswered questions
+            const unansweredQuestions = questions.filter(
+              (question) =>
+                question.question_type !== ApplicationQuestionType.InfoText &&
+                (!values[question.id] || values[question.id].trim() === ''),
+            )
+
+            if (unansweredQuestions.length > 0) {
+              setErrors('Please answer all questions before submitting.')
+              return
+            }
+
             // word count error check
             for (const [questionId, text] of Object.entries(values)) {
               const question = questions.find(
