@@ -20,7 +20,7 @@ jobs:
 
   frontend-check:
     name: "Frontend Check"
-    uses: pennlabs/shared-actions/.github/workflows/react-check.yaml@v0.1
+    uses: pennlabs/shared-actions/.github/workflows/react-check.yaml@v0.1.3
     with:
       path: frontend
       nodeVersion: 20.11.1
