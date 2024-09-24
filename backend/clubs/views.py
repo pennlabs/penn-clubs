@@ -1149,9 +1149,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         ):
             return queryset
         else:
-            return queryset.filter(
-                Q(approved=True) | (Q(ghost=True) & Q(approved=None))
-            )
+            return queryset.filter(Q(approved=True) | Q(ghost=True))
 
     def _has_elevated_view_perms(self, instance):
         """
