@@ -1008,6 +1008,10 @@ class ClubListSerializer(serializers.ModelSerializer):
                 and instance.membership_set.filter(person=user).exists()
             )
             if not can_see_pending and not is_member:
+                if instance.approved is False:
+                    raise serializers.ValidationError(
+                        "This club has been removed from the platform."
+                    )
                 historical_club = (
                     instance.history.filter(approved=True)
                     .order_by("-approved_on")
