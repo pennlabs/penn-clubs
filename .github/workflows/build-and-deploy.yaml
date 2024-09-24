@@ -18,13 +18,6 @@ jobs:
       black: false
       ruff: true
 
-  frontend-check:
-    name: "Frontend Check"
-    uses: pennlabs/shared-actions/.github/workflows/react-check.yaml@v0.1
-    with:
-      path: frontend
-      nodeVersion: 20.11.1
-
   build-backend:
     name: Build backend
     runs-on: ubuntu-latest
