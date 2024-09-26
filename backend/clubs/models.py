@@ -784,7 +784,7 @@ class QuestionAnswer(models.Model):
 
         owner_emails = list(
             self.club.membership_set.filter(
-                role__lte=Membership.ROLE_OFFICER
+                role__lte=Membership.ROLE_OFFICER, active=True
             ).values_list("person__email", flat=True)
         )
 
@@ -1116,7 +1116,7 @@ class MembershipRequest(models.Model):
 
         owner_emails = list(
             self.club.membership_set.filter(
-                role__lte=Membership.ROLE_OFFICER
+                role__lte=Membership.ROLE_OFFICER, active=True
             ).values_list("person__email", flat=True)
         )
 
