@@ -418,8 +418,8 @@ export default function ApplicationsPage({
         if (applications.length !== 0) {
           setApplications(applications)
           setCurrentApplication({
-            ...applications[0],
-            name: format_app_name(applications[0]),
+            ...applications[applications.length - 1],
+            name: format_app_name(applications[applications.length - 1]),
           })
         }
       })
@@ -532,7 +532,7 @@ export default function ApplicationsPage({
         CSV.
       </Text>
       <Select
-        options={applications.map((application) => {
+        options={applications.toReversed().map((application) => {
           return {
             ...application,
             value: application.id,
