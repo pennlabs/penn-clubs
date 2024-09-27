@@ -782,11 +782,7 @@ class QuestionAnswer(models.Model):
     def send_question_mail(self, request=None):
         domain = get_domain(request)
 
-        owner_emails = list(
-            self.club.membership_set.filter(
-                role__lte=Membership.ROLE_OFFICER, active=True
-            ).values_list("person__email", flat=True)
-        )
+        emails = self.club.get_officer_emails()
 
         context = {
             "name": self.club.name,
@@ -794,11 +790,11 @@ class QuestionAnswer(models.Model):
             "url": settings.QUESTION_URL.format(domain=domain, club=self.club.code),
         }
 
-        if owner_emails:
+        if emails:
             send_mail_helper(
                 name="question",
                 subject="Question for {}".format(self.club.name),
-                emails=owner_emails,
+                emails=emails,
                 context=context,
             )
 
@@ -1114,20 +1110,17 @@ class MembershipRequest(models.Model):
             "full_name": self.person.get_full_name(),
         }
 
-        owner_emails = list(
-            self.club.membership_set.filter(
-                role__lte=Membership.ROLE_OFFICER, active=True
-            ).values_list("person__email", flat=True)
-        )
+        emails = self.club.get_officer_emails()
 
-        send_mail_helper(
-            name="request",
-            subject="Membership Request from {} for {}".format(
-                self.person.get_full_name(), self.club.name
-            ),
-            emails=owner_emails,
-            context=context,
-        )
+        if emails:
+            send_mail_helper(
+                name="request",
+                subject="Membership Request from {} for {}".format(
+                    self.person.get_full_name(), self.club.name
+                ),
+                emails=emails,
+                context=context,
+            )
 
     class Meta:
         unique_together = (("person", "club"),)
