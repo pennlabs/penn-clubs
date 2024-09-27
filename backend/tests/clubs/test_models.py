@@ -63,6 +63,60 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club2.parent_orgs.first(), self.club1)
         self.assertEqual(self.club1.children_orgs.first(), self.club2)
 
+    def test_get_officer_emails(self):
+        # Create test users with various email formats
+        user1 = get_user_model().objects.create_user(
+            "user1", "user1@example.com", "password"
+        )
+        user2 = get_user_model().objects.create_user(
+            "user2", "   user2@example.com  ", "password"
+        )  # whitespace
+        user3 = get_user_model().objects.create_user(
+            "user3", "", "password"
+        )  # empty email
+        user4 = get_user_model().objects.create_user(
+            "user4", "user4@example.com", "password"
+        )
+
+        # Create memberships for the test users
+        Membership.objects.create(
+            person=user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        Membership.objects.create(
+            person=user2, club=self.club1, role=Membership.ROLE_OWNER
+        )
+        Membership.objects.create(
+            person=user3, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        Membership.objects.create(
+            person=user4, club=self.club1, role=Membership.ROLE_OFFICER, active=False
+        )  # alumni
+
+        # Test with valid club email
+        self.club1.email = "club@example.com"
+        self.club1.save()
+
+        officer_emails = self.club1.get_officer_emails()
+        expected_emails = ["club@example.com", "user1@example.com", "user2@example.com"]
+        self.assertEqual(officer_emails, expected_emails)
+
+        # Ensure alumni are not included
+        self.assertNotIn("user4@example.com", officer_emails)
+
+        # Test with invalid club email
+        self.club1.email = "invalid-email"
+        self.club1.save()
+
+        officer_emails = self.club1.get_officer_emails()
+        expected_emails = ["user1@example.com", "user2@example.com"]
+        self.assertEqual(officer_emails, expected_emails)
+
+        # Test with empty club email
+        self.club1.email = ""
+        self.club1.save()
+        officer_emails = self.club1.get_officer_emails()
+        self.assertEqual(officer_emails, expected_emails)
+
 
 class ProfileTestCase(TestCase):
     def test_profile_creation(self):

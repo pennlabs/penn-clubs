@@ -620,27 +620,23 @@ class Club(models.Model):
         """
         emails = []
 
-        # add club contact email if valid
-        try:
-            validate_email(self.email)
-            emails.append(self.email)
-        except ValidationError:
-            pass
+        # Add club contact email if valid
+        if self.email:
+            try:
+                validate_email(self.email)
+                emails.append(self.email)
+            except ValidationError:
+                pass
 
-        # add email for all officers and above
-        for user in self.membership_set.filter(
-            role__lte=Membership.ROLE_OFFICER, active=True
-        ):
-            emails.append(user.person.email)
+        # Add email for all active officers and above
+        emails.extend(
+            self.membership_set.filter(
+                role__lte=Membership.ROLE_OFFICER, active=True
+            ).values_list("person__email", flat=True)
+        )
 
-        # remove empty emails
-        emails = [email.strip() for email in emails]
-        emails = [email for email in emails if email]
-
-        # remove duplicate emails
-        emails = list(sorted(set(emails)))
-
-        return emails
+        # Remove whitespace, empty emails, and duplicates, then sort
+        return sorted(set(email.strip() for email in emails if email.strip()))
 
     def send_confirmation_email(self, request=None):
         """
