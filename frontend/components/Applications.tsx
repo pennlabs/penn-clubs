@@ -159,11 +159,8 @@ ApplicationsPage.getInitialProps = async (ctx: NextPageContext) => {
     ctx,
   )) as BulkResp
 
-  const returner = {
-    whartonApplications: data.whartonapplications,
-  }
   return {
-    ...returner,
+    whartonApplications: data.whartonapplications,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }

@@ -10,7 +10,7 @@ import React, { ReactNode } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
-import { ApplicationSubmission, UserInfo } from 'types'
+import { Application, ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
 import ApplicationsPage from '~/components/Applications'
@@ -125,7 +125,7 @@ const Settings = ({
 }
 
 type BulkResp = {
-  whartonapplications: any
+  whartonapplications: Application[]
   submissions: Array<ApplicationSubmission>
 }
 
@@ -135,13 +135,9 @@ Settings.getInitialProps = async (ctx: NextPageContext) => {
     ctx,
   )) as BulkResp
 
-  const returner = {
+  return {
     whartonApplications: data.whartonapplications,
     submissions: data.submissions,
-  }
-
-  return {
-    ...returner,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }
