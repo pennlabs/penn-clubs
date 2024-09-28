@@ -88,6 +88,13 @@ export class MyChart extends PennLabsChart {
       secret: clubsSecret,
       cmd: ['python', 'manage.py', 'import_calendar_events'],
     });
+
+    new CronJob(this, 'expire-stale-membership-invites', {
+      schedule: cronTime.everyDayAt(12),
+      image: backendImage,
+      secret: clubsSecret,
+      cmd: ["python", "manage.py", "expire_membership_invites"],
+    });
   }
 }
 
