@@ -1,7 +1,6 @@
 import ClubMetadata from 'components/ClubMetadata'
 import { DesktopActions, MobileActions } from 'components/ClubPage/Actions'
 import AdvisorList from 'components/ClubPage/AdvisorList'
-import ClubApprovalDialog from 'components/ClubPage/ClubApprovalDialog'
 import Description from 'components/ClubPage/Description'
 import FilesList from 'components/ClubPage/FilesList'
 import Header from 'components/ClubPage/Header'
@@ -24,6 +23,7 @@ import {
   WideContainer,
 } from 'components/common'
 import { NextPageContext } from 'next'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
@@ -169,6 +169,11 @@ const ClubPage = ({
       </Container>
     )
   }
+
+  const ClubApprovalDialog = dynamic(
+    () => import('components/ClubPage/ClubApprovalDialog'),
+    { ssr: false },
+  )
 
   const {
     active: isActive,
