@@ -39,7 +39,6 @@ const QuestionList = ({
   sortBy,
 }: QuestionListProps): ReactElement => {
   const [formSubmitted, setFormSubmitted] = useState(false)
-
   const handleSubmit = (data, { setSubmitting, setStatus }) => {
     doApiRequest(`/clubs/${code}/questions/?format=json`, {
       method: 'POST',

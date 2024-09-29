@@ -1136,7 +1136,18 @@ class Advisor(models.Model):
     phone = PhoneNumberField(null=False, blank=True)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    public = models.BooleanField()
+
+    PUBLIC_ADMIN = 1
+    PUBLIC_STUDENTS = 2
+    PUBLIC_ALL = 3
+
+    PUBLIC_CHOICES = (
+        (PUBLIC_ADMIN, "Admin Only"),
+        (PUBLIC_STUDENTS, "Signed-in Students"),
+        (PUBLIC_ALL, "Public"),
+    )
+
+    public = models.IntegerField(choices=PUBLIC_CHOICES, default=PUBLIC_STUDENTS)
 
     def __str__(self):
         return self.name

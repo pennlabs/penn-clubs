@@ -2024,7 +2024,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"clubs:{club.id}"
+        key = f"""clubs:{club.id}-{"authed" if self.request.user.is_authenticated
+                                            else "anon"}"""
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -3422,7 +3423,8 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         )
 
         if not self.request.user.is_authenticated:
-            return questions.filter(approved=True)
+            # Hide responder if not authenticated
+            return questions.filter(approved=True).extra(select={"responder": "NULL"})
 
         membership = Membership.objects.filter(
             club__code=club_code, person=self.request.user

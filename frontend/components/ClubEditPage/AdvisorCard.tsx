@@ -1,17 +1,10 @@
 import { Field } from 'formik'
 import { ReactElement, useState } from 'react'
-import styled from 'styled-components'
 
-import { RED } from '../../constants/colors'
-import { Advisor, Club } from '../../types'
-import {
-  OBJECT_NAME_SINGULAR,
-  SHOW_MEMBERS,
-  SITE_ID,
-  SITE_NAME,
-} from '../../utils/branding'
+import { Advisor, AdvisorPublicType, Club } from '../../types'
+import { OBJECT_NAME_SINGULAR, SHOW_MEMBERS } from '../../utils/branding'
 import { Text } from '../common'
-import { CheckboxField, TextField } from '../FormComponents'
+import { SelectField, TextField } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
 import BaseCard from './BaseCard'
 
@@ -20,10 +13,20 @@ type Props = {
   validateAdvisors?: (valid: boolean) => void
 }
 
-const RequireText = styled.p`
-  color: ${RED};
-  margin-top: 1rem;
-`
+export const PUBLIC_TYPES = [
+  {
+    value: AdvisorPublicType.AdminOnly,
+    label: 'Admin Only',
+  },
+  {
+    value: AdvisorPublicType.Students,
+    label: 'Students (Logged In)',
+  },
+  {
+    value: AdvisorPublicType.All,
+    label: 'All (Public, External)',
+  },
+]
 
 export default function AdvisorCard({
   club,
@@ -57,18 +60,22 @@ export default function AdvisorCard({
       <Field name="phone" as={TextField} />
       <Field
         name="public"
-        as={CheckboxField}
         label="Show contact information to the public?"
+        as={SelectField}
+        required
+        choices={PUBLIC_TYPES}
+        serialize={({ value }) => value}
+        isMulti={false}
+        valueDeserialize={(val) => PUBLIC_TYPES.find((x) => x.value === val)}
       />
     </>
   )
 
   return (
     <>
-      <BaseCard title="Public Points of Contact">
+      <BaseCard title="Points of Contact">
         <Text>
-          Provide points of contact for your organization. These public points
-          of contact will be shown to the public.
+          Provide points of contact for your organization.
           {SHOW_MEMBERS && (
             <>
               {' '}
@@ -82,32 +89,8 @@ export default function AdvisorCard({
         <ModelForm
           onUpdate={updateAdvisors}
           baseUrl={`/clubs/${club.code}/advisors/`}
-          listParams="&public=true"
-          defaultObject={{ public: true }}
-          initialData={club.advisor_set.filter(
-            ({ public: isPublic }) => isPublic,
-          )}
-          fields={fields}
-        />
-        {SITE_ID === 'fyh' && advisorsCount <= 0 && (
-          <RequireText>
-            * At least one public point of contact is required.
-          </RequireText>
-        )}
-      </BaseCard>
-
-      <BaseCard title="Internal Points of Contact">
-        <Text>
-          These private points of contact will be shown to only {SITE_NAME}{' '}
-          administrators.
-        </Text>
-        <ModelForm
-          baseUrl={`/clubs/${club.code}/advisors/`}
-          listParams="&public=false"
-          defaultObject={{ public: false }}
-          initialData={club.advisor_set.filter(
-            ({ public: isPublic }) => !isPublic,
-          )}
+          defaultObject={{ public: AdvisorPublicType.Students }}
+          initialData={club.advisor_set}
           fields={fields}
         />
       </BaseCard>

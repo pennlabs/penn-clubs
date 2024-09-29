@@ -1249,8 +1249,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         return obj.approved_by.get_full_name()
 
     def get_advisor_set(self, obj):
+        user = self.context["request"].user
+
+        public_filter = (
+            obj.advisor_set.filter(public__gte=Advisor.PUBLIC_STUDENTS).order_by("name")
+            if user.is_authenticated
+            else obj.advisor_set.filter(public=Advisor.PUBLIC_ALL).order_by("name")
+        )
+
         return AdvisorSerializer(
-            obj.advisor_set.filter(public=True).order_by("name"),
+            public_filter,
             many=True,
             read_only=True,
             context=self.context,
