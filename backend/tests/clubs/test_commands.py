@@ -616,7 +616,7 @@ class RenewalTestCase(TestCase):
         self.client.get(reverse("clubs-detail", args=(club.code,)))
 
         # club should now be cached
-        cache_key = f"clubs:{club.id}"
+        cache_key = f"clubs:{club.id}-anon"
         self.assertIsNotNone(caches["default"].get(cache_key))
 
         call_command("deactivate", "all", "--force")

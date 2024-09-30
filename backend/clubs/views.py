@@ -1204,8 +1204,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # ensure user is allowed to upload image
         club = self.get_object()
-        key = f"clubs:{club.id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{club.id}-authed")
+        cache.delete(f"clubs:{club.id}-anon")
 
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
@@ -2039,8 +2039,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
@@ -2048,8 +2048,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().partial_update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
@@ -2819,7 +2819,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_drop_time = drop_time
             event.save()
 
-        cache.delete(f"clubs:{event.club.id}")
+        cache.delete(f"clubs:{event.club.id}-authed")
+        cache.delete(f"clubs:{event.club.id}-anon")
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])

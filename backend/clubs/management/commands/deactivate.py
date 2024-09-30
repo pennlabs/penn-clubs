@@ -93,7 +93,8 @@ class Command(BaseCommand):
                         num_ghosted += 1
 
                     club.save()
-                    cache.delete(f"clubs:{club.id}")  # clear cache
+                    cache.delete(f"clubs:{club.id}-authed")  # clear cache
+                    cache.delete(f"clubs:{club.id}-anon")
 
             self.stdout.write(
                 f"{clubs.count()} clubs deactivated! {num_ghosted} clubs ghosted!"
