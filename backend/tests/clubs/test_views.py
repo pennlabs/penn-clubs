@@ -2600,7 +2600,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIsInstance(resp.data, list, resp.content)
 
-        resp = self.client.post(reverse("scripts"), {"action": "graduate_users"})
+        resp = self.client.post(reverse("scripts"), {"action": "find_broken_images"})
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIn("output", resp.data, resp.content)
 

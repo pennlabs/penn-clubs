@@ -9,7 +9,6 @@ class Command(BaseCommand):
         "Mark all memberships where the student has graduated as inactive. "
         "This script should be run at the beginning of each year."
     )
-    web_execute = True
 
     def handle(self, *args, **kwargs):
         now = timezone.now()
