@@ -6,33 +6,30 @@ from django.db import migrations, models
 def migrate_public_to_enum(apps, schema_editor):
     Advisor = apps.get_model("clubs", "Advisor")
     # Update 'public' field, assume public=True means only students by default
-    Advisor.objects.filter(public_old=False).update(public=1)
-    Advisor.objects.filter(public_old=True).update(public=2)
+    Advisor.objects.filter(public=False).update(visibility=1)
+    Advisor.objects.filter(public=True).update(visibility=2)
 
+def reverse_migrate_public_to_enum(apps, schema_editor):
+    Advisor = apps.get_model("clubs", "Advisor")
+    Advisor.objects.filter(visibility=1).update(public=False)
+    Advisor.objects.filter(visibility__in=[2, 3]).update(public=True)
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("clubs", "0113_badge_message"),
     ]
-
     operations = [
-        migrations.RenameField(
-            model_name="advisor",
-            old_name="public",
-            new_name="public_old",
-        ),
         migrations.AddField(
             model_name="advisor",
-            name="public",
+            name="visibility",
             field=models.IntegerField(
                 choices=[(1, "Admin Only"), (2, "Signed-in Students"), (3, "Public")],
                 default=2,
             ),
         ),
-        migrations.RunPython(migrate_public_to_enum),
+        migrations.RunPython(migrate_public_to_enum, reverse_migrate_public_to_enum),
         migrations.RemoveField(
             model_name="advisor",
-            name="public_old",
+            name="public",
         ),
     ]

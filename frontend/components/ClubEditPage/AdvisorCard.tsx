@@ -1,7 +1,7 @@
 import { Field } from 'formik'
 import { ReactElement, useState } from 'react'
 
-import { Advisor, AdvisorPublicType, Club } from '../../types'
+import { Advisor, AdvisorVisibilityType, Club } from '../../types'
 import { OBJECT_NAME_SINGULAR, SHOW_MEMBERS } from '../../utils/branding'
 import { Text } from '../common'
 import { SelectField, TextField } from '../FormComponents'
@@ -13,17 +13,17 @@ type Props = {
   validateAdvisors?: (valid: boolean) => void
 }
 
-export const PUBLIC_TYPES = [
+export const VISIBILITY_TYPES = [
   {
-    value: AdvisorPublicType.AdminOnly,
+    value: AdvisorVisibilityType.AdminOnly,
     label: 'Admin Only',
   },
   {
-    value: AdvisorPublicType.Students,
+    value: AdvisorVisibilityType.Students,
     label: 'Students (Logged In)',
   },
   {
-    value: AdvisorPublicType.All,
+    value: AdvisorVisibilityType.All,
     label: 'All (Public, External)',
   },
 ]
@@ -42,7 +42,7 @@ export default function AdvisorCard({
     if (newAdvisors.length) {
       validCount = newAdvisors.filter(
         (advisor) =>
-          (advisor._status || !advisor._errorMessage) && advisor.public,
+          (advisor._status || !advisor._errorMessage) && advisor.visibility,
       ).length
     }
     if (validateAdvisors) {
@@ -59,14 +59,16 @@ export default function AdvisorCard({
       <Field name="email" as={TextField} type="email" />
       <Field name="phone" as={TextField} />
       <Field
-        name="public"
+        name="visibility"
         label="Show contact information to the public?"
         as={SelectField}
         required
-        choices={PUBLIC_TYPES}
+        choices={VISIBILITY_TYPES}
         serialize={({ value }) => value}
         isMulti={false}
-        valueDeserialize={(val) => PUBLIC_TYPES.find((x) => x.value === val)}
+        valueDeserialize={(val) =>
+          VISIBILITY_TYPES.find((x) => x.value === val)
+        }
       />
     </>
   )
@@ -89,7 +91,7 @@ export default function AdvisorCard({
         <ModelForm
           onUpdate={updateAdvisors}
           baseUrl={`/clubs/${club.code}/advisors/`}
-          defaultObject={{ public: AdvisorPublicType.Students }}
+          defaultObject={{ public: AdvisorVisibilityType.Students }}
           initialData={club.advisor_set}
           fields={fields}
         />

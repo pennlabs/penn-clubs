@@ -2280,11 +2280,14 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         public = request.GET.get("public")
-
         if public is not None:
             public = public.strip().lower()
             if public in {"true", "false"}:
-                queryset = queryset.filter(public=public == "true")
+                queryset = queryset.filter(
+                    visibility__gte=Advisor.ADVISOR_VISIBILITY_STUDENTS
+                    if public == "true"
+                    else Advisor.ADVISOR_VISIBILITY_ADMIN
+                )
 
         return queryset
 
@@ -2292,7 +2295,7 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 class AdvisorViewSet(viewsets.ModelViewSet):
     """
     list:
-    Return a list of advisors for this club.
+    Return a list of advisors for this club for club administrators.
 
     create:
     Add an advisor to this club.
@@ -2311,7 +2314,7 @@ class AdvisorViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = AdvisorSerializer
-    permission_classes = [ClubItemPermission | IsSuperuser]
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
     filter_backends = [AdvisorSearchFilter]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]

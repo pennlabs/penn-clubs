@@ -1137,17 +1137,19 @@ class Advisor(models.Model):
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
-    PUBLIC_ADMIN = 1
-    PUBLIC_STUDENTS = 2
-    PUBLIC_ALL = 3
+    ADVISOR_VISIBILITY_ADMIN = 1
+    ADVISOR_VISIBILITY_STUDENTS = 2
+    ADVISOR_VISIBILITY_ALL = 3
 
-    PUBLIC_CHOICES = (
-        (PUBLIC_ADMIN, "Admin Only"),
-        (PUBLIC_STUDENTS, "Signed-in Students"),
-        (PUBLIC_ALL, "Public"),
+    ADVISOR_VISIBILITY_CHOICES = (
+        (ADVISOR_VISIBILITY_ADMIN, "Admin Only"),
+        (ADVISOR_VISIBILITY_STUDENTS, "Signed-in Students"),
+        (ADVISOR_VISIBILITY_ALL, "Public"),
     )
 
-    public = models.IntegerField(choices=PUBLIC_CHOICES, default=PUBLIC_STUDENTS)
+    visibility = models.IntegerField(
+        choices=ADVISOR_VISIBILITY_CHOICES, default=ADVISOR_VISIBILITY_STUDENTS
+    )
 
     def __str__(self):
         return self.name

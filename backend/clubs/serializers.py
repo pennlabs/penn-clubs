@@ -351,7 +351,7 @@ class AdvisorSerializer(
 ):
     class Meta:
         model = Advisor
-        fields = ("id", "name", "title", "department", "email", "phone", "public")
+        fields = ("id", "name", "title", "department", "email", "phone", "visibility")
 
 
 class ClubEventSerializer(serializers.ModelSerializer):
@@ -1250,15 +1250,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def get_advisor_set(self, obj):
         user = self.context["request"].user
-
-        public_filter = (
-            obj.advisor_set.filter(public__gte=Advisor.PUBLIC_STUDENTS).order_by("name")
+        visibility_level = (
+            Advisor.ADVISOR_VISIBILITY_STUDENTS
             if user.is_authenticated
-            else obj.advisor_set.filter(public=Advisor.PUBLIC_ALL).order_by("name")
+            else Advisor.ADVISOR_VISIBILITY_ALL
         )
-
         return AdvisorSerializer(
-            public_filter,
+            obj.advisor_set.filter(visibility__gte=visibility_level),
             many=True,
             read_only=True,
             context=self.context,

@@ -80,7 +80,7 @@ export interface CountedEventTicket extends EventTicket {
   count?: number
 }
 
-export enum AdvisorPublicType {
+export enum AdvisorVisibilityType {
   AdminOnly = 1,
   Students = 2,
   All = 3,
@@ -153,7 +153,7 @@ export interface Advisor {
   department: string
   email: string
   phone: string
-  public: AdvisorPublicType
+  visibility: AdvisorVisibilityType
 }
 
 export interface Club {
