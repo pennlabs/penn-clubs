@@ -1136,7 +1136,20 @@ class Advisor(models.Model):
     phone = PhoneNumberField(null=False, blank=True)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    public = models.BooleanField()
+
+    ADVISOR_VISIBILITY_ADMIN = 1
+    ADVISOR_VISIBILITY_STUDENTS = 2
+    ADVISOR_VISIBILITY_ALL = 3
+
+    ADVISOR_VISIBILITY_CHOICES = (
+        (ADVISOR_VISIBILITY_ADMIN, "Admin Only"),
+        (ADVISOR_VISIBILITY_STUDENTS, "Signed-in Students"),
+        (ADVISOR_VISIBILITY_ALL, "Public"),
+    )
+
+    visibility = models.IntegerField(
+        choices=ADVISOR_VISIBILITY_CHOICES, default=ADVISOR_VISIBILITY_STUDENTS
+    )
 
     def __str__(self):
         return self.name

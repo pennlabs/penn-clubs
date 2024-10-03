@@ -18,6 +18,7 @@ from ics import Calendar
 
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
+    Advisor,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -203,6 +204,77 @@ class ClubTestCase(TestCase):
             author=self.user2,
             responder=self.user1,
         )
+
+        self.advisor_admin = Advisor.objects.create(
+            name="Anonymous Avi",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_ADMIN,
+        )
+
+        self.advisor_students = Advisor.objects.create(
+            name="Reclusive Rohan",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_STUDENTS,
+        )
+
+        self.advisor_public = Advisor.objects.create(
+            name="Jocular Julian",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_ALL,
+        )
+
+    def test_advisor_visibility(self):
+        """
+        Tests each tier of advisor visibility.
+        """
+        # Anonymous view
+        self.client.logout()
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 1)
+        self.assertEqual(resp.data["advisor_set"][0]["name"], "Jocular Julian")
+
+        # Student view
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 2)
+        sorted_advisors = sorted(
+            [advisor["name"] for advisor in resp.data["advisor_set"]]
+        )
+        self.assertEqual(sorted_advisors, ["Jocular Julian", "Reclusive Rohan"])
+
+        # Admin view
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 3)
+        sorted_advisors = sorted(
+            [advisor["name"] for advisor in resp.data["advisor_set"]]
+        )
+        self.assertEqual(
+            sorted_advisors, ["Anonymous Avi", "Jocular Julian", "Reclusive Rohan"]
+        )
+
+    def test_advisor_viewset(self):
+        # Make sure we can't view advisors via the viewset if not authed
+        self.client.logout()
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn("detail", resp.data)
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn("detail", resp.data)
+
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 3)
 
     def test_club_upload(self):
         """

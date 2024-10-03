@@ -198,7 +198,10 @@ class AdvisorTestCase(TestCase):
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )
         self.advisor = Advisor.objects.create(
-            name="Eric Wang", phone="+12025550133", club=club, public=True
+            name="Eric Wang",
+            phone="+12025550133",
+            club=club,
+            visibility=Advisor.ADVISOR_VISIBILITY_ALL,
         )
 
     def test_str(self):

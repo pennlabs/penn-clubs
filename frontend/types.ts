@@ -80,6 +80,12 @@ export interface CountedEventTicket extends EventTicket {
   count?: number
 }
 
+export enum AdvisorVisibilityType {
+  AdminOnly = 1,
+  Students = 2,
+  All = 3,
+}
+
 export interface ClubApplication {
   id: number
   name: string
@@ -147,7 +153,7 @@ export interface Advisor {
   department: string
   email: string
   phone: string
-  public: boolean
+  visibility: AdvisorVisibilityType
 }
 
 export interface Club {

@@ -1204,8 +1204,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # ensure user is allowed to upload image
         club = self.get_object()
-        key = f"clubs:{club.id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{club.id}-authed")
+        cache.delete(f"clubs:{club.id}-anon")
 
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
@@ -2024,7 +2024,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"clubs:{club.id}"
+        key = f"""clubs:{club.id}-{"authed" if self.request.user.is_authenticated
+                                            else "anon"}"""
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -2038,8 +2039,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
@@ -2047,8 +2048,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().partial_update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
@@ -2279,11 +2280,14 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         public = request.GET.get("public")
-
         if public is not None:
             public = public.strip().lower()
             if public in {"true", "false"}:
-                queryset = queryset.filter(public=public == "true")
+                queryset = queryset.filter(
+                    visibility__gte=Advisor.ADVISOR_VISIBILITY_STUDENTS
+                    if public == "true"
+                    else Advisor.ADVISOR_VISIBILITY_ADMIN
+                )
 
         return queryset
 
@@ -2291,7 +2295,7 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 class AdvisorViewSet(viewsets.ModelViewSet):
     """
     list:
-    Return a list of advisors for this club.
+    Return a list of advisors for this club for club administrators.
 
     create:
     Add an advisor to this club.
@@ -2310,7 +2314,7 @@ class AdvisorViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = AdvisorSerializer
-    permission_classes = [ClubItemPermission | IsSuperuser]
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
     filter_backends = [AdvisorSearchFilter]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
@@ -2818,7 +2822,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_drop_time = drop_time
             event.save()
 
-        cache.delete(f"clubs:{event.club.id}")
+        cache.delete(f"clubs:{event.club.id}-authed")
+        cache.delete(f"clubs:{event.club.id}-anon")
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
@@ -3422,7 +3427,8 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         )
 
         if not self.request.user.is_authenticated:
-            return questions.filter(approved=True)
+            # Hide responder if not authenticated
+            return questions.filter(approved=True).extra(select={"responder": "NULL"})
 
         membership = Membership.objects.filter(
             club__code=club_code, person=self.request.user
