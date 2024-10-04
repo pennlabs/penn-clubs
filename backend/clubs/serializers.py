@@ -994,30 +994,48 @@ class ClubListSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """
-        Return the previous approved version of a club for users
-        that should not see unapproved content.
+        Return appropriate version of club based on user permissions and club status:
+        - Privileged users see current version (or when bypass=True)
+        - For non-privileged users:
+          - During renewal period: show last approved version from past calendar year
+          - Outside renewal period: show last approved version from past calendar year
         """
-        if instance.ghost and not instance.approved:
-            user = self.context["request"].user
+        user = self.context["request"].user
+        can_see_pending = user.has_perm("clubs.see_pending_clubs") or user.has_perm(
+            "clubs.manage_club"
+        )
+        is_member = (
+            user.is_authenticated
+            and instance.membership_set.filter(person=user).exists()
+        )
+        bypass = (
+            self.context["request"].query_params.get("bypass", "").lower() == "true"
+        )
 
-            can_see_pending = user.has_perm("clubs.see_pending_clubs") or user.has_perm(
-                "clubs.manage_club"
-            )
-            is_member = (
-                user.is_authenticated
-                and instance.membership_set.filter(person=user).exists()
-            )
-            if not can_see_pending and not is_member:
-                historical_club = (
-                    instance.history.filter(approved=True)
-                    .order_by("-approved_on")
-                    .first()
-                )
-                if historical_club is not None:
-                    approved_instance = historical_club.instance
-                    approved_instance._is_historical = True
-                    return super().to_representation(approved_instance)
-        return super().to_representation(instance)
+        if can_see_pending or is_member or instance.approved or bypass:
+            return super().to_representation(instance)
+
+        now = timezone.now()
+        renewal_start, renewal_end = settings.RENEWAL_PERIOD
+        in_renewal_period = renewal_start <= now <= renewal_end
+
+        start_date = (
+            renewal_start
+            if not in_renewal_period
+            else now.replace(year=now.year - 1, month=1, day=1)
+        )
+        approved_version = (
+            instance.history.filter(approved=True, approved_on__gte=start_date)
+            .order_by("-approved_on")
+            .first()
+        )
+
+        if approved_version is not None:
+            approved_instance = approved_version.instance
+            approved_instance._is_historical = True
+            return super().to_representation(approved_instance)
+
+        raise serializers.ValidationError("Club not found", code="not_found")
 
     class Meta:
         model = Club

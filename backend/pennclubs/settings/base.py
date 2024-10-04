@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
+import datetime
 import os
 
 import dj_database_url
@@ -204,11 +205,12 @@ APPLY_URL = "https://{domain}/club/{club}/apply"
 
 OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
 
-
-# Controls whether existing clubs can submit for reapproval
-REAPPROVAL_QUEUE_OPEN = True
-# Controls whether new clubs can submit for initial approval
-NEW_APPROVAL_QUEUE_OPEN = True
+REAPPROVAL_QUEUE_OPEN = True  # controls whether existing clubs can request reapproval
+NEW_APPROVAL_QUEUE_OPEN = True  # controls whether new clubs can request approval
+RENEWAL_PERIOD = (
+    datetime.date(datetime.date.today().year, 8, 1),
+    datetime.date(datetime.date.today().year, 9, 30),
+)  # defines renewal period for club visibility
 
 # File upload settings
 
