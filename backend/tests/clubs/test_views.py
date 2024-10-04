@@ -175,8 +175,9 @@ class ClubTestCase(TestCase):
         self.club1 = Club.objects.create(
             code="test-club",
             name="Test Club",
-            approved=True,
             email="example@example.com",
+            approved=True,
+            approved_on=timezone.now(),
         )
 
         self.event1 = Event.objects.create(
@@ -1141,55 +1142,63 @@ class ClubTestCase(TestCase):
 
     def test_club_display_after_deactivation_for_permissioned_vs_non_permissioned(self):
         """
-        Test club retrieval after deactivation script runs. Non-permissioned users
-        should see the last approved version of the club. Permissioned users (e.g.
-        admins, club members) should see the most up-to-date version.
+        Test club retrieval during renewal period after deactivation.
+        Non-permissioned users should see last approved version.
+        Privileged users (e.g. admins, club members) should see most up-to-date.
         """
-        # club is approved before deactivation
-        self.assertTrue(self.club1.approved)
+        # Mock that we're in renewal period
+        with patch(
+            "django.conf.settings.RENEWAL_PERIOD",
+            (
+                (timezone.now() - datetime.timedelta(days=5)),
+                (timezone.now() + datetime.timedelta(days=5)),
+            ),
+        ):
+            # club is approved before deactivation
+            self.assertTrue(self.club1.approved)
 
-        call_command("deactivate", "all", "--force")
+            call_command("deactivate", "all", "--force")
 
-        club = self.club1
-        club.refresh_from_db()
+            club = self.club1
+            club.refresh_from_db()
 
-        # after deactivation, club should not be approved and should not have approver
-        self.assertIsNone(club.approved)
-        self.assertIsNone(club.approved_by)
+            # club is not approved and does not have approver after deactivation
+            self.assertIsNone(club.approved)
+            self.assertIsNone(club.approved_by)
 
-        # non-permissioned users should see the last approved version
-        non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
-        self.assertEqual(non_admin_resp.status_code, 200)
-        non_admin_data = non_admin_resp.json()
-        self.assertTrue(non_admin_data["approved"])
+            # non-permissioned users should see the last approved version
+            non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+            self.assertEqual(non_admin_resp.status_code, 200)
+            non_admin_data = non_admin_resp.json()
+            self.assertTrue(non_admin_data["approved"])
 
-        # permissioned users should see the club as it is in the DB
-        self.client.login(username=self.user5.username, password="test")
-        admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
-        self.assertEqual(admin_resp.status_code, 200)
-        admin_data = admin_resp.json()
-        self.assertIsNone(admin_data["approved"])
-        self.client.logout()
+            # permissioned users should see the club as it is in the DB
+            self.client.login(username=self.user5.username, password="test")
+            admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+            self.assertEqual(admin_resp.status_code, 200)
+            admin_data = admin_resp.json()
+            self.assertIsNone(admin_data["approved"])
+            self.client.logout()
 
-        cache.clear()
+            cache.clear()
 
-        # reversing the order of operations shouldn't change anything
-        self.client.login(username=self.user5.username, password="test")
-        admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
-        self.assertEqual(admin_resp.status_code, 200)
-        admin_data = admin_resp.json()
-        self.assertIsNone(admin_data["approved"])
-        self.client.logout()
+            # reversing the order of operations shouldn't change anything
+            self.client.login(username=self.user5.username, password="test")
+            admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+            self.assertEqual(admin_resp.status_code, 200)
+            admin_data = admin_resp.json()
+            self.assertIsNone(admin_data["approved"])
+            self.client.logout()
 
-        non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
-        self.assertEqual(non_admin_resp.status_code, 200)
-        non_admin_data = non_admin_resp.json()
-        self.assertTrue(non_admin_data["approved"])
+            non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+            self.assertEqual(non_admin_resp.status_code, 200)
+            non_admin_data = non_admin_resp.json()
+            self.assertTrue(non_admin_data["approved"])
 
-        # club object itself shouldn't have changed
-        club.refresh_from_db()
-        self.assertFalse(club.active)
-        self.assertIsNone(club.approved)
+            # club object itself shouldn't have changed
+            club.refresh_from_db()
+            self.assertFalse(club.active)
+            self.assertIsNone(club.approved)
 
     def test_club_create_url_sanitize(self):
         """
