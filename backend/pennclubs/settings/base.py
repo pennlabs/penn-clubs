@@ -10,10 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
-import datetime
 import os
 
 import dj_database_url
+from django.utils import timezone
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -208,8 +208,12 @@ OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
 REAPPROVAL_QUEUE_OPEN = True  # controls whether existing clubs can request reapproval
 NEW_APPROVAL_QUEUE_OPEN = True  # controls whether new clubs can request approval
 RENEWAL_PERIOD = (
-    datetime.date(datetime.date.today().year, 8, 1),
-    datetime.date(datetime.date.today().year, 9, 30),
+    timezone.datetime(
+        timezone.now().year, 8, 1, tzinfo=timezone.get_default_timezone()
+    ),
+    timezone.datetime(
+        timezone.now().year, 9, 30, tzinfo=timezone.get_default_timezone()
+    ),
 )  # defines renewal period for club visibility
 
 # File upload settings
