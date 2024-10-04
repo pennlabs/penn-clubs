@@ -1142,9 +1142,9 @@ class ClubTestCase(TestCase):
 
     def test_club_display_after_deactivation_for_permissioned_vs_non_permissioned(self):
         """
-        Test club retrieval during renewal period after deactivation.
-        Non-permissioned users should see last approved version.
-        Privileged users (e.g. admins, club members) should see most up-to-date.
+        Test club retrieval after deactivation script runs. Non-permissioned users
+        should see the last approved version of the club. Permissioned users (e.g.
+        admins, club members) should see the most up-to-date version.
         """
         # club is approved before deactivation
         self.assertTrue(self.club1.approved)
@@ -1154,7 +1154,7 @@ class ClubTestCase(TestCase):
         club = self.club1
         club.refresh_from_db()
 
-        # club is not approved and does not have approver after deactivation
+        # after deactivation, club should not be approved and should not have approver
         self.assertIsNone(club.approved)
         self.assertIsNone(club.approved_by)
 
