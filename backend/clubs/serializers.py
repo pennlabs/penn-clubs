@@ -2319,7 +2319,7 @@ class ReportClubField(serializers.Field):
     def to_representation(self, value):
         """
         This is called to get the value for a partcular cell, given the club code.
-        The entire field object can be though of as a column in the spreadsheet.
+        The entire field object can be thought of as a column in the spreadsheet.
         """
         return self._cached_values.get(value, self._default_value)
 
