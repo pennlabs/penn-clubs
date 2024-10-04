@@ -998,7 +998,7 @@ class ClubListSerializer(serializers.ModelSerializer):
         - Privileged users see current version (or when bypass=True)
         - For non-privileged users:
           - During renewal period: show last approved version from past calendar year
-          - Outside renewal period: show last approved version from past calendar year
+          - Outside renewal period: show last approved version from this renewal cycle
         """
         user = self.context["request"].user
         can_see_pending = user.has_perm("clubs.see_pending_clubs") or user.has_perm(
