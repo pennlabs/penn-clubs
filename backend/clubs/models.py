@@ -294,6 +294,7 @@ class Club(models.Model):
 
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=False)
+    beta = models.BooleanField(default=False)  # opts club into all beta features
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     terms = models.CharField(blank=True, max_length=1024)

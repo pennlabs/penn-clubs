@@ -167,6 +167,7 @@ export interface Club {
   approved_comment: string | null
   available_virtually: boolean
   badges: Badge[]
+  beta: boolean
   code: string
   description: string
   email: string

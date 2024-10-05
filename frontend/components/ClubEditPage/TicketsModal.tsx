@@ -14,7 +14,7 @@ import {
 } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 import { BODY_FONT } from '../../constants/styles'
-import { ClubEvent } from '../../types'
+import { Club, ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
 import CoverPhoto from '../EventPage/CoverPhoto'
 
@@ -56,6 +56,7 @@ const notify = (
 
 type TicketItemProps = {
   ticket: Ticket
+  club: Club
   onChange?: (ticket: Ticket) => void
   onDelete?: () => void
   deletable: boolean
@@ -63,6 +64,7 @@ type TicketItemProps = {
 
 const TicketItem: React.FC<TicketItemProps> = ({
   ticket: propTicket,
+  club,
   onChange,
   onDelete,
   deletable,
@@ -122,7 +124,7 @@ const TicketItem: React.FC<TicketItemProps> = ({
             className="input"
             value={ticket.price ?? ''}
             placeholder="Ticket Price"
-            disabled={!TICKETING_PAYMENT_ENABLED}
+            disabled={!TICKETING_PAYMENT_ENABLED && !club.beta}
             onChange={(e) => {
               const price = e.target.value
               setTicket({ ...ticket, price })
@@ -221,9 +223,11 @@ type Ticket = {
 
 const TicketsModal = ({
   event,
+  club,
   onSuccessfulSubmit,
 }: {
   event: ClubEvent
+  club: Club
   onSuccessfulSubmit: () => void
 }): ReactElement => {
   const { large_image_url, image_url, club_name, name, id } = event
@@ -333,6 +337,7 @@ const TicketsModal = ({
             <TicketItem
               key={index}
               ticket={ticket}
+              club={club}
               deletable={tickets.length > 1}
               onChange={(newTicket) => {
                 setTickets((t) =>

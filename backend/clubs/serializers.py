@@ -1502,6 +1502,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Override save in order to replace code with slugified name if not specified.
         """
+        if "beta" in self.validated_data:
+            raise serializers.ValidationError(
+                "The beta field is not allowed to be set by clubs."
+            )
+
         # remove any spaces from the name
         if "name" in self.validated_data:
             self.validated_data["name"] = self.validated_data["name"].strip()
@@ -1704,6 +1709,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_by",
             "approved_comment",
             "badges",
+            "beta",
             "created_at",
             "description",
             "events",
