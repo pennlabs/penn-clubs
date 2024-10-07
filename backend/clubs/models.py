@@ -280,7 +280,7 @@ class Club(models.Model):
         blank=True,
     )
     approved_comment = models.TextField(null=True, blank=True)
-    approved_on = models.DateTimeField(null=True, blank=True)
+    approved_on = models.DateTimeField(null=True, blank=True, db_index=True)
 
     archived = models.BooleanField(default=False)
     archived_by = models.ForeignKey(
