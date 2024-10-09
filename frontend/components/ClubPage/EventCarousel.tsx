@@ -90,9 +90,7 @@ const EventCarousel = ({ data }: EventsProps) => {
       </Arrow>
       {show && (
         <Modal show={show} closeModal={hideModal} marginBottom={false}>
-          {modalData && (
-            <EventModal event={modalData} showDetailsButton={false} />
-          )}
+          {modalData && <EventModal event={modalData} />}
         </Modal>
       )}
     </div>
