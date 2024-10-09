@@ -313,7 +313,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           }}
         >
           <Subtitle>Your cart is empty</Subtitle>
-          <Text isGray>
+          <Text $isGray>
             To add tickets to your cart, visit the event page and select the
             tickets you wish to purchase. If you believe this is an error,
             please contact support at

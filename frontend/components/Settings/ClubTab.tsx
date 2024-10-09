@@ -232,7 +232,7 @@ const ClubTab = ({
     <>
       <EmptyState name="button" />
       <Center>
-        <Text isGray>
+        <Text $isGray>
           No memberships yet! Browse {OBJECT_NAME_PLURAL}{' '}
           <Link href="/">here</Link>.
         </Text>
