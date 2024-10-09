@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import freezegun
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.db.models import Count
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
@@ -1018,6 +1019,18 @@ class TicketTestCase(TestCase):
             reconciliation_id=MockPaymentResponse().reconciliation_id
         ).exists()
         self.assertTrue(record_exists)
+
+        # Check that confirmation emails were sent
+        self.assertEqual(len(mail.outbox), len(tickets_to_add))
+        for msg in mail.outbox:
+            self.assertIn(
+                f"Ticket confirmation for {self.user1.first_name} "
+                f"{self.user1.last_name}",
+                msg.subject,
+            )
+            self.assertIn(self.user1.first_name, msg.body)
+            self.assertIn(self.event1.name, msg.body)
+            self.assertIsNotNone(msg.attachments)
 
     def test_initiate_checkout_non_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")

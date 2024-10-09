@@ -5620,16 +5620,18 @@ class TicketViewSet(viewsets.ModelViewSet):
             buyer_phone=order_info["billTo"].get("phoneNumber", None),
             buyer_email=order_info["billTo"]["email"],
         )
-
         tickets.update(owner=user, holder=None, transaction_record=transaction_record)
+
         cart.tickets.clear()
-        for ticket in tickets:
-            ticket.send_confirmation_email()
-
         Ticket.objects.update_holds()
-
         cart.checkout_context = None
         cart.save()
+
+        tickets = Ticket.objects.filter(
+            owner=user, transaction_record=transaction_record
+        )
+        for ticket in tickets:
+            ticket.send_confirmation_email()
 
     @staticmethod
     def _place_hold_on_tickets(user, tickets):
