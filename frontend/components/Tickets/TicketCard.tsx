@@ -132,7 +132,8 @@ export const TicketCard = ({
   indexProps?: TicketCardIndexProps
 
   onRemove?: () => void
-  onChange?: (count: number) => void
+  // Optimistically update the ticket count but revert if server request fails
+  onChange?: (count: number, propogateCount: (number) => void) => void
   onClick?: () => void
 
   viewModal?: (type: ModalType) => void
@@ -196,7 +197,10 @@ export const TicketCard = ({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     setIsEditMode(false)
-                    onChange?.(parseInt(e.currentTarget.value ?? ticket.count))
+                    onChange?.(
+                      parseInt(e.currentTarget.value ?? ticket.count),
+                      setTicketCount,
+                    )
                   }
                 }}
               />
@@ -256,12 +260,12 @@ export const TicketCard = ({
                 css={css`
                   font-size: 12px;
                   position: absolute;
-                  right: 12px;
-                  top: 12px;
+                  right: 8px;
+                  top: 8px;
                 `}
               >
-                {datetimeData.dayDuration < 0 ? '-' : '+'}{' '}
-                {Math.abs(datetimeData.dayDuration)}
+                {datetimeData.dayDuration < 0 ? '-' : '+'}
+                {Math.abs(datetimeData.dayDuration)}d
               </div>
             )}
           </Title>
@@ -318,7 +322,7 @@ export const TicketCard = ({
           `}
           onClick={() => {
             if (isEditMode) {
-              onChange?.(ticketCount || ticket.count!)
+              onChange?.(ticketCount || ticket.count!, setTicketCount)
             }
             setIsEditMode(!isEditMode)
           }}
