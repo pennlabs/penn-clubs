@@ -5186,7 +5186,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 buyable=True,  # should not be triggered as buyable is by ticket class
                 owner__isnull=True,
                 holder__isnull=True,
-                event__end_time__gte=now,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
             num_short = ticket_class["count"] - available_tickets.count()
