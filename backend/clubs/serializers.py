@@ -1008,12 +1008,28 @@ class ClubListSerializer(serializers.ModelSerializer):
                 and instance.membership_set.filter(person=user).exists()
             )
             if not can_see_pending and not is_member:
+                if instance.approved is False:
+                    raise serializers.ValidationError(
+                        "This club has been removed from the platform."
+                    )
+                # Given month and date APPROVAL_CUTOFF, find the last date
+                last_date = timezone.now().replace(
+                    month=settings.APPROVAL_CUTOFF.tm_mon,
+                    day=settings.APPROVAL_CUTOFF.tm_mday,
+                )
+                if timezone.now() < last_date:
+                    last_date = last_date.replace(year=timezone.now().year - 1)
+
                 historical_club = (
                     instance.history.filter(approved=True)
                     .order_by("-approved_on")
                     .first()
                 )
-                if historical_club is not None:
+                if (
+                    historical_club is not None
+                    and historical_club.approved_on
+                    and historical_club.approved_on < last_date
+                ):
                     approved_instance = historical_club.instance
                     approved_instance._is_historical = True
                     return super().to_representation(approved_instance)
