@@ -5165,6 +5165,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         for ticket_class in tickets_to_replace.values(
             "type", "event", "event__name", "event__end_time"
         ).annotate(count=Count("id")):
+            # we don't need to lock, since we aren't updating holder/owner
             if ticket_class["event__end_time"] < now:
                 # Event has elapsed, mark all tickets as sold out
                 sold_out_tickets.append(
