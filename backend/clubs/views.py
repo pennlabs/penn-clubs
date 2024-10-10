@@ -5139,8 +5139,12 @@ class TicketViewSet(viewsets.ModelViewSet):
             owner=self.request.user
         )
 
+        now = timezone.now()
+
         tickets_to_replace = cart.tickets.filter(
-            Q(owner__isnull=False) | Q(holder__isnull=False)
+            Q(owner__isnull=False)
+            | Q(holder__isnull=False)
+            | Q(event__end_time__lt=now)
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
@@ -5152,22 +5156,37 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
             )
 
-        # Attempt to replace all tickets that have gone stale
+        # Attempt to replace all tickets that have gone stale or are for elapsed events
         replacement_tickets, sold_out_tickets = [], []
 
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
         tickets_to_replace = tickets_to_replace.select_related("event")
 
         for ticket_class in tickets_to_replace.values(
-            "type", "event", "event__name"
+            "type", "event", "event__name", "event__end_time"
         ).annotate(count=Count("id")):
-            # we don't need to lock, since we aren't updating holder/owner
+            if ticket_class["event__end_time"] < now:
+                # Event has elapsed, mark all tickets as sold out
+                sold_out_tickets.append(
+                    {
+                        "type": ticket_class["type"],
+                        "event": {
+                            "id": ticket_class["event"],
+                            "name": ticket_class["event__name"],
+                        },
+                        "count": ticket_class["count"],
+                    }
+                )
+                continue
+
+            # For non-elapsed events, proceed with replacement logic
             available_tickets = Ticket.objects.filter(
                 event=ticket_class["event"],
                 type=ticket_class["type"],
                 buyable=True,  # should not be triggered as buyable is by ticket class
                 owner__isnull=True,
                 holder__isnull=True,
+                event__end_time__gte=now,
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
             num_short = ticket_class["count"] - available_tickets.count()
