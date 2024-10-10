@@ -5180,7 +5180,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 )
                 continue
 
-            # For non-elapsed events, proceed with replacement logic
             available_tickets = Ticket.objects.filter(
                 event=ticket_class["event"],
                 type=ticket_class["type"],
