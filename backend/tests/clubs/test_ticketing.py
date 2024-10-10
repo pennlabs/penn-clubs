@@ -948,6 +948,40 @@ class TicketTestCase(TestCase):
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
         self.assertEqual(len(in_cart & to_add), 0, in_cart | to_add)
 
+    def test_get_cart_expired_event(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Add a few tickets
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        tickets_to_add = self.tickets1[:5]
+        for ticket in tickets_to_add:
+            cart.tickets.add(ticket)
+        cart.save()
+
+        # Set the event end time to the past
+        self.event1.end_time = timezone.now() - timezone.timedelta(days=1)
+        self.event1.save()
+
+        resp = self.client.get(reverse("tickets-cart"), format="json")
+        data = resp.json()
+
+        # The cart should now be empty
+        self.assertEqual(len(data["tickets"]), 0, data)
+
+        # All tickets should be in the sold out array
+        self.assertEqual(len(data["sold_out"]), 1, data)
+
+        expected_sold_out = {
+            "type": self.tickets1[0].type,
+            "event": {
+                "id": self.event1.id,
+                "name": self.event1.name,
+            },
+            "count": 5,
+        }
+        for key, val in expected_sold_out.items():
+            self.assertEqual(data["sold_out"][0][key], val, data)
+
     def test_place_hold_on_tickets(self):
         from clubs.views import TicketViewSet
 
