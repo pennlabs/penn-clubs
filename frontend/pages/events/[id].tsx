@@ -361,10 +361,12 @@ const EventPage: React.FC<EventPageProps> = ({
                   ))}
                   <button
                     className="button is-primary is-fullwidth mt-4"
-                    disabled={totalAvailableTickets === 0}
+                    disabled={
+                      totalAvailableTickets === 0 || endTime < DateTime.now()
+                    }
                     onClick={() => setShowTicketModal(true)}
                   >
-                    Get Tickets
+                    {endTime < DateTime.now() ? 'Event Ended' : 'Get Tickets'}
                   </button>
                 </Card>
               )}
