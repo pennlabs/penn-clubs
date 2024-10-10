@@ -969,7 +969,7 @@ class TicketTestCase(TestCase):
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
         self.assertEqual(len(in_cart & to_add), 0, in_cart | to_add)
 
-    def test_get_cart_expired_event(self):
+    def test_get_cart_elapsed_event(self):
         self.client.login(username=self.user1.username, password="test")
 
         # Add a few tickets
