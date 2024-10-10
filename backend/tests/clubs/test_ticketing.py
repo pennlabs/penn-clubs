@@ -496,6 +496,27 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
 
+    def test_add_to_cart_elapsed_event(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Set the event end time to the past
+        self.event1.end_time = timezone.now() - timezone.timedelta(days=1)
+        self.event1.save()
+
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 1},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertIn("This event has already ended", resp.data["detail"], resp.data)
+
     def test_add_to_cart_twice_accumulates(self):
         self.client.login(username=self.user1.username, password="test")
 
