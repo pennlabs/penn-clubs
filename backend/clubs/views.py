@@ -2417,7 +2417,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         # Check if the event has already ended
-        if event.end_time <= timezone.now():
+        if event.end_time < timezone.now():
             return Response(
                 {"detail": "This event has already ended", "success": False},
                 status=status.HTTP_403_FORBIDDEN,
