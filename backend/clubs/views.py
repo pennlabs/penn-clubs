@@ -2416,10 +2416,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
+        # Check if the event has already ended
+        if event.end_time <= timezone.now():
+            return Response(
+                {"detail": "This event has already ended", "success": False},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Cannot add tickets that haven't dropped yet
         if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
             return Response(
-                {"detail": "Ticket drop time has not yet elapsed"},
+                {"detail": "Ticket drop time has not yet elapsed", "success": False},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -2463,7 +2470,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
             if tickets.count() < count:
                 return Response(
-                    {"detail": f"Not enough tickets of type {type} left!"},
+                    {
+                        "detail": f"Not enough tickets of type {type} left!",
+                        "success": False,
+                    },
                     status=status.HTTP_403_FORBIDDEN,
                 )
             cart.tickets.add(*tickets[:count])
