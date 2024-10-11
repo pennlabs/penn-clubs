@@ -13,37 +13,43 @@ view_url:
     type: string
 year:
     type: number
+reply_emails:
+    type: array
+    items:
+        type: string
 -->
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <h2><b>{{ name }}</b> {% if change %}changes{% else %}renewal{% endif %} marked as {% if approved %}approved{% else %}not approved{% endif %} on Penn Clubs</h2>
+    <h2><b>{{ name }}</b> status update on Penn Clubs</h2>
     {% if approved %}
-    <p style="font-size: 1.2em; color: #228B22">
-        <b>🎉 Congratulations!</b> Your club {% if change %}changes have{% else %}has{% endif %} been approved by the <b>Office of Student Affairs</b> for the {{ year }} school year! 
-        Your {% if change %}updated{% else %}new{% endif %} club information is now open to the public on Penn Clubs.
+    <p style="font-size: 1.2em;">
+        Your club {% if change %}changes have{% else %}has{% endif %} been approved by the <b>Office of Student Affairs</b> for the {{ year }} school year. 
+        Your {% if change %}updated{% else %}new{% endif %} club information is now visible to the public on Penn Clubs.
     </p>
     {% if approved_comment %}
         <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc; white-space: pre-wrap;">{{ approved_comment }}</p>
     {% endif %}
     <p style="font-size: 1.2em">
-        You do not need to perform any further actions.
+        No further action is required at this time.
     </p>
     <p style="font-size: 1.2em">
-        You can view your club <a href="{{ view_url }}">here</a> and make further edits <a href="{{ view_url }}">here</a>.
-        If you have any feedback about the club renewal process, you can respond to this email or fill out <a href="https://airtable.com/shrCsYFWxCwfwE7cf">this form</a>.
+        You can view your club <a href="{{ view_url }}">here</a> and make further edits <a href="{{ edit_url }}">here</a>.
+        If you have any feedback about the club renewal process, please respond to this email or <a href="mailto:{% for email in reply_emails %}{% if not forloop.first %},{% endif %}{{ email }}{% endfor %}">contact the Office of Student Affairs</a>.
     </p>
     <p style="font-size: 1.2em">
-        Thank you for using Penn Clubs!
+        Thank you for using Penn Clubs.
     </p>
     {% else %}
-    <p style="font-size: 1.2em; color: #8B2222">
-        <b>Oh no!</b> Your club {% if change %}updates have{% else %}renewal has{% endif %} <b>not been approved</b> by the <b>Office of Student Affairs</b>. You will need to make changes to your club information before gaining approval.
+    <p style="font-size: 1.2em;">
+        Your club {% if change %}updates have{% else %}renewal has{% endif %} not been approved by the <b>Office of Student Affairs</b>. Some changes to your club information are required before approval can be granted.
     </p>
-    <p style="font-size: 1.2em">The reason your club was not approved is shown below:</p>
+    <p style="font-size: 1.2em">The feedback regarding your club's status is as follows:</p>
     <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc;">{{ approved_comment }}</p>
-    <p style="font-size: 1.2em">You will need to <a href="{{ edit_url }}">make edits</a> to your club and press the button found <a href="{{ view_url }}">here</a> to apply again for approval.</p>
-    <p style="font-size: 1.2em">If you run into any issues with the approval process, you can respond to this email.</p>
+    <p style="font-size: 1.2em">Please <a href="{{ edit_url }}">make the necessary edits</a> to your club information and use the button <a href="{{ view_url }}">here</a> to resubmit for approval.</p>
+    <p style="font-size: 1.2em">
+        If you have any questions about the approval process, please feel free to respond to this email or <a href="mailto:{% for email in reply_emails %}{% if not forloop.first %},{% endif %}{{ email }}{% endfor %}">contact the Office of Student Affairs</a>.
+    </p>
     <p style="font-size: 1.2em">
     <a
        style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold"

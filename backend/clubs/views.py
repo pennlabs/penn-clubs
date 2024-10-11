@@ -2068,17 +2068,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # Send notice to club officers and executor
         context = {
             "name": club.name,
-            "branding_site_name": settings.BRANDING_SITE_NAME,
-            "branding_site_email": settings.BRANDING_SITE_EMAIL,
+            "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         }
         emails = club.get_officer_emails() + [self.request.user.email]
         send_mail_helper(
             name="club_deletion",
-            subject="Removal of {} from {}".format(
+            subject="{} status update on {}".format(
                 club.name, settings.BRANDING_SITE_NAME
             ),
             emails=emails,
             context=context,
+            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         )
 
     @action(detail=False, methods=["GET"])

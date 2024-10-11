@@ -677,6 +677,7 @@ class Club(models.Model):
             "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
             "edit_url": settings.EDIT_URL.format(domain=domain, club=self.code),
             "change": change,
+            "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         }
 
         emails = self.get_officer_emails()
@@ -684,10 +685,8 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{}{} {} on {}".format(
-                    "Changes to " if change else "",
+                subject="{} status update on {}".format(
                     self.name,
-                    "accepted" if self.approved else "not approved",
                     settings.BRANDING_SITE_NAME,
                 ),
                 emails=emails,
