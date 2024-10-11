@@ -116,14 +116,6 @@ const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
               {!active && (
                 <InactiveTag className="tag is-rounded">Inactive</InactiveTag>
               )}
-              {approved === null && (
-                <InactiveTag className="tag is-rounded">
-                  Pending Approval
-                </InactiveTag>
-              )}
-              {approved === false && (
-                <InactiveTag className="tag is-rounded">Rejected</InactiveTag>
-              )}
               <TagGroup tags={tags} />
             </div>
             {img && (
