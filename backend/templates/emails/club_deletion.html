@@ -14,7 +14,7 @@ reply_emails:
         Your club has been removed from Penn Clubs by the Office of Student Affairs.
     </p>
     <p style="font-size: 1.2em">
-        If you have any questions or concerns, please contact 
-        <a href="mailto:{% for email in reply_emails %}{{ email }}{% if not forloop.last %},{% endif %}{% endfor %}">the Office of Student Affairs</a>.
+        If you have any questions or concerns, please
+        respond to this email or <a href="mailto:{% for email in reply_emails %}{% if not forloop.first %},{% endif %}{{ email }}{% endfor %}">contact the Office of Student Affairs</a>.
     </p>
 {% endblock %}

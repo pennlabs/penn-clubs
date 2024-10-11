@@ -2068,9 +2068,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             "name": club.name,
             "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         }
-        emails = (
-            club.get_officer_emails() + [self.request.user.email] + settings.OSA_EMAILS
-        )
+        emails = club.get_officer_emails() + [self.request.user.email]
         send_mail_helper(
             name="club_deletion",
             subject="Removal of {} from {}".format(
@@ -2078,6 +2076,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             ),
             emails=emails,
             context=context,
+            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         )
 
     @action(detail=False, methods=["GET"])
