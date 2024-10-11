@@ -315,17 +315,19 @@ const ClubPage = ({
             <div className="mb-3">
               <StrongText>Additional Pages</StrongText>
               <ul>
-                <li>
-                  <Link
-                    legacyBehavior
-                    href={CLUB_ALUMNI_ROUTE()}
-                    as={CLUB_ALUMNI_ROUTE(club.code)}
-                  >
-                    <a>
-                      <Icon name="database" /> Alumni
-                    </a>
-                  </Link>
-                </li>
+                {userInfo && (
+                  <li>
+                    <Link
+                      legacyBehavior
+                      href={CLUB_ALUMNI_ROUTE()}
+                      as={CLUB_ALUMNI_ROUTE(club.code)}
+                    >
+                      <a>
+                        <Icon name="database" /> Alumni
+                      </a>
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link
                     legacyBehavior

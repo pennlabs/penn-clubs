@@ -1369,6 +1369,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                             type: string
         ---
         """
+        if not request.user.is_authenticated:
+            raise PermissionDenied
         club = self.get_object()
         results = collections.defaultdict(list)
         for first, last, year, show, username in club.membership_set.filter(
