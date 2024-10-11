@@ -13,6 +13,10 @@ view_url:
     type: string
 year:
     type: number
+reply_emails:
+    type: array
+    items:
+        type: string
 -->
 {% extends 'emails/base.html' %}
 
@@ -31,7 +35,7 @@ year:
     </p>
     <p style="font-size: 1.2em">
         You can view your club <a href="{{ view_url }}">here</a> and make further edits <a href="{{ edit_url }}">here</a>.
-        If you have any feedback about the club renewal process, you can respond to this email or fill out <a href="https://airtable.com/shrCsYFWxCwfwE7cf">this form</a>.
+        If you have any feedback about the club renewal process, you can respond to this email.
     </p>
     <p style="font-size: 1.2em">
         Thank you for using Penn Clubs.
@@ -43,7 +47,10 @@ year:
     <p style="font-size: 1.2em">The feedback regarding your club's status is as follows:</p>
     <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc;">{{ approved_comment }}</p>
     <p style="font-size: 1.2em">Please <a href="{{ edit_url }}">make the necessary edits</a> to your club information and use the button <a href="{{ view_url }}">here</a> to resubmit for approval.</p>
-    <p style="font-size: 1.2em">If you have any questions about the approval process, please feel free to respond to this email.</p>
+    <p style="font-size: 1.2em">
+        If you have any questions or concerns, please contact 
+        <a href="mailto:{% for email in reply_emails %}{{ email }}{% if not forloop.last %},{% endif %}{% endfor %}">the Office of Student Affairs</a>.
+    </p>
     <p style="font-size: 1.2em">
     <a
        style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: green; border-radius: 3px; font-weight: bold"

@@ -677,6 +677,7 @@ class Club(models.Model):
             "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
             "edit_url": settings.EDIT_URL.format(domain=domain, club=self.code),
             "change": change,
+            "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         }
 
         emails = self.get_officer_emails()
