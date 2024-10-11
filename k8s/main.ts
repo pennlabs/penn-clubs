@@ -69,7 +69,7 @@ export class MyChart extends PennLabsChart {
 
     /** Cronjobs **/
     new CronJob(this, 'rank-clubs', {
-      schedule: cronTime.everyDayAt(8),
+      schedule: cronTime.everyDayAt(6, 18),
       image: backendImage,
       secret: clubsSecret,
       cmd: ['python', 'manage.py', 'rank'],
