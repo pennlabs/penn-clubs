@@ -2643,7 +2643,7 @@ class ClubTestCase(TestCase):
 
     def test_alumni_page(self):
         """
-        Ensure alumni page can be seen, even for users who are not logged in.
+        Ensure alumni page can be seen
         """
         now = timezone.now()
         for i, user in enumerate([self.user1, self.user2, self.user3]):
@@ -2655,6 +2655,10 @@ class ClubTestCase(TestCase):
             )
 
         # fetch alumni page
+        resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [403], resp.content)
+
+        self.client.login(username=self.user4.username, password="test")
         resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
         data = resp.json()
