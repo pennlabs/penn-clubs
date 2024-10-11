@@ -291,7 +291,10 @@ const Rank = (): ReactElement => (
           name: 'Random Factor',
           description: `A random factor is applied periodically in order to ensure that students see new ${OBJECT_NAME_PLURAL} when they visit ${SITE_NAME}.`,
           points: [
-            [10, 'Random number between 0 and this number, updated daily'],
+            [
+              15,
+              'Standard exponential random number scaled to average this number, updated daily',
+            ],
           ],
         },
       ]}
