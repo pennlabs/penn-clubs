@@ -685,10 +685,8 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{}{} {} on {}".format(
-                    "Changes to " if change else "",
+                subject="{} status update on {}".format(
                     self.name,
-                    "accepted" if self.approved else "not approved",
                     settings.BRANDING_SITE_NAME,
                 ),
                 emails=emails,

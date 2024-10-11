@@ -2071,7 +2071,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         emails = club.get_officer_emails() + [self.request.user.email]
         send_mail_helper(
             name="club_deletion",
-            subject="Removal of {} from {}".format(
+            subject="{} status update on {}".format(
                 club.name, settings.BRANDING_SITE_NAME
             ),
             emails=emails,
