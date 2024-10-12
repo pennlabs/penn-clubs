@@ -16,8 +16,7 @@ export default function AdminNoteCard({
 }: AdminNoteCardProps): ReactElement {
   const noteTableFields = [
     { label: 'Author', name: 'creator' },
-    { label: 'Title', name: 'title' },
-    { label: 'Content', name: 'content' },
+    { label: 'Note', name: 'content' },
     {
       label: 'Created On',
       name: 'created_at',
@@ -35,12 +34,11 @@ export default function AdminNoteCard({
         baseUrl={`/clubs/${club.code}/adminnotes/`}
         fields={
           <>
-            <Field name="title" as={TextField} required />
-            <Field name="content" as={TextField} type="textarea" />
+            <Field name="content" as={TextField} type="textarea" required />
           </>
         }
         tableFields={noteTableFields}
-        searchableColumns={['title', 'content']}
+        searchableColumns={['content']}
         noun="Note"
       />
     </BaseCard>
