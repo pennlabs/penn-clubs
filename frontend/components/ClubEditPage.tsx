@@ -42,6 +42,7 @@ import {
   SHOW_ORG_MANAGEMENT,
   SITE_NAME,
 } from '../utils/branding'
+import AdminNoteCard from './ClubEditPage/AdminNoteCard'
 import AdvisorCard from './ClubEditPage/AdvisorCard'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import ApplicationsCard from './ClubEditPage/ApplicationsCard'
@@ -236,6 +237,11 @@ const ClubForm = ({
             onSubmit={submit}
           />
         ),
+      },
+      {
+        name: 'notes',
+        label: 'Administrator Notes',
+        content: <AdminNoteCard club={club} />,
       },
       {
         name: 'member',

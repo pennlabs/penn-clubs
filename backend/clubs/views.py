@@ -7382,7 +7382,9 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     def get_queryset(self):
-        return AdminNote.objects.filter(club__code=self.kwargs.get("club_code"))
+        return AdminNote.objects.filter(
+            club__code=self.kwargs.get("club_code")
+        ).order_by("-created_at")
 
 
 class ScriptExecutionView(APIView):
