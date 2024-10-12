@@ -26,6 +26,7 @@ import {
   School,
   StudentType,
   Tag,
+  UserInfo,
   VisitType,
   Year,
 } from '../types'
@@ -75,6 +76,7 @@ type ClubFormProps = {
   tags: Tag[]
   studentTypes: StudentType[]
   tab?: string | null
+  userInfo?: UserInfo
 }
 
 const ClubForm = ({
@@ -86,6 +88,7 @@ const ClubForm = ({
   studentTypes,
   clubId,
   tab,
+  userInfo,
 }: ClubFormProps): ReactElement => {
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
@@ -238,11 +241,15 @@ const ClubForm = ({
           />
         ),
       },
-      {
-        name: 'notes',
-        label: 'Administrator Notes',
-        content: <AdminNoteCard club={club} />,
-      },
+      ...(userInfo !== undefined && userInfo.is_superuser
+        ? [
+            {
+              name: 'notes',
+              label: 'Administrator Notes',
+              content: <AdminNoteCard club={club} />,
+            },
+          ]
+        : []),
       {
         name: 'member',
         label: OBJECT_TAB_MEMBERSHIP_LABEL,
