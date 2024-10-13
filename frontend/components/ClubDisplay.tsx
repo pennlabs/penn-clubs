@@ -1,9 +1,10 @@
 import { ReactElement, useEffect } from 'react'
+import Masonry from 'react-masonry-css'
 import styled from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
 import ClubTableRow from '../components/ClubTableRow'
-import { mediaMaxWidth, SM } from '../constants/measurements'
+import { getNumberFromPx, mediaMaxWidth, SM } from '../constants/measurements'
 import { Club, Tag } from '../types'
 
 const ClubTableRowWrapper = styled.div`
@@ -11,6 +12,26 @@ const ClubTableRowWrapper = styled.div`
     margin-left: -1rem;
     margin-right: 1rem;
     width: calc(100vw);
+  }
+`
+
+const StyledMasonry = styled(Masonry)`
+  display: flex;
+  width: auto;
+  margin: -12px;
+
+  .masonry-column {
+    background-clip: padding-box;
+  }
+
+  .masonry-column > div {
+    width: 100% !important;
+  }
+
+  ${mediaMaxWidth(SM)} {
+    .masonry-column {
+      width: 100% !important;
+    }
   }
 `
 
@@ -50,11 +71,18 @@ const ClubDisplay = ({
 
   if (display === 'cards') {
     return (
-      <div className="columns is-multiline is-desktop is-tablet">
+      <StyledMasonry
+        breakpointCols={{
+          default: 2,
+          [getNumberFromPx(SM)]: 1,
+        }}
+        className="masonry-grid"
+        columnClassName="masonry-column"
+      >
         {displayClubs.map((club) => (
           <ClubCard key={club.code} club={club} />
         ))}
-      </div>
+      </StyledMasonry>
     )
   }
 

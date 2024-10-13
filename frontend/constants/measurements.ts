@@ -57,6 +57,8 @@ export const mediaMinWidth = (width: string): string =>
   `@media screen and (min-width: ${width})`
 export const mediaMaxWidth = (width: string): string =>
   `@media screen and (max-width: ${width})`
+export const getNumberFromPx = (px: string): number =>
+  parseInt(px.replace('px', ''), 10)
 
 export const SM = '768px'
 export const MD = '992px'
