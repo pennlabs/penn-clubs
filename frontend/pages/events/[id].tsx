@@ -201,6 +201,7 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
         </p>
         <Input
           type="number"
+          pattern="[0-9]*"
           className="input"
           min={0}
           max={max}
@@ -208,7 +209,7 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
           step={1}
           placeholder="Ticket Count"
           onChange={handleCountChange}
-          style={{ flex: '0 0 auto', maxWidth: '48px' }}
+          style={{ flex: '0 0 auto', maxWidth: '64px' }}
         />
       </div>
     </div>

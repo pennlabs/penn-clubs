@@ -251,9 +251,9 @@ const sites = {
   },
 }
 
-export const TICKETING_PAYMENT_ENABLED = false
+export const TICKETING_PAYMENT_ENABLED = true
 export const REAPPROVAL_QUEUE_ENABLED = true
-export const NEW_APPROVAL_QUEUE_ENABLED = false
+export const NEW_APPROVAL_QUEUE_ENABLED = true
 export const SITE_ID = site
 export const SITE_NAME = sites[site].SITE_NAME
 export const SITE_SUBTITLE = sites[site].SITE_SUBTITLE

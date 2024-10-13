@@ -208,7 +208,7 @@ OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
 # Controls whether existing clubs can submit for reapproval
 REAPPROVAL_QUEUE_OPEN = True
 # Controls whether new clubs can submit for initial approval
-NEW_APPROVAL_QUEUE_OPEN = False
+NEW_APPROVAL_QUEUE_OPEN = True
 
 # File upload settings
 

@@ -36,7 +36,7 @@ const Payment: React.FC<PaymentProps> = ({
   return (
     <>
       <Script
-        src="https://apitest.cybersource.com/up/v1/assets/0.15/SecureAcceptance.js"
+        src="https://api.cybersource.com/up/v1/assets/0.22.0/SecureAcceptance.js"
         async
         onLoad={onLoad}
       />

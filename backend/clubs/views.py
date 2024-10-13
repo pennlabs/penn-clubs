@@ -1151,6 +1151,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         else:
             return queryset.filter(Q(approved=True) | Q(ghost=True))
 
+    def _has_elevated_view_perms(self, instance):
+        """
+        Determine if the current user has elevated view privileges.
+        """
+        see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
+        manage_club = self.request.user.has_perm("clubs.manage_club")
+        is_member = (
+            self.request.user.is_authenticated
+            and instance.membership_set.filter(person=self.request.user).exists()
+        )
+        return see_pending or manage_club or is_member
+
     @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
@@ -1192,8 +1204,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # ensure user is allowed to upload image
         club = self.get_object()
-        key = f"clubs:{club.id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{club.id}-authed")
+        cache.delete(f"clubs:{club.id}-anon")
 
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
@@ -1357,6 +1369,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                             type: string
         ---
         """
+        if not request.user.is_authenticated:
+            raise PermissionDenied
         club = self.get_object()
         results = collections.defaultdict(list)
         for first, last, year, show, username in club.membership_set.filter(
@@ -2002,9 +2016,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def retrieve(self, *args, **kwargs):
         """
-        Retrieve data about a specific club. Responses cached for 1 hour
+        Retrieve data about a specific club. Responses cached for 1 hour. Caching is
+        disabled for users with elevated view perms so that changes without approval
+        granted don't spill over to public.
         """
-        key = f"clubs:{self.get_object().id}"
+        club = self.get_object()
+
+        # don't cache if user has elevated view perms
+        if self._has_elevated_view_perms(club):
+            return super().retrieve(*args, **kwargs)
+
+        key = f"""clubs:{club.id}-{"authed" if self.request.user.is_authenticated
+                                            else "anon"}"""
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -2018,8 +2041,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
@@ -2027,8 +2050,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().partial_update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
@@ -2045,17 +2068,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # Send notice to club officers and executor
         context = {
             "name": club.name,
-            "branding_site_name": settings.BRANDING_SITE_NAME,
-            "branding_site_email": settings.BRANDING_SITE_EMAIL,
+            "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         }
         emails = club.get_officer_emails() + [self.request.user.email]
         send_mail_helper(
             name="club_deletion",
-            subject="Removal of {} from {}".format(
+            subject="{} status update on {}".format(
                 club.name, settings.BRANDING_SITE_NAME
             ),
             emails=emails,
             context=context,
+            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         )
 
     @action(detail=False, methods=["GET"])
@@ -2259,11 +2282,14 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         public = request.GET.get("public")
-
         if public is not None:
             public = public.strip().lower()
             if public in {"true", "false"}:
-                queryset = queryset.filter(public=public == "true")
+                queryset = queryset.filter(
+                    visibility__gte=Advisor.ADVISOR_VISIBILITY_STUDENTS
+                    if public == "true"
+                    else Advisor.ADVISOR_VISIBILITY_ADMIN
+                )
 
         return queryset
 
@@ -2271,7 +2297,7 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 class AdvisorViewSet(viewsets.ModelViewSet):
     """
     list:
-    Return a list of advisors for this club.
+    Return a list of advisors for this club for club administrators.
 
     create:
     Add an advisor to this club.
@@ -2290,7 +2316,7 @@ class AdvisorViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = AdvisorSerializer
-    permission_classes = [ClubItemPermission | IsSuperuser]
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
     filter_backends = [AdvisorSearchFilter]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
@@ -2798,7 +2824,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_drop_time = drop_time
             event.save()
 
-        cache.delete(f"clubs:{event.club.id}")
+        cache.delete(f"clubs:{event.club.id}-authed")
+        cache.delete(f"clubs:{event.club.id}-anon")
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
@@ -3402,7 +3429,8 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         )
 
         if not self.request.user.is_authenticated:
-            return questions.filter(approved=True)
+            # Hide responder if not authenticated
+            return questions.filter(approved=True).extra(select={"responder": "NULL"})
 
         membership = Membership.objects.filter(
             club__code=club_code, person=self.request.user
@@ -5594,16 +5622,18 @@ class TicketViewSet(viewsets.ModelViewSet):
             buyer_phone=order_info["billTo"].get("phoneNumber", None),
             buyer_email=order_info["billTo"]["email"],
         )
-
         tickets.update(owner=user, holder=None, transaction_record=transaction_record)
+
         cart.tickets.clear()
-        for ticket in tickets:
-            ticket.send_confirmation_email()
-
         Ticket.objects.update_holds()
-
         cart.checkout_context = None
         cart.save()
+
+        tickets = Ticket.objects.filter(
+            owner=user, transaction_record=transaction_record
+        )
+        for ticket in tickets:
+            ticket.send_confirmation_email()
 
     @staticmethod
     def _place_hold_on_tickets(user, tickets):

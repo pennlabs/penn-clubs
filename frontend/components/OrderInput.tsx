@@ -19,7 +19,7 @@ import { Icon } from './common'
 const ORDERINGS = [
   {
     key: 'featured',
-    name: 'Featured',
+    name: 'Default',
     icon: 'star',
   },
   {
@@ -31,11 +31,6 @@ const ORDERINGS = [
     key: '-favorite_count',
     name: 'Bookmarks',
     icon: 'bookmark',
-  },
-  {
-    key: 'random',
-    name: 'Random',
-    icon: 'shuffle',
   },
 ]
 

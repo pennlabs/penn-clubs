@@ -1,18 +1,14 @@
 import Color from 'color'
-import Link from 'next/link'
 import React, { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
-import { Icon } from '../../components/common'
-import { CLUB_ROUTE, ZOOM_BLUE } from '../../constants'
+import { Icon, Text } from '../../components/common'
+import { ZOOM_BLUE } from '../../constants'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { ClubEvent } from '../../types'
 import { doApiRequest } from '../../utils'
-import {
-  OBJECT_NAME_SINGULAR,
-  OBJECT_NAME_TITLE_SINGULAR,
-} from '../../utils/branding'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
 import DateInterval from './DateInterval'
@@ -121,39 +117,6 @@ const LiveEventUpdater = ({
   return null
 }
 
-/**
- * Buttons that allow you to bookmark and subscribe to a club.
- */
-const ActionButtons = ({
-  club: code,
-  isTicketEvent,
-  setDisplayTicketModal,
-  ticketCount,
-  userHasTickets,
-}): ReactElement | null => {
-  return (
-    <>
-      {isTicketEvent && (
-        <>
-          <Link href="/">
-            <button
-              disabled={ticketCount === 0}
-              className="button is-success is-small"
-            >
-              {ticketCount === 0 && !userHasTickets
-                ? ' SOLD OUT'
-                : userHasTickets
-                  ? ' View Tickets'
-                  : ' Get Tickets'}{' '}
-              <Icon name="credit-card" className="ml-2" />
-            </button>
-          </Link>
-        </>
-      )}
-    </>
-  )
-}
-
 type LiveStatsData = {
   attending: number
   attended: number
@@ -196,31 +159,27 @@ export const LiveStats = ({
 
 const EventModal = (props: {
   event: ClubEvent
-  showDetailsButton?: boolean
   onLinkClicked?: () => void
 }): ReactElement => {
-  const { event, showDetailsButton, onLinkClicked } = props
+  const { event, onLinkClicked } = props
   const {
     large_image_url,
     image_url,
-    club,
     club_name,
     start_time,
     end_time,
-    // ticketed,
+    ticketed,
     name,
     url,
     description,
+    id,
   } = event
-  const ticketed = true
   const [userCount, setUserCount] = useState<LiveStatsData | null>(null)
-  const [ticketCount, setTicketCount] = useState<number | null>(null)
+  const [tickets, setTickets] = useState<Record<
+    string,
+    { total: number; available: number; price: number }
+  > | null>(null)
   const [userHasTickets, setUserHasTickets] = useState<boolean | null>(null)
-  const [displayTicketModal, setDisplayTicketModal] = useState<boolean>(false)
-  const [availableTickets, setAvailableTickets] = useState<Array<JSON> | null>(
-    null,
-  )
-
   const now = new Date()
   const startDate = new Date(start_time)
   const endDate = new Date(end_time)
@@ -235,18 +194,26 @@ const EventModal = (props: {
           setUserCount(resp)
         })
     }
-    // TODO: CHANGE TO event.ticketed instead of true when that is added
     if (ticketed) {
-      setTicketCount(0) // TODO: CHANGE BACK TO 0
       doApiRequest(`/events/${event.id}/tickets/`)
         .then((resp) => resp.json())
         .then((resp) => {
-          if (resp.available) {
-            setAvailableTickets(resp.available)
-            for (let i = 0; i < resp.available.length; i++) {
-              setTicketCount(ticketCount + resp.available[i].count)
-            }
-          }
+          const ticketMap = resp.totals.reduce(
+            (acc, cur) => ({
+              ...acc,
+              [cur.type]: {
+                total: cur.count,
+                available:
+                  resp.available.find((t) => t.type === cur.type)?.count ?? 0,
+                price: cur.price,
+              },
+            }),
+            {},
+          ) as Record<
+            string,
+            { total: number; available: number; price: number }
+          >
+          setTickets(ticketMap)
         })
       setUserHasTickets(false)
       doApiRequest(`/tickets/`)
@@ -264,7 +231,7 @@ const EventModal = (props: {
 
   useEffect(refreshLiveData, [])
 
-  return !displayTicketModal ? (
+  return (
     <ModalContainer>
       <CoverPhoto
         image={large_image_url ?? image_url}
@@ -307,43 +274,27 @@ const EventModal = (props: {
           ))}{' '}
         {userCount != null && <LiveStats stats={userCount} />}
         <StyledDescription contents={description} />
-        {showDetailsButton !== false && event.club != null && (
-          <div className="is-clearfix">
-            <div className="buttons is-pulled-right">
-              {club != null && (
-                <ActionButtons
-                  club={club}
-                  isTicketEvent={ticketed}
-                  setDisplayTicketModal={setDisplayTicketModal}
-                  ticketCount={ticketCount}
-                  userHasTickets={userHasTickets}
-                />
-              )}
-              <Link
-                legacyBehavior
-                href={CLUB_ROUTE()}
-                as={CLUB_ROUTE(event.club)}
-              >
-                <a
-                  className="button is-link is-small"
-                  onClick={(e) => {
-                    if (!event.club) {
-                      e.preventDefault()
-                    }
-                  }}
-                >
-                  See {OBJECT_NAME_TITLE_SINGULAR} Details{' '}
-                  <Icon name="chevrons-right" className="ml-2" />
-                </a>
-              </Link>
-            </div>
+        {tickets &&
+          Object.entries(tickets).map(([type, counts]) => (
+            <Text key={type}>
+              {type}: {counts.available} tickets available / {counts.total}{' '}
+              total
+            </Text>
+          ))}
+        <div className="is-clearfix">
+          <div className="buttons is-pulled-right">
+            {userHasTickets && (
+              <a className="button is-secondary" href="/settings/#Tickets">
+                Owned Tickets
+              </a>
+            )}
+            <a className="button is-primary" href={`/events/${id}`}>
+              Event Page
+            </a>
           </div>
-        )}
+        </div>
       </EventDetails>
     </ModalContainer>
-  ) : (
-    // TODO: THIS IS NOTHING RN, SHOULD DISPLAY ALL AVAILABLE TICKETS
-    <ModalContainer>""</ModalContainer>
   )
 }
 

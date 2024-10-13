@@ -18,6 +18,7 @@ from ics import Calendar
 
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
+    Advisor,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -167,6 +168,8 @@ class ClubTestCase(TestCase):
         Tag.objects.create(name="Undergraduate")
 
     def setUp(self):
+        cache.clear()  # clear the cache between tests
+
         self.client = Client()
 
         self.club1 = Club.objects.create(
@@ -201,6 +204,77 @@ class ClubTestCase(TestCase):
             author=self.user2,
             responder=self.user1,
         )
+
+        self.advisor_admin = Advisor.objects.create(
+            name="Anonymous Avi",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_ADMIN,
+        )
+
+        self.advisor_students = Advisor.objects.create(
+            name="Reclusive Rohan",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_STUDENTS,
+        )
+
+        self.advisor_public = Advisor.objects.create(
+            name="Jocular Julian",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_ALL,
+        )
+
+    def test_advisor_visibility(self):
+        """
+        Tests each tier of advisor visibility.
+        """
+        # Anonymous view
+        self.client.logout()
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 1)
+        self.assertEqual(resp.data["advisor_set"][0]["name"], "Jocular Julian")
+
+        # Student view
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 2)
+        sorted_advisors = sorted(
+            [advisor["name"] for advisor in resp.data["advisor_set"]]
+        )
+        self.assertEqual(sorted_advisors, ["Jocular Julian", "Reclusive Rohan"])
+
+        # Admin view
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 3)
+        sorted_advisors = sorted(
+            [advisor["name"] for advisor in resp.data["advisor_set"]]
+        )
+        self.assertEqual(
+            sorted_advisors, ["Anonymous Avi", "Jocular Julian", "Reclusive Rohan"]
+        )
+
+    def test_advisor_viewset(self):
+        # Make sure we can't view advisors via the viewset if not authed
+        self.client.logout()
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn("detail", resp.data)
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn("detail", resp.data)
+
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 3)
 
     def test_club_upload(self):
         """
@@ -1064,6 +1138,58 @@ class ClubTestCase(TestCase):
         self.assertTrue(self.club1.approved)
         self.assertIsNotNone(self.club1.approved_on)
         self.assertIsNotNone(self.club1.approved_by)
+
+    def test_club_display_after_deactivation_for_permissioned_vs_non_permissioned(self):
+        """
+        Test club retrieval after deactivation script runs. Non-permissioned users
+        should see the last approved version of the club. Permissioned users (e.g.
+        admins, club members) should see the most up-to-date version.
+        """
+        # club is approved before deactivation
+        self.assertTrue(self.club1.approved)
+
+        call_command("deactivate", "all", "--force")
+
+        club = self.club1
+        club.refresh_from_db()
+
+        # after deactivation, club should not be approved and should not have approver
+        self.assertIsNone(club.approved)
+        self.assertIsNone(club.approved_by)
+
+        # non-permissioned users should see the last approved version
+        non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(non_admin_resp.status_code, 200)
+        non_admin_data = non_admin_resp.json()
+        self.assertTrue(non_admin_data["approved"])
+
+        # permissioned users should see the club as it is in the DB
+        self.client.login(username=self.user5.username, password="test")
+        admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(admin_resp.status_code, 200)
+        admin_data = admin_resp.json()
+        self.assertIsNone(admin_data["approved"])
+        self.client.logout()
+
+        cache.clear()
+
+        # reversing the order of operations shouldn't change anything
+        self.client.login(username=self.user5.username, password="test")
+        admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(admin_resp.status_code, 200)
+        admin_data = admin_resp.json()
+        self.assertIsNone(admin_data["approved"])
+        self.client.logout()
+
+        non_admin_resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(non_admin_resp.status_code, 200)
+        non_admin_data = non_admin_resp.json()
+        self.assertTrue(non_admin_data["approved"])
+
+        # club object itself shouldn't have changed
+        club.refresh_from_db()
+        self.assertFalse(club.active)
+        self.assertIsNone(club.approved)
 
     def test_club_create_url_sanitize(self):
         """
@@ -2517,7 +2643,7 @@ class ClubTestCase(TestCase):
 
     def test_alumni_page(self):
         """
-        Ensure alumni page can be seen, even for users who are not logged in.
+        Ensure alumni page can be seen
         """
         now = timezone.now()
         for i, user in enumerate([self.user1, self.user2, self.user3]):
@@ -2529,6 +2655,10 @@ class ClubTestCase(TestCase):
             )
 
         # fetch alumni page
+        resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [403], resp.content)
+
+        self.client.login(username=self.user4.username, password="test")
         resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
         data = resp.json()
@@ -2546,7 +2676,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIsInstance(resp.data, list, resp.content)
 
-        resp = self.client.post(reverse("scripts"), {"action": "graduate_users"})
+        resp = self.client.post(reverse("scripts"), {"action": "find_broken_images"})
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIn("output", resp.data, resp.content)
 

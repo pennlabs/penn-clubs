@@ -68,7 +68,7 @@ const RenewTab = ({ className }: ClubTabProps): ReactElement => {
         <>
           <EmptyState name="button" />
           <Center>
-            <Text isGray>
+            <Text $isGray>
               You are not listed as an officer for any {OBJECT_NAME_PLURAL} yet.
               If you would like to request access for an existing{' '}
               {OBJECT_NAME_SINGULAR}, please send your name, PennKey, and{' '}

@@ -31,7 +31,7 @@ export class MyChart extends PennLabsChart {
     new DjangoApplication(this, 'django-wsgi', {
       deployment: {
         image: backendImage,
-        replicas: 4,
+        replicas: 2,
         secret: clubsSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
@@ -60,7 +60,7 @@ export class MyChart extends PennLabsChart {
     new ReactApplication(this, 'react', {
       deployment: {
         image: frontendImage,
-        replicas: 3,
+        replicas: 2,
       },
       domain: { host: clubsDomain, paths: ['/'] },
       port: 80,
@@ -69,7 +69,7 @@ export class MyChart extends PennLabsChart {
 
     /** Cronjobs **/
     new CronJob(this, 'rank-clubs', {
-      schedule: cronTime.everyDayAt(8),
+      schedule: cronTime.everyDayAt(6, 18),
       image: backendImage,
       secret: clubsSecret,
       cmd: ['python', 'manage.py', 'rank'],
@@ -87,6 +87,20 @@ export class MyChart extends PennLabsChart {
       image: backendImage,
       secret: clubsSecret,
       cmd: ['python', 'manage.py', 'import_calendar_events'],
+    });
+
+    new CronJob(this, 'expire-stale-membership-invites', {
+      schedule: cronTime.everyDayAt(12),
+      image: backendImage,
+      secret: clubsSecret,
+      cmd: ["python", "manage.py", "expire_membership_invites"],
+    });
+
+    new CronJob(this, 'graduate-users', {
+      schedule: cronTime.everyYearIn(1, 1, 12, 0),
+      image: backendImage,
+      secret: clubsSecret,
+      cmd: ["python", "manage.py", "graduate_users"],
     });
   }
 }

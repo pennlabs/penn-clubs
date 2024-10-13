@@ -14,6 +14,7 @@ import {
 } from 'components/common'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
@@ -35,6 +36,7 @@ type Props = {
 }
 
 const ApplyPage = ({ club, applications }: Props): ReactElement => {
+  const router = useRouter()
   const [updatedIsRequest, setUpdatedIsRequest] = useState<boolean>(
     club.is_request,
   )
@@ -170,13 +172,15 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
                   {new Date(app.result_release_time).toLocaleString()} (
                   <TimeAgo date={app.result_release_time} />)
                 </div>
-                <a
-                  href={app.external_url}
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => {
+                    router.push(app.external_url)
+                  }}
                   className="button is-success mt-3"
+                  disabled={new Date() < new Date(app.application_start_time)}
                 >
                   <Icon name="edit" /> Apply
-                </a>
+                </button>
               </div>
             ))}
             <Subtitle>Already a member?</Subtitle>

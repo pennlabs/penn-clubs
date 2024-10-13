@@ -3,7 +3,6 @@ import { DesktopActions, MobileActions } from 'components/ClubPage/Actions'
 import AdvisorList from 'components/ClubPage/AdvisorList'
 import ClubApprovalDialog from 'components/ClubPage/ClubApprovalDialog'
 import Description from 'components/ClubPage/Description'
-import Events from 'components/ClubPage/Events'
 import FilesList from 'components/ClubPage/FilesList'
 import Header from 'components/ClubPage/Header'
 import InfoBox from 'components/ClubPage/InfoBox'
@@ -43,6 +42,7 @@ import {
   SITE_NAME,
 } from 'utils/branding'
 
+import EventCarousel from '~/components/ClubPage/EventCarousel'
 import { CLUB_ALUMNI_ROUTE, CLUB_ORG_ROUTE } from '~/constants'
 import { CLUBS_RED, SNOW, WHITE } from '~/constants/colors'
 import { M0, M2, M3 } from '~/constants/measurements'
@@ -178,15 +178,23 @@ const ClubPage = ({
     testimonials,
     signature_events: signatureEvents,
   } = club
-
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
       {userInfo != null && (
         <ClubApprovalDialog club={club} userInfo={userInfo} />
       )}
+      {club.badges.length > 0 &&
+        club.badges
+          .filter((badge) => badge.message && badge.message.length > 0)
+          .map((badge) => (
+            <div className="notification is-info is-light" key={badge.id}>
+              <Icon name="alert-circle" style={{ marginTop: '-3px' }} />{' '}
+              {badge.message}
+            </div>
+          ))}
       <div className="columns">
-        <div className="column">
+        <div className="column is-two-thirds">
           {isActive || (
             <InactiveCard
               $bordered
@@ -217,14 +225,11 @@ const ClubPage = ({
               pending approval from the {APPROVAL_AUTHORITY}.
             </div>
           )}
-
-          {userInfo != null && (
-            <MobileActions
-              club={club}
-              userInfo={userInfo}
-              updateRequests={updateRequests}
-            />
-          )}
+          <MobileActions
+            club={club}
+            authenticated={userInfo !== undefined}
+            updateRequests={updateRequests}
+          />
           <StyledCard $bordered>
             <Description club={club} />
           </StyledCard>
@@ -268,15 +273,14 @@ const ClubPage = ({
               <MemberList club={club} />
             </>
           )}
+          {events.length > 0 && <EventCarousel data={events} />}
         </div>
         <div className="column is-one-third">
-          {userInfo && (
-            <DesktopActions
-              club={club}
-              userInfo={userInfo}
-              updateRequests={updateRequests}
-            />
-          )}
+          <DesktopActions
+            club={club}
+            authenticated={userInfo !== undefined}
+            updateRequests={updateRequests}
+          />
           <QAButton onClick={scrollToQuestions}>
             {questions.length > 0
               ? `Click here to see the ${questions.length} question${
@@ -296,7 +300,6 @@ const ClubPage = ({
               <div dangerouslySetInnerHTML={{ __html: involvement }} />
             </StyledCard>
           )}
-          <Events data={events} />
           {isClubFieldShown('signature_events') &&
             signatureEvents &&
             !!signatureEvents.length && (
@@ -312,17 +315,19 @@ const ClubPage = ({
             <div className="mb-3">
               <StrongText>Additional Pages</StrongText>
               <ul>
-                <li>
-                  <Link
-                    legacyBehavior
-                    href={CLUB_ALUMNI_ROUTE()}
-                    as={CLUB_ALUMNI_ROUTE(club.code)}
-                  >
-                    <a>
-                      <Icon name="database" /> Alumni
-                    </a>
-                  </Link>
-                </li>
+                {userInfo && (
+                  <li>
+                    <Link
+                      legacyBehavior
+                      href={CLUB_ALUMNI_ROUTE()}
+                      as={CLUB_ALUMNI_ROUTE(club.code)}
+                    >
+                      <a>
+                        <Icon name="database" /> Alumni
+                      </a>
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link
                     legacyBehavior

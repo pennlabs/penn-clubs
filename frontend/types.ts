@@ -61,7 +61,7 @@ export interface ClubEvent {
   large_image_url: string | null
   location: string | null
   name: string
-  ticketed: string
+  ticketed: boolean
   pinned: boolean
   start_time: string
   type: ClubEventType
@@ -78,6 +78,12 @@ export interface EventTicket {
 
 export interface CountedEventTicket extends EventTicket {
   count?: number
+}
+
+export enum AdvisorVisibilityType {
+  AdminOnly = 1,
+  Students = 2,
+  All = 3,
 }
 
 export interface ClubApplication {
@@ -126,6 +132,7 @@ export interface Badge {
   color: string
   purpose: string
   description: string
+  message?: string
 }
 
 export interface QuestionAnswer {
@@ -146,7 +153,7 @@ export interface Advisor {
   department: string
   email: string
   phone: string
-  public: boolean
+  visibility: AdvisorVisibilityType
 }
 
 export interface Club {
@@ -160,6 +167,7 @@ export interface Club {
   approved_comment: string | null
   available_virtually: boolean
   badges: Badge[]
+  beta: boolean
   code: string
   description: string
   email: string

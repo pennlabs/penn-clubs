@@ -6,8 +6,6 @@ import { DARK_BLUE, HOVER_GRAY, PURPLE, WHITE } from '../../constants/colors'
 import { M2, M3 } from '../../constants/measurements'
 import { ClubEvent, ClubEventType } from '../../types'
 import { Card, Icon, StrongText } from '../common'
-import Modal from '../common/Modal'
-import EventModal from '../EventPage/EventModal'
 
 type EventsProps = {
   data: ClubEvent[]
@@ -31,7 +29,8 @@ const Wrapper = styled.div`
   margin-bottom: 0.5rem;
   display: flex;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 8px;
+  padding: 2px;
 
   &:hover {
     background-color: ${HOVER_GRAY};
@@ -70,11 +69,6 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
           </SmallParagraph>
         </div>
       </Wrapper>
-      {show && (
-        <Modal show={show} closeModal={hideModal} marginBottom={false}>
-          <EventModal event={entry} showDetailsButton={false} />
-        </Modal>
-      )}
     </>
   )
 }

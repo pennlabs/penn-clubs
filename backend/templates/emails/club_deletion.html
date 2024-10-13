@@ -1,17 +1,20 @@
 <!-- TYPES:
 name:
     type: string
-branding_site_name: 
-    type: string
-branding_site_email: 
-    type: string
+reply_emails:
+    type: array
+    items:
+        type: string
 -->
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <h2><b>{{ name }}</b> has been marked as deleted on {{ branding_site_name }}</h2>
-    <p style="font-size: 1.2em; color: #8B2222">
-        <b>Oh no!</b> Your club has <b>been removed</b> from {{ branding_site_name }} by the <b>Office of Student Affairs</b>.
+    <h2><b>{{ name }}</b> status update on Penn Clubs</h2>
+    <p style="font-size: 1.2em;">
+        Your club has been removed from Penn Clubs by the Office of Student Affairs.
     </p>
-    <p style="font-size: 1.2em">If you believe this is an error, please contact <a href="mailto:{{ branding_site_email }}">{{ branding_site_email }}</a>.</p>
+    <p style="font-size: 1.2em">
+        If you have any questions or concerns, please
+        respond to this email or <a href="mailto:{% for email in reply_emails %}{% if not forloop.first %},{% endif %}{{ email }}{% endfor %}">contact the Office of Student Affairs</a>.
+    </p>
 {% endblock %}

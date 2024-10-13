@@ -15,9 +15,12 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
+from django.core.cache import caches
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
+from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils import timezone
 from ics import Calendar
 from ics import Event as ICSEvent
@@ -593,6 +596,39 @@ class RenewalTestCase(TestCase):
 
         self.assertGreater(len(mail.outbox), current_email_count)
 
+    @override_settings(
+        CACHES={  # don't want to clear prod cache while testing
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            }
+        }
+    )
+    def test_deactivate_invalidates_cache(self):
+        # Clear the cache before starting the test
+        caches["default"].clear()
+
+        with open(os.devnull, "w") as f:
+            call_command("populate", stdout=f)
+
+        club = Club.objects.first()
+
+        # make request to the club detail view to cache it
+        self.client.get(reverse("clubs-detail", args=(club.code,)))
+
+        # club should now be cached
+        cache_key = f"clubs:{club.id}-anon"
+        self.assertIsNotNone(caches["default"].get(cache_key))
+
+        call_command("deactivate", "all", "--force")
+
+        # club should no longer be cached
+        self.assertIsNone(caches["default"].get(cache_key))
+
+        # club should be deactivated and inactive
+        club.refresh_from_db()
+        self.assertFalse(club.active)
+        self.assertIsNone(club.approved)
+
 
 class MergeDuplicatesTestCase(TestCase):
     def setUp(self):
@@ -697,3 +733,47 @@ class ExpireMembershipInvitesTest(TestCase):
 
         self.assertFalse(self.expired_invite.active)
         self.assertTrue(self.active_invite.active)
+
+
+class GraduateUsersTestCase(TestCase):
+    def setUp(self):
+        self.club = Club.objects.create(code="test", name="Test Club", active=True)
+        self.user1 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
+        )
+        self.user2 = get_user_model().objects.create_user(
+            "tjefferson", "tjefferson@seas.upenn.edu", "test"
+        )
+
+        # Set graduation years
+        self.user1.profile.graduation_year = timezone.now().year - 1
+        self.user1.profile.save()
+        self.user2.profile.graduation_year = timezone.now().year + 1
+        self.user2.profile.save()
+
+        # Create active memberships
+        Membership.objects.create(person=self.user1, club=self.club, active=True)
+        Membership.objects.create(person=self.user2, club=self.club, active=True)
+
+    def test_graduate_users(self):
+        # Ensure both memberships are active initially
+        self.assertEqual(Membership.objects.filter(active=True).count(), 2)
+
+        # Run the command
+        call_command("graduate_users")
+
+        # Check that only the graduated user's membership is inactive
+        self.assertEqual(Membership.objects.filter(active=True).count(), 1)
+        self.assertFalse(Membership.objects.get(person=self.user1).active)
+        self.assertTrue(Membership.objects.get(person=self.user2).active)
+
+    def test_graduate_users_output(self):
+        # Capture command output
+        out = io.StringIO()
+        call_command("graduate_users", stdout=out)
+
+        # Check the output
+        self.assertIn(
+            "Updated the membership status of 1 student club relationships!",
+            out.getvalue(),
+        )

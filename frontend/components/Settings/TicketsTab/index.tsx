@@ -257,7 +257,7 @@ const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
     <>
       <EmptyState name="empty_cart" />
       <Center>
-        <Text isGray>
+        <Text $isGray>
           No tickets yet! Browse events to find tickets{' '}
           <Link href="/events">here</Link>.
         </Text>
