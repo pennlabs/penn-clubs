@@ -2159,54 +2159,54 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Return old and new data for clubs that are pending approval.
         ---
         responses:
-                "200":
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                description: >
-                                "Response object where the keys are club codes"
-                                additionalProperties:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                club_code:
                                     type: object
-                                    description: >
-                                        "Details of the changes for a particular club"
+                                    description: club code
                                     properties:
                                         name:
                                             type: object
-                                            description: "Changes in the name field"
+                                            description: Changes in the name field
                                             properties:
                                                 old:
                                                     type: string
-                                                    description: "Old name of the club"
+                                                    description: >
+                                                        Old name of the club
                                                 new:
                                                     type: string
-                                                    description: "New name of the club"
+                                                    description: >
+                                                        New name of the club
                                         description:
                                             type: object
                                             description: >
-                                            "Changes in the club description"
+                                                Changes in the club description
                                             properties:
                                                 old:
                                                     type: string
                                                     description: >
-                                                    "Old description of the club"
+                                                        Old description of the club
                                                 new:
                                                     type: string
                                                     description: >
-                                                        "New description of the club"
+                                                        New description of the club
                                         image:
                                             type: object
                                             description: >
-                                            "Changes in the image of the club"
+                                                Changes in the image of the club
                                             properties:
                                                 old:
                                                     type: string
                                                     description: >
-                                                    "Old image URL of the club"
+                                                        Old image URL of the club
                                                 new:
                                                     type: string
                                                     description: >
-                                                        "New image URL of the club"
+                                                        New image URL of the club
         ---
         """
         pending_clubs = Club.objects.filter(approved=None, active=True).only(
