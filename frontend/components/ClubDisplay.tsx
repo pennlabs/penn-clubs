@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import ClubCard from '../components/ClubCard'
 import ClubTableRow from '../components/ClubTableRow'
-import { mediaMaxWidth, SM } from '../constants/measurements'
+import { getNumberFromPx, mediaMaxWidth, SM } from '../constants/measurements'
 import { Club, Tag } from '../types'
 
 const ClubTableRowWrapper = styled.div`
@@ -18,6 +18,7 @@ const ClubTableRowWrapper = styled.div`
 const StyledMasonry = styled(Masonry)`
   display: flex;
   width: auto;
+  margin: -12px;
 
   .masonry-column {
     background-clip: padding-box;
@@ -27,7 +28,7 @@ const StyledMasonry = styled(Masonry)`
     width: 100% !important;
   }
 
-  @media (max-width: 960px) {
+  ${mediaMaxWidth(SM)} {
     .masonry-column {
       width: 100% !important;
     }
@@ -73,7 +74,7 @@ const ClubDisplay = ({
       <StyledMasonry
         breakpointCols={{
           default: 2,
-          960: 1,
+          [getNumberFromPx(SM)]: 1,
         }}
         className="masonry-grid"
         columnClassName="masonry-column"
