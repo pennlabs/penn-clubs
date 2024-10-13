@@ -55,6 +55,20 @@ const LoginButton = styled.a`
   }
 `
 
+export const MobileLoginButton = styled(LoginButton)`
+  display: none;
+  margin-right: 0;
+  ${mediaMaxWidth(MD)} {
+    display: inline-flex;
+  }
+`
+const DesktopLoginButton = styled(LoginButton)`
+  margin-left: 20px;
+  ${mediaMaxWidth(MD)} {
+    display: none;
+  }
+`
+
 const StyledLinkAnchor = styled.a`
   padding: ${LINK_MARGIN} 20px;
   color: ${BANNER_TEXT} !important;
@@ -116,13 +130,13 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
           FAQ
         </StyledLink>
         {authenticated === false && (
-          <LoginButton
+          <DesktopLoginButton
             className="button"
             href={`${LOGIN_URL}?next=${router.asPath}`}
             onClick={() => logEvent('login', 'click')}
           >
             Login
-          </LoginButton>
+          </DesktopLoginButton>
         )}
         {authenticated && userInfo && (
           <StyledLink href={SETTINGS_ROUTE}>
