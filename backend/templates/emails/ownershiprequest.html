@@ -1,0 +1,17 @@
+<!-- TYPES:
+club_name:
+    type: string
+edit_url:
+    type: string
+full_name:
+    type: string
+-->
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Ownership Request from <b>{{ full_name }}</b> for <b>{{ club_name }}</b></h2>
+    <p style="font-size: 1.2em"><b>{{ full_name }}</b> sent an ownership request to join <b>{{ club_name }}</b> through the Penn
+        Clubs website. To approve this request, use the button below to navigate to the Penn Clubs website.</p>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 20px; color: white; background-color: #4954f4; border-radius: 3px; font-weight: bold"
+        href="{{ edit_url }}">Approve Request</a>
+{% endblock %}

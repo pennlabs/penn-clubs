@@ -1122,6 +1122,54 @@ class MembershipRequest(models.Model):
         unique_together = (("person", "club"),)
 
 
+class OwnershipRequest(models.Model):
+    """
+    Used when users request ownership from the owner
+    """
+
+    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+
+    withdrew = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "<OwnershipRequest: {} for {}, with email {}>".format(
+            self.person.username, self.club.code, self.person.email
+        )
+
+    def send_request(self, request=None):
+        domain = get_domain(request)
+
+        context = {
+            "club_name": self.club.name,
+            "edit_url": "{}/member".format(
+                settings.EDIT_URL.format(domain=domain, club=self.club.code)
+            ),
+            "full_name": self.person.get_full_name(),
+        }
+
+        owner_emails = list(
+            self.club.membership_set.filter(
+                role=Membership.ROLE_OWNER, active=True
+            ).values_list("person__email", flat=True)
+        )
+
+        send_mail_helper(
+            name="ownershiprequest",
+            subject="Ownership Request from {} for {}".format(
+                self.person.get_full_name(), self.club.name
+            ),
+            emails=owner_emails,
+            context=context,
+        )
+
+    class Meta:
+        unique_together = (("person", "club"),)
+
+
 class Advisor(models.Model):
     """
     Represents one faculty advisor or point of contact for a club.
