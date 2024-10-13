@@ -47,8 +47,10 @@ from django.db.models import (
     ExpressionWrapper,
     F,
     Max,
+    OuterRef,
     Prefetch,
     Q,
+    Subquery,
     TextField,
     Value,
     When,
@@ -2059,7 +2061,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["GET"])
-    def diff(self, request, *args, **kwargs):
+    def club_detail_diff(self, request, *args, **kwargs):
         """
         Return old and new data for a club that is pending approval.
         ---
@@ -2117,34 +2119,145 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
 
         latest_approved_version = (
-            club.history.filter(approved=True).order_by("-history_date").first()
+            club.history.filter(approved=True)
+            .only("name", "description", "image")
+            .order_by("-history_date")
+            .first()
         )
-        latest_version = club.history.order_by("-history_date").first()
 
-        # if this is the first time the club is being approved
-        if not latest_approved_version:
-            return Response(
-                {
-                    club.code: {
-                        field: {"old": None, "new": getattr(latest_version, field)}
-                        for field in ["name", "description", "image"]
-                    }
-                }
-            )
+        latest_version = (
+            club.history.only("name", "description", "image")
+            .order_by("-history_date")
+            .first()
+        )
 
-        # if the current version is not approvedthe and it has been approved before
-        if not club.approved and latest_approved_version:
+        # if the current version is not approved, return a diff
+        # if the club has never be approved, for each field, it's old data is None
+        if not club.approved:
             return Response(
                 {
                     club.code: {
                         field: {
-                            "old": getattr(latest_approved_version, field),
+                            "old": (
+                                getattr(latest_approved_version, field)
+                                if latest_approved_version
+                                else None
+                            ),
                             "new": getattr(latest_version, field),
                         }
                         for field in ["name", "description", "image"]
                     }
                 }
             )
+
+        # if the current version is approved, no diff is returned
+        return Response({})
+
+    @action(detail=False, methods=["GET"])
+    def club_list_diff(self, request, *args, **kwargs):
+        """
+        Return old and new data for clubs that are pending approval.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            items:
+                                type: object
+                                properties:
+                                    code:
+                                        type: object
+                                        description: club code
+                                        properties:
+                                            name:
+                                                type: object
+                                                description: Changes in the name field
+                                                properties:
+                                                    old:
+                                                        type: string
+                                                        description: >
+                                                            Old name of the club
+                                                    new:
+                                                        type: string
+                                                        description: >
+                                                            New name of the club
+                                            description:
+                                                type: object
+                                                description: >
+                                                    Changes in the club description
+                                                properties:
+                                                    old:
+                                                        type: string
+                                                        description: >
+                                                            Old description of the club
+                                                    new:
+                                                        type: string
+                                                        description: >
+                                                            New description of the club
+                                            image:
+                                                type: object
+                                                description: >
+                                                    Changes in the image of the club
+                                                properties:
+                                                    old:
+                                                        type: string
+                                                        description: >
+                                                            Old image URL of the club
+                                                    new:
+                                                        type: string
+                                                        description: >
+                                                            New image URL of the club
+        ---
+        """
+        pending_clubs = Club.objects.filter(approved=None, active=True).only(
+            "code", "name", "description", "image"
+        )
+
+        # write subqueries
+        latest_versions_subquery = (
+            Club.history.filter(code=OuterRef("code"))
+            .order_by("-history_date")
+            .values("code")[:1]
+        )
+        latest_approved_versions_subquery = (
+            Club.history.filter(code=OuterRef("code"), approved=True)
+            .order_by("-history_date")
+            .values("code")[:1]
+        )
+
+        # get the latest versions of each club
+        latest_versions = Club.history.filter(
+            code__in=Subquery(latest_versions_subquery)
+        ).only("code", "name", "description", "image")
+
+        # get the latest approved versions of each club
+        latest_approved_versions = Club.history.filter(
+            code__in=Subquery(latest_approved_versions_subquery), approved=True
+        ).only("code", "name", "description", "image")
+
+        latest_versions_dict = {version.code: version for version in latest_versions}
+        latest_approved_versions_dict = {
+            version.code: version for version in latest_approved_versions
+        }
+
+        return Response(
+            {
+                club.code: {
+                    field: {
+                        "old": (
+                            getattr(latest_approved_versions_dict[club.code], field)
+                            if club.code in latest_approved_versions_dict
+                            else None
+                        ),
+                        "new": getattr(latest_versions_dict[club.code], field),
+                    }
+                    for field in ["name", "description", "image"]
+                }
+                for club in pending_clubs
+            }
+        )
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
