@@ -191,7 +191,7 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
           </Link>
           {authenticated === false && (
             <MobileLoginButton
-              className="button is-mobile"
+              className="button"
               href={`${LOGIN_URL}?next=${router.asPath}`}
               onClick={() => logEvent('login', 'click')}
             >
