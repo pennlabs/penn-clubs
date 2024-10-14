@@ -189,16 +189,24 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
               <Title>{SITE_NAME}</Title>
             </LogoItem>
           </Link>
-          {authenticated === false && (
-            <MobileLoginButton
-              className="button"
-              href={`${LOGIN_URL}?next=${router.asPath}`}
-              onClick={() => logEvent('login', 'click')}
-            >
-              Login
-            </MobileLoginButton>
-          )}
-          <Burger toggle={toggle} />
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              justifyContent: 'flex-end',
+            }}
+          >
+            {authenticated === false && (
+              <MobileLoginButton
+                className="button"
+                href={`${LOGIN_URL}?next=${router.asPath}`}
+                onClick={() => logEvent('login', 'click')}
+              >
+                Login
+              </MobileLoginButton>
+            )}
+            <Burger toggle={toggle} />
+          </div>
         </div>
         <Links userInfo={userInfo} authenticated={authenticated} show={show} />
       </Nav>
