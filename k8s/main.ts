@@ -76,7 +76,7 @@ export class MyChart extends PennLabsChart {
     });
 
     new CronJob(this, 'daily-notifications', {
-      schedule: cronTime.everyDayAt(13),
+      schedule: cronTime.everyWeekOn(1, 3, 5, 10),
       image: backendImage,
       secret: clubsSecret,
       cmd: ['python', 'manage.py', 'daily_notifications'],
