@@ -38,6 +38,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
   const [fairs, setFairs] = useState<ClubFair[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
+  const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
 
   const canApprove = apiCheckPermission('clubs.approve_club')
   const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
@@ -62,7 +63,11 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
         .then((resp) => resp.json())
         .then(setTemplates)
     }
-  }, [])
+
+    setComment(
+      selectedTemplates.map((template) => template.content).join('\n\n'),
+    )
+  }, [selectedTemplates])
 
   return (
     <>
@@ -211,17 +216,27 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                   <div className="field is-grouped mb-3">
                     <div className="control is-expanded">
                       <Select
+                        isMulti
                         isClearable
-                        placeholder="Select a template"
+                        placeholder="Select templates"
                         options={templates.map((template) => ({
                           value: template.id,
                           label: template.title,
                           content: template.content,
+                          author: template.author,
                         }))}
-                        onChange={(selectedOption) => {
-                          selectedOption
-                            ? setComment(selectedOption.content)
-                            : setComment('')
+                        onChange={(selectedOptions) => {
+                          if (selectedOptions) {
+                            const selected = selectedOptions.map((option) => ({
+                              id: option.value,
+                              title: option.label,
+                              content: option.content,
+                              author: option.author,
+                            }))
+                            setSelectedTemplates(selected)
+                          } else {
+                            setSelectedTemplates([])
+                          }
                         }}
                       />
                     </div>

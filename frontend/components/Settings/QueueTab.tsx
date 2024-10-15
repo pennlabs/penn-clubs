@@ -33,11 +33,20 @@ const QueueTableModal = ({
   templates,
 }: QueueTableModalProps): ReactElement => {
   const [comment, setComment] = useState<string>('')
+  const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
+
+  useEffect(() => {
+    setComment(
+      selectedTemplates.map((template) => template.content).join('\n\n'),
+    )
+  }, [selectedTemplates])
+
   return (
     <Modal
       show={show}
       closeModal={() => {
         setComment('')
+        setSelectedTemplates([])
         closeModal()
       }}
       marginBottom={false}
@@ -49,15 +58,33 @@ const QueueTableModal = ({
           {isApproving ? 'approve' : 'reject'} these requests.
         </div>
         <Select
+          isMulti
           isClearable
-          placeholder="Select a template"
+          placeholder="Select templates"
+          value={selectedTemplates.map((template) => ({
+            value: template.id,
+            label: template.title,
+            content: template.content,
+            author: template.author,
+          }))}
           options={templates.map((template) => ({
             value: template.id,
             label: template.title,
             content: template.content,
+            author: template.author,
           }))}
-          onChange={(selectedOption) => {
-            selectedOption ? setComment(selectedOption.content) : setComment('')
+          onChange={(selectedOptions) => {
+            if (selectedOptions) {
+              const selected = selectedOptions.map((option) => ({
+                id: option.value,
+                title: option.label,
+                content: option.content,
+                author: option.author,
+              }))
+              setSelectedTemplates(selected)
+            } else {
+              setSelectedTemplates([])
+            }
           }}
         />
         <textarea
