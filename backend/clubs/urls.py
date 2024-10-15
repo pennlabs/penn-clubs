@@ -35,6 +35,7 @@ from clubs.views import (
     NoteViewSet,
     OptionListView,
     OwnershipRequestOwnerViewSet,
+    OwnershipRequestSuperuserAPIView,
     OwnershipRequestViewSet,
     QuestionAnswerViewSet,
     ReportViewSet,
@@ -173,6 +174,11 @@ urlpatterns = [
     path(r"emailpreview/", email_preview, name="email-preview"),
     path(r"scripts/", ScriptExecutionView.as_view(), name="scripts"),
     path(r"options/", OptionListView.as_view(), name="options"),
+    path(
+        r"ownershiprequestsadmin/",
+        OwnershipRequestSuperuserAPIView.as_view(),
+        name="ownershiprequestsadmin",
+    ),
     path(r"social/", include("social_django.urls", namespace="social")),
     path(
         r"webhook/meeting/",

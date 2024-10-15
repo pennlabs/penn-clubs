@@ -3854,10 +3854,10 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
 class OwnershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     """
     list:
-    Return a list of users who have sent membership request to the club.
+    Return a list of users who have sent ownership request to the club.
 
     destroy:
-    Delete a membership request for a specific user.
+    Delete a ownership request for a specific user.
     """
 
     serializer_class = OwnershipRequestSerializer
@@ -3902,6 +3902,20 @@ class OwnershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         request_object.delete()
         return Response({"success": True})
+
+
+class OwnershipRequestSuperuserAPIView(generics.ListAPIView):
+    """
+    Return a list of ownership requests older than a week.
+    """
+
+    serializer_class = OwnershipRequestSerializer
+    permission_classes = [IsSuperuser]
+
+    def get_queryset(self):
+        return OwnershipRequest.objects.filter(
+            withdrew=False, created_at__lte=timezone.now() - datetime.timedelta(days=7)
+        )
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
