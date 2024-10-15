@@ -74,10 +74,10 @@ const DisplayButtons = ({
       <Link href="/create" className="button is-small is-primary">
         <Icon
           name="plus"
-          alt={`create ${OBJECT_NAME_SINGULAR}`}
+          alt={`register ${OBJECT_NAME_SINGULAR}`}
           style={iconStylesDark}
         />
-        Add {OBJECT_NAME_TITLE_SINGULAR}
+        Register {OBJECT_NAME_TITLE_SINGULAR}
       </Link>
     )}
   </DisplayButtonsTag>
