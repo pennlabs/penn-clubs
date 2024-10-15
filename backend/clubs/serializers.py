@@ -31,6 +31,7 @@ from clubs.models import (
     Badge,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubVisit,
@@ -3000,3 +3001,22 @@ class WritableClubFairSerializer(ClubFairSerializer):
 
     class Meta(ClubFairSerializer.Meta):
         pass
+
+
+class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField("get_author")
+
+    def get_author(self, obj):
+        return obj.author.get_full_name()
+
+    def create(self, validated_data):
+        validated_data["author"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("author", "")
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = ClubApprovalResponseTemplate
+        fields = ("id", "author", "title", "content", "created_at", "updated_at")

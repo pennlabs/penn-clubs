@@ -25,6 +25,7 @@ from clubs.models import (
     Cart,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubFairRegistration,
@@ -415,6 +416,10 @@ class ApplicationSubmissionAdmin(admin.ModelAdmin):
     list_display = ("user", "id", "created_at", "status")
 
 
+class ClubApprovalResponseTemplateAdmin(admin.ModelAdmin):
+    search_fields = ("title", "content")
+
+
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
 admin.site.register(ApplicationExtension)
@@ -460,3 +465,4 @@ admin.site.register(TicketTransactionRecord)
 admin.site.register(TicketTransferRecord)
 admin.site.register(Cart)
 admin.site.register(ApplicationCycle)
+admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)

@@ -95,6 +95,7 @@ from clubs.models import (
     Cart,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubFairRegistration,
@@ -158,6 +159,7 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubApplicationSerializer,
+    ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
@@ -7385,6 +7387,15 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
         return AdminNote.objects.filter(
             club__code=self.kwargs.get("club_code")
         ).order_by("-created_at")
+
+
+class ClubApprovalResponseTemplateViewSet(viewsets.ModelViewSet):
+    serializer_class = ClubApprovalResponseTemplateSerializer
+    permission_classes = [IsSuperuser]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        return ClubApprovalResponseTemplate.objects.all().order_by("-created_at")
 
 
 class ScriptExecutionView(APIView):
