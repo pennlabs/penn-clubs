@@ -31,7 +31,7 @@ export default function TemplatesTab({
               name="title"
               as={TextField}
               required
-              helpText={`The title of the ${OBJECT_NAME_SINGULAR} approval response template. This will be shown in the template dropdown menu.`}
+              helpText={`The unique title of the ${OBJECT_NAME_SINGULAR} approval response template. This will be shown in the template dropdown menu.`}
             />
             <Field name="content" as={TextField} type="textarea" required />
           </>

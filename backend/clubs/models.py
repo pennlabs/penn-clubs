@@ -2007,9 +2007,9 @@ class ClubApprovalResponseTemplate(models.Model):
     author = models.ForeignKey(
         get_user_model(), on_delete=models.SET_NULL, null=True, related_name="templates"
     )
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, unique=True)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

@@ -94,7 +94,7 @@ const QueueTableModal = ({
           placeholder={`${isApproving ? 'approval' : 'rejection'} notes`}
         ></textarea>
         <button
-          className={`mb-2 button ${isApproving ? 'is-success' : 'is-danger'}`}
+          className={`mt-2 button ${isApproving ? 'is-success' : 'is-danger'}`}
           onClick={() => {
             closeModal()
             bulkAction(comment)
