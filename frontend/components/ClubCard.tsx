@@ -100,7 +100,9 @@ const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
   const { name, active, approved, subtitle, tags, enables_subscription, code } =
     club
   const img = club.image_url
-  const textDescription = shorten(subtitle || 'This club has no description.')
+  const textDescription = shorten(
+    subtitle || 'This club has not provided a mission statement.',
+  )
 
   return (
     <CardWrapper className={fullWidth ? '' : 'column is-half-desktop'}>

@@ -20,7 +20,7 @@ type Props = {
 const Description = ({ club }: Props): ReactElement => (
   <Wrapper>
     <div style={{ width: '100%' }}>
-      <StrongText>Description</StrongText>
+      <StrongText>Club Mission</StrongText>
       <div
         className="content"
         dangerouslySetInnerHTML={{
