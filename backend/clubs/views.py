@@ -107,6 +107,7 @@ from clubs.models import (
     MembershipInvite,
     MembershipRequest,
     Note,
+    OwnershipRequest,
     QuestionAnswer,
     RecurringEvent,
     Report,
@@ -138,6 +139,7 @@ from clubs.permissions import (
     MemberPermission,
     MembershipRequestPermission,
     NotePermission,
+    OwnershipRequestPermission,
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
@@ -180,6 +182,7 @@ from clubs.serializers import (
     MembershipSerializer,
     MinimalUserProfileSerializer,
     NoteSerializer,
+    OwnershipRequestSerializer,
     QuestionAnswerSerializer,
     ReportClubSerializer,
     ReportSerializer,
@@ -196,6 +199,7 @@ from clubs.serializers import (
     UserMembershipInviteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
+    UserOwnershipRequestSerializer,
     UserProfileSerializer,
     UserSerializer,
     UserSubscribeSerializer,
@@ -3806,6 +3810,124 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         request_object.delete()
         return Response({"success": True})
+
+
+class OwnershipRequestViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has sent ownership request to.
+
+    create: Sent ownership request to a club.
+
+    destroy: Deleted a ownership request from a club.
+    """
+
+    serializer_class = UserOwnershipRequestSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "club__code"
+    http_method_names = ["get", "post", "delete"]
+
+    def create(self, request, *args, **kwargs):
+        """
+        If a ownership request object already exists, reuse it.
+        """
+        club = request.data.get("club", None)
+        obj = OwnershipRequest.objects.filter(
+            club__code=club, person=request.user
+        ).first()
+        if obj is not None:
+            obj.withdrew = False
+            obj.created_at = timezone.now()
+            obj.save(update_fields=["withdrew", "created_at"])
+            return Response(UserOwnershipRequestSerializer(obj).data)
+
+        return super().create(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Don't actually delete the ownership request when it is withdrawn.
+
+        This is to keep track of repeat ownership requests and avoid spamming the club
+        owners with requests.
+        """
+        obj = self.get_object()
+        obj.withdrew = True
+        obj.save(update_fields=["withdrew"])
+
+        return Response({"success": True})
+
+    def get_queryset(self):
+        return OwnershipRequest.objects.filter(
+            person=self.request.user,
+            withdrew=False,
+            club__archived=False,
+        )
+
+
+class OwnershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of users who have sent ownership request to the club.
+
+    destroy:
+    Delete a ownership request for a specific user.
+    """
+
+    serializer_class = OwnershipRequestSerializer
+    permission_classes = [OwnershipRequestPermission | IsSuperuser]
+    http_method_names = ["get", "post", "delete"]
+    lookup_field = "person__username"
+
+    def get_queryset(self):
+        return OwnershipRequest.objects.filter(
+            club__code=self.kwargs["club_code"], withdrew=False
+        )
+
+    @action(detail=True, methods=["post"])
+    def accept(self, request, *ages, **kwargs):
+        """
+        Accept an ownership request as a club owner.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: >
+                                        True if this request was properly processed.
+        ---
+        """
+        request_object = self.get_object()
+        membership, created = Membership.objects.get_or_create(
+            person=request_object.person,
+            club=request_object.club,
+            defaults={"role": Membership.ROLE_OWNER},
+        )
+
+        if not created and membership.role != Membership.ROLE_OWNER:
+            membership.role = Membership.ROLE_OWNER
+            membership.save(update_fields=["role"])
+
+        request_object.delete()
+        return Response({"success": True})
+
+
+class OwnershipRequestSuperuserAPIView(generics.ListAPIView):
+    """
+    Return a list of ownership requests older than a week.
+    """
+
+    serializer_class = OwnershipRequestSerializer
+    permission_classes = [IsSuperuser]
+
+    def get_queryset(self):
+        return OwnershipRequest.objects.filter(
+            withdrew=False, created_at__lte=timezone.now() - datetime.timedelta(days=7)
+        )
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
