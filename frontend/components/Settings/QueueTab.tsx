@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
+import Select from 'react-select'
 import styled from 'styled-components'
 
 import { CLUB_ROUTE } from '../../constants'
-import { Club } from '../../types'
+import { Club, Template } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -21,6 +22,7 @@ type QueueTableModalProps = {
   closeModal: () => void
   bulkAction: (comment: string) => void
   isApproving: boolean
+  templates: Template[]
 }
 
 const QueueTableModal = ({
@@ -28,13 +30,23 @@ const QueueTableModal = ({
   closeModal,
   bulkAction,
   isApproving,
+  templates,
 }: QueueTableModalProps): ReactElement => {
   const [comment, setComment] = useState<string>('')
+  const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
+
+  useEffect(() => {
+    setComment(
+      selectedTemplates.map((template) => template.content).join('\n\n'),
+    )
+  }, [selectedTemplates])
+
   return (
     <Modal
       show={show}
       closeModal={() => {
         setComment('')
+        setSelectedTemplates([])
         closeModal()
       }}
       marginBottom={false}
@@ -45,6 +57,36 @@ const QueueTableModal = ({
           notes will be emailed to the requesters when you{' '}
           {isApproving ? 'approve' : 'reject'} these requests.
         </div>
+        <Select
+          isMulti
+          isClearable
+          placeholder="Select templates"
+          value={selectedTemplates.map((template) => ({
+            value: template.id,
+            label: template.title,
+            content: template.content,
+            author: template.author,
+          }))}
+          options={templates.map((template) => ({
+            value: template.id,
+            label: template.title,
+            content: template.content,
+            author: template.author,
+          }))}
+          onChange={(selectedOptions) => {
+            if (selectedOptions) {
+              const selected = selectedOptions.map((option) => ({
+                id: option.value,
+                title: option.label,
+                content: option.content,
+                author: option.author,
+              }))
+              setSelectedTemplates(selected)
+            } else {
+              setSelectedTemplates([])
+            }
+          }}
+        />
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
@@ -52,7 +94,7 @@ const QueueTableModal = ({
           placeholder={`${isApproving ? 'approval' : 'rejection'} notes`}
         ></textarea>
         <button
-          className={`mb-2 button ${isApproving ? 'is-success' : 'is-danger'}`}
+          className={`mt-2 button ${isApproving ? 'is-success' : 'is-danger'}`}
           onClick={() => {
             closeModal()
             bulkAction(comment)
@@ -68,10 +110,11 @@ const QueueTableModal = ({
 
 type QueueTableProps = {
   clubs: Club[] | null
+  templates: Template[]
 }
 /* TODO: refactor with Table component when render and search
 functionality are disconnected */
-const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
+const QueueTable = ({ clubs, templates }: QueueTableProps): ReactElement => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
@@ -106,6 +149,7 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
         closeModal={() => setShowModal(false)}
         bulkAction={bulkAction}
         isApproving={approve}
+        templates={templates}
       />
       <QueueTableHeader>
         <QueueTableHeaderText>
@@ -238,6 +282,7 @@ const QueueTab = (): ReactElement => {
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)
   const [inactiveClubs, setInactiveClubs] = useState<Club[] | null>(null)
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
+  const [templates, setTemplates] = useState<Template[]>([])
   const canApprove = apiCheckPermission('clubs.approve_club')
 
   useEffect(() => {
@@ -261,6 +306,10 @@ const QueueTab = (): ReactElement => {
       doApiRequest('/clubs/directory/?format=json')
         .then((resp) => resp.json())
         .then((data) => setAllClubs(data.map((club: Club) => club.approved)))
+
+      doApiRequest('/templates/?format=json')
+        .then((resp) => resp.json())
+        .then(setTemplates)
     }
   }, [])
 
@@ -327,7 +376,7 @@ const QueueTab = (): ReactElement => {
           {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
         </li>
       </ul>
-      <QueueTable clubs={pendingClubs} />
+      <QueueTable clubs={pendingClubs} templates={templates} />
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {OBJECT_NAME_PLURAL} that have been
