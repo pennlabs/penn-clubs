@@ -95,6 +95,7 @@ from clubs.models import (
     Cart,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubFairRegistration,
@@ -160,6 +161,7 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubApplicationSerializer,
+    ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
@@ -2422,10 +2424,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
+        # Check if the event has already ended
+        if event.end_time < timezone.now():
+            return Response(
+                {"detail": "This event has already ended", "success": False},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Cannot add tickets that haven't dropped yet
         if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
             return Response(
-                {"detail": "Ticket drop time has not yet elapsed"},
+                {"detail": "Ticket drop time has not yet elapsed", "success": False},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -2469,7 +2478,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
             if tickets.count() < count:
                 return Response(
-                    {"detail": f"Not enough tickets of type {type} left!"},
+                    {
+                        "detail": f"Not enough tickets of type {type} left!",
+                        "success": False,
+                    },
                     status=status.HTTP_403_FORBIDDEN,
                 )
             cart.tickets.add(*tickets[:count])
@@ -5263,8 +5275,12 @@ class TicketViewSet(viewsets.ModelViewSet):
             owner=self.request.user
         )
 
+        now = timezone.now()
+
         tickets_to_replace = cart.tickets.filter(
-            Q(owner__isnull=False) | Q(holder__isnull=False)
+            Q(owner__isnull=False)
+            | Q(holder__isnull=False)
+            | Q(event__end_time__lt=now)
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
@@ -5276,16 +5292,30 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
             )
 
-        # Attempt to replace all tickets that have gone stale
+        # Attempt to replace all tickets that have gone stale or are for elapsed events
         replacement_tickets, sold_out_tickets = [], []
 
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
         tickets_to_replace = tickets_to_replace.select_related("event")
 
         for ticket_class in tickets_to_replace.values(
-            "type", "event", "event__name"
+            "type", "event", "event__name", "event__end_time"
         ).annotate(count=Count("id")):
             # we don't need to lock, since we aren't updating holder/owner
+            if ticket_class["event__end_time"] < now:
+                # Event has elapsed, mark all tickets as sold out
+                sold_out_tickets.append(
+                    {
+                        "type": ticket_class["type"],
+                        "event": {
+                            "id": ticket_class["event"],
+                            "name": ticket_class["event__name"],
+                        },
+                        "count": ticket_class["count"],
+                    }
+                )
+                continue
+
             available_tickets = Ticket.objects.filter(
                 event=ticket_class["event"],
                 type=ticket_class["type"],
@@ -7504,7 +7534,18 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     def get_queryset(self):
-        return AdminNote.objects.filter(club__code=self.kwargs.get("club_code"))
+        return AdminNote.objects.filter(
+            club__code=self.kwargs.get("club_code")
+        ).order_by("-created_at")
+
+
+class ClubApprovalResponseTemplateViewSet(viewsets.ModelViewSet):
+    serializer_class = ClubApprovalResponseTemplateSerializer
+    permission_classes = [IsSuperuser]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        return ClubApprovalResponseTemplate.objects.all().order_by("-created_at")
 
 
 class ScriptExecutionView(APIView):

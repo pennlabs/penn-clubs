@@ -31,6 +31,7 @@ from clubs.models import (
     Badge,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubVisit,
@@ -3039,8 +3040,7 @@ class ClubFairSerializer(serializers.ModelSerializer):
         )
 
 
-class AdminNoteSerializer(serializers.ModelSerializer):
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+class AdminNoteSerializer(ClubRouteMixin, serializers.ModelSerializer):
     creator = serializers.SerializerMethodField("get_creator")
     title = serializers.CharField(max_length=255, default="Note")
     content = serializers.CharField(required=False)
@@ -3049,16 +3049,16 @@ class AdminNoteSerializer(serializers.ModelSerializer):
         return obj.creator.get_full_name()
 
     def create(self, validated_data):
-        return AdminNote.objects.create(
-            creator=self.context["request"].user,
-            club=validated_data["club"],
-            title=validated_data["title"],
-            content=validated_data["content"],
-        )
+        validated_data["creator"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("creator", "")
+        return super().update(instance, validated_data)
 
     class Meta:
         model = AdminNote
-        fields = ("id", "creator", "club", "title", "content", "created_at")
+        fields = ("id", "creator", "title", "content", "created_at")
 
 
 class WritableClubFairSerializer(ClubFairSerializer):
@@ -3066,3 +3066,22 @@ class WritableClubFairSerializer(ClubFairSerializer):
 
     class Meta(ClubFairSerializer.Meta):
         pass
+
+
+class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField("get_author")
+
+    def get_author(self, obj):
+        return obj.author.get_full_name()
+
+    def create(self, validated_data):
+        validated_data["author"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("author", "")
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = ClubApprovalResponseTemplate
+        fields = ("id", "author", "title", "content", "created_at", "updated_at")

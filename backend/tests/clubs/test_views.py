@@ -24,6 +24,7 @@ from clubs.models import (
     Badge,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairRegistration,
     Event,
@@ -2856,3 +2857,69 @@ class ClubTestCase(TestCase):
         self.event1.refresh_from_db()
         self.assertIn("url", resp.data, resp.content)
         self.assertTrue(self.event1.url, resp.content)
+
+    def test_club_approval_response_templates(self):
+        """
+        Test operations and permissions for club approval response templates.
+        """
+
+        # Log in as superuser
+        self.client.login(username=self.user5.username, password="test")
+
+        # Create a new template
+        resp = self.client.post(
+            reverse("templates-list"),
+            {
+                "title": "Test template",
+                "content": "This is a new template",
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201)
+
+        # Create another template
+        template = ClubApprovalResponseTemplate.objects.create(
+            author=self.user5,
+            title="Another template",
+            content="This is another template",
+        )
+
+        # List templates
+        resp = self.client.get(reverse("templates-list"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(resp.json()), 2)
+
+        # Update a template
+        resp = self.client.patch(
+            reverse("templates-detail", args=[template.id]),
+            {"title": "Updated title"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Verify update
+        template.refresh_from_db()
+        self.assertEqual(template.title, "Updated title")
+
+        # Delete the template
+        resp = self.client.delete(reverse("templates-detail", args=[template.id]))
+        self.assertEqual(resp.status_code, 204)
+
+        # Verify the template has been deleted
+        self.assertIsNone(
+            ClubApprovalResponseTemplate.objects.filter(id=template.id).first()
+        )
+
+        # Test non-superuser access restrictions
+        self.client.logout()
+        self.client.login(
+            username=self.user4.username, password="test"
+        )  # non-superuser
+
+        # Non-superuser shouldn't be able to create a template
+        resp = self.client.post(
+            reverse("templates-list"),
+            {"title": "Template", "content": "This should not exist"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)

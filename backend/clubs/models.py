@@ -2046,6 +2046,24 @@ class TicketTransferRecord(models.Model):
         )
 
 
+class ClubApprovalResponseTemplate(models.Model):
+    """
+    Represents a (rejection) template for site administrators to use
+    during the club approval process.
+    """
+
+    author = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="templates"
+    )
+    title = models.CharField(max_length=255, unique=True)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+
 @receiver(models.signals.pre_delete, sender=Asset)
 def asset_delete_cleanup(sender, instance, **kwargs):
     if instance.file:

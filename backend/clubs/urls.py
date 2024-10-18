@@ -12,6 +12,7 @@ from clubs.views import (
     BadgeClubViewSet,
     BadgeViewSet,
     ClubApplicationViewSet,
+    ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
@@ -98,6 +99,7 @@ router.register(
     basename="wharton",
 )
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
+router.register(r"templates", ClubApprovalResponseTemplateViewSet, basename="templates")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")

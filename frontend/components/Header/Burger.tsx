@@ -4,6 +4,9 @@ const Burger = ({ toggle }: BurgerProps): ReactElement => (
   <a
     role="button"
     className="navbar-burger burger"
+    style={{
+      marginLeft: '8px',
+    }}
     aria-label="menu"
     aria-expanded="false"
     data-target="navbarBasicExample"
