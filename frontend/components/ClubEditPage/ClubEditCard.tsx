@@ -445,7 +445,8 @@ export default function ClubEditCard({
             terms != null ? terms.map((term) => term.value).join(',') : null,
         },
         {
-          name: 'mission',
+          name: 'description',
+          label: 'Club Mission',
           required: true,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
