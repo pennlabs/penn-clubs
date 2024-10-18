@@ -3863,27 +3863,37 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         )
 
 
-class OwnershipRequestOwnerViewSet(viewsets.ModelViewSet):
+class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     """
     list:
     Return a list of users who have sent ownership request to the club.
 
     destroy:
     Delete a ownership request for a specific user.
+
+    accept:
+    Accept an ownership request as a club owner.
+
+    old_requests:
+    Return a list of ownership requests older than a week. Used by Superusers.
     """
 
     serializer_class = OwnershipRequestSerializer
+
     permission_classes = [OwnershipRequestPermission | IsSuperuser]
     http_method_names = ["get", "post", "delete"]
     lookup_field = "requester__username"
 
     def get_queryset(self):
-        return OwnershipRequest.objects.filter(
-            club__code=self.kwargs["club_code"], withdrawn=False
-        )
+        if self.action != "old_requests":
+            return OwnershipRequest.objects.filter(
+                club__code=self.kwargs["club_code"], withdrawn=False
+            )
+        else:
+            return OwnershipRequest.objects.filter(withdrawn=False)
 
     @action(detail=True, methods=["post"])
-    def accept(self, request, *ages, **kwargs):
+    def accept(self, request, *args, **kwargs):
         """
         Accept an ownership request as a club owner.
         ---
@@ -3903,7 +3913,7 @@ class OwnershipRequestOwnerViewSet(viewsets.ModelViewSet):
         """
         request_object = self.get_object()
         membership, created = Membership.objects.get_or_create(
-            requester=request_object.requester,
+            person=request_object.requester,
             club=request_object.club,
             defaults={"role": Membership.ROLE_OWNER},
         )
@@ -3915,19 +3925,15 @@ class OwnershipRequestOwnerViewSet(viewsets.ModelViewSet):
         request_object.delete()
         return Response({"success": True})
 
-
-class OwnershipRequestSuperuserAPIView(generics.ListAPIView):
-    """
-    Return a list of ownership requests older than a week.
-    """
-
-    serializer_class = OwnershipRequestSerializer
-    permission_classes = [IsSuperuser]
-
-    def get_queryset(self):
-        return OwnershipRequest.objects.filter(
+    @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
+    def old_requests(self, request, *args, **kwargs):
+        queryset = OwnershipRequest.objects.filter(
             withdrawn=False, created_at__lte=timezone.now() - datetime.timedelta(days=7)
         )
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):

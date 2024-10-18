@@ -290,7 +290,7 @@ class OwnershipRequestAdmin(admin.ModelAdmin):
         "club__name",
         "created_at",
     )
-    list_display = ("person", "club", "email", "withdrawn", "created_at")
+    list_display = ("requester", "club", "email", "withdrawn", "created_at")
     list_filter = ("withdrawn",)
 
     def person(self, obj):
