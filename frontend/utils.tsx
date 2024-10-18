@@ -91,7 +91,7 @@ export const SITE_ORIGIN = publicRuntimeConfig.SITE_ORIGIN
 export const API_BASE_URL = `${SITE_ORIGIN}/api`
 
 export const EMPTY_DESCRIPTION =
-  '<span style="color:#666">This club has not added a description yet.</span>'
+  '<span style="color:#666">This club has not added a club mission yet.</span>'
 export const LOGIN_URL = `${API_BASE_URL}/accounts/login/`
 export const LOGOUT_URL = `${API_BASE_URL}/accounts/logout/`
 

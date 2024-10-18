@@ -184,9 +184,8 @@ const EmbedOption = (props: Props): ReactElement => {
           <h1>Embed Content</h1>
           <p>
             You can use this tool to embed multimedia content into your club
-            description. If you run into any issues using the tool, please
-            contact <Contact />. Here are examples of some of the things you can
-            embed.
+            mission. If you run into any issues using the tool, please contact{' '}
+            <Contact />. Here are examples of some of the things you can embed.
           </p>
           <div className="content mb-3">
             <ul>

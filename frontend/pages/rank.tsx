@@ -235,13 +235,13 @@ const Rank = (): ReactElement => (
           ],
         },
         {
-          name: `${OBJECT_NAME_TITLE} Description`,
+          name: `${OBJECT_NAME_TITLE} Mission`,
           description: (
             <>
-              Adding a description helps students learn more about whether or
+              Adding a club mission helps students learn more about whether or
               not a {OBJECT_NAME_SINGULAR} is a good fit for them.{' '}
-              {OBJECT_NAME_TITLE} without a description will therefore appear
-              lower on the homepage. Longer and more detailed descriptions are
+              {OBJECT_NAME_TITLE} without a club mission will therefore appear
+              lower on the homepage. Longer and more detailed club missions are
               awarded bonus points.
             </>
           ),

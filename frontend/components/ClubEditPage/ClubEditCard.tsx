@@ -446,8 +446,9 @@ export default function ClubEditCard({
         },
         {
           name: 'description',
+          label: 'Club Mission',
           required: true,
-          placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
+          placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
           hidden: !REAPPROVAL_QUEUE_ENABLED,
         },
