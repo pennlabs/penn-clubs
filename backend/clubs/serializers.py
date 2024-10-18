@@ -2002,7 +2002,7 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
 
 class OwnershipRequestSerializer(serializers.ModelSerializer):
     """
-    Used by club owners/officers to see who has requested to be owner of the club.
+    Used by club owners to see who has requested to be owner of the club.
     """
 
     person = serializers.HiddenField(default=serializers.CurrentUserDefault())

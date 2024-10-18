@@ -1124,7 +1124,7 @@ class MembershipRequest(models.Model):
 
 class OwnershipRequest(models.Model):
     """
-    Used when users request ownership from the owner
+    Represents a user's request to take ownership of a club
     """
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
