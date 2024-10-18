@@ -3832,12 +3832,12 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         """
         club = request.data.get("club", None)
         obj = OwnershipRequest.objects.filter(
-            club__code=club, person=request.user
+            club__code=club, requester=request.user
         ).first()
         if obj is not None:
-            obj.withdrew = False
+            obj.withdrawn = False
             obj.created_at = timezone.now()
-            obj.save(update_fields=["withdrew", "created_at"])
+            obj.save(update_fields=["withdrawn", "created_at"])
             return Response(UserOwnershipRequestSerializer(obj).data)
 
         return super().create(request, *args, **kwargs)
@@ -3850,20 +3850,20 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
-        obj.withdrew = True
-        obj.save(update_fields=["withdrew"])
+        obj.withdrawn = True
+        obj.save(update_fields=["withdrawn"])
 
         return Response({"success": True})
 
     def get_queryset(self):
         return OwnershipRequest.objects.filter(
-            person=self.request.user,
-            withdrew=False,
+            requester=self.request.user,
+            withdrawn=False,
             club__archived=False,
         )
 
 
-class OwnershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
+class OwnershipRequestOwnerViewSet(viewsets.ModelViewSet):
     """
     list:
     Return a list of users who have sent ownership request to the club.
@@ -3875,11 +3875,11 @@ class OwnershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     serializer_class = OwnershipRequestSerializer
     permission_classes = [OwnershipRequestPermission | IsSuperuser]
     http_method_names = ["get", "post", "delete"]
-    lookup_field = "person__username"
+    lookup_field = "requester__username"
 
     def get_queryset(self):
         return OwnershipRequest.objects.filter(
-            club__code=self.kwargs["club_code"], withdrew=False
+            club__code=self.kwargs["club_code"], withdrawn=False
         )
 
     @action(detail=True, methods=["post"])
@@ -3903,7 +3903,7 @@ class OwnershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         request_object = self.get_object()
         membership, created = Membership.objects.get_or_create(
-            person=request_object.person,
+            requester=request_object.requester,
             club=request_object.club,
             defaults={"role": Membership.ROLE_OWNER},
         )
@@ -3926,7 +3926,7 @@ class OwnershipRequestSuperuserAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return OwnershipRequest.objects.filter(
-            withdrew=False, created_at__lte=timezone.now() - datetime.timedelta(days=7)
+            withdrawn=False, created_at__lte=timezone.now() - datetime.timedelta(days=7)
         )
 
 

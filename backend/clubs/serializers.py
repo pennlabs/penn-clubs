@@ -2005,20 +2005,22 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
     Used by club owners to see who has requested to be owner of the club.
     """
 
-    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     name = serializers.SerializerMethodField("get_full_name")
-    username = serializers.CharField(source="person.username", read_only=True)
-    email = serializers.EmailField(source="person.email", read_only=True)
+    username = serializers.CharField(source="requester.username", read_only=True)
+    email = serializers.EmailField(source="requester.email", read_only=True)
 
-    school = SchoolSerializer(many=True, source="person.profile.school", read_only=True)
-    major = MajorSerializer(many=True, source="person.profile.major", read_only=True)
+    school = SchoolSerializer(
+        many=True, source="requester.profile.school", read_only=True
+    )
+    major = MajorSerializer(many=True, source="requester.profile.major", read_only=True)
     graduation_year = serializers.IntegerField(
-        source="person.profile.graduation_year", read_only=True
+        source="requester.profile.graduation_year", read_only=True
     )
 
     def get_full_name(self, obj):
-        return obj.person.get_full_name()
+        return obj.requester.get_full_name()
 
     class Meta:
         model = OwnershipRequest
@@ -2029,13 +2031,13 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
             "graduation_year",
             "major",
             "name",
-            "person",
+            "requester",
             "school",
             "username",
         )
         validators = [
             validators.UniqueTogetherValidator(
-                queryset=OwnershipRequest.objects.all(), fields=["club", "person"]
+                queryset=OwnershipRequest.objects.all(), fields=["club", "requester"]
             )
         ]
 
@@ -2045,7 +2047,7 @@ class UserOwnershipRequestSerializer(serializers.ModelSerializer):
     Used by the users to return the clubs that the user has sent OwnershipRequest to.
     """
 
-    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     club_name = serializers.CharField(source="club.name", read_only=True)
 
@@ -2061,7 +2063,7 @@ class UserOwnershipRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OwnershipRequest
-        fields = ("club", "club_name", "person")
+        fields = ("club", "club_name", "requester")
 
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):

@@ -1127,28 +1127,34 @@ class OwnershipRequest(models.Model):
     Represents a user's request to take ownership of a club
     """
 
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    requester = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="ownership_requests"
+    )
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="ownership_requests"
+    )
 
-    withdrew = models.BooleanField(default=False)
+    withdrawn = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "<OwnershipRequest: {} for {}, with email {}>".format(
-            self.person.username, self.club.code, self.person.email
-        )
+        return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"
 
     def send_request(self, request=None):
         domain = get_domain(request)
 
+        edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
+
+        club_name = self.club.name
+
+        full_name = self.requester.get_full_name()
+
         context = {
-            "club_name": self.club.name,
-            "edit_url": "{}/member".format(
-                settings.EDIT_URL.format(domain=domain, club=self.club.code)
-            ),
-            "full_name": self.person.get_full_name(),
+            "club_name": club_name,
+            "edit_url": f"{edit_url}/member",
+            "full_name": full_name,
         }
 
         owner_emails = list(
@@ -1159,15 +1165,13 @@ class OwnershipRequest(models.Model):
 
         send_mail_helper(
             name="ownershiprequest",
-            subject="Ownership Request from {} for {}".format(
-                self.person.get_full_name(), self.club.name
-            ),
+            subject=f"Ownership Request from {full_name} for {club_name}",
             emails=owner_emails,
             context=context,
         )
 
     class Meta:
-        unique_together = (("person", "club"),)
+        unique_together = (("requester", "club"),)
 
 
 class Advisor(models.Model):

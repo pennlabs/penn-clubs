@@ -288,20 +288,19 @@ class OwnershipRequestAdmin(admin.ModelAdmin):
         "person__username",
         "person__email",
         "club__name",
-        "club__pk",
         "created_at",
     )
-    list_display = ("person", "club", "email", "withdrew", "created_at")
-    list_filter = ("withdrew",)
+    list_display = ("person", "club", "email", "withdrawn", "created_at")
+    list_filter = ("withdrawn",)
 
     def person(self, obj):
-        return obj.person.username
+        return obj.requester.username
 
     def club(self, obj):
         return obj.club.name
 
     def email(self, obj):
-        return obj.person.email
+        return obj.requester.email
 
 
 class MembershipAdmin(admin.ModelAdmin):
