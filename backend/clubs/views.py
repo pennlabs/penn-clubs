@@ -3927,6 +3927,55 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
     def old_requests(self, request, *args, **kwargs):
+        """
+        View unaddressed ownership requests that are older than a week.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    club:
+                                        type: string
+                                    created_at:
+                                        type: string
+                                        format: date-time
+                                    email:
+                                        type: string
+                                    graduation_year:
+                                        type: integer
+                                    major:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                name:
+                                                    type: string
+                                    name:
+                                        type: string
+                                    school:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                name:
+                                                    type: string
+                                                is_graduate:
+                                                    type: boolean
+                                    username:
+                                        type: string
+        ---
+        """
+
         queryset = OwnershipRequest.objects.filter(
             withdrawn=False, created_at__lte=timezone.now() - datetime.timedelta(days=7)
         )
