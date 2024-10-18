@@ -43,6 +43,7 @@ from clubs.models import (
     MembershipRequest,
     Note,
     NoteTag,
+    OwnershipRequest,
     Profile,
     QuestionAnswer,
     Report,
@@ -1997,6 +1998,72 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = MembershipRequest
         fields = ("club", "club_name", "person")
+
+
+class OwnershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by club owners to see who has requested to be owner of the club.
+    """
+
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    name = serializers.SerializerMethodField("get_full_name")
+    username = serializers.CharField(source="requester.username", read_only=True)
+    email = serializers.EmailField(source="requester.email", read_only=True)
+
+    school = SchoolSerializer(
+        many=True, source="requester.profile.school", read_only=True
+    )
+    major = MajorSerializer(many=True, source="requester.profile.major", read_only=True)
+    graduation_year = serializers.IntegerField(
+        source="requester.profile.graduation_year", read_only=True
+    )
+
+    def get_full_name(self, obj):
+        return obj.requester.get_full_name()
+
+    class Meta:
+        model = OwnershipRequest
+        fields = (
+            "club",
+            "created_at",
+            "email",
+            "graduation_year",
+            "major",
+            "name",
+            "requester",
+            "school",
+            "username",
+        )
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=OwnershipRequest.objects.all(), fields=["club", "requester"]
+            )
+        ]
+
+
+class UserOwnershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by the users to return the clubs that the user has sent OwnershipRequest to.
+    """
+
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    club_name = serializers.CharField(source="club.name", read_only=True)
+
+    def create(self, validated_data):
+        """
+        Send an email when a ownership request is created.
+        """
+        obj = super().create(validated_data)
+
+        obj.send_request(self.context["request"])
+
+        return obj
+
+    class Meta:
+        model = OwnershipRequest
+        fields = ("club", "club_name", "requester")
 
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):

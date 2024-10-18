@@ -1122,6 +1122,58 @@ class MembershipRequest(models.Model):
         unique_together = (("person", "club"),)
 
 
+class OwnershipRequest(models.Model):
+    """
+    Represents a user's request to take ownership of a club
+    """
+
+    requester = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="ownership_requests"
+    )
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="ownership_requests"
+    )
+
+    withdrawn = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"
+
+    def send_request(self, request=None):
+        domain = get_domain(request)
+
+        edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
+
+        club_name = self.club.name
+
+        full_name = self.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "edit_url": f"{edit_url}/member",
+            "full_name": full_name,
+        }
+
+        owner_emails = list(
+            self.club.membership_set.filter(
+                role=Membership.ROLE_OWNER, active=True
+            ).values_list("person__email", flat=True)
+        )
+
+        send_mail_helper(
+            name="ownership_request",
+            subject=f"Ownership Request from {full_name} for {club_name}",
+            emails=owner_emails,
+            context=context,
+        )
+
+    class Meta:
+        unique_together = (("requester", "club"),)
+
+
 class Advisor(models.Model):
     """
     Represents one faculty advisor or point of contact for a club.

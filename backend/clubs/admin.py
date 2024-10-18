@@ -38,6 +38,7 @@ from clubs.models import (
     MembershipRequest,
     Note,
     NoteTag,
+    OwnershipRequest,
     Profile,
     QuestionAnswer,
     RecurringEvent,
@@ -282,6 +283,26 @@ class MembershipRequestAdmin(admin.ModelAdmin):
     is_member.boolean = True
 
 
+class OwnershipRequestAdmin(admin.ModelAdmin):
+    search_fields = (
+        "person__username",
+        "person__email",
+        "club__name",
+        "created_at",
+    )
+    list_display = ("requester", "club", "email", "withdrawn", "created_at")
+    list_filter = ("withdrawn",)
+
+    def person(self, obj):
+        return obj.requester.username
+
+    def club(self, obj):
+        return obj.club.name
+
+    def email(self, obj):
+        return obj.requester.email
+
+
 class MembershipAdmin(admin.ModelAdmin):
     search_fields = (
         "person__username",
@@ -443,6 +464,7 @@ admin.site.register(MembershipRequest, MembershipRequestAdmin)
 admin.site.register(Major, MajorAdmin)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
+admin.site.register(OwnershipRequest, OwnershipRequestAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
 admin.site.register(RecurringEvent)

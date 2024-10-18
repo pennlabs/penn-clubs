@@ -437,6 +437,26 @@ class MembershipRequestPermission(permissions.BasePermission):
         return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
+class OwnershipRequestPermission(permissions.BasePermission):
+    """
+    Only owners can view and modify ownership requests.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        if "club_code" not in view.kwargs:
+            return False
+
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+
+        obj = Club.objects.get(code=view.kwargs["club_code"])
+        membership = find_membership_helper(request.user, obj)
+        return membership is not None and membership.role == Membership.ROLE_OWNER
+
+
 class InvitePermission(permissions.BasePermission):
     """
     Officers and higher can list/delete invitations.
