@@ -1164,7 +1164,7 @@ class OwnershipRequest(models.Model):
         )
 
         send_mail_helper(
-            name="ownershiprequest",
+            name="ownership_request",
             subject=f"Ownership Request from {full_name} for {club_name}",
             emails=owner_emails,
             context=context,
