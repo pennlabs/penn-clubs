@@ -314,7 +314,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               helpText="A name for this application, used for identifying it if you have multiple applications per semester."
             />
             <Field
-              name="mission"
+              name="description"
               as={RichTextField}
               helpText="Information about the application that will be displayed at the top of the application page."
             />
