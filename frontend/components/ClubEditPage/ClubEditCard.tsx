@@ -445,9 +445,9 @@ export default function ClubEditCard({
             terms != null ? terms.map((term) => term.value).join(',') : null,
         },
         {
-          name: 'description',
+          name: 'mission',
           required: true,
-          placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
+          placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
           hidden: !REAPPROVAL_QUEUE_ENABLED,
         },
