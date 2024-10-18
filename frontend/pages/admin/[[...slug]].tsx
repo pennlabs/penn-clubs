@@ -11,15 +11,17 @@ import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
 import React, { ReactElement } from 'react'
 import renderPage from 'renderPage'
-import { Badge, ClubFair, Report, Tag } from 'types'
+import { Badge, ClubFair, Report, Tag, Template } from 'types'
 import { apiCheckPermission, doBulkLookup } from 'utils'
 
+import TemplatesTab from '~/components/Settings/TemplatesTab'
 import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
 
 function AdminPage({
   userInfo,
   tags,
   badges,
+  templates,
   clubfairs,
   scripts,
   fair,
@@ -57,6 +59,11 @@ function AdminPage({
       name: 'queue',
       label: 'Approval Queue',
       content: () => <QueueTab />,
+    },
+    {
+      name: 'templates',
+      label: 'Approval Templates',
+      content: () => <TemplatesTab templates={templates} />,
     },
     {
       name: 'fair',
@@ -99,6 +106,7 @@ function AdminPage({
 type BulkResp = {
   tags: Tag[]
   badges: Badge[]
+  templates: Template[]
   clubfairs: ClubFair[]
   scripts: any[]
   reports: Report[]
@@ -109,6 +117,7 @@ AdminPage.getInitialProps = async (ctx: NextPageContext) => {
     [
       'tags',
       ['badges', '/badges/?all=true&format=json'],
+      'templates',
       'clubfairs',
       'scripts',
       ['reports', '/reports/?format=json'],

@@ -426,3 +426,10 @@ export type TicketAvailability = {
   totals: TicketEntry[]
   available: TicketEntry[]
 }
+
+export type Template = {
+  id: number
+  author: string
+  title: string
+  content: string
+}

@@ -1,9 +1,10 @@
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
+import Select from 'react-select'
 
 import { CLUB_SETTINGS_ROUTE } from '~/constants/routes'
 
-import { Club, ClubFair, MembershipRank, UserInfo } from '../../types'
+import { Club, ClubFair, MembershipRank, Template, UserInfo } from '../../types'
 import {
   apiCheckPermission,
   doApiRequest,
@@ -36,6 +37,8 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
   const [loading, setLoading] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
   const [fairs, setFairs] = useState<ClubFair[]>([])
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
 
   const canApprove = apiCheckPermission('clubs.approve_club')
   const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
@@ -54,7 +57,17 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
         .then((resp) => resp.json())
         .then(setFairs)
     }
-  }, [])
+
+    if (canApprove) {
+      doApiRequest('/templates/?format=json')
+        .then((resp) => resp.json())
+        .then(setTemplates)
+    }
+
+    setComment(
+      selectedTemplates.map((template) => template.content).join('\n\n'),
+    )
+  }, [selectedTemplates])
 
   return (
     <>
@@ -200,6 +213,43 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                     className="textarea mb-4"
                     placeholder="Enter approval or rejection notes here! Your notes will be emailed to the requester when you approve or reject this request."
                   ></textarea>
+                  <div className="field is-grouped mb-3">
+                    <div className="control is-expanded">
+                      <Select
+                        isMulti
+                        isClearable
+                        placeholder="Select templates"
+                        options={templates.map((template) => ({
+                          value: template.id,
+                          label: template.title,
+                          content: template.content,
+                          author: template.author,
+                        }))}
+                        onChange={(selectedOptions) => {
+                          if (selectedOptions) {
+                            const selected = selectedOptions.map((option) => ({
+                              id: option.value,
+                              title: option.label,
+                              content: option.content,
+                              author: option.author,
+                            }))
+                            setSelectedTemplates(selected)
+                          } else {
+                            setSelectedTemplates([])
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="control">
+                      <button
+                        className="button is-primary"
+                        onClick={() => router.push('/admin/templates')}
+                      >
+                        <Icon name="edit" />
+                        Edit Templates
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
               <div className="buttons">
