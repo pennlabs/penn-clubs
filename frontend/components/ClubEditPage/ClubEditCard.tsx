@@ -40,8 +40,9 @@ import {
   SITE_ID,
   SITE_NAME,
 } from '../../utils/branding'
+import { ModalContent } from '../ClubPage/Actions'
 import { LiveBanner, LiveSub, LiveTitle } from '../ClubPage/LiveEventsDialog'
-import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
+import { Checkbox, CheckboxLabel, Contact, Modal, Text } from '../common'
 import {
   CheckboxField,
   CheckboxTextField,
@@ -189,6 +190,7 @@ export default function ClubEditCard({
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
+  const [showRankModal, setShowRankModal] = useState<boolean>(false)
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
       club.target_majors?.length ||
@@ -397,6 +399,58 @@ export default function ClubEditCard({
     {
       name: 'General',
       type: 'group',
+      description: (
+        <div className="mb-4">
+          <a onClick={() => setShowRankModal(true)}>
+            How does filling out this information affect your club?
+          </a>
+          <Modal
+            show={showRankModal}
+            closeModal={() => setShowRankModal(false)}
+            marginBottom={false}
+            width="80%"
+          >
+            <ModalContent className="content mb-4">
+              <h2>How we calculate club rankings</h2>
+              <hr />
+              <h5>
+                The following positively affects your club's ranking in homepage
+                search results:
+              </h5>
+              <ul>
+                <li>
+                  Upcoming events with filled out name, description, and image
+                </li>
+                <li>Upcoming, open applications for membership</li>
+                <li>
+                  Having at least 3 active officers, plus a bonus for any
+                  additional non-officer member on the platform
+                </li>
+                <li>
+                  Having between 3 and 7 useful tags (please email <Contact />{' '}
+                  if none apply)
+                </li>
+                <li>
+                  Posting a public (non-personal) contact email and 2 or more
+                  social links
+                </li>
+                <li>
+                  Having a club logo image uploaded and subtitle filled out
+                </li>
+                <li>
+                  Filling out a club mission with images and detail (rewarded up
+                  to 1000 words)
+                </li>
+                <li>Displaying 3 or more student testimonials (experiences)</li>
+                <li>Filling out the {FIELD_PARTICIPATION_LABEL} section</li>
+                <li>
+                  Updating the club listing recently (within the last 8 months)
+                </li>
+              </ul>
+            </ModalContent>
+          </Modal>
+        </div>
+      ),
       fields: [
         {
           name: 'name',
