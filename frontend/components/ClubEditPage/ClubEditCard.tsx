@@ -401,8 +401,8 @@ export default function ClubEditCard({
       type: 'group',
       description: (
         <div className="mb-4">
-          <a onClick={() => setShowRankModal(true)} className="is-italic">
-            How can filling out this information help your club's ranking?
+          <a onClick={() => setShowRankModal(true)}>
+            How does filling out this information affect your club?
           </a>
           <Modal
             show={showRankModal}
@@ -411,7 +411,8 @@ export default function ClubEditCard({
             width="80%"
           >
             <ModalContent className="content mb-4">
-              <h2>Rank Algorithm</h2>
+              <h2>How we calculate club rankings</h2>
+              <hr />
               <h5>
                 The following positively affects your club's ranking in homepage
                 search results:
