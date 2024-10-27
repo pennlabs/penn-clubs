@@ -7565,6 +7565,11 @@ class ScriptExecutionView(APIView):
             return Response({"output": output.getvalue()})
 
 
+class HealthView(APIView):
+    def get(self, request):
+        return Response({"message": "OK"}, status=status.HTTP_200_OK)
+
+
 def get_initial_context_from_types(types):
     """
     Generate a sample context given the specified types.

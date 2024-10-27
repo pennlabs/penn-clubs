@@ -2923,3 +2923,11 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 403)
+
+
+class HealthTestCase(TestCase):
+    def test_health(self):
+        url = reverse("health")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data, {"message": "OK"})
