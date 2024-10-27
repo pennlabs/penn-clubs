@@ -7566,6 +7566,12 @@ class ScriptExecutionView(APIView):
 
 
 class HealthView(APIView):
+    """
+    Health check endpoint to confirm the backend is running.
+    """
+
+    schema = None
+
     def get(self, request):
         return Response({"message": "OK"}, status=status.HTTP_200_OK)
 
