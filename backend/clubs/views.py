@@ -3831,6 +3831,7 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         If a ownership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
+        """
         obj = OwnershipRequest.objects.filter(
             club__code=club, requester=request.user
         ).first()
@@ -3841,6 +3842,24 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
             return Response(UserOwnershipRequestSerializer(obj).data)
 
         return super().create(request, *args, **kwargs)
+        """
+        club_instance = Club.objects.get(code=club)
+
+        create_defaults = {"club": club_instance, "requester": request.user}
+
+        obj, created = OwnershipRequest.objects.update_or_create(
+            club__code=club,
+            requester=request.user,
+            defaults={"withdrawn": False, "created_at": timezone.now()},
+            create_defaults=create_defaults,
+        )
+
+        if created:
+            obj.send_request(request)
+
+        serializer = self.get_serializer(obj, many=False)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         """

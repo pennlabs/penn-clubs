@@ -2051,16 +2051,6 @@ class UserOwnershipRequestSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     club_name = serializers.CharField(source="club.name", read_only=True)
 
-    def create(self, validated_data):
-        """
-        Send an email when a ownership request is created.
-        """
-        obj = super().create(validated_data)
-
-        obj.send_request(self.context["request"])
-
-        return obj
-
     class Meta:
         model = OwnershipRequest
         fields = ("club", "club_name", "requester")
