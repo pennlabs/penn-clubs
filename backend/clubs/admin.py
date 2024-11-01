@@ -285,15 +285,15 @@ class MembershipRequestAdmin(admin.ModelAdmin):
 
 class OwnershipRequestAdmin(admin.ModelAdmin):
     search_fields = (
-        "person__username",
-        "person__email",
+        "requester__username",
+        "requester__email",
         "club__name",
         "created_at",
     )
     list_display = ("requester", "club", "email", "withdrawn", "created_at")
     list_filter = ("withdrawn",)
 
-    def person(self, obj):
+    def requester(self, obj):
         return obj.requester.username
 
     def club(self, obj):
