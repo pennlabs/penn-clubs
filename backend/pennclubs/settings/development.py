@@ -42,3 +42,5 @@ CYBERSOURCE_CONFIG = {
     "run_environment": "apitest.cybersource.com",
 }
 CYBERSOURCE_TARGET_ORIGIN = "https://localhost:3001"
+
+OSA_KEYS = ["gwashington"]
