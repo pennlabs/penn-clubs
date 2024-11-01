@@ -6563,6 +6563,52 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         return Response([])
 
     @action(detail=True, methods=["GET"])
+    def club_applications(self, *args, **kwargs):
+        """
+        Retrieve club applications for given cycle
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                    id:
+                                        type: integer
+                                    application_end_time:
+                                        type: string
+                                        format: date-time
+                                    application_end_time_exception:
+                                        type: string
+                                    club__name:
+                                        type: string
+                                    club__code:
+                                        type: string
+        ---
+        """
+        cycle = self.get_object()
+
+        return Response(
+            ClubApplication.objects.filter(application_cycle=cycle)
+            .select_related("club")
+            .values(
+                "name",
+                "id",
+                "application_end_time",
+                "application_end_time_exception",
+                "club__name",
+                "club__code",
+            )
+        )
+
+    @action(detail=True, methods=["GET"])
     def applications(self, *args, **kwargs):
         """
         Retrieve applications for given cycle
@@ -6570,7 +6616,10 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         requestBody: {}
         responses:
             "200":
-                content: {}
+                content:
+                    text/csv:
+                        schema:
+                            type: string
         ---
         """
         cycle = self.get_object()
