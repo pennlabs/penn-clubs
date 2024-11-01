@@ -2925,7 +2925,7 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403)
 
-    def test_ownershiprequests_create_and_view(self):  # create approve and deny later
+    def test_ownershiprequests_create_and_view(self):
         """
         Test the ownership requests creation and viewing permissions
         """
@@ -3103,3 +3103,229 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(len(resp.json()), 2, resp.content)
+
+    def test_ownershiprequests_withdraw(self):
+        """
+        Test the ownership requests withdraw feature
+        """
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+        Membership.objects.create(
+            person=self.user2, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        Membership.objects.create(
+            person=self.user3, club=self.club1, role=Membership.ROLE_MEMBER
+        )
+
+        # Create ownership requests for all three
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            1,
+        )
+
+        self.client.login(username=self.user3.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user3
+            ).count(),
+            1,
+        )
+
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user4
+            ).count(),
+            1,
+        )
+
+        self.assertEqual(len(mail.outbox), 3, mail.outbox)
+
+        # Owner can check club's ownership requests
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-ownership-requests-list", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 3, resp.content)
+
+        # Superuser should only see old requests throgh old-requests
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(
+            reverse("club-ownership-requests-old-requests", args=("anystring",))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 0, resp.content)
+
+        OwnershipRequest.objects.filter(club=self.club1, requester=self.user2).update(
+            created_at=timezone.now() - timezone.timedelta(days=8)
+        )
+        OwnershipRequest.objects.filter(club=self.club1, requester=self.user3).update(
+            created_at=timezone.now() - timezone.timedelta(days=7)
+        )
+        OwnershipRequest.objects.filter(club=self.club1, requester=self.user4).update(
+            created_at=timezone.now() - timezone.timedelta(days=6)
+        )
+
+        resp = self.client.get(
+            reverse("club-ownership-requests-old-requests", args=("anystring",))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 2, resp.content)
+
+        # Officer can withdraw
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.delete(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2, withdrawn=True
+            ).count(),
+            1,
+        )
+
+        resp = self.client.get(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 404, resp.content)
+
+        # Member can withdraw
+        self.client.login(username=self.user3.username, password="test")
+        resp = self.client.delete(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user3, withdrawn=True
+            ).count(),
+            1,
+        )
+
+        resp = self.client.get(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 404, resp.content)
+
+        # Non-member can withdraw
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.delete(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user4, withdrawn=True
+            ).count(),
+            1,
+        )
+
+        resp = self.client.get(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 404, resp.content)
+
+        # Owner and superuser cannot see withdrawn requests
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-ownership-requests-list", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 0, resp.content)
+
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(
+            reverse("club-ownership-requests-old-requests", args=("anystring",))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 0, resp.content)
+
+        # Recreate ownership requests for all three
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            1,
+        )
+
+        self.client.login(username=self.user3.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user3
+            ).count(),
+            1,
+        )
+
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user4
+            ).count(),
+            1,
+        )
+
+        # Emails are not resent
+        self.assertEqual(len(mail.outbox), 3, mail.outbox)
+
+        # Owner can see recreated ownership requests
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-ownership-requests-list", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 3, resp.content)
+
+        # Recreated ownership requests are not old
+
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(
+            reverse("club-ownership-requests-old-requests", args=("anystring",))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 0, resp.content)
