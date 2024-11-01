@@ -3119,7 +3119,7 @@ class ClubTestCase(TestCase):
             person=self.user3, club=self.club1, role=Membership.ROLE_MEMBER
         )
 
-        # Create ownership requests for all three
+        # Create ownership requests for officer, member, non-member
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.post(
             reverse("ownership-requests-list"),
@@ -3329,3 +3329,182 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(len(resp.json()), 0, resp.content)
+
+    def test_ownershiprequests_accept(self):
+        """
+        Test the ownership requests accept feature
+        """
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+        Membership.objects.create(
+            person=self.user2, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        Membership.objects.create(
+            person=self.user3, club=self.club1, role=Membership.ROLE_MEMBER
+        )
+
+        # Create ownership requests for officer, member, non-member
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            1,
+        )
+
+        self.client.login(username=self.user3.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user3
+            ).count(),
+            1,
+        )
+
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user4
+            ).count(),
+            1,
+        )
+
+        # Officer cannot accept requests
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse(
+                "club-ownership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user2.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Member cannot accept requests
+        self.client.login(username=self.user3.username, password="test")
+        resp = self.client.post(
+            reverse(
+                "club-ownership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user3.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Non-member cannot accept requests
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.post(
+            reverse(
+                "club-ownership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user4.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Owner can accept requests
+
+        # Accept for officer
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.post(
+            reverse(
+                "club-ownership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user2.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            0,
+        )
+
+        self.assertEqual(
+            Membership.objects.filter(
+                club=self.club1, person=self.user2, role=Membership.ROLE_OWNER
+            ).count(),
+            1,
+        )
+
+        # Accept for member
+        resp = self.client.post(
+            reverse(
+                "club-ownership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user3.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user3
+            ).count(),
+            0,
+        )
+
+        self.assertEqual(
+            Membership.objects.filter(
+                club=self.club1, person=self.user3, role=Membership.ROLE_OWNER
+            ).count(),
+            1,
+        )
+
+        # Accept for non-member
+        resp = self.client.post(
+            reverse(
+                "club-ownership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user4.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user4
+            ).count(),
+            0,
+        )
+
+        self.assertEqual(
+            Membership.objects.filter(
+                club=self.club1, person=self.user4, role=Membership.ROLE_OWNER
+            ).count(),
+            1,
+        )
