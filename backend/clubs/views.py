@@ -3872,7 +3872,7 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         obj.withdrawn = True
         obj.save(update_fields=["withdrawn"])
 
-        return Response({"success": True})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return OwnershipRequest.objects.filter(
