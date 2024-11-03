@@ -165,8 +165,13 @@ const EmailModal = ({
   confirmSubmission,
 }: EmailModalProps): ReactElement => {
   return (
-    <Modal width={'450px'} show={true} closeModal={closeModal}>
-      <div className="card-content">
+    <Modal
+      width={'450px'}
+      show={true}
+      closeModal={closeModal}
+      marginBottom={false}
+    >
+      <div className="card-content" style={{ marginBottom: '24px' }}>
         <Text>
           Warning: This email will be shown to the public. We highly recommend
           you don't use a personal email, and instead use a club email. Feel
