@@ -1,4 +1,3 @@
-import { error } from 'console'
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
@@ -871,7 +870,7 @@ export default function ClubEditCard({
           showEmailModal(true)
           errors.email = 'Please confirm your email'
         }
-        return error
+        return errors
       }}
     >
       {({ dirty, isSubmitting, setFieldValue, submitForm }) => (
