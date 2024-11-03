@@ -266,8 +266,6 @@ export default function ClubEditCard({
     ),
   )
 
-  // Need to save the email here!
-  // And also need t save data in a state
   const [emailModal, showEmailModal] = useState<boolean>(false)
 
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
@@ -861,127 +859,125 @@ export default function ClubEditCard({
     : creationDefaults
 
   return (
-    <div>
-      <Formik
-        initialValues={initialValues}
-        onSubmit={(values, actions) =>
-          submit({ ...values, emailOverride: false }, actions)
+    <Formik
+      initialValues={initialValues}
+      onSubmit={(values, actions) =>
+        submit({ ...values, emailOverride: false }, actions)
+      }
+      enableReinitialize
+      validate={(values) => {
+        const errors: { email?: string } = {}
+        if (values.email.includes('upenn.edu')) {
+          showEmailModal(true)
+          errors.email = 'Please confirm your email'
         }
-        enableReinitialize
-        validate={(values) => {
-          const errors: { email?: string } = {}
-          if (values.email.includes('upenn.edu')) {
-            showEmailModal(true)
-            errors.email = 'Please confirm your email'
-          }
-          return error
-        }}
-      >
-        {({ dirty, isSubmitting, setFieldValue, submitForm }) => (
-          <Form>
-            {emailModal && (
-              <EmailModal
-                closeModal={() => showEmailModal(false)}
-                email=""
-                setEmail={(newEmail) => setFieldValue('email', newEmail)}
-                confirmSubmission={() => {
-                  showEmailModal(false)
-                  submitForm()
-                }}
-              />
-            )}
-            {!REAPPROVAL_QUEUE_ENABLED && (
+        return error
+      }}
+    >
+      {({ dirty, isSubmitting, setFieldValue, submitForm }) => (
+        <Form>
+          {emailModal && (
+            <EmailModal
+              closeModal={() => showEmailModal(false)}
+              email=""
+              setEmail={(newEmail) => setFieldValue('email', newEmail)}
+              confirmSubmission={() => {
+                showEmailModal(false)
+                submitForm()
+              }}
+            />
+          )}
+          {!REAPPROVAL_QUEUE_ENABLED && (
+            <LiveBanner>
+              <LiveTitle>Queue Closed for Summer Break</LiveTitle>
+              <LiveSub>
+                No edits to existing clubs or applications for new clubs will be
+                submitted for review to OSA.
+              </LiveSub>
+            </LiveBanner>
+          )}
+          {!NEW_APPROVAL_QUEUE_ENABLED &&
+            REAPPROVAL_QUEUE_ENABLED &&
+            !isEdit && (
               <LiveBanner>
-                <LiveTitle>Queue Closed for Summer Break</LiveTitle>
+                <LiveTitle>Queue Closed for New Clubs</LiveTitle>
                 <LiveSub>
-                  No edits to existing clubs or applications for new clubs will
-                  be submitted for review to OSA.
+                  Submissions for new clubs are closed for the time being.
+                  Please reach out to the Office of Student Affairs at
+                  vpul-pennosa@pobox.upenn.edu with any questions.
                 </LiveSub>
               </LiveBanner>
             )}
-            {!NEW_APPROVAL_QUEUE_ENABLED &&
-              REAPPROVAL_QUEUE_ENABLED &&
-              !isEdit && (
-                <LiveBanner>
-                  <LiveTitle>Queue Closed for New Clubs</LiveTitle>
-                  <LiveSub>
-                    Submissions for new clubs are closed for the time being.
-                    Please reach out to the Office of Student Affairs at
-                    vpul-pennosa@pobox.upenn.edu with any questions.
-                  </LiveSub>
-                </LiveBanner>
-              )}
-            <FormStyle isHorizontal>
-              {fields.map(({ name, description, fields, hidden }, i) => {
-                if (hidden) {
-                  return null
-                }
-                return (
-                  <Card title={name} key={i}>
-                    {description}
-                    {(fields as any[]).map(
-                      (props: any, i): ReactElement | null => {
-                        const { hidden, ...other } = props
-                        if (hidden) {
-                          return null
-                        }
-                        if (props.type === 'content') {
-                          return <div key={i}>{props.content}</div>
-                        }
-                        if (other.help) {
-                          other.helpText = other.help
-                          delete other.help
-                        }
-                        if (props.type === 'select') {
-                          other.isMulti = false
-                        } else if (props.type === 'multiselect') {
-                          other.isMulti = true
-                        }
-                        if (props.type === 'image') {
-                          other.isImage = true
-                          delete other.type
-                        }
+          <FormStyle isHorizontal>
+            {fields.map(({ name, description, fields, hidden }, i) => {
+              if (hidden) {
+                return null
+              }
+              return (
+                <Card title={name} key={i}>
+                  {description}
+                  {(fields as any[]).map(
+                    (props: any, i): ReactElement | null => {
+                      const { hidden, ...other } = props
+                      if (hidden) {
+                        return null
+                      }
+                      if (props.type === 'content') {
+                        return <div key={i}>{props.content}</div>
+                      }
+                      if (other.help) {
+                        other.helpText = other.help
+                        delete other.help
+                      }
+                      if (props.type === 'select') {
+                        other.isMulti = false
+                      } else if (props.type === 'multiselect') {
+                        other.isMulti = true
+                      }
+                      if (props.type === 'image') {
+                        other.isImage = true
+                        delete other.type
+                      }
 
-                        return (
-                          <Field
-                            key={i}
-                            as={
-                              {
-                                text: TextField,
-                                checkbox: CheckboxField,
-                                html: RichTextField,
-                                multiselect: SelectField,
-                                select: SelectField,
-                                image: FileField,
-                                address: FormikAddressField,
-                                checkboxText: CheckboxTextField,
-                                creatableMultiSelect:
-                                  CreatableMultipleSelectField,
-                              }[props.type] ?? TextField
-                            }
-                            {...other}
-                          />
-                        )
-                      },
-                    )}
-                  </Card>
-                )
-              })}
-              <button
-                disabled={
-                  !dirty ||
-                  isSubmitting ||
-                  (!NEW_APPROVAL_QUEUE_ENABLED && !isEdit)
-                }
-                type="submit"
-                className="button is-primary is-large"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
-              </button>
-            </FormStyle>
-          </Form>
-        )}
-      </Formik>
-    </div>
+                      return (
+                        <Field
+                          key={i}
+                          as={
+                            {
+                              text: TextField,
+                              checkbox: CheckboxField,
+                              html: RichTextField,
+                              multiselect: SelectField,
+                              select: SelectField,
+                              image: FileField,
+                              address: FormikAddressField,
+                              checkboxText: CheckboxTextField,
+                              creatableMultiSelect:
+                                CreatableMultipleSelectField,
+                            }[props.type] ?? TextField
+                          }
+                          {...other}
+                        />
+                      )
+                    },
+                  )}
+                </Card>
+              )
+            })}
+            <button
+              disabled={
+                !dirty ||
+                isSubmitting ||
+                (!NEW_APPROVAL_QUEUE_ENABLED && !isEdit)
+              }
+              type="submit"
+              className="button is-primary is-large"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </button>
+          </FormStyle>
+        </Form>
+      )}
+    </Formik>
   )
 }
