@@ -163,7 +163,6 @@ const EmailModal = ({
   setEmail,
   confirmSubmission,
 }: EmailModalProps): ReactElement => {
-  // Change email help as well.
   return (
     <Modal
       width={''}
