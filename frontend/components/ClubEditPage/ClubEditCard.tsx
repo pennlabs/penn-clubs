@@ -166,15 +166,11 @@ const EmailModal = ({
 }: EmailModalProps): ReactElement => {
   return (
     <Modal
-      width={''}
+      width={'450px'}
       show={true}
       closeModal={closeModal}
       children={
-        <div
-          style={{
-            alignItems: 'center',
-          }}
-        >
+        <div>
           <Text className="card-content">
             Warning: This email will be down to the public. We highly recommend
             you don't use a personal email, and instead use a club email. Feel
@@ -184,8 +180,8 @@ const EmailModal = ({
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`input`}
-            style={{ maxWidth: '350px', marginBottom: '12px' }}
+            className="input mb-5"
+            style={{ maxWidth: '350px' }}
           ></Field>
           <div>
             <button onClick={confirmSubmission} className="button is-primary">
