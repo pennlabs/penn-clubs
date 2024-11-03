@@ -1,3 +1,4 @@
+import { error } from 'console'
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
@@ -41,7 +42,7 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { LiveBanner, LiveSub, LiveTitle } from '../ClubPage/LiveEventsDialog'
-import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
+import { Checkbox, CheckboxLabel, Contact, Modal, Text } from '../common'
 import {
   CheckboxField,
   CheckboxTextField,
@@ -150,6 +151,44 @@ const Card = ({
     </div>
   )
 }
+interface EmailModalProps {
+  closeModal: () => void
+  email: string
+  setEmail: (inp: string) => void
+  confirmSubmission: () => void
+}
+
+const EmailModal = ({
+  closeModal,
+  email,
+  setEmail,
+  confirmSubmission,
+}: EmailModalProps): ReactElement => {
+  // Change email help as well.
+  return (
+    <Modal
+      width={''}
+      show={true}
+      closeModal={closeModal}
+      children={
+        <div>
+          <div>
+            Warning: This email will be down to the public. We highly recommend
+            you don't use a personal email, and instead use a club email. Feel
+            free to ignore this if the email is not a personal email.
+          </div>
+          <Field
+            type="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          ></Field>
+          <button onClick={confirmSubmission}>Confirm</button>
+        </div>
+      }
+    />
+  )
+}
 
 /**
  * Remove fields in an object that are not part of a whitelist.
@@ -226,6 +265,10 @@ export default function ClubEditCard({
       club.student_types?.length
     ),
   )
+
+  // Need to save the email here!
+  // And also need t save data in a state
+  const [emailModal, showEmailModal] = useState<boolean>(false)
 
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
@@ -796,6 +839,7 @@ export default function ClubEditCard({
 
   const creationDefaults = {
     subtitle: '',
+    email: '',
     email_public: true,
     accepting_members: false,
     size: CLUB_SIZES[0].value,
@@ -817,100 +861,127 @@ export default function ClubEditCard({
     : creationDefaults
 
   return (
-    <Formik initialValues={initialValues} onSubmit={submit} enableReinitialize>
-      {({ dirty, isSubmitting }) => (
-        <Form>
-          {!REAPPROVAL_QUEUE_ENABLED && (
-            <LiveBanner>
-              <LiveTitle>Queue Closed for Summer Break</LiveTitle>
-              <LiveSub>
-                No edits to existing clubs or applications for new clubs will be
-                submitted for review to OSA.
-              </LiveSub>
-            </LiveBanner>
-          )}
-          {!NEW_APPROVAL_QUEUE_ENABLED &&
-            REAPPROVAL_QUEUE_ENABLED &&
-            !isEdit && (
+    <div>
+      <Formik
+        initialValues={initialValues}
+        onSubmit={(values, actions) =>
+          submit({ ...values, emailOverride: false }, actions)
+        }
+        enableReinitialize
+        validate={(values) => {
+          const errors: { email?: string } = {}
+          if (values.email.includes('upenn.edu')) {
+            showEmailModal(true)
+            errors.email = 'Please confirm your email'
+          }
+          return error
+        }}
+      >
+        {({ dirty, isSubmitting, setFieldValue, submitForm }) => (
+          <Form>
+            {emailModal && (
+              <EmailModal
+                closeModal={() => showEmailModal(false)}
+                email=""
+                setEmail={(newEmail) => setFieldValue('email', newEmail)}
+                confirmSubmission={() => {
+                  showEmailModal(false)
+                  submitForm()
+                }}
+              />
+            )}
+            {!REAPPROVAL_QUEUE_ENABLED && (
               <LiveBanner>
-                <LiveTitle>Queue Closed for New Clubs</LiveTitle>
+                <LiveTitle>Queue Closed for Summer Break</LiveTitle>
                 <LiveSub>
-                  Submissions for new clubs are closed for the time being.
-                  Please reach out to the Office of Student Affairs at
-                  vpul-pennosa@pobox.upenn.edu with any questions.
+                  No edits to existing clubs or applications for new clubs will
+                  be submitted for review to OSA.
                 </LiveSub>
               </LiveBanner>
             )}
-          <FormStyle isHorizontal>
-            {fields.map(({ name, description, fields, hidden }, i) => {
-              if (hidden) {
-                return null
-              }
-              return (
-                <Card title={name} key={i}>
-                  {description}
-                  {(fields as any[]).map(
-                    (props: any, i): ReactElement | null => {
-                      const { hidden, ...other } = props
-                      if (hidden) {
-                        return null
-                      }
-                      if (props.type === 'content') {
-                        return <div key={i}>{props.content}</div>
-                      }
-                      if (other.help) {
-                        other.helpText = other.help
-                        delete other.help
-                      }
-                      if (props.type === 'select') {
-                        other.isMulti = false
-                      } else if (props.type === 'multiselect') {
-                        other.isMulti = true
-                      }
-                      if (props.type === 'image') {
-                        other.isImage = true
-                        delete other.type
-                      }
+            {!NEW_APPROVAL_QUEUE_ENABLED &&
+              REAPPROVAL_QUEUE_ENABLED &&
+              !isEdit && (
+                <LiveBanner>
+                  <LiveTitle>Queue Closed for New Clubs</LiveTitle>
+                  <LiveSub>
+                    Submissions for new clubs are closed for the time being.
+                    Please reach out to the Office of Student Affairs at
+                    vpul-pennosa@pobox.upenn.edu with any questions.
+                  </LiveSub>
+                </LiveBanner>
+              )}
+            <FormStyle isHorizontal>
+              {fields.map(({ name, description, fields, hidden }, i) => {
+                if (hidden) {
+                  return null
+                }
+                return (
+                  <Card title={name} key={i}>
+                    {description}
+                    {(fields as any[]).map(
+                      (props: any, i): ReactElement | null => {
+                        const { hidden, ...other } = props
+                        if (hidden) {
+                          return null
+                        }
+                        if (props.type === 'content') {
+                          return <div key={i}>{props.content}</div>
+                        }
+                        if (other.help) {
+                          other.helpText = other.help
+                          delete other.help
+                        }
+                        if (props.type === 'select') {
+                          other.isMulti = false
+                        } else if (props.type === 'multiselect') {
+                          other.isMulti = true
+                        }
+                        if (props.type === 'image') {
+                          other.isImage = true
+                          delete other.type
+                        }
 
-                      return (
-                        <Field
-                          key={i}
-                          as={
-                            {
-                              text: TextField,
-                              checkbox: CheckboxField,
-                              html: RichTextField,
-                              multiselect: SelectField,
-                              select: SelectField,
-                              image: FileField,
-                              address: FormikAddressField,
-                              checkboxText: CheckboxTextField,
-                              creatableMultiSelect:
-                                CreatableMultipleSelectField,
-                            }[props.type] ?? TextField
-                          }
-                          {...other}
-                        />
-                      )
-                    },
-                  )}
-                </Card>
-              )
-            })}
-            <button
-              disabled={
-                !dirty ||
-                isSubmitting ||
-                (!NEW_APPROVAL_QUEUE_ENABLED && !isEdit)
-              }
-              type="submit"
-              className="button is-primary is-large"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
-            </button>
-          </FormStyle>
-        </Form>
-      )}
-    </Formik>
+                        return (
+                          <Field
+                            key={i}
+                            as={
+                              {
+                                text: TextField,
+                                checkbox: CheckboxField,
+                                html: RichTextField,
+                                multiselect: SelectField,
+                                select: SelectField,
+                                image: FileField,
+                                address: FormikAddressField,
+                                checkboxText: CheckboxTextField,
+                                creatableMultiSelect:
+                                  CreatableMultipleSelectField,
+                              }[props.type] ?? TextField
+                            }
+                            {...other}
+                          />
+                        )
+                      },
+                    )}
+                  </Card>
+                )
+              })}
+              <button
+                disabled={
+                  !dirty ||
+                  isSubmitting ||
+                  (!NEW_APPROVAL_QUEUE_ENABLED && !isEdit)
+                }
+                type="submit"
+                className="button is-primary is-large"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+            </FormStyle>
+          </Form>
+        )}
+      </Formik>
+    </div>
   )
 }
