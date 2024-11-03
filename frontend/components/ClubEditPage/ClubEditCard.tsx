@@ -170,19 +170,28 @@ const EmailModal = ({
       show={true}
       closeModal={closeModal}
       children={
-        <div>
-          <div>
+        <div
+          style={{
+            alignItems: 'center',
+          }}
+        >
+          <Text className="card-content">
             Warning: This email will be down to the public. We highly recommend
             you don't use a personal email, and instead use a club email. Feel
             free to ignore this if the email is not a personal email.
-          </div>
+          </Text>
           <Field
-            type="email"
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className={`input`}
+            style={{ maxWidth: '350px', marginBottom: '12px' }}
           ></Field>
-          <button onClick={confirmSubmission}>Confirm</button>
+          <div>
+            <button onClick={confirmSubmission} className="button is-primary">
+              Confirm
+            </button>
+          </div>
         </div>
       }
     />
@@ -919,19 +928,21 @@ export default function ClubEditCard({
       enableReinitialize
       validate={(values) => {
         const errors: { email?: string } = {}
-        if (values.email.includes('upenn.edu')) {
+        if (values.email.includes('upenn.edu') && !emailModal) {
           showEmailModal(true)
           errors.email = 'Please confirm your email'
         }
         return errors
       }}
+      validateOnChange={false}
+      validateOnBlur={false}
     >
-      {({ dirty, isSubmitting, setFieldValue, submitForm }) => (
+      {({ dirty, isSubmitting, setFieldValue, submitForm, values }) => (
         <Form>
           {emailModal && (
             <EmailModal
               closeModal={() => showEmailModal(false)}
-              email=""
+              email={values.email}
               setEmail={(newEmail) => setFieldValue('email', newEmail)}
               confirmSubmission={() => {
                 showEmailModal(false)
