@@ -165,32 +165,27 @@ const EmailModal = ({
   confirmSubmission,
 }: EmailModalProps): ReactElement => {
   return (
-    <Modal
-      width={'450px'}
-      show={true}
-      closeModal={closeModal}
-      children={
+    <Modal width={'450px'} show={true} closeModal={closeModal}>
+      <div className="card-content">
+        <Text>
+          Warning: This email will be shown to the public. We highly recommend
+          you don't use a personal email, and instead use a club email. Feel
+          free to ignore this warning if the email is not a personal email.
+        </Text>
+        <Field
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input mb-4"
+          style={{ maxWidth: '350px' }}
+        ></Field>
         <div>
-          <Text className="card-content">
-            Warning: This email will be down to the public. We highly recommend
-            you don't use a personal email, and instead use a club email. Feel
-            free to ignore this if the email is not a personal email.
-          </Text>
-          <Field
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input mb-5"
-            style={{ maxWidth: '350px' }}
-          ></Field>
-          <div>
-            <button onClick={confirmSubmission} className="button is-primary">
-              Confirm
-            </button>
-          </div>
+          <button onClick={confirmSubmission} className="button is-primary">
+            Confirm
+          </button>
         </div>
-      }
-    />
+      </div>
+    </Modal>
   )
 }
 
