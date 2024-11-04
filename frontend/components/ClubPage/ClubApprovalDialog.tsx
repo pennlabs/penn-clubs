@@ -30,9 +30,17 @@ type ConfirmParams = {
   message: ReactElement | string
 }
 
+type HistoricItem = {
+  approved: boolean | null
+  approved_on: string | null
+  approved_by: string | null
+  history_date: string
+}
+
 const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
   const router = useRouter()
   const year = getCurrentSchoolYear()
+  const [history, setHistory] = useState<HistoricItem[]>([])
   const [comment, setComment] = useState<string>(club.approved_comment || '')
   const [loading, setLoading] = useState<boolean>(false)
   const [confirmModal, setConfirmModal] = useState<ConfirmParams | null>(null)
@@ -62,6 +70,10 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
       doApiRequest('/templates/?format=json')
         .then((resp) => resp.json())
         .then(setTemplates)
+
+      doApiRequest(`/clubs/${club.code}/history/?format=json`)
+        .then((resp) => resp.json())
+        .then(setHistory)
     }
 
     setComment(

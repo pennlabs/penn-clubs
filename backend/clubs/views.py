@@ -1277,6 +1277,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return file_upload_endpoint_helper(request, code=club.code)
 
     @action(detail=True, methods=["get"])
+    def history(self, request, *args, **kwargs):
+        """
+        Return a simplified approval history for the club.
+        """
+        club = self.get_object()
+        return Response(
+            club.history.order_by("approved_on").values(
+                "approved", "approved_on", "approved_by", "history_date"
+            )
+        )
+
+    @action(detail=True, methods=["get"])
     def owned_badges(self, request, *args, **kwargs):
         """
         Return a list of badges that this club is an owner of.
