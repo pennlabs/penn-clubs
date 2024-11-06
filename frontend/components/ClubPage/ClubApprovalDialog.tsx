@@ -265,6 +265,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                           body: {
                             approved: true,
                             approved_comment: comment,
+                            ghost: false,
                           },
                         })
                           .then(() => router.reload())
@@ -283,6 +284,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
                           body: {
                             approved: false,
                             approved_comment: comment,
+                            ghost: false,
                           },
                         })
                           .then(() => router.reload())
