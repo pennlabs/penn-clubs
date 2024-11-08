@@ -72,7 +72,9 @@ router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
 router.register(r"searches", SearchQueryViewSet, basename="searches")
 router.register(r"memberships", MembershipViewSet, basename="members")
-router.register(r"requests/membership", MembershipRequestViewSet, basename="requests")
+router.register(
+    r"requests/membership", MembershipRequestViewSet, basename="membership-requests"
+)
 router.register(
     r"requests/ownership", OwnershipRequestViewSet, basename="ownership-requests"
 )

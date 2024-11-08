@@ -31,6 +31,7 @@ from clubs.models import (
     Favorite,
     Membership,
     MembershipInvite,
+    MembershipRequest,
     OwnershipRequest,
     QuestionAnswer,
     School,
@@ -3687,3 +3688,66 @@ class ClubTestCase(TestCase):
             ).count(),
             0,
         )
+
+    def test_membershiprequests_create_and_view(self):
+        """
+        Test the membership requests creation and viewing permissions
+        """
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("membership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            MembershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            1,
+        )
+        self.assertEqual(len(mail.outbox), 1, mail.outbox)
+
+        # Requester can check own membership requests
+        resp = self.client.get(reverse("membership-requests-list"))
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 1, resp.content)
+
+        # Requester can check own membership request to a club
+        resp = self.client.get(
+            reverse("membership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.json()["club"], self.club1.code, resp.content)
+
+        # Requester cannot check club's membership requests
+        resp = self.client.get(
+            reverse("club-membership-requests-list", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Owner can check club's membership requests
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-membership-requests-list", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 1, resp.content)
+
+        # Owner can check club's membership requests for specific user
+        resp = self.client.get(
+            reverse(
+                "club-membership-requests-detail",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user2.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.json()["club"], self.club1.code, resp.content)
