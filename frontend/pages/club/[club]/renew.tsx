@@ -295,7 +295,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
       name: 'University Affiliation',
       content: (
         <div>
-          The club description must clearly state that the group is a student
+          The club mission must clearly state that the group is a student
           organization at the University.
         </div>
       ),

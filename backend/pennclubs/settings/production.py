@@ -89,3 +89,5 @@ CYBERSOURCE_CONFIG = {
     "run_environment": "api.cybersource.com",
 }
 CYBERSOURCE_TARGET_ORIGIN = "https://pennclubs.com"
+
+OSA_KEYS = os.getenv("OSA_KEYS", "").split(",")
