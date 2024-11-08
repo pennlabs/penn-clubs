@@ -3827,3 +3827,68 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(len(resp.json()), 1, resp.content)
+
+    def test_membershiprequests_accept(self):
+        """
+        Test the membership requests accept feature
+        """
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("membership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            MembershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            1,
+        )
+        self.assertEqual(len(mail.outbox), 1, mail.outbox)
+
+        # Requester cannot accept membership requests
+        resp = self.client.post(
+            reverse(
+                "club-membership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user2.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Owner can accept membership requests
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.post(
+            reverse(
+                "club-membership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user2.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.assertEqual(
+            MembershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            0,
+        )
+
+        self.assertEqual(
+            Membership.objects.filter(
+                club=self.club1,
+                person=self.user2,
+            ).count(),
+            1,
+        )
