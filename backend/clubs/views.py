@@ -3735,15 +3735,24 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         If a membership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
-        obj = MembershipRequest.objects.filter(
-            club__code=club, person=request.user
-        ).first()
-        if obj is not None:
-            obj.withdrew = False
-            obj.save(update_fields=["withdrew"])
-            return Response(UserMembershipRequestSerializer(obj).data)
 
-        return super().create(request, *args, **kwargs)
+        club_instance = Club.objects.get(code=club)
+
+        create_defaults = {"club": club_instance, "requester": request.user}
+
+        obj, created = MembershipRequest.objects.update_or_create(
+            club__code=club,
+            requester=request.user,
+            defaults={"withdrawn": False, "created_at": timezone.now()},
+            create_defaults=create_defaults,
+        )
+
+        if created:
+            obj.send_request(request)
+
+        serializer = self.get_serializer(obj, many=False)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -3753,15 +3762,15 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
-        obj.withdrew = True
-        obj.save(update_fields=["withdrew"])
+        obj.withdrawn = True
+        obj.save(update_fields=["withdrawn"])
 
-        return Response({"success": True})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user,
-            withdrew=False,
+            requester=self.request.user,
+            withdrawn=False,
             club__archived=False,
         )
 
@@ -3778,11 +3787,11 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     serializer_class = MembershipRequestSerializer
     permission_classes = [MembershipRequestPermission | IsSuperuser]
     http_method_names = ["get", "post", "delete"]
-    lookup_field = "person__username"
+    lookup_field = "requester__username"
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            club__code=self.kwargs["club_code"], withdrew=False
+            club__code=self.kwargs["club_code"], withdrawn=False
         )
 
     @action(detail=True, methods=["post"])
@@ -3806,7 +3815,7 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         request_object = self.get_object()
         Membership.objects.get_or_create(
-            person=request_object.person, club=request_object.club
+            person=request_object.requester, club=request_object.club
         )
         request_object.delete()
         return Response({"success": True})

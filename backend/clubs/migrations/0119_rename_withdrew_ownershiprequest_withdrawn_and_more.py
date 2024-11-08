@@ -41,4 +41,32 @@ class Migration(migrations.Migration):
                 to=settings.AUTH_USER_MODEL
             ),
         ),
+        migrations.RenameField(
+            model_name="membershiprequest",
+            old_name="withdrew",
+            new_name="withdrawn",
+        ),
+        migrations.RenameField(
+            model_name="membershiprequest",
+            old_name="person",
+            new_name="requester",
+        ),
+        migrations.AlterField(
+            model_name="membershiprequest",
+            name="club",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="membership_requests",
+                to="clubs.club"
+            ),
+        ),
+        migrations.AlterField(
+            model_name="membershiprequest",
+            name="requester",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="membership_requests",
+                to=settings.AUTH_USER_MODEL
+            ),
+        ),
     ]

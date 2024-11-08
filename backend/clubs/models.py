@@ -1082,28 +1082,34 @@ class MembershipRequest(models.Model):
     Used when users are not in the club but request membership from the owner
     """
 
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    requester = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="membership_requests"
+    )
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="membership_requests"
+    )
 
-    withdrew = models.BooleanField(default=False)
+    withdrawn = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "<MembershipRequest: {} for {}, with email {}>".format(
-            self.person.username, self.club.code, self.person.email
-        )
+        return f"<MembershipRequest: {self.requester.username} for {self.club.code}>"
 
     def send_request(self, request=None):
         domain = get_domain(request)
 
+        edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
+
+        club_name = self.club.name
+
+        full_name = self.requester.get_full_name()
+
         context = {
-            "club_name": self.club.name,
-            "edit_url": "{}/member".format(
-                settings.EDIT_URL.format(domain=domain, club=self.club.code)
-            ),
-            "full_name": self.person.get_full_name(),
+            "club_name": club_name,
+            "edit_url": f"{edit_url}/member",
+            "full_name": full_name,
         }
 
         emails = self.club.get_officer_emails()
@@ -1111,15 +1117,13 @@ class MembershipRequest(models.Model):
         if emails:
             send_mail_helper(
                 name="request",
-                subject="Membership Request from {} for {}".format(
-                    self.person.get_full_name(), self.club.name
-                ),
+                subject=f"Membership Request from {full_name} for {club_name}",
                 emails=emails,
                 context=context,
             )
 
     class Meta:
-        unique_together = (("person", "club"),)
+        unique_together = (("requester", "club"),)
 
 
 class OwnershipRequest(models.Model):

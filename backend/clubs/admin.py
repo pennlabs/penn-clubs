@@ -264,21 +264,26 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 
 class MembershipRequestAdmin(admin.ModelAdmin):
-    search_fields = ("person__username", "person__email", "club__name", "club__pk")
-    list_display = ("person", "club", "email", "withdrew", "is_member")
-    list_filter = ("withdrew",)
+    search_fields = (
+        "requester__username",
+        "requester__email",
+        "club__name",
+        "club__pk",
+    )
+    list_display = ("requester", "club", "email", "withdrawn", "is_member")
+    list_filter = ("withdrawn",)
 
-    def person(self, obj):
-        return obj.person.username
+    def requester(self, obj):
+        return obj.requester.username
 
     def club(self, obj):
         return obj.club.name
 
     def email(self, obj):
-        return obj.person.email
+        return obj.requester.email
 
     def is_member(self, obj):
-        return obj.club.membership_set.filter(person__pk=obj.person.pk).exists()
+        return obj.club.membership_set.filter(person__pk=obj.requester.pk).exists()
 
     is_member.boolean = True
 
