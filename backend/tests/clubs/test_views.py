@@ -3751,3 +3751,79 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(resp.json()["club"], self.club1.code, resp.content)
+
+    def test_membershiprequests_withdraw(self):
+        """
+        Test the membership requests withdraw feature
+        """
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("membership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            MembershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            1,
+        )
+        self.assertEqual(len(mail.outbox), 1, mail.outbox)
+
+        # Requester can withdraw
+        resp = self.client.delete(
+            reverse("membership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+        self.assertEqual(
+            MembershipRequest.objects.filter(
+                club=self.club1, requester=self.user2, withdrawn=True
+            ).count(),
+            1,
+        )
+
+        # Requester cannot see withdrawn request
+        resp = self.client.get(
+            reverse("membership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 404, resp.content)
+
+        # Owner cannot see withdrawn request
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-membership-requests-list", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 0, resp.content)
+
+        # Recreate membership request
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("membership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(
+            MembershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            1,
+        )
+
+        # Email are not resent
+        self.assertEqual(len(mail.outbox), 1, mail.outbox)
+
+        # Owner can see recreated membership request
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-membership-requests-list", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 1, resp.content)
