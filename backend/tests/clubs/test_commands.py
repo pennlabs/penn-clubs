@@ -777,3 +777,31 @@ class GraduateUsersTestCase(TestCase):
             "Updated the membership status of 1 student club relationships!",
             out.getvalue(),
         )
+
+
+class OsaPermsUpdatesTestCase(TestCase):
+    def setUp(self):
+        self.user1 = get_user_model().objects.create_user("gwashington")
+
+    def test_osa_perms_updates(self):
+        # Test error when OSA_KEYS is not set
+        with mock.patch("django.conf.settings.OSA_KEYS", None):
+            with self.assertRaises(ValueError):
+                call_command("osa_perms_updates")
+            self.assertFalse(self.user1.is_superuser)
+
+        with mock.patch("django.conf.settings.OSA_KEYS", ["gwashington"]):
+            # Test error when Approvers group is not found
+            with self.assertRaises(ValueError):
+                call_command("osa_perms_updates")
+            self.assertFalse(self.user1.is_superuser)
+
+            # Create Approvers group
+            Group.objects.create(name="Approvers")
+            call_command("osa_perms_updates")
+            self.user1.refresh_from_db()
+            self.assertTrue(self.user1.groups.filter(name="Approvers").exists())
+            self.assertTrue(self.user1.is_staff)
+            self.assertTrue(self.user1.is_superuser)
+            self.assertTrue(self.user1.has_perm("approve_club"))
+            self.assertTrue(self.user1.has_perm("see_pending_clubs"))

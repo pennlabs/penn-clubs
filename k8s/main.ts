@@ -75,6 +75,20 @@ export class MyChart extends PennLabsChart {
       cmd: ['python', 'manage.py', 'rank'],
     });
 
+    new CronJob(this, 'update-club-counts', {
+      schedule: cronTime.everyDayAt(0, 12),
+      image: backendImage,
+      secret: clubsSecret,
+      cmd: ['python', 'manage.py', 'update_club_counts'],
+    })
+
+    new CronJob(this, 'osa-perms-updates', {
+      schedule: cronTime.every(5).minutes(),
+      image: backendImage,
+      secret: clubsSecret,
+      cmd: ['python', 'manage.py', 'osa_perms_updates'],
+    });
+
     new CronJob(this, 'daily-notifications', {
       schedule: cronTime.onSpecificDaysAt(['monday', 'wednesday', 'friday'], 10, 0),
       image: backendImage,
