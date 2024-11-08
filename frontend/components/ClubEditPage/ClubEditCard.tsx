@@ -171,17 +171,18 @@ const EmailModal = ({
       closeModal={closeModal}
       marginBottom={false}
     >
-      <div className="card-content" style={{ marginBottom: '24px' }}>
-        <Text>
-          Warning: This email will be shown to the public. We highly recommend
-          you don't use a personal email, and instead use a club email. Feel
-          free to ignore this warning if the email is not a personal email.
+      <div className="card-content mb-2">
+        <Text className="has-text-danger">
+          This email will be visible to the public.
+          <br />
+          We recommend that you don’t use a personal email, and instead use a
+          club email.
         </Text>
         <Field
           name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="input mb-4"
+          className="input mb-5"
           style={{ maxWidth: '350px' }}
         ></Field>
         <div>
