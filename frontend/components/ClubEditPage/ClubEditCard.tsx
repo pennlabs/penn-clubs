@@ -40,8 +40,9 @@ import {
   SITE_ID,
   SITE_NAME,
 } from '../../utils/branding'
+import { ModalContent } from '../ClubPage/Actions'
 import { LiveBanner, LiveSub, LiveTitle } from '../ClubPage/LiveEventsDialog'
-import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
+import { Checkbox, CheckboxLabel, Contact, Modal, Text } from '../common'
 import {
   CheckboxField,
   CheckboxTextField,
@@ -150,6 +151,48 @@ const Card = ({
     </div>
   )
 }
+interface EmailModalProps {
+  closeModal: () => void
+  email: string
+  setEmail: (inp: string) => void
+  confirmSubmission: () => void
+}
+
+const EmailModal = ({
+  closeModal,
+  email,
+  setEmail,
+  confirmSubmission,
+}: EmailModalProps): ReactElement => {
+  return (
+    <Modal
+      width={'450px'}
+      show={true}
+      closeModal={closeModal}
+      marginBottom={false}
+    >
+      <div className="card-content" style={{ marginBottom: '24px' }}>
+        <Text>
+          Warning: This email will be shown to the public. We highly recommend
+          you don't use a personal email, and instead use a club email. Feel
+          free to ignore this warning if the email is not a personal email.
+        </Text>
+        <Field
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input mb-4"
+          style={{ maxWidth: '350px' }}
+        ></Field>
+        <div>
+          <button onClick={confirmSubmission} className="button is-primary">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
 
 /**
  * Remove fields in an object that are not part of a whitelist.
@@ -189,6 +232,7 @@ export default function ClubEditCard({
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
+  const [showRankModal, setShowRankModal] = useState<boolean>(false)
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
       club.target_majors?.length ||
@@ -226,6 +270,8 @@ export default function ClubEditCard({
       club.student_types?.length
     ),
   )
+
+  const [emailModal, showEmailModal] = useState<boolean>(false)
 
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
@@ -397,6 +443,58 @@ export default function ClubEditCard({
     {
       name: 'General',
       type: 'group',
+      description: (
+        <div className="mb-4">
+          <a onClick={() => setShowRankModal(true)}>
+            How does filling out this information affect your club?
+          </a>
+          <Modal
+            show={showRankModal}
+            closeModal={() => setShowRankModal(false)}
+            marginBottom={false}
+            width="80%"
+          >
+            <ModalContent className="content mb-4">
+              <h2>How we calculate club rankings</h2>
+              <hr />
+              <h5>
+                The following positively affects your club's ranking in homepage
+                search results:
+              </h5>
+              <ul>
+                <li>
+                  Upcoming events with filled out name, description, and image
+                </li>
+                <li>Upcoming, open applications for membership</li>
+                <li>
+                  Having at least 3 active officers, plus a bonus for any
+                  additional non-officer member on the platform
+                </li>
+                <li>
+                  Having between 3 and 7 useful tags (please email <Contact />{' '}
+                  if none apply)
+                </li>
+                <li>
+                  Posting a public (non-personal) contact email and 2 or more
+                  social links
+                </li>
+                <li>
+                  Having a club logo image uploaded and subtitle filled out
+                </li>
+                <li>
+                  Filling out a club mission with images and detail (rewarded up
+                  to 1000 words)
+                </li>
+                <li>Displaying 3 or more student testimonials (experiences)</li>
+                <li>Filling out the {FIELD_PARTICIPATION_LABEL} section</li>
+                <li>
+                  Updating the club listing recently (within the last 8 months)
+                </li>
+              </ul>
+            </ModalContent>
+          </Modal>
+        </div>
+      ),
       fields: [
         {
           name: 'name',
@@ -446,8 +544,9 @@ export default function ClubEditCard({
         },
         {
           name: 'description',
+          label: 'Club Mission',
           required: true,
-          placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
+          placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
           hidden: !REAPPROVAL_QUEUE_ENABLED,
         },
@@ -795,6 +894,7 @@ export default function ClubEditCard({
 
   const creationDefaults = {
     subtitle: '',
+    email: '',
     email_public: true,
     accepting_members: false,
     size: CLUB_SIZES[0].value,
@@ -816,9 +916,36 @@ export default function ClubEditCard({
     : creationDefaults
 
   return (
-    <Formik initialValues={initialValues} onSubmit={submit} enableReinitialize>
-      {({ dirty, isSubmitting }) => (
+    <Formik
+      initialValues={initialValues}
+      onSubmit={(values, actions) =>
+        submit({ ...values, emailOverride: false }, actions)
+      }
+      enableReinitialize
+      validate={(values) => {
+        const errors: { email?: string } = {}
+        if (values.email.includes('upenn.edu') && !emailModal) {
+          showEmailModal(true)
+          errors.email = 'Please confirm your email'
+        }
+        return errors
+      }}
+      validateOnChange={false}
+      validateOnBlur={false}
+    >
+      {({ dirty, isSubmitting, setFieldValue, submitForm, values }) => (
         <Form>
+          {emailModal && (
+            <EmailModal
+              closeModal={() => showEmailModal(false)}
+              email={values.email}
+              setEmail={(newEmail) => setFieldValue('email', newEmail)}
+              confirmSubmission={() => {
+                showEmailModal(false)
+                submitForm()
+              }}
+            />
+          )}
           {!REAPPROVAL_QUEUE_ENABLED && (
             <LiveBanner>
               <LiveTitle>Queue Closed for Summer Break</LiveTitle>
