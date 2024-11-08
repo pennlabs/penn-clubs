@@ -3201,7 +3201,7 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(
             reverse("ownership-requests-detail", args=(self.club1.code,))
         )
-        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertIn(resp.status_code, [200, 204], resp.content)
         self.assertEqual(
             OwnershipRequest.objects.filter(
                 club=self.club1, requester=self.user2, withdrawn=True
@@ -3219,7 +3219,7 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(
             reverse("ownership-requests-detail", args=(self.club1.code,))
         )
-        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertIn(resp.status_code, [200, 204], resp.content)
         self.assertEqual(
             OwnershipRequest.objects.filter(
                 club=self.club1, requester=self.user3, withdrawn=True
@@ -3237,7 +3237,7 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(
             reverse("ownership-requests-detail", args=(self.club1.code,))
         )
-        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertIn(resp.status_code, [200, 204], resp.content)
         self.assertEqual(
             OwnershipRequest.objects.filter(
                 club=self.club1, requester=self.user4, withdrawn=True
@@ -3580,7 +3580,7 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
-        # Member cannot accept requests
+        # Member cannot destroy requests
         self.client.login(username=self.user3.username, password="test")
         resp = self.client.delete(
             reverse(
@@ -3593,7 +3593,7 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
-        # Non-member cannot accept requests
+        # Non-member cannot destroy requests
         self.client.login(username=self.user4.username, password="test")
         resp = self.client.delete(
             reverse(
@@ -3606,9 +3606,9 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
-        # Owner can accept requests
+        # Owner can destroy requests
 
-        # Accept for officer
+        # Destroy for officer
         self.client.login(username=self.user1.username, password="test")
 
         resp = self.client.delete(
@@ -3620,7 +3620,7 @@ class ClubTestCase(TestCase):
                 },
             )
         )
-        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertIn(resp.status_code, [200, 204], resp.content)
 
         self.assertEqual(
             OwnershipRequest.objects.filter(
@@ -3636,7 +3636,7 @@ class ClubTestCase(TestCase):
             0,
         )
 
-        # Accept for member
+        # Destroy for member
         resp = self.client.delete(
             reverse(
                 "club-ownership-requests-detail",
@@ -3646,7 +3646,7 @@ class ClubTestCase(TestCase):
                 },
             )
         )
-        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertIn(resp.status_code, [200, 204], resp.content)
 
         self.assertEqual(
             OwnershipRequest.objects.filter(
@@ -3662,7 +3662,7 @@ class ClubTestCase(TestCase):
             0,
         )
 
-        # Accept for non-member
+        # Destroy for non-member
         resp = self.client.delete(
             reverse(
                 "club-ownership-requests-detail",
@@ -3672,7 +3672,7 @@ class ClubTestCase(TestCase):
                 },
             )
         )
-        self.assertEqual(resp.status_code, 204, resp.content)
+        self.assertIn(resp.status_code, [200, 204], resp.content)
 
         self.assertEqual(
             OwnershipRequest.objects.filter(

@@ -3831,18 +3831,7 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         If a ownership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
-        """
-        obj = OwnershipRequest.objects.filter(
-            club__code=club, requester=request.user
-        ).first()
-        if obj is not None:
-            obj.withdrawn = False
-            obj.created_at = timezone.now()
-            obj.save(update_fields=["withdrawn", "created_at"])
-            return Response(UserOwnershipRequestSerializer(obj).data)
 
-        return super().create(request, *args, **kwargs)
-        """
         club_instance = Club.objects.get(code=club)
 
         create_defaults = {"club": club_instance, "requester": request.user}
