@@ -2923,3 +2923,30 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 403)
+
+    def test_limited_permissions(self):
+        """
+        Test limited permissions (i.e. authenticated student view) for superusers
+        """
+
+        # Log in as superuser
+        self.client.force_login(self.user5)
+
+        resp = self.client.get(reverse("limited-permissions-list"))
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["limited_permissions"], False)
+
+        # Toggle limited permissions
+        resp = self.client.post(reverse("limited-permissions-toggle"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["limited_permissions"], True)
+
+        # Accessing a superuser-only route should now fail
+        resp = self.client.get(reverse("templates-list"))
+        self.assertEqual(resp.status_code, 403)
+
+        # After toggling limited permissions, it should work again
+        self.client.post(reverse("limited-permissions-toggle"))
+        resp = self.client.get(reverse("templates-list"))
+        self.assertEqual(resp.status_code, 200)

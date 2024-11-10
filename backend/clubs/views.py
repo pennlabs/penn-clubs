@@ -7426,6 +7426,55 @@ class ClubApprovalResponseTemplateViewSet(viewsets.ModelViewSet):
         return ClubApprovalResponseTemplate.objects.all().order_by("-created_at")
 
 
+class LimitedPermissionsViewSet(viewsets.ViewSet):
+    """
+    Allows superusers to view the site from a student perspective.
+    """
+
+    permission_classes = [IsSuperuser]
+
+    def list(self, request):
+        """
+        Check whether limited permissions are enabled for the user's session.
+        ---
+        summary: Check Limited Permissions
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                limited_permissions:
+                                    type: boolean
+        ---
+        """
+        return Response(
+            {"limited_permissions": request.session.get("limited_permissions", False)}
+        )
+
+    @action(detail=False, methods=["post"])
+    def toggle(self, request, *args, **kwargs):
+        """
+        Toggle limited permissions for the user's session.
+        ---
+        summary: Toggle Limited Permissions
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                limited_permissions:
+                                    type: boolean
+        ---
+        """
+        new_state = not request.session.get("limited_permissions", False)
+        request.session["limited_permissions"] = new_state
+        return Response({"limited_permissions": new_state}, status=status.HTTP_200_OK)
+
+
 class ScriptExecutionView(APIView):
     """
     View and execute Django management scripts using these endpoints.

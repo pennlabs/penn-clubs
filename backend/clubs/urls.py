@@ -24,6 +24,7 @@ from clubs.views import (
     FavoriteCalendarAPIView,
     FavoriteEventsAPIView,
     FavoriteViewSet,
+    LimitedPermissionsViewSet,
     MajorViewSet,
     MassInviteAPIView,
     MeetingZoomAPIView,
@@ -134,6 +135,9 @@ applications_router.register(
 )
 
 router.register(r"booths", ClubBoothsViewSet, basename="club-booth")
+router.register(
+    r"limitedpermissions", LimitedPermissionsViewSet, basename="limited-permissions"
+)
 
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
