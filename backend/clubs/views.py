@@ -1281,6 +1281,35 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def history(self, request, *args, **kwargs):
         """
         Return a simplified approval history for the club.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    approved:
+                                        type: boolean
+                                    approved_on:
+                                        type: string
+                                        format: date-time
+                                    approved_by:
+                                        type: string
+                                        description: >
+                                            The full name of the user who approved
+                                            the club.
+                                    approved_comment:
+                                        type: string
+                                    history_date:
+                                        type: string
+                                        format: date-time
+                                        description: >
+                                            The time in which the specific version
+                                            of the club was saved at.
+        ---
         """
         club = self.get_object()
         return Response(
