@@ -154,6 +154,7 @@ from clubs.serializers import (
     ApplicationSubmissionCSVSerializer,
     ApplicationSubmissionSerializer,
     ApplicationSubmissionUserSerializer,
+    ApprovalHistorySerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
@@ -1283,9 +1284,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
         return Response(
-            club.history.order_by("approved_on").values(
-                "approved", "approved_on", "approved_by", "history_date"
-            )
+            ApprovalHistorySerializer(
+                club.history.order_by("history_date"),
+                many=True,
+                context={"request": request},
+            ).data
         )
 
     @action(detail=True, methods=["get"])
@@ -2171,6 +2174,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return ClubConstitutionSerializer
         if self.action == "notes_about":
             return NoteSerializer
+        if self.action == "history":
+            return ApprovalHistorySerializer
         if self.action in {"list", "fields"}:
             if self.request is not None and (
                 self.request.accepted_renderer.format == "xlsx"

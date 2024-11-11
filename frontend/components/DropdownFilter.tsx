@@ -73,17 +73,17 @@ const TableContainer = styled.div`
   }
 `
 
-const Chevron = styled(Icon)<{ open?: boolean }>`
+export const Chevron = styled(Icon)<{ open?: boolean; color?: string }>`
   cursor: pointer;
-  color: ${CLUBS_GREY};
+  color: ${({ color }) => color ?? CLUBS_GREY};
   transform: rotate(0deg) translateY(0);
   transition: transform ${ANIMATION_DURATION}ms ease;
-  ${({ open }) => open && 'transform: rotate(180deg) translateY(-4px);'}
+  ${({ open }) => open && 'transform: rotate(180deg);'}
 
   ${mediaMaxWidth(MD)} {
     margin-top: 0.1em !important;
     margin-left: 0.1em !important;
-    color: ${LIGHT_GRAY};
+    color: ${({ color }) => color ?? LIGHT_GRAY};
     ${({ open }) => open && 'transform: rotate(180deg)'}
   }
 `

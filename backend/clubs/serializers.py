@@ -2975,6 +2975,34 @@ class ClubFairSerializer(serializers.ModelSerializer):
         )
 
 
+class ApprovalHistorySerializer(serializers.ModelSerializer):
+    approved = serializers.BooleanField()
+    approved_on = serializers.DateTimeField()
+    approved_by = serializers.SerializerMethodField("get_approved_by")
+    approved_comment = serializers.CharField()
+    history_date = serializers.DateTimeField()
+
+    def get_approved_by(self, obj):
+        user = self.context["request"].user
+        if not user.is_authenticated:
+            return None
+        if not user.has_perm("clubs.see_pending_clubs"):
+            return None
+        if obj.approved_by is None:
+            return "Unknown"
+        return obj.approved_by.get_full_name()
+
+    class Meta:
+        model = Club
+        fields = (
+            "approved",
+            "approved_on",
+            "approved_by",
+            "approved_comment",
+            "history_date",
+        )
+
+
 class AdminNoteSerializer(ClubRouteMixin, serializers.ModelSerializer):
     creator = serializers.SerializerMethodField("get_creator")
     title = serializers.CharField(max_length=255, default="Note")

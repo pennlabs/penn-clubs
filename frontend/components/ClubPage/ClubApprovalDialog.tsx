@@ -1,3 +1,5 @@
+import { EmotionJSX } from '@emotion/react/types/jsx-namespace'
+import moment from 'moment-timezone'
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
@@ -18,6 +20,7 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { Contact, Icon, Modal, Text, TextQuote } from '../common'
+import { Chevron } from '../DropdownFilter'
 import { ModalContent } from './Actions'
 
 type Props = {
@@ -34,7 +37,98 @@ type HistoricItem = {
   approved: boolean | null
   approved_on: string | null
   approved_by: string | null
+  approved_comment: string | null
   history_date: string
+}
+
+const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
+  const [active, setActive] = useState<boolean>(false)
+  const [reason, setReason] = useState<string | null>(null)
+  const getReason = (item: HistoricItem): EmotionJSX.Element | string => {
+    return item.approved_comment ? (
+      item.approved_comment.length > 100 ? (
+        <span
+          style={{
+            cursor: 'pointer',
+            textDecoration: 'underline',
+          }}
+          onClick={() => setReason(item.approved_comment)}
+        >
+          View Reason
+        </span>
+      ) : (
+        item.approved_comment
+      )
+    ) : (
+      'No reason provided'
+    )
+  }
+  return (
+    <>
+      <div
+        style={{
+          cursor: 'pointer',
+        }}
+        className="mt-2"
+        onClick={() => setActive(!active)}
+      >
+        {active ? 'Hide' : 'Show'} History
+        <Chevron
+          name="chevron-down"
+          alt="toggle dropdown"
+          open={active}
+          color="inherit"
+          className="ml-1"
+        />
+      </div>
+      <Modal
+        show={reason !== null}
+        closeModal={() => setReason(null)}
+        marginBottom={false}
+        width="80%"
+      >
+        <ModalContent>{reason}</ModalContent>
+      </Modal>
+      {active && (
+        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          {history.map((item, i) => (
+            <div
+              key={i}
+              className="mt-2"
+              style={{
+                fontSize: '70%',
+              }}
+            >
+              {item.approved === true ? (
+                <TextQuote className="py-0">
+                  <b>Approved</b> by <b>{item.approved_by}</b> on{' '}
+                  {moment(item.history_date)
+                    .tz('America/New_York')
+                    .format('LLL')}{' '}
+                  - {getReason(item)}
+                </TextQuote>
+              ) : item.approved === false ? (
+                <TextQuote className="py-0">
+                  <b>Rejected</b> by <b>{item.approved_by}</b> on{' '}
+                  {moment(item.history_date)
+                    .tz('America/New_York')
+                    .format('LLL')}{' '}
+                  - {getReason(item)}
+                </TextQuote>
+              ) : (
+                <TextQuote className="py-0">
+                  <b>Submitted for re-approval</b> on{' '}
+                  {moment(item.history_date)
+                    .tz('America/New_York')
+                    .format('LLL')}
+                </TextQuote>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
 }
 
 const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
@@ -73,9 +167,21 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
 
       doApiRequest(`/clubs/${club.code}/history/?format=json`)
         .then((resp) => resp.json())
-        .then(setHistory)
-    }
+        .then((data) => {
+          // Get last version of club for each change in approved status
+          const lastVersions: HistoricItem[] = []
 
+          for (let i = data.length - 1; i >= 0; i--) {
+            const item = data[i]
+            const lastItem = lastVersions[lastVersions.length - 1]
+
+            if (item.approved !== lastItem?.approved || !lastItem) {
+              lastVersions.push(item)
+            }
+          }
+          setHistory(lastVersions)
+        })
+    }
     setComment(
       selectedTemplates.map((template) => template.content).join('\n\n'),
     )
@@ -142,6 +248,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
           >
             <Icon name="x" /> Revoke Approval
           </button>
+          <ClubHistoryDropdown history={history} />
         </div>
       )}
       {(club.active || canDeleteClub) && club.approved !== true ? (
@@ -378,6 +485,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
               </button>
             </>
           )}
+          <ClubHistoryDropdown history={history} />
         </div>
       ) : null}
       {(seeFairStatus || isOfficer) && fairs.length > 0 && (
