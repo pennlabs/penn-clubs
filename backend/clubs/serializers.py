@@ -2987,7 +2987,10 @@ class ApprovalHistorySerializer(serializers.ModelSerializer):
         if not user.is_authenticated:
             return None
         if not user.has_perm("clubs.see_pending_clubs"):
-            return None
+            club = Club.objects.get(code=obj.code)
+            membership = Membership.objects.filter(person=user, club=club).first()
+            if membership is None or membership.role < Membership.ROLE_OFFICER:
+                return None
         if obj.approved_by is None:
             return "Unknown"
         return obj.approved_by.get_full_name()

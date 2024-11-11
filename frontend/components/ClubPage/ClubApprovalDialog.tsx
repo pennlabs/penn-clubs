@@ -164,7 +164,9 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
       doApiRequest('/templates/?format=json')
         .then((resp) => resp.json())
         .then(setTemplates)
+    }
 
+    if (isOfficer || canApprove) {
       doApiRequest(`/clubs/${club.code}/history/?format=json`)
         .then((resp) => resp.json())
         .then((data) => {
@@ -182,6 +184,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
           setHistory(lastVersions)
         })
     }
+
     setComment(
       selectedTemplates.map((template) => template.content).join('\n\n'),
     )
