@@ -7565,6 +7565,27 @@ class ScriptExecutionView(APIView):
             return Response({"output": output.getvalue()})
 
 
+class HealthView(APIView):
+    def get(self, request):
+        """
+        Health check endpoint to confirm the backend is running.
+        ---
+        summary: Health Check
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                message:
+                                    type: string
+                                    enum: ["OK"]
+        ---
+        """
+        return Response({"message": "OK"}, status=status.HTTP_200_OK)
+
+
 def get_initial_context_from_types(types):
     """
     Generate a sample context given the specified types.
