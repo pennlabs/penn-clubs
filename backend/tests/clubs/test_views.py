@@ -2182,6 +2182,12 @@ class ClubTestCase(TestCase):
                 club.refresh_from_db()
                 self.assertTrue(club.approved)
 
+        # store result of approval history query
+        resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+        previous_history = json.loads(resp.content.decode("utf-8"))
+        self.assertTrue(previous_history[0]["approved"])
+
         with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
             for field in {"name"}:
                 # edit sensitive field
@@ -2191,6 +2197,13 @@ class ClubTestCase(TestCase):
                     content_type="application/json",
                 )
                 self.assertIn(resp.status_code, [200, 201], resp.content)
+                resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+                # find the approval history
+                resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+                self.assertIn(resp.status_code, [200], resp.content)
+                history = json.loads(resp.content.decode("utf-8"))
+                self.assertEqual(len(history), len(previous_history) + 1)
+                self.assertFalse(history[0]["approved"])
 
                 # ensure club is marked as not approved
                 club.refresh_from_db()

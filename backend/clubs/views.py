@@ -154,6 +154,7 @@ from clubs.serializers import (
     ApplicationSubmissionCSVSerializer,
     ApplicationSubmissionSerializer,
     ApplicationSubmissionUserSerializer,
+    ApprovalHistorySerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
@@ -1277,6 +1278,49 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return file_upload_endpoint_helper(request, code=club.code)
 
     @action(detail=True, methods=["get"])
+    def history(self, request, *args, **kwargs):
+        """
+        Return a simplified approval history for the club.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    approved:
+                                        type: boolean
+                                    approved_on:
+                                        type: string
+                                        format: date-time
+                                    approved_by:
+                                        type: string
+                                        description: >
+                                            The full name of the user who approved
+                                            the club.
+                                    approved_comment:
+                                        type: string
+                                    history_date:
+                                        type: string
+                                        format: date-time
+                                        description: >
+                                            The time in which the specific version
+                                            of the club was saved at.
+        ---
+        """
+        club = self.get_object()
+        return Response(
+            ApprovalHistorySerializer(
+                club.history.order_by("-history_date"),
+                many=True,
+                context={"request": request},
+            ).data
+        )
+
+    @action(detail=True, methods=["get"])
     def owned_badges(self, request, *args, **kwargs):
         """
         Return a list of badges that this club is an owner of.
@@ -2159,6 +2203,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return ClubConstitutionSerializer
         if self.action == "notes_about":
             return NoteSerializer
+        if self.action == "history":
+            return ApprovalHistorySerializer
         if self.action in {"list", "fields"}:
             if self.request is not None and (
                 self.request.accepted_renderer.format == "xlsx"
