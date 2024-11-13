@@ -2983,14 +2983,6 @@ class ApprovalHistorySerializer(serializers.ModelSerializer):
     history_date = serializers.DateTimeField()
 
     def get_approved_by(self, obj):
-        user = self.context["request"].user
-        if not user.is_authenticated:
-            return None
-        if not user.has_perm("clubs.see_pending_clubs"):
-            club = Club.objects.get(code=obj.code)
-            membership = Membership.objects.filter(person=user, club=club).first()
-            if membership is None or membership.role < Membership.ROLE_OFFICER:
-                return None
         if obj.approved_by is None:
             return "Unknown"
         return obj.approved_by.get_full_name()

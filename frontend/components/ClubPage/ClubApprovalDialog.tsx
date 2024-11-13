@@ -181,6 +181,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
               lastVersions.push(item)
             }
           }
+          lastVersions.reverse() // Avoids O(n^2) of unshift() method
           setHistory(lastVersions)
         })
     }

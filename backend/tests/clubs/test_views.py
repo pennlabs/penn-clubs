@@ -2186,7 +2186,7 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("clubs-history", args=(club.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
         previous_history = json.loads(resp.content.decode("utf-8"))
-        self.assertTrue(previous_history[-1]["approved"])
+        self.assertTrue(previous_history[0]["approved"])
 
         with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
             for field in {"name"}:
@@ -2203,7 +2203,7 @@ class ClubTestCase(TestCase):
                 self.assertIn(resp.status_code, [200], resp.content)
                 history = json.loads(resp.content.decode("utf-8"))
                 self.assertEqual(len(history), len(previous_history) + 1)
-                self.assertFalse(history[-1]["approved"])
+                self.assertFalse(history[0]["approved"])
 
                 # ensure club is marked as not approved
                 club.refresh_from_db()
