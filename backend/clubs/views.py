@@ -18,7 +18,6 @@ import pandas as pd
 import pytz
 import qrcode
 import requests
-import rest_framework
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from CyberSource import (
@@ -1279,7 +1278,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return file_upload_endpoint_helper(request, code=club.code)
 
     @action(detail=True, methods=["get"])
-    @rest_framework.decorators.permission_classes([ClubSensitiveItemPermission])
     def history(self, request, *args, **kwargs):
         """
         Return a simplified approval history for the club.
