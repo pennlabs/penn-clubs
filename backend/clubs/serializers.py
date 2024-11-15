@@ -1973,11 +1973,6 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
             "school",
             "username",
         )
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=MembershipRequest.objects.all(), fields=["club", "requester"]
-            )
-        ]
 
 
 class UserMembershipRequestSerializer(serializers.ModelSerializer):
@@ -2029,11 +2024,6 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
             "school",
             "username",
         )
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=OwnershipRequest.objects.all(), fields=["club", "requester"]
-            )
-        ]
 
 
 class UserOwnershipRequestSerializer(serializers.ModelSerializer):
