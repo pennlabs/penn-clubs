@@ -1077,22 +1077,30 @@ class SearchQuery(models.Model):
         return "<SearchQuery: {} at {}>".format(self.query, self.created_at)
 
 
-class MembershipRequest(models.Model):
+class Request(models.Model):
     """
-    Used when users are not in the club but request membership from the owner
+    Abstract base class for Membership Request and Ownership Request
     """
 
     requester = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="membership_requests"
+        get_user_model(), on_delete=models.CASCADE, related_name="%(class)ss"
     )
-    club = models.ForeignKey(
-        Club, on_delete=models.CASCADE, related_name="membership_requests"
-    )
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="%(class)ss")
 
     withdrawn = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+        unique_together = (("requester", "club"),)
+
+
+class MembershipRequest(Request):
+    """
+    Used when users are not in the club but request membership from the owner
+    """
 
     def __str__(self):
         return f"<MembershipRequest: {self.requester.username} for {self.club.code}>"
@@ -1116,32 +1124,17 @@ class MembershipRequest(models.Model):
 
         if emails:
             send_mail_helper(
-                name="request",
+                name="membership_request",
                 subject=f"Membership Request from {full_name} for {club_name}",
                 emails=emails,
                 context=context,
             )
 
-    class Meta:
-        unique_together = (("requester", "club"),)
 
-
-class OwnershipRequest(models.Model):
+class OwnershipRequest(Request):
     """
     Represents a user's request to take ownership of a club
     """
-
-    requester = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name="ownership_requests"
-    )
-    club = models.ForeignKey(
-        Club, on_delete=models.CASCADE, related_name="ownership_requests"
-    )
-
-    withdrawn = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"
@@ -1173,9 +1166,6 @@ class OwnershipRequest(models.Model):
             emails=owner_emails,
             context=context,
         )
-
-    class Meta:
-        unique_together = (("requester", "club"),)
 
 
 class Advisor(models.Model):

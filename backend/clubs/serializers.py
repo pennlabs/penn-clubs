@@ -1270,7 +1270,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
-        return obj.membership_requests.filter(requester=user, withdrawn=False).exists()
+        return obj.membershiprequests.filter(requester=user, withdrawn=False).exists()
 
     def get_target_years(self, obj):
         qset = TargetYear.objects.filter(club=obj).select_related("target_years")
