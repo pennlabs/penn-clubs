@@ -2038,7 +2038,7 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
 
 class UserOwnershipRequestSerializer(serializers.ModelSerializer):
     """
-    Used by the users to return the clubs that the user has sent OwnershipRequest to.
+    Used by the users to return the clubs that the user has sent an OwnershipRequest to.
     """
 
     requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
