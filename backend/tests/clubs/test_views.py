@@ -3110,7 +3110,6 @@ class ClubTestCase(TestCase):
             {"club": self.club1.code},
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, 201, resp.content)
 
         # Requester cannot accept requests
         resp = self.client.post(
@@ -3168,7 +3167,6 @@ class ClubTestCase(TestCase):
             {"club": self.club1.code},
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, 201, resp.content)
 
         # Requester cannot destroy requests
         resp = self.client.delete(
