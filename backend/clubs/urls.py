@@ -24,6 +24,7 @@ from clubs.views import (
     FavoriteCalendarAPIView,
     FavoriteEventsAPIView,
     FavoriteViewSet,
+    HealthView,
     MajorViewSet,
     MassInviteAPIView,
     MeetingZoomAPIView,
@@ -188,6 +189,7 @@ urlpatterns = [
         WhartonApplicationStatusAPIView.as_view(),
         name="wharton-applications-status",
     ),
+    path(r"health/", HealthView.as_view(), name="health"),
 ]
 
 urlpatterns += router.urls

@@ -116,6 +116,8 @@ class ClubPermission(permissions.BasePermission):
 
     Anyone should be able to view, if the club is approved.
     Otherwise, only members or people with permission should be able to view.
+
+    Actions default to owners/officers only unless specified below.
     """
 
     def has_object_permission(self, request, view, obj):
@@ -163,7 +165,7 @@ class ClubPermission(permissions.BasePermission):
         if membership is None:
             return False
         # user has to be an owner to delete a club, an officer to edit it
-        if view.action in ["destroy"]:
+        if view.action in {"destroy"}:
             return membership.role <= Membership.ROLE_OWNER
         else:
             return membership.role <= Membership.ROLE_OFFICER
@@ -171,15 +173,15 @@ class ClubPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in {
             "children",
+            "create",
             "destroy",
+            "history",
             "parents",
             "partial_update",
             "update",
             "upload",
             "upload_file",
         }:
-            return request.user.is_authenticated
-        elif view.action in {"create"}:
             return request.user.is_authenticated
         else:
             return True
