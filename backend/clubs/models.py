@@ -1107,11 +1107,8 @@ class MembershipRequest(Request):
 
     def send_request(self, request=None):
         domain = get_domain(request)
-
         edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
-
         club_name = self.club.name
-
         full_name = self.requester.get_full_name()
 
         context = {
@@ -1141,11 +1138,8 @@ class OwnershipRequest(Request):
 
     def send_request(self, request=None):
         domain = get_domain(request)
-
         edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
-
         club_name = self.club.name
-
         full_name = self.requester.get_full_name()
 
         context = {

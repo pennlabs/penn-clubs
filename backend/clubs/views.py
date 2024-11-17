@@ -3781,8 +3781,11 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         If a membership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
-
-        club_instance = Club.objects.get(code=club)
+        club_instance = Club.objects.filter(code=club).first()
+        if club_instance is None:
+            return Response(
+                {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         create_defaults = {"club": club_instance, "requester": request.user}
 
@@ -3886,8 +3889,11 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         If a ownership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
-
-        club_instance = Club.objects.get(code=club)
+        club_instance = Club.objects.filter(code=club).first()
+        if club_instance is None:
+            return Response(
+                {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         create_defaults = {"club": club_instance, "requester": request.user}
 
