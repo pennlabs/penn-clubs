@@ -3954,12 +3954,14 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     lookup_field = "requester__username"
 
     def get_queryset(self):
-        if self.action != "old_requests":
+        if self.action != "all_requests":
             return OwnershipRequest.objects.filter(
                 club__code=self.kwargs["club_code"], withdrawn=False
             )
         else:
-            return OwnershipRequest.objects.filter(withdrawn=False)
+            return OwnershipRequest.objects.filter(withdrawn=False).order_by(
+                "created_at"
+            )
 
     @action(detail=True, methods=["post"])
     def accept(self, request, *args, **kwargs):
@@ -3995,9 +3997,9 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
         return Response({"success": True})
 
     @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
-    def old_requests(self, request, *args, **kwargs):
+    def all_requests(self, request, *args, **kwargs):
         """
-        View unaddressed ownership requests that are older than a week.
+        View unaddressed ownership requests, sorted by date.
         ---
         requestBody: {}
         responses:
@@ -4045,11 +4047,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
         ---
         """
 
-        queryset = OwnershipRequest.objects.filter(
-            withdrawn=False, created_at__lte=timezone.now() - datetime.timedelta(days=7)
-        )
-
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(self.get_queryset(), many=True)
 
         return Response(serializer.data)
 
