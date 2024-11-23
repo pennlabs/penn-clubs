@@ -3120,6 +3120,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         ---
         """
+        # only approved clubs can create events
+        club = Club.objects.get(code=kwargs["club_code"])
+        if not club.approved:
+            return Response(
+                {"detail": "Only approved clubs can create events"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # get event type
         type = request.data.get("type", 0)
         if type == Event.FAIR and not self.request.user.is_superuser:
