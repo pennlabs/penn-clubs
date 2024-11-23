@@ -47,7 +47,8 @@ export const getServerSideProps = (async (ctx) => {
   const clubMap = new Map(clubs.map((club) => [club.code, club]))
   const eventsWithClubs = events.map((event) => ({
     ...event,
-    club: event.club ? clubMap.get(event.club) : null,
+    club: event.club ? clubMap.get(event.club) ?? null : null,
+    clubPublic: event.club == null || clubMap.get(event.club) !== undefined,
   }))
   return {
     props: {

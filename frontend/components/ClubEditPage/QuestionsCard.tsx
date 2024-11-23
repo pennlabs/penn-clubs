@@ -20,7 +20,7 @@ export default function QuestionsCard({
       <p className="mb-3">
         You can see a list of questions that prospective {OBJECT_NAME_SINGULAR}{' '}
         members have asked below. Answering any of these questions will make
-        them publically available and show your name as the person who answered
+        them publicly available and show your name as the person who answered
         the question.
       </p>
       <ModelForm

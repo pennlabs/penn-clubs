@@ -1,7 +1,9 @@
 import { css } from '@emotion/react'
 import { Center, Container, Icon, Metadata } from 'components/common'
 import { Form, Formik } from 'formik'
+import moment from 'moment-timezone'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
+import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -160,6 +162,18 @@ const Ticket: React.FC<TicketProps> = ({
           <BetaTag>
             <Title>All Tickets for {event.name}</Title>
           </BetaTag>
+          {event.ticket_drop_time &&
+            new Date(event.ticket_drop_time) > new Date() && (
+              <Text>
+                Tickets have not dropped yet. Visit the{' '}
+                <Link href={`/club/${event.club}/edit/events`}>event page</Link>{' '}
+                to change the current drop time of{' '}
+                {moment(event.ticket_drop_time)
+                  .tz('America/New_York')
+                  .format('MMMM Do YYYY')}
+                .
+              </Text>
+            )}
           {Object.values(tickTypes).map((ticket, i) => (
             <TicketCard
               key={i}

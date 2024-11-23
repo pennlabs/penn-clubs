@@ -202,11 +202,11 @@ const EmbedOption = (props: Props): ReactElement => {
                 Google Drive PDF Files
                 <br />
                 <small>
-                  You can upload a PDF file on Google Drive, share it
-                  publically, and then go to right click &gt; Preview &gt; More
-                  actions (three dots) &gt; Open in a new window. After that,
-                  you can click on More actions (three dots) &gt; Embed item.
-                  Example link format:
+                  You can upload a PDF file on Google Drive, share it and then
+                  go to right click &gt; Preview &gt; More actions actions
+                  (three dots) &gt; Open in a new window. After that, you can
+                  click on More actions (three dots) &gt; Embed item. Example
+                  link format:
                   https://drive.google.com/file/d/1hfN3dWDIE4cTApJ-XPgLx_3eIta_IihV/preview
                 </small>
               </li>

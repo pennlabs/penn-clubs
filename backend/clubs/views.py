@@ -2682,9 +2682,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
-            return Response({"totals": [], "available": []})
-
         # Take price of first ticket of given type for now
         totals = (
             tickets.values("type")
@@ -3193,24 +3190,59 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return super().destroy(request, *args, **kwargs)
 
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Do not let users modify the ticket drop time if tickets have already been sold.
+        """
+        event = self.get_object()
+        if (
+            "ticket_drop_time" in request.data
+            and Ticket.objects.filter(event=event, owner__isnull=False).exists()
+        ):
+            raise DRFValidationError(
+                detail="""Ticket drop times cannot be edited
+                        after tickets have been sold."""
+            )
+        return super().partial_update(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = Event.objects.all()
         is_club_specific = self.kwargs.get("club_code") is not None
         if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
-            qs = qs.filter(
-                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
-                club__archived=False,
-            )
+            # Check if the user is an officer or admin
+            if not self.request.user.is_authenticated or (
+                not self.request.user.has_perm("clubs.manage_club")
+                and not Membership.objects.filter(
+                    person=self.request.user,
+                    club__code=self.kwargs["club_code"],
+                    role__lte=Membership.ROLE_OFFICER,
+                ).exists()
+            ):
+                qs = qs.filter(
+                    Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
+                    club__archived=False,
+                )
         else:
-            qs = qs.filter(
-                Q(club__approved=True)
-                | Q(type=Event.FAIR)
-                | Q(club__ghost=True)
-                | Q(club__isnull=True),
-                Q(club__isnull=True) | Q(club__archived=False),
-            )
-
+            if not (
+                self.request.user.is_authenticated
+                and self.request.user.has_perm("clubs.manage_club")
+            ):
+                officer_clubs = (
+                    Membership.objects.filter(
+                        person=self.request.user, role__lte=Membership.ROLE_OFFICER
+                    ).values_list("club", flat=True)
+                    if self.request.user.is_authenticated
+                    else []
+                )
+                qs = qs.filter(
+                    Q(club__approved=True)
+                    | Q(club__id__in=list(officer_clubs))
+                    | Q(type=Event.FAIR)
+                    | Q(club__ghost=True)
+                    | Q(club__isnull=True),
+                    Q(club__isnull=True) | Q(club__archived=False),
+                )
         return (
             qs.select_related("club", "creator")
             .prefetch_related(

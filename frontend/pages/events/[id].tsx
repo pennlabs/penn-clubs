@@ -1,4 +1,5 @@
 import { DateTime, Settings } from 'luxon'
+import moment from 'moment-timezone'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
 import React, { useState } from 'react'
@@ -50,10 +51,18 @@ export const getServerSideProps = (async (ctx) => {
   // TODO: Add caching
   const [baseProps, event] = await Promise.all([
     getBaseProps(ctx),
-    doApiRequest(`/events/${id}`, data).then(
-      (resp) => resp.json() as Promise<ClubEvent>,
-    ),
+    doApiRequest(`/events/${id}`, data).then((resp) => {
+      if (!resp.ok) {
+        return null
+      }
+      return resp.json() as Promise<ClubEvent>
+    }),
   ])
+  if (!event) {
+    return {
+      notFound: true,
+    }
+  }
   const [club, tickets] = await Promise.all([
     doApiRequest(`/clubs/${event.club}/`, data).then(
       (resp) => resp.json() as Promise<Club>,
@@ -256,6 +265,10 @@ const EventPage: React.FC<EventPageProps> = ({
 
   const image = event.image_url ?? club.image_url
 
+  const notDroppedYet =
+    event.ticket_drop_time !== null &&
+    new Date(event.ticket_drop_time) > new Date()
+
   return (
     <>
       <Modal
@@ -349,7 +362,19 @@ const EventPage: React.FC<EventPageProps> = ({
               {event.ticketed && (
                 <Card>
                   <StrongText>Tickets</StrongText>
-                  <Text>
+                  {notDroppedYet && (
+                    <>
+                      <Text>
+                        Tickets will be available for purchase on{' '}
+                        {moment(event.ticket_drop_time)
+                          .tz('America/New_York')
+                          .format('LLL')}
+                        .
+                      </Text>
+                      <Divider />
+                    </>
+                  )}
+                  <Text className="has-text-weight-medium">
                     {totalAvailableTickets > 0
                       ? `${totalAvailableTickets} tickets available`
                       : 'Sold out'}
@@ -363,11 +388,19 @@ const EventPage: React.FC<EventPageProps> = ({
                   <button
                     className="button is-primary is-fullwidth mt-4"
                     disabled={
-                      totalAvailableTickets === 0 || endTime < DateTime.now()
+                      totalAvailableTickets === 0 ||
+                      endTime < DateTime.now() ||
+                      notDroppedYet
                     }
                     onClick={() => setShowTicketModal(true)}
                   >
-                    {endTime < DateTime.now() ? 'Event Ended' : 'Get Tickets'}
+                    {endTime < DateTime.now()
+                      ? 'Event Ended'
+                      : notDroppedYet
+                        ? 'Tickets Not Available Yet'
+                        : totalAvailableTickets === 0
+                          ? 'Sold Out'
+                          : 'Get Tickets'}
                   </button>
                 </Card>
               )}
