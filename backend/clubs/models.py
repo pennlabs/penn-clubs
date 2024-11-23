@@ -1924,8 +1924,6 @@ class Ticket(models.Model):
         """
         Send a confirmation email to the ticket owner after purchase
         """
-        owner = self.owner
-
         output = BytesIO()
         qr_image = self.get_qr()
         qr_image.save(output, format="PNG")
@@ -1943,9 +1941,9 @@ class Ticket(models.Model):
         if self.owner.email:
             send_mail_helper(
                 name="ticket_confirmation",
-                subject=f"Ticket confirmation for {owner.get_full_name()}"
+                subject=f"Ticket confirmation for {self.owner.get_full_name()}"
                 f" to {self.event.name}",
-                emails=[owner.email],
+                emails=[self.owner.email],
                 context=context,
                 attachment={
                     "filename": "qr_code.png",
