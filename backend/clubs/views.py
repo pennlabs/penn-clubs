@@ -2463,11 +2463,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: boolean
         ---
         """
-        event = self.get_object().select_related("club")
+        event = self.get_object()
+        club = Club.objects.filter(code=event.club.code).first()
         # As clubs cannot go from historically approved to unapproved, we can
         # check here without checking further on in the checkout process
         # (the only exception is archiving a club, which is checked)
-        if not event.club.approved and not event.club.ghost:
+        if not club:
+            return Response(
+                {"detail": "Related club does not exist", "success": False},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        elif not club.approved and not club.ghost:
             return Response(
                 {
                     "detail": """This club has not been approved
@@ -5251,7 +5257,10 @@ class TicketViewSet(viewsets.ModelViewSet):
             | Q(event__club__archived=True)
             | Q(holder__isnull=False)
             | Q(event__end_time__lt=now)
-            | Q(event__ticket_drop_time__gt=timezone.now())
+            | (
+                Q(event__ticket_drop_time__gt=timezone.now())
+                & Q(event__ticket_drop_time__isnull=False)
+            )
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
@@ -5288,12 +5297,13 @@ class TicketViewSet(viewsets.ModelViewSet):
                 continue
 
             available_tickets = Ticket.objects.filter(
+                Q(event__ticket_drop_time__lt=timezone.now())
+                | Q(event__ticket_drop_time__isnull=True),
                 event=ticket_class["event"],
                 type=ticket_class["type"],
                 buyable=True,  # should not be triggered as buyable is by ticket class
                 owner__isnull=True,
                 holder__isnull=True,
-                event__ticket_drop_time__lt=timezone.now(),
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
             num_short = ticket_class["count"] - available_tickets.count()
@@ -5383,9 +5393,10 @@ class TicketViewSet(viewsets.ModelViewSet):
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
             Q(holder__isnull=True) | Q(holder=self.request.user),
+            Q(event__ticket_drop_time__lt=timezone.now())
+            | Q(event__ticket_drop_time__isnull=True),
             event__club__archived=False,
             owner__isnull=True,
-            event__ticket_drop_time__lt=timezone.now(),
             buyable=True,
         )
 
