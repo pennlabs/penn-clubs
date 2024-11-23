@@ -362,15 +362,14 @@ const TicketsModal = ({
             <p className="help">
               You can optionally add a time in which after when tickets will be
               available{' '}
-              <label
-                htmlFor="ticket_drop_time"
+              <a
                 onClick={(e) => {
                   setSubmitting(false)
                   closeModal()
                 }}
               >
                 within the event's edit page
-              </label>
+              </a>
               . Please note that this cannot be changed once any tickets are
               sold.
             </p>
