@@ -1,12 +1,7 @@
 import { Field } from 'formik'
 import moment from 'moment'
-import React, {
-  forwardRef,
-  ReactElement,
-  RefObject,
-  useRef,
-  useState,
-} from 'react'
+import Link from 'next/link'
+import { forwardRef, ReactElement, RefObject, useRef, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
@@ -492,6 +487,13 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
           : 'Note: you must be an approved club to create publicly-viewable events.'}
       </Text>
       <ModelForm
+        actions={(object) => (
+          <Link legacyBehavior href={{ pathname: `/events/${object.id}` }}>
+            <button className="button is-info is-small">
+              <Icon name="eye" /> Page
+            </button>
+          </Link>
+        )}
         baseUrl={`/clubs/${club.code}/events/`}
         listParams={`&end_time__gte=${new Date().toISOString()}`}
         fields={eventFields}
