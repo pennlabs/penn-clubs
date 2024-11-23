@@ -399,6 +399,35 @@ class TicketEventTestCase(TestCase):
             Ticket.objects.filter(type="normal", holder__isnull=False).count(), 0
         )
 
+    def test_email_blast(self):
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user1.username, password="test")
+
+        ticket1 = self.tickets1[0]
+        ticket1.owner = self.user2
+        ticket1.save()
+
+        resp = self.client.post(
+            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            {"content": "Test email blast content"},
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+
+        self.assertIn(self.user2.email, email.to)
+        self.assertIn(self.user1.email, email.to)
+
+        self.assertEqual(
+            email.subject, f"Update on {self.event1.name} from {self.club1.name}"
+        )
+        self.assertIn("Test email blast content", email.body)
+
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
         Ticket.objects.all().delete()
