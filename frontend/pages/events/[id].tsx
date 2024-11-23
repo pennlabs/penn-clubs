@@ -269,6 +269,8 @@ const EventPage: React.FC<EventPageProps> = ({
     event.ticket_drop_time !== null &&
     new Date(event.ticket_drop_time) > new Date()
 
+  const historicallyApproved = club.approved !== true && !club.is_ghost
+
   return (
     <>
       <Modal
@@ -390,17 +392,20 @@ const EventPage: React.FC<EventPageProps> = ({
                     disabled={
                       totalAvailableTickets === 0 ||
                       endTime < DateTime.now() ||
-                      notDroppedYet
+                      notDroppedYet ||
+                      historicallyApproved
                     }
                     onClick={() => setShowTicketModal(true)}
                   >
-                    {endTime < DateTime.now()
-                      ? 'Event Ended'
-                      : notDroppedYet
-                        ? 'Tickets Not Available Yet'
-                        : totalAvailableTickets === 0
-                          ? 'Sold Out'
-                          : 'Get Tickets'}
+                    {historicallyApproved
+                      ? 'Club Not Approved'
+                      : endTime < DateTime.now()
+                        ? 'Event Ended'
+                        : notDroppedYet
+                          ? 'Tickets Not Available Yet'
+                          : totalAvailableTickets === 0
+                            ? 'Sold Out'
+                            : 'Get Tickets'}
                   </button>
                 </Card>
               )}

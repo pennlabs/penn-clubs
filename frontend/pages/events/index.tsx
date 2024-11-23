@@ -37,9 +37,9 @@ export const getServerSideProps = (async (ctx) => {
   // TODO: Add caching
   const [baseProps, clubs, events] = await Promise.all([
     getBaseProps(ctx),
-    doApiRequest('/clubs/directory/?format=json', data)
-      .then((resp) => resp.json() as Promise<Club[]>)
-      .then((resp) => resp.filter(({ approved }) => approved)),
+    doApiRequest('/clubs/directory/?format=json', data).then(
+      (resp) => resp.json() as Promise<Club[]>,
+    ),
     doApiRequest(`/events/?${params.toString()}`, data).then(
       (resp) => resp.json() as Promise<ClubEvent[]>,
     ),

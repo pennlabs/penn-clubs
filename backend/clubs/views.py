@@ -1762,7 +1762,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         serializer = ClubMinimalSerializer(
             Club.objects.all()
-            .exclude(Q(approved=False) | Q(archived=True))
+            .exclude((~Q(approved=True) & Q(ghost=False)) | Q(archived=True))
             .order_by(Lower("name")),
             many=True,
         )
@@ -2463,7 +2463,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: boolean
         ---
         """
-        event = self.get_object()
+        event = self.get_object().select_related("club")
+        # As clubs cannot go from historically approved to unapproved, we can
+        # check here without checking further on in the checkout process
+        # (the only exception is archiving a club, which is checked)
+        if not event.club.approved and not event.club.ghost:
+            return Response(
+                {
+                    "detail": """This club has not been approved
+                                 and cannot sell tickets.""",
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         # Check if the event has already ended
@@ -5236,6 +5248,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         tickets_to_replace = cart.tickets.filter(
             Q(owner__isnull=False)
+            | Q(event__club__archived=True)
             | Q(holder__isnull=False)
             | Q(event__end_time__lt=now)
             | Q(event__ticket_drop_time__gt=timezone.now())
@@ -5370,6 +5383,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
             Q(holder__isnull=True) | Q(holder=self.request.user),
+            event__club__archived=False,
             owner__isnull=True,
             event__ticket_drop_time__lt=timezone.now(),
             buyable=True,
