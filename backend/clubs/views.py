@@ -3192,7 +3192,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         """
-        Do not let users modify the ticket drop time if tickets have already been sold.
+        Do not let club admins modify the ticket drop time
+        if tickets have already been sold.
         """
         event = self.get_object()
         if (
@@ -5237,6 +5238,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             Q(owner__isnull=False)
             | Q(holder__isnull=False)
             | Q(event__end_time__lt=now)
+            | Q(event__ticket_drop_time__gt=timezone.now())
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
@@ -5278,6 +5280,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 buyable=True,  # should not be triggered as buyable is by ticket class
                 owner__isnull=True,
                 holder__isnull=True,
+                event__ticket_drop_time__lt=timezone.now(),
             ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
 
             num_short = ticket_class["count"] - available_tickets.count()
@@ -5368,6 +5371,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
             Q(holder__isnull=True) | Q(holder=self.request.user),
             owner__isnull=True,
+            event__ticket_drop_time__lt=timezone.now(),
             buyable=True,
         )
 
