@@ -1943,7 +1943,8 @@ class Ticket(models.Model):
         if self.owner.email:
             send_mail_helper(
                 name="ticket_confirmation",
-                subject=f"Ticket confirmation for {owner.get_full_name()}",
+                subject=f"Ticket confirmation for {owner.get_full_name()}"
+                f" to {self.event.name}",
                 emails=[owner.email],
                 context=context,
                 attachment={
