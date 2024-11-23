@@ -176,8 +176,9 @@ class ClubTestCase(TestCase):
         self.club1 = Club.objects.create(
             code="test-club",
             name="Test Club",
-            approved=True,
             email="example@example.com",
+            approved=True,
+            approved_on=timezone.now(),
         )
 
         self.event1 = Event.objects.create(
