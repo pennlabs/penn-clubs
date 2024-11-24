@@ -16,13 +16,13 @@ const blink = keyframes`
 `
 
 const HappeningNowContainer = styled.p<{
-  urgent?: boolean
+  $urgent?: boolean
   floatRight?: boolean
 }>`
   font-size: 14px;
   font-weight: 500;
   ${({ floatRight }) => (floatRight ? 'float: right;' : '')}
-  ${({ urgent }) => (urgent ? UrgentText : '')}
+  ${({ $urgent }) => ($urgent ? UrgentText : '')}
 `
 
 const HappeningNow = (props: {
