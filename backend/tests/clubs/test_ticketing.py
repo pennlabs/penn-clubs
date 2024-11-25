@@ -428,6 +428,15 @@ class TicketEventTestCase(TestCase):
         )
         self.assertIn("Test email blast content", email.body)
 
+    def test_email_blast_empty_content(self):
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            {"content": ""},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
         Ticket.objects.all().delete()

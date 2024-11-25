@@ -3067,6 +3067,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: string
                                     description: A message indicating how many
                                         recipients received the blast
+            "400":
+                description: Content field was empty or missing
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating content
+                                        was not provided
             "404":
                 description: Event not found
                 content:
@@ -3087,6 +3098,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ).values_list("owner__email", flat=True)
         officer_emails = event.club.get_officer_emails()
         emails = list(holder_emails) + list(officer_emails)
+
+        content = request.data.get("content").strip()
+        if not content:
+            return Response(
+                {"detail": "Content must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         send_mail_helper(
             name="blast",
