@@ -3099,7 +3099,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         officer_emails = event.club.get_officer_emails()
         emails = list(holder_emails) + list(officer_emails)
 
-        content = request.data.get("content").strip()
+        content = request.data.get("content", "").strip()
         if not content:
             return Response(
                 {"detail": "Content must be specified"},
