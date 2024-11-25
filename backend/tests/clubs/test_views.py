@@ -766,6 +766,33 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
+    def test_event_create_unapproved_club(self):
+        self.club1.approved = False
+        self.club1.save()
+
+        start_date = datetime.datetime.now() - datetime.timedelta(days=3)
+        end_date = start_date + datetime.timedelta(hours=2)
+
+        # add user as officer
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("club-events-list", args=(self.club1.code,)),
+            {
+                "name": "Interest Meeting",
+                "description": "Interest Meeting on Friday!",
+                "location": "JMHH G06",
+                "type": Event.RECRUITMENT,
+                "start_time": start_date.isoformat(),
+                "end_time": end_date.isoformat(),
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
     def test_recurring_event_create(self):
         self.client.login(username=self.user4.username, password="test")
         self.assertFalse(self.user4.is_superuser)
