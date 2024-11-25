@@ -3040,6 +3040,93 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    def email_blast(self, request, *args, **kwargs):
+        """
+        Send an email blast to all users holding tickets.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            content:
+                                type: string
+                                description: The content of the email blast to send
+                        required:
+                            - content
+        responses:
+            "200":
+                description: Email blast was sent successfully
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: A message indicating how many
+                                        recipients received the blast
+            "400":
+                description: Content field was empty or missing
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating content
+                                        was not provided
+            "404":
+                description: Event not found
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating event was
+                                        not found
+        ---
+        """
+        event = self.get_object()
+
+        holder_emails = Ticket.objects.filter(
+            event=event, owner__isnull=False
+        ).values_list("owner__email", flat=True)
+        officer_emails = event.club.get_officer_emails()
+        emails = list(holder_emails) + list(officer_emails)
+
+        content = request.data.get("content", "").strip()
+        if not content:
+            return Response(
+                {"detail": "Content must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        send_mail_helper(
+            name="blast",
+            subject=f"Update on {event.name} from {event.club.name}",
+            emails=emails,
+            context={
+                "sender": event.club.name,
+                "content": request.data.get("content"),
+                "reply_emails": event.club.get_officer_emails(),
+            },
+        )
+
+        return Response(
+            {
+                "detail": (
+                    f"Blast sent to {len(holder_emails)} ticket holders "
+                    f"and {len(officer_emails)} officers"
+                )
+            }
+        )
+
+    @action(detail=True, methods=["post"])
     def upload(self, request, *args, **kwargs):
         """
         Upload a picture for the event.
