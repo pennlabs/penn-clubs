@@ -8,6 +8,7 @@ import styled from 'styled-components'
 
 import { BaseLayout } from '~/components/BaseLayout'
 import {
+  Icon,
   Metadata,
   Modal,
   StrongText,
@@ -32,6 +33,7 @@ import {
 } from '~/constants'
 import { Club, ClubEvent, TicketAvailability } from '~/types'
 import { doApiRequest, EMPTY_DESCRIPTION } from '~/utils'
+import { APPROVAL_AUTHORITY } from '~/utils/branding'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
 Settings.defaultZone = 'America/New_York'
@@ -195,6 +197,7 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
         borderBottom: '1px solid #e0e0e0',
         borderTop: '1px solid #e0e0e0',
       }}
+      id={ticket.type}
     >
       <div
         style={{
@@ -332,6 +335,14 @@ const EventPage: React.FC<EventPageProps> = ({
       <BaseLayout {...baseProps}>
         <Metadata title="Events" />
         <MainWrapper>
+          {!club.active && !club.is_ghost && (
+            <div className="notification is-info is-light">
+              <Icon name="alert-circle" style={{ marginTop: '-3px' }} />
+              This event is hosted by a club that has not been approved by the{' '}
+              {APPROVAL_AUTHORITY} and is therefore not visible to the public
+              yet.
+            </div>
+          )}
           <GridWrapper>
             <div>
               <Title>{event.name}</Title>
