@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import time
 
 import dj_database_url
 
@@ -203,7 +204,8 @@ RENEWAL_URL = "https://{domain}/club/{club}/renew"
 APPLY_URL = "https://{domain}/club/{club}/apply"
 
 OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
-
+# Cut off date for reapproval per year
+APPROVAL_CUTOFF = time.strptime("09-01", "%m-%d")
 
 # Controls whether existing clubs can submit for reapproval
 REAPPROVAL_QUEUE_OPEN = True
