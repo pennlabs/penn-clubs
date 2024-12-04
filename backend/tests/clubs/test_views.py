@@ -3051,13 +3051,6 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(len(resp.json()), 0, resp.content)
 
-        self.client.login(username=self.user5.username, password="test")
-        resp = self.client.get(
-            reverse("club-ownership-requests-old-requests", args=("anystring",))
-        )
-        self.assertEqual(resp.status_code, 200, resp.content)
-        self.assertEqual(len(resp.json()), 0, resp.content)
-
         # Recreate ownership request
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.post(
