@@ -21,31 +21,18 @@ ticket_url:
 <h2>Thanks for using Penn Clubs!</h2>
 
 <p style="font-size: 1.2em">
-    {{ first_name }}, thank you for your recent acquisition of a ticket to {{ name }} with ticket type {{type }}.
+    {{ first_name }}, thank you for your recent acquisition of a ticket to <b>{{ name }}</b> with ticket type <b>{{ type }}</b>.
 </p>
 
 <p style="font-size: 1.2em">
-    As a reminder, the event starts at {{ start_time }} and ends at {{ end_time }}.
-
-
+    As a reminder, the event starts at <b>{{ start_time }}</b> and ends at <b>{{ end_time }}</b>.
 </p>
 
-<p style="font-size: 1.2em"> Below is a
-    QR code for
-    your confirmation. </p>
-
+<p style="font-size: 1.2em"> Below is a QR code for your confirmation: </p>
 
 <img id="now" style="max-width: 60%; width: auto;" alt="Ticket QR code" src="cid:{{ cid }}" />
 
-<p style="font-size: 1.2em"> Note: all tickets issued by us are <b>non-refundable</b>. </p>
+<p style="font-size: 1.2em"> All tickets issued by us are <b>non-refundable</b>. You can view your tickets and transfer them to other users through <a href="{{ ticket_url }}">your Penn Clubs profile</a>.</p>
 
-
-
-<p style="font-size: 1.2em">
-    If you have any questions, feel free to respond to this email.
-</p>
-
-<p style="font-size: 1.2em">
-    You can view your tickets and transfer them to other users <a href="{{ ticket_url }}">here</a>.
-</p>
+<p style="font-size: 1.2em">If you have any questions, feel free to respond to this email.</p>
 {% endblock %}

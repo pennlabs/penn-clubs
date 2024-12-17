@@ -95,6 +95,7 @@ from clubs.models import (
     Cart,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubFairRegistration,
@@ -153,11 +154,13 @@ from clubs.serializers import (
     ApplicationSubmissionCSVSerializer,
     ApplicationSubmissionSerializer,
     ApplicationSubmissionUserSerializer,
+    ApprovalHistorySerializer,
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     ClubApplicationSerializer,
+    ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
     ClubConstitutionSerializer,
     ClubFairSerializer,
@@ -1204,8 +1207,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         # ensure user is allowed to upload image
         club = self.get_object()
-        key = f"clubs:{club.id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{club.id}-authed")
+        cache.delete(f"clubs:{club.id}-anon")
 
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
@@ -1273,6 +1276,49 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
 
         return file_upload_endpoint_helper(request, code=club.code)
+
+    @action(detail=True, methods=["get"])
+    def history(self, request, *args, **kwargs):
+        """
+        Return a simplified approval history for the club.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    approved:
+                                        type: boolean
+                                    approved_on:
+                                        type: string
+                                        format: date-time
+                                    approved_by:
+                                        type: string
+                                        description: >
+                                            The full name of the user who approved
+                                            the club.
+                                    approved_comment:
+                                        type: string
+                                    history_date:
+                                        type: string
+                                        format: date-time
+                                        description: >
+                                            The time in which the specific version
+                                            of the club was saved at.
+        ---
+        """
+        club = self.get_object()
+        return Response(
+            ApprovalHistorySerializer(
+                club.history.order_by("-history_date"),
+                many=True,
+                context={"request": request},
+            ).data
+        )
 
     @action(detail=True, methods=["get"])
     def owned_badges(self, request, *args, **kwargs):
@@ -1369,6 +1415,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                             type: string
         ---
         """
+        if not request.user.is_authenticated:
+            raise PermissionDenied
         club = self.get_object()
         results = collections.defaultdict(list)
         for first, last, year, show, username in club.membership_set.filter(
@@ -2024,7 +2072,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"clubs:{club.id}"
+        key = f"""clubs:{club.id}-{"authed" if self.request.user.is_authenticated
+                                            else "anon"}"""
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -2038,8 +2087,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
@@ -2047,8 +2096,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Invalidate caches
         """
         self.check_approval_permission(request)
-        key = f"clubs:{self.get_object().id}"
-        cache.delete(key)
+        cache.delete(f"clubs:{self.get_object().id}-authed")
+        cache.delete(f"clubs:{self.get_object().id}-anon")
         return super().partial_update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
@@ -2065,17 +2114,17 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # Send notice to club officers and executor
         context = {
             "name": club.name,
-            "branding_site_name": settings.BRANDING_SITE_NAME,
-            "branding_site_email": settings.BRANDING_SITE_EMAIL,
+            "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         }
         emails = club.get_officer_emails() + [self.request.user.email]
         send_mail_helper(
             name="club_deletion",
-            subject="Removal of {} from {}".format(
+            subject="{} status update on {}".format(
                 club.name, settings.BRANDING_SITE_NAME
             ),
             emails=emails,
             context=context,
+            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         )
 
     @action(detail=False, methods=["GET"])
@@ -2154,6 +2203,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             return ClubConstitutionSerializer
         if self.action == "notes_about":
             return NoteSerializer
+        if self.action == "history":
+            return ApprovalHistorySerializer
         if self.action in {"list", "fields"}:
             if self.request is not None and (
                 self.request.accepted_renderer.format == "xlsx"
@@ -2279,11 +2330,14 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         public = request.GET.get("public")
-
         if public is not None:
             public = public.strip().lower()
             if public in {"true", "false"}:
-                queryset = queryset.filter(public=public == "true")
+                queryset = queryset.filter(
+                    visibility__gte=Advisor.ADVISOR_VISIBILITY_STUDENTS
+                    if public == "true"
+                    else Advisor.ADVISOR_VISIBILITY_ADMIN
+                )
 
         return queryset
 
@@ -2291,7 +2345,7 @@ class AdvisorSearchFilter(filters.BaseFilterBackend):
 class AdvisorViewSet(viewsets.ModelViewSet):
     """
     list:
-    Return a list of advisors for this club.
+    Return a list of advisors for this club for club administrators.
 
     create:
     Add an advisor to this club.
@@ -2310,7 +2364,7 @@ class AdvisorViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = AdvisorSerializer
-    permission_classes = [ClubItemPermission | IsSuperuser]
+    permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
     filter_backends = [AdvisorSearchFilter]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
@@ -2412,10 +2466,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
+        # Check if the event has already ended
+        if event.end_time < timezone.now():
+            return Response(
+                {"detail": "This event has already ended", "success": False},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Cannot add tickets that haven't dropped yet
         if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
             return Response(
-                {"detail": "Ticket drop time has not yet elapsed"},
+                {"detail": "Ticket drop time has not yet elapsed", "success": False},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -2459,7 +2520,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
             if tickets.count() < count:
                 return Response(
-                    {"detail": f"Not enough tickets of type {type} left!"},
+                    {
+                        "detail": f"Not enough tickets of type {type} left!",
+                        "success": False,
+                    },
                     status=status.HTTP_403_FORBIDDEN,
                 )
             cart.tickets.add(*tickets[:count])
@@ -2818,7 +2882,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             event.ticket_drop_time = drop_time
             event.save()
 
-        cache.delete(f"clubs:{event.club.id}")
+        cache.delete(f"clubs:{event.club.id}-authed")
+        cache.delete(f"clubs:{event.club.id}-anon")
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
@@ -2972,6 +3037,93 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return Response(
             {"success": True, "detail": f"Issued {len(tickets)} tickets", "errors": []}
+        )
+
+    @action(detail=True, methods=["post"])
+    def email_blast(self, request, *args, **kwargs):
+        """
+        Send an email blast to all users holding tickets.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            content:
+                                type: string
+                                description: The content of the email blast to send
+                        required:
+                            - content
+        responses:
+            "200":
+                description: Email blast was sent successfully
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: A message indicating how many
+                                        recipients received the blast
+            "400":
+                description: Content field was empty or missing
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating content
+                                        was not provided
+            "404":
+                description: Event not found
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating event was
+                                        not found
+        ---
+        """
+        event = self.get_object()
+
+        holder_emails = Ticket.objects.filter(
+            event=event, owner__isnull=False
+        ).values_list("owner__email", flat=True)
+        officer_emails = event.club.get_officer_emails()
+        emails = list(holder_emails) + list(officer_emails)
+
+        content = request.data.get("content", "").strip()
+        if not content:
+            return Response(
+                {"detail": "Content must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        send_mail_helper(
+            name="blast",
+            subject=f"Update on {event.name} from {event.club.name}",
+            emails=emails,
+            context={
+                "sender": event.club.name,
+                "content": request.data.get("content"),
+                "reply_emails": event.club.get_officer_emails(),
+            },
+        )
+
+        return Response(
+            {
+                "detail": (
+                    f"Blast sent to {len(holder_emails)} ticket holders "
+                    f"and {len(officer_emails)} officers"
+                )
+            }
         )
 
     @action(detail=True, methods=["post"])
@@ -3422,7 +3574,8 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         )
 
         if not self.request.user.is_authenticated:
-            return questions.filter(approved=True)
+            # Hide responder if not authenticated
+            return questions.filter(approved=True).extra(select={"responder": "NULL"})
 
         membership = Membership.objects.filter(
             club__code=club_code, person=self.request.user
@@ -5133,8 +5286,12 @@ class TicketViewSet(viewsets.ModelViewSet):
             owner=self.request.user
         )
 
+        now = timezone.now()
+
         tickets_to_replace = cart.tickets.filter(
-            Q(owner__isnull=False) | Q(holder__isnull=False)
+            Q(owner__isnull=False)
+            | Q(holder__isnull=False)
+            | Q(event__end_time__lt=now)
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
@@ -5146,16 +5303,30 @@ class TicketViewSet(viewsets.ModelViewSet):
                 },
             )
 
-        # Attempt to replace all tickets that have gone stale
+        # Attempt to replace all tickets that have gone stale or are for elapsed events
         replacement_tickets, sold_out_tickets = [], []
 
         tickets_in_cart = cart.tickets.values_list("id", flat=True)
         tickets_to_replace = tickets_to_replace.select_related("event")
 
         for ticket_class in tickets_to_replace.values(
-            "type", "event", "event__name"
+            "type", "event", "event__name", "event__end_time"
         ).annotate(count=Count("id")):
             # we don't need to lock, since we aren't updating holder/owner
+            if ticket_class["event__end_time"] < now:
+                # Event has elapsed, mark all tickets as sold out
+                sold_out_tickets.append(
+                    {
+                        "type": ticket_class["type"],
+                        "event": {
+                            "id": ticket_class["event"],
+                            "name": ticket_class["event__name"],
+                        },
+                        "count": ticket_class["count"],
+                    }
+                )
+                continue
+
             available_tickets = Ticket.objects.filter(
                 event=ticket_class["event"],
                 type=ticket_class["type"],
@@ -5614,16 +5785,18 @@ class TicketViewSet(viewsets.ModelViewSet):
             buyer_phone=order_info["billTo"].get("phoneNumber", None),
             buyer_email=order_info["billTo"]["email"],
         )
-
         tickets.update(owner=user, holder=None, transaction_record=transaction_record)
+
         cart.tickets.clear()
-        for ticket in tickets:
-            ticket.send_confirmation_email()
-
         Ticket.objects.update_holds()
-
         cart.checkout_context = None
         cart.save()
+
+        tickets = Ticket.objects.filter(
+            owner=user, transaction_record=transaction_record
+        )
+        for ticket in tickets:
+            ticket.send_confirmation_email()
 
     @staticmethod
     def _place_hold_on_tickets(user, tickets):
@@ -6523,6 +6696,52 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         return Response([])
 
     @action(detail=True, methods=["GET"])
+    def club_applications(self, *args, **kwargs):
+        """
+        Retrieve club applications for given cycle
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                    id:
+                                        type: integer
+                                    application_end_time:
+                                        type: string
+                                        format: date-time
+                                    application_end_time_exception:
+                                        type: string
+                                    club__name:
+                                        type: string
+                                    club__code:
+                                        type: string
+        ---
+        """
+        cycle = self.get_object()
+
+        return Response(
+            ClubApplication.objects.filter(application_cycle=cycle)
+            .select_related("club")
+            .values(
+                "name",
+                "id",
+                "application_end_time",
+                "application_end_time_exception",
+                "club__name",
+                "club__code",
+            )
+        )
+
+    @action(detail=True, methods=["GET"])
     def applications(self, *args, **kwargs):
         """
         Retrieve applications for given cycle
@@ -6530,7 +6749,10 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         requestBody: {}
         responses:
             "200":
-                content: {}
+                content:
+                    text/csv:
+                        schema:
+                            type: string
         ---
         """
         cycle = self.get_object()
@@ -7372,7 +7594,18 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     def get_queryset(self):
-        return AdminNote.objects.filter(club__code=self.kwargs.get("club_code"))
+        return AdminNote.objects.filter(
+            club__code=self.kwargs.get("club_code")
+        ).order_by("-created_at")
+
+
+class ClubApprovalResponseTemplateViewSet(viewsets.ModelViewSet):
+    serializer_class = ClubApprovalResponseTemplateSerializer
+    permission_classes = [IsSuperuser]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        return ClubApprovalResponseTemplate.objects.all().order_by("-created_at")
 
 
 class ScriptExecutionView(APIView):
@@ -7463,6 +7696,27 @@ class ScriptExecutionView(APIView):
         with io.StringIO() as output:
             call_command(action, *args, **kwargs, stdout=output, stderr=output)
             return Response({"output": output.getvalue()})
+
+
+class HealthView(APIView):
+    def get(self, request):
+        """
+        Health check endpoint to confirm the backend is running.
+        ---
+        summary: Health Check
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                message:
+                                    type: string
+                                    enum: ["OK"]
+        ---
+        """
+        return Response({"message": "OK"}, status=status.HTTP_200_OK)
 
 
 def get_initial_context_from_types(types):

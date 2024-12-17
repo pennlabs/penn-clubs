@@ -114,13 +114,14 @@ export interface CartTicketsProps {
  * @param tickets - Original array of tickets
  * @returns Array of tickets condensed into unique types
  */
-const combineTickets = (tickets: EventTicket[]): CountedEventTicket[] =>
+const combineTickets = (tickets: EventTicket[]): CountedEventTicketStatus[] =>
   Object.values(
     tickets.reduce(
       (acc, ticket) => ({
         ...acc,
         [`${ticket.event.id}_${ticket.type}`]: {
           ...ticket,
+          pendingEdit: false,
           count: (acc[`${ticket.event.id}_${ticket.type}`]?.count ?? 0) + 1,
         },
       }),
@@ -182,12 +183,17 @@ const useCheckout = (paid: boolean) => {
   }
 }
 
+interface CountedEventTicketStatus extends CountedEventTicket {
+  pendingEdit: boolean
+}
+
 const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   const navigate = useRouter()
-  const [removeModal, setRemoveModal] = useState<CountedEventTicket | null>(
-    null,
-  )
-  const [countedTickets, setCountedTickets] = useState<CountedEventTicket[]>([])
+  const [removeModal, setRemoveModal] =
+    useState<CountedEventTicketStatus | null>(null)
+  const [countedTickets, setCountedTickets] = useState<
+    CountedEventTicketStatus[]
+  >([])
 
   const atLeastOnePaid = tickets.some((ticket) => parseFloat(ticket.price) > 0)
   const {
@@ -207,7 +213,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
       .forEach(
         (ticket) => {
           toast.error(
-            `${ticket.event.name} - ${ticket.type} is sold out and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
+            `${ticket.event.name} - ${ticket.type} is no longer available and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
             {
               style: { color: WHITE },
               autoClose: false,
@@ -225,12 +231,25 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
     checkout()
   }
 
-  function handleUpdateTicket(ticket: CountedEventTicket, newCount?: number) {
+  function handleUpdateTicket(
+    ticket: CountedEventTicketStatus,
+    newCount?: number,
+    propogateCount?: (count: number) => void,
+  ) {
     let reqPromise
 
     if (!ticket.count || newCount === ticket.count) {
       return
     }
+
+    function flipPendingEdit(value: boolean) {
+      setCountedTickets(
+        countedTickets.map((t) =>
+          t.id === ticket.id ? { ...t, pendingEdit: value } : t,
+        ),
+      )
+    }
+    flipPendingEdit(true)
     if (newCount && newCount > ticket.count) {
       reqPromise = doApiRequest(`/events/${ticket.event.id}/add_to_cart/`, {
         method: 'POST',
@@ -268,8 +287,11 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           toast.error(res.detail, {
             style: { color: WHITE },
           })
+          propogateCount?.(ticket.count ?? 0)
+          flipPendingEdit(false)
           return
         }
+        flipPendingEdit(false)
         toast.success(res.detail)
         // TODO: a less naive approach to updating the cart
         setCountedTickets(
@@ -313,7 +335,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           }}
         >
           <Subtitle>Your cart is empty</Subtitle>
-          <Text isGray>
+          <Text $isGray>
             To add tickets to your cart, visit the event page and select the
             tickets you wish to purchase. If you believe this is an error,
             please contact support at
@@ -365,9 +387,9 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
               ticket={ticket}
               hideActions
               removable
-              editable
-              onChange={(count) => {
-                handleUpdateTicket(ticket, count)
+              editable={!ticket.pendingEdit}
+              onChange={(count, propogateCount) => {
+                handleUpdateTicket(ticket, count, propogateCount)
               }}
               onRemove={() => {
                 setRemoveModal(ticket)

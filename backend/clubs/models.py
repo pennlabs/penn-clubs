@@ -280,7 +280,7 @@ class Club(models.Model):
         blank=True,
     )
     approved_comment = models.TextField(null=True, blank=True)
-    approved_on = models.DateTimeField(null=True, blank=True)
+    approved_on = models.DateTimeField(null=True, blank=True, db_index=True)
 
     archived = models.BooleanField(default=False)
     archived_by = models.ForeignKey(
@@ -294,6 +294,7 @@ class Club(models.Model):
 
     code = models.SlugField(max_length=255, unique=True, db_index=True)
     active = models.BooleanField(default=False)
+    beta = models.BooleanField(default=False)  # opts club into all beta features
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     terms = models.CharField(blank=True, max_length=1024)
@@ -620,27 +621,23 @@ class Club(models.Model):
         """
         emails = []
 
-        # add club contact email if valid
-        try:
-            validate_email(self.email)
-            emails.append(self.email)
-        except ValidationError:
-            pass
+        # Add club contact email if valid
+        if self.email:
+            try:
+                validate_email(self.email)
+                emails.append(self.email)
+            except ValidationError:
+                pass
 
-        # add email for all officers and above
-        for user in self.membership_set.filter(
-            role__lte=Membership.ROLE_OFFICER, active=True
-        ):
-            emails.append(user.person.email)
+        # Add email for all active officers and above
+        emails.extend(
+            self.membership_set.filter(
+                role__lte=Membership.ROLE_OFFICER, active=True
+            ).values_list("person__email", flat=True)
+        )
 
-        # remove empty emails
-        emails = [email.strip() for email in emails]
-        emails = [email for email in emails if email]
-
-        # remove duplicate emails
-        emails = list(sorted(set(emails)))
-
-        return emails
+        # Remove whitespace, empty emails, and duplicates, then sort
+        return sorted(set(email.strip() for email in emails if email.strip()))
 
     def send_confirmation_email(self, request=None):
         """
@@ -680,6 +677,7 @@ class Club(models.Model):
             "view_url": settings.VIEW_URL.format(domain=domain, club=self.code),
             "edit_url": settings.EDIT_URL.format(domain=domain, club=self.code),
             "change": change,
+            "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         }
 
         emails = self.get_officer_emails()
@@ -687,10 +685,8 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="approval_status",
-                subject="{}{} {} on {}".format(
-                    "Changes to " if change else "",
+                subject="{} status update on {}".format(
                     self.name,
-                    "accepted" if self.approved else "not approved",
                     settings.BRANDING_SITE_NAME,
                 ),
                 emails=emails,
@@ -782,11 +778,7 @@ class QuestionAnswer(models.Model):
     def send_question_mail(self, request=None):
         domain = get_domain(request)
 
-        owner_emails = list(
-            self.club.membership_set.filter(
-                role__lte=Membership.ROLE_OFFICER, active=True
-            ).values_list("person__email", flat=True)
-        )
+        emails = self.club.get_officer_emails()
 
         context = {
             "name": self.club.name,
@@ -794,11 +786,11 @@ class QuestionAnswer(models.Model):
             "url": settings.QUESTION_URL.format(domain=domain, club=self.club.code),
         }
 
-        if owner_emails:
+        if emails:
             send_mail_helper(
                 name="question",
                 subject="Question for {}".format(self.club.name),
-                emails=owner_emails,
+                emails=emails,
                 context=context,
             )
 
@@ -1114,20 +1106,17 @@ class MembershipRequest(models.Model):
             "full_name": self.person.get_full_name(),
         }
 
-        owner_emails = list(
-            self.club.membership_set.filter(
-                role__lte=Membership.ROLE_OFFICER, active=True
-            ).values_list("person__email", flat=True)
-        )
+        emails = self.club.get_officer_emails()
 
-        send_mail_helper(
-            name="request",
-            subject="Membership Request from {} for {}".format(
-                self.person.get_full_name(), self.club.name
-            ),
-            emails=owner_emails,
-            context=context,
-        )
+        if emails:
+            send_mail_helper(
+                name="request",
+                subject="Membership Request from {} for {}".format(
+                    self.person.get_full_name(), self.club.name
+                ),
+                emails=emails,
+                context=context,
+            )
 
     class Meta:
         unique_together = (("person", "club"),)
@@ -1147,7 +1136,20 @@ class Advisor(models.Model):
     phone = PhoneNumberField(null=False, blank=True)
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
-    public = models.BooleanField()
+
+    ADVISOR_VISIBILITY_ADMIN = 1
+    ADVISOR_VISIBILITY_STUDENTS = 2
+    ADVISOR_VISIBILITY_ALL = 3
+
+    ADVISOR_VISIBILITY_CHOICES = (
+        (ADVISOR_VISIBILITY_ADMIN, "Admin Only"),
+        (ADVISOR_VISIBILITY_STUDENTS, "Signed-in Students"),
+        (ADVISOR_VISIBILITY_ALL, "Public"),
+    )
+
+    visibility = models.IntegerField(
+        choices=ADVISOR_VISIBILITY_CHOICES, default=ADVISOR_VISIBILITY_STUDENTS
+    )
 
     def __str__(self):
         return self.name
@@ -1922,8 +1924,6 @@ class Ticket(models.Model):
         """
         Send a confirmation email to the ticket owner after purchase
         """
-        owner = self.owner
-
         output = BytesIO()
         qr_image = self.get_qr()
         qr_image.save(output, format="PNG")
@@ -1941,8 +1941,9 @@ class Ticket(models.Model):
         if self.owner.email:
             send_mail_helper(
                 name="ticket_confirmation",
-                subject=f"Ticket confirmation for {owner.get_full_name()}",
-                emails=[owner.email],
+                subject=f"Ticket confirmation for {self.owner.get_full_name()}"
+                f" to {self.event.name}",
+                emails=[self.owner.email],
                 context=context,
                 attachment={
                     "filename": "qr_code.png",
@@ -1994,6 +1995,24 @@ class TicketTransferRecord(models.Model):
             emails=[self.sender.email, self.receiver.email],
             context=context,
         )
+
+
+class ClubApprovalResponseTemplate(models.Model):
+    """
+    Represents a (rejection) template for site administrators to use
+    during the club approval process.
+    """
+
+    author = models.ForeignKey(
+        get_user_model(), on_delete=models.SET_NULL, null=True, related_name="templates"
+    )
+    title = models.CharField(max_length=255, unique=True)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
 
 
 @receiver(models.signals.pre_delete, sender=Asset)

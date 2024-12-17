@@ -18,11 +18,13 @@ from ics import Calendar
 
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
+    Advisor,
     ApplicationSubmission,
     Asset,
     Badge,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairRegistration,
     Event,
@@ -203,6 +205,77 @@ class ClubTestCase(TestCase):
             author=self.user2,
             responder=self.user1,
         )
+
+        self.advisor_admin = Advisor.objects.create(
+            name="Anonymous Avi",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_ADMIN,
+        )
+
+        self.advisor_students = Advisor.objects.create(
+            name="Reclusive Rohan",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_STUDENTS,
+        )
+
+        self.advisor_public = Advisor.objects.create(
+            name="Jocular Julian",
+            phone="+12025550133",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_ALL,
+        )
+
+    def test_advisor_visibility(self):
+        """
+        Tests each tier of advisor visibility.
+        """
+        # Anonymous view
+        self.client.logout()
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 1)
+        self.assertEqual(resp.data["advisor_set"][0]["name"], "Jocular Julian")
+
+        # Student view
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 2)
+        sorted_advisors = sorted(
+            [advisor["name"] for advisor in resp.data["advisor_set"]]
+        )
+        self.assertEqual(sorted_advisors, ["Jocular Julian", "Reclusive Rohan"])
+
+        # Admin view
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data["advisor_set"]), 3)
+        sorted_advisors = sorted(
+            [advisor["name"] for advisor in resp.data["advisor_set"]]
+        )
+        self.assertEqual(
+            sorted_advisors, ["Anonymous Avi", "Jocular Julian", "Reclusive Rohan"]
+        )
+
+    def test_advisor_viewset(self):
+        # Make sure we can't view advisors via the viewset if not authed
+        self.client.logout()
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn("detail", resp.data)
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn("detail", resp.data)
+
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(reverse("club-advisors-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 3)
 
     def test_club_upload(self):
         """
@@ -2109,6 +2182,12 @@ class ClubTestCase(TestCase):
                 club.refresh_from_db()
                 self.assertTrue(club.approved)
 
+        # store result of approval history query
+        resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+        previous_history = json.loads(resp.content.decode("utf-8"))
+        self.assertTrue(previous_history[0]["approved"])
+
         with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
             for field in {"name"}:
                 # edit sensitive field
@@ -2118,6 +2197,13 @@ class ClubTestCase(TestCase):
                     content_type="application/json",
                 )
                 self.assertIn(resp.status_code, [200, 201], resp.content)
+                resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+                # find the approval history
+                resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+                self.assertIn(resp.status_code, [200], resp.content)
+                history = json.loads(resp.content.decode("utf-8"))
+                self.assertEqual(len(history), len(previous_history) + 1)
+                self.assertFalse(history[0]["approved"])
 
                 # ensure club is marked as not approved
                 club.refresh_from_db()
@@ -2571,7 +2657,7 @@ class ClubTestCase(TestCase):
 
     def test_alumni_page(self):
         """
-        Ensure alumni page can be seen, even for users who are not logged in.
+        Ensure alumni page can be seen
         """
         now = timezone.now()
         for i, user in enumerate([self.user1, self.user2, self.user3]):
@@ -2583,6 +2669,10 @@ class ClubTestCase(TestCase):
             )
 
         # fetch alumni page
+        resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [403], resp.content)
+
+        self.client.login(username=self.user4.username, password="test")
         resp = self.client.get(reverse("clubs-alumni", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
         data = resp.json()
@@ -2600,7 +2690,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIsInstance(resp.data, list, resp.content)
 
-        resp = self.client.post(reverse("scripts"), {"action": "graduate_users"})
+        resp = self.client.post(reverse("scripts"), {"action": "find_broken_images"})
         self.assertIn(resp.status_code, [200], resp.content)
         self.assertIn("output", resp.data, resp.content)
 
@@ -2780,3 +2870,77 @@ class ClubTestCase(TestCase):
         self.event1.refresh_from_db()
         self.assertIn("url", resp.data, resp.content)
         self.assertTrue(self.event1.url, resp.content)
+
+    def test_club_approval_response_templates(self):
+        """
+        Test operations and permissions for club approval response templates.
+        """
+
+        # Log in as superuser
+        self.client.login(username=self.user5.username, password="test")
+
+        # Create a new template
+        resp = self.client.post(
+            reverse("templates-list"),
+            {
+                "title": "Test template",
+                "content": "This is a new template",
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201)
+
+        # Create another template
+        template = ClubApprovalResponseTemplate.objects.create(
+            author=self.user5,
+            title="Another template",
+            content="This is another template",
+        )
+
+        # List templates
+        resp = self.client.get(reverse("templates-list"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(resp.json()), 2)
+
+        # Update a template
+        resp = self.client.patch(
+            reverse("templates-detail", args=[template.id]),
+            {"title": "Updated title"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Verify update
+        template.refresh_from_db()
+        self.assertEqual(template.title, "Updated title")
+
+        # Delete the template
+        resp = self.client.delete(reverse("templates-detail", args=[template.id]))
+        self.assertEqual(resp.status_code, 204)
+
+        # Verify the template has been deleted
+        self.assertIsNone(
+            ClubApprovalResponseTemplate.objects.filter(id=template.id).first()
+        )
+
+        # Test non-superuser access restrictions
+        self.client.logout()
+        self.client.login(
+            username=self.user4.username, password="test"
+        )  # non-superuser
+
+        # Non-superuser shouldn't be able to create a template
+        resp = self.client.post(
+            reverse("templates-list"),
+            {"title": "Template", "content": "This should not exist"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+
+class HealthTestCase(TestCase):
+    def test_health(self):
+        url = reverse("health")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data, {"message": "OK"})

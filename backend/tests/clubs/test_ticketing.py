@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import freezegun
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.db.models import Count
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
@@ -398,6 +399,44 @@ class TicketEventTestCase(TestCase):
             Ticket.objects.filter(type="normal", holder__isnull=False).count(), 0
         )
 
+    def test_email_blast(self):
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user1.username, password="test")
+
+        ticket1 = self.tickets1[0]
+        ticket1.owner = self.user2
+        ticket1.save()
+
+        resp = self.client.post(
+            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            {"content": "Test email blast content"},
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+
+        self.assertIn(self.user2.email, email.to)
+        self.assertIn(self.user1.email, email.to)
+
+        self.assertEqual(
+            email.subject, f"Update on {self.event1.name} from {self.club1.name}"
+        )
+        self.assertIn("Test email blast content", email.body)
+
+    def test_email_blast_empty_content(self):
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            {"content": ""},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
     def test_get_tickets_information_no_tickets(self):
         # Delete all the tickets
         Ticket.objects.all().delete()
@@ -494,6 +533,27 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(cart.tickets.count(), 3, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
+
+    def test_add_to_cart_elapsed_event(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Set the event end time to the past
+        self.event1.end_time = timezone.now() - timezone.timedelta(days=1)
+        self.event1.save()
+
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 1},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertIn("This event has already ended", resp.data["detail"], resp.data)
 
     def test_add_to_cart_twice_accumulates(self):
         self.client.login(username=self.user1.username, password="test")
@@ -947,6 +1007,40 @@ class TicketTestCase(TestCase):
         to_add = set(map(lambda t: str(t.id), tickets_to_add))
         self.assertEqual(len(in_cart & to_add), 0, in_cart | to_add)
 
+    def test_get_cart_elapsed_event(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Add a few tickets
+        cart, _ = Cart.objects.get_or_create(owner=self.user1)
+        tickets_to_add = self.tickets1[:5]
+        for ticket in tickets_to_add:
+            cart.tickets.add(ticket)
+        cart.save()
+
+        # Set the event end time to the past
+        self.event1.end_time = timezone.now() - timezone.timedelta(days=1)
+        self.event1.save()
+
+        resp = self.client.get(reverse("tickets-cart"), format="json")
+        data = resp.json()
+
+        # The cart should now be empty
+        self.assertEqual(len(data["tickets"]), 0, data)
+
+        # All tickets should be in the sold out array
+        self.assertEqual(len(data["sold_out"]), 1, data)
+
+        expected_sold_out = {
+            "type": self.tickets1[0].type,
+            "event": {
+                "id": self.event1.id,
+                "name": self.event1.name,
+            },
+            "count": 5,
+        }
+        for key, val in expected_sold_out.items():
+            self.assertEqual(data["sold_out"][0][key], val, data)
+
     def test_place_hold_on_tickets(self):
         from clubs.views import TicketViewSet
 
@@ -1018,6 +1112,18 @@ class TicketTestCase(TestCase):
             reconciliation_id=MockPaymentResponse().reconciliation_id
         ).exists()
         self.assertTrue(record_exists)
+
+        # Check that confirmation emails were sent
+        self.assertEqual(len(mail.outbox), len(tickets_to_add))
+        for msg in mail.outbox:
+            self.assertIn(
+                f"Ticket confirmation for {self.user1.first_name} "
+                f"{self.user1.last_name}",
+                msg.subject,
+            )
+            self.assertIn(self.user1.first_name, msg.body)
+            self.assertIn(self.event1.name, msg.body)
+            self.assertIsNotNone(msg.attachments)
 
     def test_initiate_checkout_non_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")

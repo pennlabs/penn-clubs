@@ -12,6 +12,7 @@ from clubs.views import (
     BadgeClubViewSet,
     BadgeViewSet,
     ClubApplicationViewSet,
+    ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
@@ -23,6 +24,7 @@ from clubs.views import (
     FavoriteCalendarAPIView,
     FavoriteEventsAPIView,
     FavoriteViewSet,
+    HealthView,
     MajorViewSet,
     MassInviteAPIView,
     MeetingZoomAPIView,
@@ -92,6 +94,7 @@ router.register(
     basename="wharton",
 )
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
+router.register(r"templates", ClubApprovalResponseTemplateViewSet, basename="templates")
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
@@ -174,6 +177,7 @@ urlpatterns = [
         WhartonApplicationStatusAPIView.as_view(),
         name="wharton-applications-status",
     ),
+    path(r"health/", HealthView.as_view(), name="health"),
 ]
 
 urlpatterns += router.urls

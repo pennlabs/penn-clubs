@@ -401,7 +401,7 @@ const CreateContainer = styled.div`
   align-items: center;
 `
 
-const CreateTickets = ({ event }: { event: ClubEvent }) => {
+const CreateTickets = ({ event, club }: { event: ClubEvent; club: Club }) => {
   const [show, setShow] = useState(false)
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)
@@ -431,7 +431,11 @@ const CreateTickets = ({ event }: { event: ClubEvent }) => {
           closeModal={hideModal}
           marginBottom={false}
         >
-          <TicketsModal event={event} onSuccessfulSubmit={hideModal} />
+          <TicketsModal
+            club={club}
+            event={event}
+            onSuccessfulSubmit={hideModal}
+          />
         </Modal>
       )}
     </CreateContainer>
@@ -476,7 +480,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         }}
       />
       <Line />
-      <CreateTickets event={event} />
+      <CreateTickets event={event} club={club} />
       <Line />
       <div ref={eventDetailsRef}>
         <EventPreview event={event} />

@@ -13,16 +13,17 @@ import ModelForm from '../ModelForm'
 
 const fields = (
   <>
-    <Field name="name" as={TextField} />
-    <Field name="start_date" as={DateTimeField} />
-    <Field name="end_date" as={DateTimeField} />
-    <Field name="release_date" as={DateTimeField} />
+    <Field name="name" as={TextField} required />
+    <Field name="start_date" as={DateTimeField} required />
+    <Field name="end_date" as={DateTimeField} required />
+    <Field name="release_date" as={DateTimeField} required />
   </>
 )
 
 type Cycle = {
   name: string
   id: number | null
+  endDate: Date
 }
 
 type ClubOption = {
@@ -35,7 +36,8 @@ type ExtensionOption = {
   clubName: string
   endDate: Date
   exception?: boolean
-  changed: boolean
+  originalEndDate: Date
+  originalException: boolean
 }
 
 const ScrollWrapper = styled.div`
@@ -44,17 +46,24 @@ const ScrollWrapper = styled.div`
   height: 40vh;
 `
 
+type ClubApplicationWithClub = ClubApplication & {
+  club__name: string
+  club__code: number
+}
+
 const WhartonApplicationCycles = (): ReactElement => {
   const [editMembership, setEditMembership] = useState(false)
   const [membershipCycle, setMembershipCycle] = useState<Cycle>({
     name: '',
     id: null,
+    endDate: new Date(),
   })
 
   const [editExtensions, setEditExtensions] = useState(false)
   const [extensionsCycle, setExtensionsCycle] = useState<Cycle>({
     name: '',
     id: null,
+    endDate: new Date(),
   })
 
   const [clubsSelectedMembership, setClubsSelectedMembership] = useState<
@@ -81,7 +90,10 @@ const WhartonApplicationCycles = (): ReactElement => {
   const closeExtensionsModal = (): void => {
     setEditExtensions(false)
     // calculate clubs that have changed
-    const clubsToUpdate = clubsExtensions.filter((x) => x.changed)
+    const clubsToUpdate = clubsExtensions.filter(
+      (x) =>
+        x.originalEndDate !== x.endDate || x.originalException !== x.exception,
+    )
     // split into clubs with exceptions and clubs without
     const clubsExceptions = clubsToUpdate.filter((x) => x.exception)
     const clubsNoExceptions = clubsToUpdate.filter((x) => !x.exception)
@@ -147,18 +159,23 @@ const WhartonApplicationCycles = (): ReactElement => {
 
   useEffect(() => {
     if (extensionsCycle && extensionsCycle.id != null) {
-      doApiRequest(`/cycles/${extensionsCycle.id}/clubs?format=json`)
+      doApiRequest(
+        `/cycles/${extensionsCycle.id}/club_applications?format=json`,
+      )
         .then((resp) => resp.json())
         .then((data) => {
-          const initialOptions = data.map((club: ClubApplication) => {
-            return {
-              id: club.id,
-              clubName: club.name,
-              endDate: new Date(club.application_end_time),
-              exception: club.application_end_time_exception,
-              changed: false,
-            }
-          })
+          const initialOptions = data.map(
+            (application: ClubApplicationWithClub) => {
+              return {
+                id: application.id,
+                clubName: application.club__name,
+                endDate: new Date(application.application_end_time),
+                exception: application.application_end_time_exception,
+                originalEndDate: new Date(application.application_end_time),
+                originalException: application.application_end_time_exception,
+              }
+            },
+          )
           setClubsExtensions(initialOptions)
         })
     }
@@ -190,7 +207,11 @@ const WhartonApplicationCycles = (): ReactElement => {
             <button
               className="button is-info is-small"
               onClick={() => {
-                setMembershipCycle({ name: object.name, id: object.id })
+                setMembershipCycle({
+                  name: object.name,
+                  id: object.id,
+                  endDate: new Date(object.end_date),
+                })
                 setEditMembership(true)
                 setEditExtensions(false)
               }}
@@ -200,7 +221,11 @@ const WhartonApplicationCycles = (): ReactElement => {
             <button
               className="button is-info is-small"
               onClick={() => {
-                setExtensionsCycle({ name: object.name, id: object.id })
+                setExtensionsCycle({
+                  name: object.name,
+                  id: object.id,
+                  endDate: new Date(object.end_date),
+                })
                 setEditExtensions(true)
                 setEditMembership(false)
               }}
@@ -290,7 +315,6 @@ const WhartonApplicationCycles = (): ReactElement => {
                             selected={club.endDate}
                             onChange={(date) => {
                               club.endDate = date
-                              club.changed = true
                               setClubsExtensions([...clubsExtensions])
                             }}
                           />
@@ -299,7 +323,6 @@ const WhartonApplicationCycles = (): ReactElement => {
                           <Checkbox
                             onChange={(e) => {
                               club.exception = e.target.checked
-                              club.changed = true
                               setClubsExtensions([...clubsExtensions])
                             }}
                             checked={
@@ -320,9 +343,27 @@ const WhartonApplicationCycles = (): ReactElement => {
               className="button is-primary"
               style={{ position: 'absolute', bottom: 10, right: 10 }}
               onClick={closeExtensionsModal}
+              disabled={clubsExtensions.some(
+                (x) =>
+                  // For the case where we change end date without giving an exception to a club without one
+                  !x.exception &&
+                  !x.originalException &&
+                  x.endDate.getTime() !== extensionsCycle.endDate.getTime(),
+              )}
             >
               Submit
             </button>
+            {clubsExtensions.some(
+              (x) =>
+                !x.exception &&
+                !x.originalException &&
+                x.endDate.getTime() !== extensionsCycle.endDate.getTime(),
+            ) && (
+              <p className="is-danger">
+                To change the end date for a club, you must also check its
+                exception box.
+              </p>
+            )}
           </>
         )}
       </Modal>

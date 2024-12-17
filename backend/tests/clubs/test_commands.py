@@ -616,7 +616,7 @@ class RenewalTestCase(TestCase):
         self.client.get(reverse("clubs-detail", args=(club.code,)))
 
         # club should now be cached
-        cache_key = f"clubs:{club.id}"
+        cache_key = f"clubs:{club.id}-anon"
         self.assertIsNotNone(caches["default"].get(cache_key))
 
         call_command("deactivate", "all", "--force")
@@ -733,3 +733,75 @@ class ExpireMembershipInvitesTest(TestCase):
 
         self.assertFalse(self.expired_invite.active)
         self.assertTrue(self.active_invite.active)
+
+
+class GraduateUsersTestCase(TestCase):
+    def setUp(self):
+        self.club = Club.objects.create(code="test", name="Test Club", active=True)
+        self.user1 = get_user_model().objects.create_user(
+            "bfranklin", "bfranklin@seas.upenn.edu", "test"
+        )
+        self.user2 = get_user_model().objects.create_user(
+            "tjefferson", "tjefferson@seas.upenn.edu", "test"
+        )
+
+        # Set graduation years
+        self.user1.profile.graduation_year = timezone.now().year - 1
+        self.user1.profile.save()
+        self.user2.profile.graduation_year = timezone.now().year + 1
+        self.user2.profile.save()
+
+        # Create active memberships
+        Membership.objects.create(person=self.user1, club=self.club, active=True)
+        Membership.objects.create(person=self.user2, club=self.club, active=True)
+
+    def test_graduate_users(self):
+        # Ensure both memberships are active initially
+        self.assertEqual(Membership.objects.filter(active=True).count(), 2)
+
+        # Run the command
+        call_command("graduate_users")
+
+        # Check that only the graduated user's membership is inactive
+        self.assertEqual(Membership.objects.filter(active=True).count(), 1)
+        self.assertFalse(Membership.objects.get(person=self.user1).active)
+        self.assertTrue(Membership.objects.get(person=self.user2).active)
+
+    def test_graduate_users_output(self):
+        # Capture command output
+        out = io.StringIO()
+        call_command("graduate_users", stdout=out)
+
+        # Check the output
+        self.assertIn(
+            "Updated the membership status of 1 student club relationships!",
+            out.getvalue(),
+        )
+
+
+class OsaPermsUpdatesTestCase(TestCase):
+    def setUp(self):
+        self.user1 = get_user_model().objects.create_user("gwashington")
+
+    def test_osa_perms_updates(self):
+        # Test error when OSA_KEYS is not set
+        with mock.patch("django.conf.settings.OSA_KEYS", None):
+            with self.assertRaises(ValueError):
+                call_command("osa_perms_updates")
+            self.assertFalse(self.user1.is_superuser)
+
+        with mock.patch("django.conf.settings.OSA_KEYS", ["gwashington"]):
+            # Test error when Approvers group is not found
+            with self.assertRaises(ValueError):
+                call_command("osa_perms_updates")
+            self.assertFalse(self.user1.is_superuser)
+
+            # Create Approvers group
+            Group.objects.create(name="Approvers")
+            call_command("osa_perms_updates")
+            self.user1.refresh_from_db()
+            self.assertTrue(self.user1.groups.filter(name="Approvers").exists())
+            self.assertTrue(self.user1.is_staff)
+            self.assertTrue(self.user1.is_superuser)
+            self.assertTrue(self.user1.has_perm("approve_club"))
+            self.assertTrue(self.user1.has_perm("see_pending_clubs"))

@@ -6,6 +6,9 @@ module.exports = {
     })
     return config
   },
+  compiler: {
+    styledComponents: true,
+  },
   async rewrites() {
     return [
       {

@@ -1,8 +1,8 @@
 import datetime
-import random
 from math import floor
 
 import bleach
+import numpy as np
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -220,8 +220,11 @@ class Command(BaseCommand):
             if num_testimonials >= 3:
                 ranking += 5
 
-            # rng
-            ranking += random.random() * 10
+            # random number, mostly shuffles similar clubs with average of 25 points
+            # but with long right tail to periodically feature less popular clubs
+            # given ~700 active clubs, multiplier c, expected # clubs with rand > cd
+            # is 257, 95, 35, 13, 5, 2, 1 for c = 1, 2, 3, 4, 5, 6, 7
+            ranking += np.random.standard_exponential() * 25
 
             club.rank = floor(ranking)
             club.skip_history_when_saving = True

@@ -221,7 +221,7 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
       )
       const contents = await resp.json()
       if (contents.success) {
-        toast.info(contents.message, { hideProgressBar: true })
+        toast.info(contents.detail, { hideProgressBar: true })
       } else {
         // eslint-disable-next-line no-console
         console.error(contents.errors)
