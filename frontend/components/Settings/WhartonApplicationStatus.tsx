@@ -1,5 +1,6 @@
 import React, { ReactElement, useState } from 'react'
-import { DiscreteColorLegend, Hint, RadialChart } from 'react-vis'
+import { Hint, RadialChart } from 'react-vis'
+import styled from 'styled-components'
 
 import { WHITE } from '~/constants/colors'
 import { ApplicationStatus } from '~/types'
@@ -29,24 +30,46 @@ const colors = {
 
 function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
   const applicationsTotal = {}
+  const applicationCommittees = {}
   const applicationsGrouped: PieChartData = {}
   statuses.forEach((status) => {
-    if (!(status.name in applicationsGrouped)) {
+    if (!(status.name in applicationCommittees)) {
       const total = {}
       Object.keys(colors).forEach((status) => (total[status] = 0))
       applicationsTotal[status.name] = total
 
-      const grouped = {}
-      grouped[status.committee] = []
-      applicationsGrouped[status.name] = grouped
-    } else if (!(status.committee in applicationsGrouped[status.name])) {
-      applicationsGrouped[status.name][status.committee] = []
+      applicationCommittees[status.name] = {}
+    }
+    if (!(status.committee in applicationCommittees[status.name])) {
+      applicationCommittees[status.name][status.committee] = {}
+    }
+    if (
+      !(status.status in applicationCommittees[status.name][status.committee])
+    ) {
+      applicationCommittees[status.name][status.committee][status.status] = 0
     }
     applicationsTotal[status.name][status.status] += status.count
-    applicationsGrouped[status.name][status.committee].push({
-      angle: status.count,
-      label: status.status,
-      color: colors[status.status],
+    applicationCommittees[status.name][status.committee][status.status] +=
+      status.count
+  })
+
+  /* Does application name even matter? */
+
+  Object.keys(applicationCommittees).forEach((name) => {
+    Object.keys(applicationCommittees[name]).forEach((committee) => {
+      Object.keys(applicationCommittees[name][committee]).forEach((status) => {
+        if (!(name in applicationsGrouped)) {
+          applicationsGrouped[name] = {}
+        }
+        if (!(committee in applicationsGrouped[name])) {
+          applicationsGrouped[name][committee] = []
+        }
+        applicationsGrouped[name][committee].push({
+          angle: applicationCommittees[name][committee][status],
+          label: status,
+          color: colors[status],
+        })
+      })
     })
   })
 
@@ -65,6 +88,41 @@ function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
   })
 
   return applicationsGrouped
+}
+
+const LegendContainer = styled.div`
+  height: 130px;
+  display: grid;
+  rowGap: "0.5rem",
+  alignItems: "center"
+`
+
+const LegendColor = styled.div<{ color: string }>`
+  background-color: ${(props) => props.color};
+`
+const LegendRow = styled.div`
+  display: grid;
+  grid-template-columns: 20px auto;
+  gap: 6px;
+`
+
+interface LegendProps {
+  items: {
+    color: string
+    title: string
+  }[]
+}
+const Legend: React.FC<LegendProps> = ({ items }) => {
+  return (
+    <LegendContainer>
+      {items.map((item, index) => (
+        <LegendRow>
+          <LegendColor key={index} color={item.color} />
+          <div style={{ alignSelf: 'center' }}>{item.title}</div>
+        </LegendRow>
+      ))}
+    </LegendContainer>
+  )
 }
 
 function StatusCard({
@@ -203,10 +261,9 @@ const WhartonApplicationStatus = ({
         Download Data
       </button>
       <div className="column">
-        <DiscreteColorLegend
+        <Legend
           items={Object.keys(colors).map((label) => ({
             title: label,
-            strokeWidth: 100,
             color: colors[label],
           }))}
         />
