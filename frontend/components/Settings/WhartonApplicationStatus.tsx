@@ -33,39 +33,37 @@ function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
   const applicationCommittees = {}
   const applicationsGrouped: PieChartData = {}
   statuses.forEach((status) => {
-    if (!(status.name in applicationCommittees)) {
+    if (!(status.club in applicationCommittees)) {
       const total = {}
       Object.keys(colors).forEach((status) => (total[status] = 0))
-      applicationsTotal[status.name] = total
+      applicationsTotal[status.club] = total
 
-      applicationCommittees[status.name] = {}
+      applicationCommittees[status.club] = {}
     }
-    if (!(status.committee in applicationCommittees[status.name])) {
-      applicationCommittees[status.name][status.committee] = {}
+    if (!(status.committee in applicationCommittees[status.club])) {
+      applicationCommittees[status.club][status.committee] = {}
     }
     if (
-      !(status.status in applicationCommittees[status.name][status.committee])
+      !(status.status in applicationCommittees[status.club][status.committee])
     ) {
-      applicationCommittees[status.name][status.committee][status.status] = 0
+      applicationCommittees[status.club][status.committee][status.status] = 0
     }
-    applicationsTotal[status.name][status.status] += status.count
-    applicationCommittees[status.name][status.committee][status.status] +=
+    applicationsTotal[status.club][status.status] += status.count
+    applicationCommittees[status.club][status.committee][status.status] +=
       status.count
   })
 
-  /* Does application name even matter? */
-
-  Object.keys(applicationCommittees).forEach((name) => {
-    Object.keys(applicationCommittees[name]).forEach((committee) => {
-      Object.keys(applicationCommittees[name][committee]).forEach((status) => {
-        if (!(name in applicationsGrouped)) {
-          applicationsGrouped[name] = {}
+  Object.keys(applicationCommittees).forEach((club) => {
+    Object.keys(applicationCommittees[club]).forEach((committee) => {
+      Object.keys(applicationCommittees[club][committee]).forEach((status) => {
+        if (!(club in applicationsGrouped)) {
+          applicationsGrouped[club] = {}
         }
-        if (!(committee in applicationsGrouped[name])) {
-          applicationsGrouped[name][committee] = []
+        if (!(committee in applicationsGrouped[club])) {
+          applicationsGrouped[club][committee] = []
         }
-        applicationsGrouped[name][committee].push({
-          angle: applicationCommittees[name][committee][status],
+        applicationsGrouped[club][committee].push({
+          angle: applicationCommittees[club][committee][status],
           label: status,
           color: colors[status],
         })
