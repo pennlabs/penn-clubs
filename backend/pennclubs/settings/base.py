@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 
 import dj_database_url
+from django.utils import timezone
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -204,11 +205,16 @@ APPLY_URL = "https://{domain}/club/{club}/apply"
 
 OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
 
-
-# Controls whether existing clubs can submit for reapproval
-REAPPROVAL_QUEUE_OPEN = True
-# Controls whether new clubs can submit for initial approval
-NEW_APPROVAL_QUEUE_OPEN = True
+REAPPROVAL_QUEUE_OPEN = True  # controls whether existing clubs can request reapproval
+NEW_APPROVAL_QUEUE_OPEN = True  # controls whether new clubs can request approval
+RENEWAL_PERIOD = (
+    timezone.datetime(
+        timezone.now().year, 8, 1, tzinfo=timezone.get_default_timezone()
+    ),
+    timezone.datetime(
+        timezone.now().year, 9, 30, tzinfo=timezone.get_default_timezone()
+    ),
+)  # defines renewal period for club visibility
 
 # File upload settings
 
