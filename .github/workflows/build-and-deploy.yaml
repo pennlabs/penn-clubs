@@ -22,16 +22,16 @@ jobs:
     name: Build backend
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: buildx-build-backend
       - name: Build/Publish
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: backend
           file: backend/Dockerfile
@@ -50,16 +50,16 @@ jobs:
     name: Build frontend
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: docker/setup-qemu-action@v1
-      - uses: docker/setup-buildx-action@v1
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: buildx-build-frontend
       - name: Build/Publish
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: frontend
           file: frontend/Dockerfile
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
       - uses: geekyeggo/delete-artifact@v5
         with:
