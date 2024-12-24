@@ -31,6 +31,7 @@ from clubs.models import (
     Badge,
     Club,
     ClubApplication,
+    ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubVisit,
@@ -132,7 +133,7 @@ class BadgeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Badge
-        fields = ("id", "purpose", "label", "color", "description")
+        fields = ("id", "purpose", "label", "color", "description", "message")
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -351,7 +352,7 @@ class AdvisorSerializer(
 ):
     class Meta:
         model = Advisor
-        fields = ("id", "name", "title", "department", "email", "phone", "public")
+        fields = ("id", "name", "title", "department", "email", "phone", "visibility")
 
 
 class ClubEventSerializer(serializers.ModelSerializer):
@@ -1278,8 +1279,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         return obj.approved_by.get_full_name()
 
     def get_advisor_set(self, obj):
+        user = self.context["request"].user
+        visibility_level = (
+            Advisor.ADVISOR_VISIBILITY_STUDENTS
+            if user.is_authenticated
+            else Advisor.ADVISOR_VISIBILITY_ALL
+        )
         return AdvisorSerializer(
-            obj.advisor_set.filter(public=True).order_by("name"),
+            obj.advisor_set.filter(visibility__gte=visibility_level),
             many=True,
             read_only=True,
             context=self.context,
@@ -1292,19 +1299,21 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
 
     def get_target_years(self, obj):
-        qset = TargetYear.objects.filter(club=obj)
+        qset = TargetYear.objects.filter(club=obj).select_related("target_years")
         return [TargetYearSerializer(m).data for m in qset]
 
     def get_target_majors(self, obj):
-        qset = TargetMajor.objects.filter(club=obj)
+        qset = TargetMajor.objects.filter(club=obj).select_related("target_majors")
         return [TargetMajorSerializer(m).data for m in qset]
 
     def get_target_schools(self, obj):
-        qset = TargetSchool.objects.filter(club=obj)
+        qset = TargetSchool.objects.filter(club=obj).select_related("target_schools")
         return [TargetSchoolSerializer(m).data for m in qset]
 
     def get_target_student_types(self, obj):
-        qset = TargetStudentType.objects.filter(club=obj)
+        qset = TargetStudentType.objects.filter(club=obj).select_related(
+            "target_student_types"
+        )
         return [TargetStudentTypeSerializer(m).data for m in qset]
 
     def create(self, validated_data):
@@ -1313,6 +1322,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         # New clubs created through the API must always be approved.
         validated_data["approved"] = None
+
+        request = self.context.get("request", None)
+        perms = request and request.user.has_perm("clubs.approve_club")
+
+        if not perms and (
+            not settings.REAPPROVAL_QUEUE_OPEN or not settings.NEW_APPROVAL_QUEUE_OPEN
+        ):
+            raise serializers.ValidationError(
+                "The approval queue is not currently open."
+            )
 
         obj = super().create(validated_data)
 
@@ -1513,6 +1532,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Override save in order to replace code with slugified name if not specified.
         """
+        if "beta" in self.validated_data:
+            raise serializers.ValidationError(
+                "The beta field is not allowed to be set by clubs."
+            )
+
         # remove any spaces from the name
         if "name" in self.validated_data:
             self.validated_data["name"] = self.validated_data["name"].strip()
@@ -1529,7 +1553,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # if key fields were edited, require re-approval
         needs_reapproval = False
         if self.instance:
-            for field in {"name", "image", "description"}:
+            for field in {"name", "image"}:
                 if field in self.validated_data and not self.validated_data[
                     field
                 ] == getattr(self.instance, field, None):
@@ -1540,6 +1564,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         request = self.context.get("request", None)
         if request and request.user.has_perm("clubs.approve_club"):
             needs_reapproval = False
+
+        if needs_reapproval and not settings.REAPPROVAL_QUEUE_OPEN:
+            raise serializers.ValidationError(
+                "The approval queue is not currently open."
+            )
 
         has_approved_version = (
             self.instance and self.instance.history.filter(approved=True).exists()
@@ -1710,6 +1739,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_by",
             "approved_comment",
             "badges",
+            "beta",
             "created_at",
             "description",
             "events",
@@ -2324,8 +2354,8 @@ class ReportClubField(serializers.Field):
 
     def to_representation(self, value):
         """
-        This is called to get the value for a partcular cell, given the club code.
-        The entire field object can be though of as a column in the spreadsheet.
+        This is called to get the value for a particular cell, given the club code.
+        The entire field object can be thought of as a column in the spreadsheet.
         """
         return self._cached_values.get(value, self._default_value)
 
@@ -2970,11 +3000,34 @@ class ClubFairSerializer(serializers.ModelSerializer):
             "registration_start_time",
             "start_time",
             "time",
+            "virtual",
         )
 
 
-class AdminNoteSerializer(serializers.ModelSerializer):
-    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+class ApprovalHistorySerializer(serializers.ModelSerializer):
+    approved = serializers.BooleanField()
+    approved_on = serializers.DateTimeField()
+    approved_by = serializers.SerializerMethodField("get_approved_by")
+    approved_comment = serializers.CharField()
+    history_date = serializers.DateTimeField()
+
+    def get_approved_by(self, obj):
+        if obj.approved_by is None:
+            return "Unknown"
+        return obj.approved_by.get_full_name()
+
+    class Meta:
+        model = Club
+        fields = (
+            "approved",
+            "approved_on",
+            "approved_by",
+            "approved_comment",
+            "history_date",
+        )
+
+
+class AdminNoteSerializer(ClubRouteMixin, serializers.ModelSerializer):
     creator = serializers.SerializerMethodField("get_creator")
     title = serializers.CharField(max_length=255, default="Note")
     content = serializers.CharField(required=False)
@@ -2983,16 +3036,16 @@ class AdminNoteSerializer(serializers.ModelSerializer):
         return obj.creator.get_full_name()
 
     def create(self, validated_data):
-        return AdminNote.objects.create(
-            creator=self.context["request"].user,
-            club=validated_data["club"],
-            title=validated_data["title"],
-            content=validated_data["content"],
-        )
+        validated_data["creator"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("creator", "")
+        return super().update(instance, validated_data)
 
     class Meta:
         model = AdminNote
-        fields = ("id", "creator", "club", "title", "content", "created_at")
+        fields = ("id", "creator", "title", "content", "created_at")
 
 
 class WritableClubFairSerializer(ClubFairSerializer):
@@ -3000,3 +3053,22 @@ class WritableClubFairSerializer(ClubFairSerializer):
 
     class Meta(ClubFairSerializer.Meta):
         pass
+
+
+class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField("get_author")
+
+    def get_author(self, obj):
+        return obj.author.get_full_name()
+
+    def create(self, validated_data):
+        validated_data["author"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("author", "")
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = ClubApprovalResponseTemplate
+        fields = ("id", "author", "title", "content", "created_at", "updated_at")

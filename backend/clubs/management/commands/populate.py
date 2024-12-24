@@ -455,7 +455,7 @@ class Command(BaseCommand):
                 department="Accounting Department",
                 email="example@example.com",
                 phone="+12158985000",
-                defaults={"public": True},
+                defaults={"visibility": Advisor.ADVISOR_VISIBILITY_STUDENTS},
             )
 
             club.tags.add(tag_undergrad)

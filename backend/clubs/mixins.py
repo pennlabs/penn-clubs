@@ -148,7 +148,7 @@ class XLSXFormatterMixin(object):
         if hasattr(serializer_class, "get_xlsx_column_name"):
             val = serializer_class.get_xlsx_column_name(key)
         if val is None:
-            val = key.replace("_", " ")
+            val = key
         self._column_cache[key] = val
         return val
 
@@ -238,7 +238,6 @@ class XLSXFormatterMixin(object):
                     field_object = model._meta.get_field(source_lookup[-1][:-4])
                 else:
                     raise e
-
         # format based on field type
         if isinstance(field_object, (ManyToManyField, ManyToOneRel)):
             return self._many_to_many_formatter
@@ -289,7 +288,6 @@ class XLSXFormatterMixin(object):
         response = super(XLSXFormatterMixin, self).finalize_response(
             request, response, *args, **kwargs
         )
-
         # If this is a spreadsheet response, intercept and format.
         if (
             isinstance(response, Response)
@@ -324,5 +322,4 @@ class XLSXFormatterMixin(object):
             response["Content-Disposition"] = "attachment; filename={}".format(
                 self.get_filename()
             )
-
         return response

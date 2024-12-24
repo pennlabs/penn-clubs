@@ -204,6 +204,12 @@ APPLY_URL = "https://{domain}/club/{club}/apply"
 
 OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
 
+
+# Controls whether existing clubs can submit for reapproval
+REAPPROVAL_QUEUE_OPEN = True
+# Controls whether new clubs can submit for initial approval
+NEW_APPROVAL_QUEUE_OPEN = True
+
 # File upload settings
 
 MEDIA_URL = "/api/media/"
@@ -259,3 +265,5 @@ PHONENUMBER_DEFAULT_REGION = "US"
 
 # Cybersource settings
 CYBERSOURCE_CLIENT_VERSION = "0.15"
+
+OSA_KEYS = None

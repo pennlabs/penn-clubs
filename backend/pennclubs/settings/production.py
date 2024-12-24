@@ -26,7 +26,7 @@ if SENTRY_URL:
         integrations=[DjangoIntegration(cache_spans=True)],
         send_default_pii=False,
         enable_tracing=True,
-        traces_sample_rate=0.1,
+        traces_sample_rate=0.01,
         profiles_sample_rate=1.0,
     )
 
@@ -89,3 +89,5 @@ CYBERSOURCE_CONFIG = {
     "run_environment": "api.cybersource.com",
 }
 CYBERSOURCE_TARGET_ORIGIN = "https://pennclubs.com"
+
+OSA_KEYS = os.getenv("OSA_KEYS", "").split(",")

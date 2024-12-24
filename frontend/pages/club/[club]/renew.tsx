@@ -98,40 +98,54 @@ const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
 
   const policies = [
     {
-      name: 'Campus Membership',
+      name: 'Nondiscrimination',
       content: (
         <div>
-          Membership in registered campus organizations must be open to all
-          persons without regard to race, color, sex, sexual or affectional
-          orientation, religion, national or ethnic origin, handicap, or
-          disability. Under Title IX of the U.S. Education Act Amendment of
-          1972, certain exemptions may be granted for intercollegiate and
-          intramural athletics, fraternities and sororities, and musical groups
-          based on vocal range. Members of all campus organizations must conduct
-          themselves at all times in a mature and responsible manner.
+          In alignment with the University of Pennsylvania’s Nondiscrimination
+          Statement, student-run organizations are expected to uphold a
+          commitment to non-discrimination. This means that these organizations
+          will not engage in discriminatory practices based on factors such as
+          race, color, sex, sexual orientation, gender identity, religion,
+          creed, national or ethnic origin, citizenship status, age, disability,
+          veteran status, or any other legally protected class status. It is
+          essential for student organizations to recognize the University’s
+          dedication to providing academic, social, and recreational programs
+          and services that are equally accessible to all, and as such, all
+          student-run organizations are required to conduct themselves and their
+          activities in accordance with this commitment.
         </div>
       ),
     },
     {
-      name: 'Legal Regulations',
+      name: 'Antihazing',
       content: (
         <div>
-          The rights and property of all persons are to be respected regardless
-          of time or place. Failure to comply with University, City, State, or
-          Federal laws and regulations can result in appropriate disciplinary
-          action. Members of campus organizations are expected to adhere to
-          standards of conduct established by Divisions and Departments of the
-          University.
+          Student organizations must fully comply with the University of
+          Pennsylvania’s Antihazing Regulations, as outlined in the{' '}
+          <a href="https://catalog.upenn.edu/pennbook/">Pennbook</a>. To ensure
+          compliance, students are encouraged to thoroughly review the
+          definition of hazing and the illustrative examples provided within the
+          the Antihazing Regulations. Additionally, it is vital for students to
+          understand the potential consequences of violating these regulations,
+          which may encompass University sanctions affecting both individuals
+          and organizations, as well as potential legal ramifications under
+          state law.
         </div>
       ),
     },
     {
-      name: 'Hazing',
+      name: 'Compliance',
       content: (
         <div>
-          The University is an association of equals who, in working together,
-          comprise a scholarly community. Hazing is inconsistent with the goals
-          and purpose of the University and is explicitly forbidden.
+          Student organizations are obligated to adhere to all policies and
+          procedures established by the University of Pennsylvania. This
+          includes, but is not limited to, the policies outlined in the{' '}
+          <a href="https://catalog.upenn.edu/pennbook/">Pennbook</a> and the{' '}
+          <a href="https://catalog.upenn.edu/pennbook/code-of-student-conduct/">
+            Code of Student Conduct
+          </a>
+          . Furthermore, student organizations are expected to operate in
+          compliance with all relevant local, state, and federal laws.
         </div>
       ),
     },
@@ -226,6 +240,77 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
 
   const year = getCurrentSchoolYear()
 
+  const prerequisites = [
+    {
+      name: 'Membership Requirements',
+      content: (
+        <div style={{ display: 'inline-block' }}>
+          Each club must have at least eight active members, with a minimum of
+          three members designated as officers.
+        </div>
+      ),
+    },
+    {
+      name: 'Group Contacts',
+      content: (
+        <div>
+          Listed group contacts are members of the organization who have
+          significant understanding of, and influence on, group operations.
+        </div>
+      ),
+    },
+    {
+      name: 'Club Operations',
+      content: (
+        <div>
+          Student organizations are to be initiated by, organized, primarily
+          comprised of and solely led by undergraduate or graduate students.
+        </div>
+      ),
+    },
+    {
+      name: 'Training and Workshops',
+      content: (
+        <div>
+          Organizations must complete any required student organization
+          trainings or workshops, such as the Student Organization Summit.
+        </div>
+      ),
+    },
+    {
+      name: 'Branding Compliance',
+      content: (
+        <div>
+          Clubs must have logos that adhere to university branding standards and
+          ensure consistent use across all platforms, including social media and
+          websites. Refer to the{' '}
+          <a href="https://universitylife.upenn.edu/student-brand-guidelines/">
+            Student Branding Guidelines
+          </a>{' '}
+          for more information.
+        </div>
+      ),
+    },
+    {
+      name: 'University Affiliation',
+      content: (
+        <div>
+          The club mission must clearly state that the group is a student
+          organization at the University.
+        </div>
+      ),
+    },
+    {
+      name: 'Policy Adherence',
+      content: (
+        <div>
+          All groups must comply with the relevant policies and guidelines for
+          student organizations.
+        </div>
+      ),
+    },
+  ]
+
   const steps = [
     {
       name: 'Introduction',
@@ -254,39 +339,41 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
           )}
           <TextInfoBox>
             <p>
-              The annual club registration process is a procedure conducted by
-              the{' '}
+              The annual club registration process, conducted by the{' '}
               <a target="_blank" href={APPROVAL_AUTHORITY_URL}>
                 {APPROVAL_AUTHORITY}
-              </a>{' '}
-              to ensure that student-run clubs are officially registered and
+              </a>
+              , ensures that student-run clubs are officially registered and
               permitted to operate on campus for the upcoming academic year.
-              During this process, clubs are required to submit update their
-              club officers and membership roster information; if applicable,
-              update primary contact information fulfill any other requirements
-              set by the University.
+              During this process, clubs are required to submit updated officer
+              and membership roster information and, if applicable, update their
+              primary contact details.
             </p>
             <p>
-              The purpose of the annual club registration process is to maintain
-              a well-organized and vibrant campus community, allowing students
-              to explore various interests and engage in extracurricular
-              activities. By registering each year, clubs reaffirm their
-              commitment to following school policies, uphold their mission, and
-              demonstrate their ongoing relevance to the student body.
+              The purpose of this process is to maintain a well-organized and
+              vibrant campus community, enabling students to explore various
+              interests and engage in extracurricular activities. By registering
+              each year, clubs reaffirm their commitment to following university
+              policies, uphold their mission, and demonstrate their ongoing
+              relevance to the student body.
             </p>
             <p>
-              Benefits of club registration include access to funding
-              opportunities, the ability to reserve campus facilities for
-              events, eligibility to participate in campus-wide events like the
-              annual activities’ fairs, and access to resources and support from
-              the student affairs office or other university departments.
+              Registration identifies the organization as active and grants
+              access to essential university resources, such as reserving space,
+              accessing electronic resources, appropriate use of the Penn name,
+              potential funding opportunities, participation in activities
+              fairs, and the ability to advertise as a student-run organization
+              at the University of Pennsylvania.
             </p>
             <p>
-              Overall, the annual club registration process plays a crucial role
-              in fostering a diverse and active campus life, enriching the
-              educational experience of students, and promoting a sense of
-              community and belonging.
+              To successfully register or re-register your organization, the
+              following prerequisites must be met:
             </p>
+            {prerequisites.map(({ name, content }) => (
+              <p>
+                <b>{name}</b>: {content}
+              </p>
+            ))}
             <p>
               If you have any questions about the club registration process,
               please contact the Office of Student Affairs at

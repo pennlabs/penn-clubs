@@ -31,14 +31,18 @@ import {
   FORM_TAG_DESCRIPTION,
   FORM_TARGET_DESCRIPTION,
   MEMBERSHIP_ROLE_NAMES,
+  NEW_APPROVAL_QUEUE_ENABLED,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_ADMISSION_LABEL,
+  REAPPROVAL_QUEUE_ENABLED,
   SHOW_RANK_ALGORITHM,
   SITE_ID,
   SITE_NAME,
 } from '../../utils/branding'
-import { Checkbox, CheckboxLabel, Contact, Text } from '../common'
+import { ModalContent } from '../ClubPage/Actions'
+import { LiveBanner, LiveSub, LiveTitle } from '../ClubPage/LiveEventsDialog'
+import { Checkbox, CheckboxLabel, Contact, Modal, Text } from '../common'
 import {
   CheckboxField,
   CheckboxTextField,
@@ -147,6 +151,49 @@ const Card = ({
     </div>
   )
 }
+interface EmailModalProps {
+  closeModal: () => void
+  email: string
+  setEmail: (inp: string) => void
+  confirmSubmission: () => void
+}
+
+const EmailModal = ({
+  closeModal,
+  email,
+  setEmail,
+  confirmSubmission,
+}: EmailModalProps): ReactElement => {
+  return (
+    <Modal
+      width={'450px'}
+      show={true}
+      closeModal={closeModal}
+      marginBottom={false}
+    >
+      <div className="card-content mb-2">
+        <Text className="has-text-danger">
+          This email will be visible to the public.
+          <br />
+          We recommend that you don’t use a personal email, and instead use a
+          club email.
+        </Text>
+        <Field
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input mb-5"
+          style={{ maxWidth: '350px' }}
+        ></Field>
+        <div>
+          <button onClick={confirmSubmission} className="button is-primary">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
 
 /**
  * Remove fields in an object that are not part of a whitelist.
@@ -186,6 +233,7 @@ export default function ClubEditCard({
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement {
+  const [showRankModal, setShowRankModal] = useState<boolean>(false)
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
       club.target_majors?.length ||
@@ -223,6 +271,8 @@ export default function ClubEditCard({
       club.student_types?.length
     ),
   )
+
+  const [emailModal, showEmailModal] = useState<boolean>(false)
 
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
@@ -394,12 +444,65 @@ export default function ClubEditCard({
     {
       name: 'General',
       type: 'group',
+      description: (
+        <div className="mb-4">
+          <a onClick={() => setShowRankModal(true)}>
+            How does filling out this information affect your club?
+          </a>
+          <Modal
+            show={showRankModal}
+            closeModal={() => setShowRankModal(false)}
+            marginBottom={false}
+            width="80%"
+          >
+            <ModalContent className="content mb-4">
+              <h2>How we calculate club rankings</h2>
+              <hr />
+              <h5>
+                The following positively affects your club's ranking in homepage
+                search results:
+              </h5>
+              <ul>
+                <li>
+                  Upcoming events with filled out name, description, and image
+                </li>
+                <li>Upcoming, open applications for membership</li>
+                <li>
+                  Having at least 3 active officers, plus a bonus for any
+                  additional non-officer member on the platform
+                </li>
+                <li>
+                  Having between 3 and 7 useful tags (please email <Contact />{' '}
+                  if none apply)
+                </li>
+                <li>
+                  Posting a public (non-personal) contact email and 2 or more
+                  social links
+                </li>
+                <li>
+                  Having a club logo image uploaded and subtitle filled out
+                </li>
+                <li>
+                  Filling out a club mission with images and detail (rewarded up
+                  to 1000 words)
+                </li>
+                <li>Displaying 3 or more student testimonials (experiences)</li>
+                <li>Filling out the {FIELD_PARTICIPATION_LABEL} section</li>
+                <li>
+                  Updating the club listing recently (within the last 8 months)
+                </li>
+              </ul>
+            </ModalContent>
+          </Modal>
+        </div>
+      ),
       fields: [
         {
           name: 'name',
           type: 'text',
           required: true,
           label: `${OBJECT_NAME_TITLE_SINGULAR} Name`,
+          disabled: !REAPPROVAL_QUEUE_ENABLED,
           help: isEdit ? (
             <>
               If you would like to change your {OBJECT_NAME_SINGULAR} URL in
@@ -442,10 +545,11 @@ export default function ClubEditCard({
         },
         {
           name: 'description',
+          label: 'Club Mission',
           required: true,
-          help: `Changing this field will require reapproval from the ${APPROVAL_AUTHORITY}.`,
-          placeholder: `Type your ${OBJECT_NAME_SINGULAR} description here!`,
+          placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
+          hidden: !REAPPROVAL_QUEUE_ENABLED,
         },
         {
           name: 'tags',
@@ -461,6 +565,7 @@ export default function ClubEditCard({
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
+          disabled: !REAPPROVAL_QUEUE_ENABLED,
         },
         {
           name: 'size',
@@ -790,6 +895,7 @@ export default function ClubEditCard({
 
   const creationDefaults = {
     subtitle: '',
+    email: '',
     email_public: true,
     accepting_members: false,
     size: CLUB_SIZES[0].value,
@@ -811,9 +917,57 @@ export default function ClubEditCard({
     : creationDefaults
 
   return (
-    <Formik initialValues={initialValues} onSubmit={submit} enableReinitialize>
-      {({ dirty, isSubmitting }) => (
+    <Formik
+      initialValues={initialValues}
+      onSubmit={(values, actions) =>
+        submit({ ...values, emailOverride: false }, actions)
+      }
+      enableReinitialize
+      validate={(values) => {
+        const errors: { email?: string } = {}
+        if (values.email.includes('upenn.edu') && !emailModal) {
+          showEmailModal(true)
+          errors.email = 'Please confirm your email'
+        }
+        return errors
+      }}
+      validateOnChange={false}
+      validateOnBlur={false}
+    >
+      {({ dirty, isSubmitting, setFieldValue, submitForm, values }) => (
         <Form>
+          {emailModal && (
+            <EmailModal
+              closeModal={() => showEmailModal(false)}
+              email={values.email}
+              setEmail={(newEmail) => setFieldValue('email', newEmail)}
+              confirmSubmission={() => {
+                showEmailModal(false)
+                submitForm()
+              }}
+            />
+          )}
+          {!REAPPROVAL_QUEUE_ENABLED && (
+            <LiveBanner>
+              <LiveTitle>Queue Closed for Summer Break</LiveTitle>
+              <LiveSub>
+                No edits to existing clubs or applications for new clubs will be
+                submitted for review to OSA.
+              </LiveSub>
+            </LiveBanner>
+          )}
+          {!NEW_APPROVAL_QUEUE_ENABLED &&
+            REAPPROVAL_QUEUE_ENABLED &&
+            !isEdit && (
+              <LiveBanner>
+                <LiveTitle>Queue Closed for New Clubs</LiveTitle>
+                <LiveSub>
+                  Submissions for new clubs are closed for the time being.
+                  Please reach out to the Office of Student Affairs at
+                  vpul-pennosa@pobox.upenn.edu with any questions.
+                </LiveSub>
+              </LiveBanner>
+            )}
           <FormStyle isHorizontal>
             {fields.map(({ name, description, fields, hidden }, i) => {
               if (hidden) {
@@ -871,7 +1025,11 @@ export default function ClubEditCard({
               )
             })}
             <button
-              disabled={!dirty || isSubmitting}
+              disabled={
+                !dirty ||
+                isSubmitting ||
+                (!NEW_APPROVAL_QUEUE_ENABLED && !isEdit)
+              }
               type="submit"
               className="button is-primary is-large"
             >

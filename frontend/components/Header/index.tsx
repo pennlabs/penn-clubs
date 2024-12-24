@@ -1,6 +1,10 @@
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
+
+import { LOGIN_URL } from '~/utils'
+import { logEvent } from '~/utils/analytics'
 
 import { BANNER_BG, BANNER_TEXT, BORDER } from '../../constants/colors'
 import {
@@ -31,7 +35,7 @@ import {
 import Burger from './Burger'
 import Feedback from './Feedback'
 import Heading from './Head'
-import Links from './Links'
+import Links, { MobileLoginButton } from './Links'
 
 const Nav = styled.nav`
   height: ${NAV_HEIGHT};
@@ -164,6 +168,7 @@ const isHub = SITE_ID === 'fyh'
 
 const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
   const [show, setShow] = useState(false)
+  const router = useRouter()
 
   const toggle = () => setShow(!show)
 
@@ -184,7 +189,24 @@ const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
               <Title>{SITE_NAME}</Title>
             </LogoItem>
           </Link>
-          <Burger toggle={toggle} />
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              justifyContent: 'flex-end',
+            }}
+          >
+            {authenticated === false && (
+              <MobileLoginButton
+                className="button"
+                href={`${LOGIN_URL}?next=${router.asPath}`}
+                onClick={() => logEvent('login', 'click')}
+              >
+                Login
+              </MobileLoginButton>
+            )}
+            <Burger toggle={toggle} />
+          </div>
         </div>
         <Links userInfo={userInfo} authenticated={authenticated} show={show} />
       </Nav>

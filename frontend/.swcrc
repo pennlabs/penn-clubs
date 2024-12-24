@@ -1,0 +1,9 @@
+{
+  "jsc": {
+    "experimental": {
+      "plugins": [
+        ["swc-plugin-coverage-instrument", {}]
+      ]
+    }
+  }
+}
