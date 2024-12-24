@@ -162,6 +162,7 @@ from clubs.serializers import (
     ClubApplicationSerializer,
     ClubBoothSerializer,
     ClubConstitutionSerializer,
+    ClubDiffSerializer,
     ClubFairSerializer,
     ClubListSerializer,
     ClubMembershipSerializer,
@@ -2060,6 +2061,38 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             context=context,
         )
 
+    def _get_club_diff_queryset(self):
+        """
+        Returns a queryset of clubs annotated with the latest and latest approved values
+        for specific fields (name, description, image) from their historical records.
+
+        The annotations include:
+        - `latest_<field>`: The most recent value of the field.
+        - `latest_approved_<field>`: The most recent approved value of the field.
+        """
+        latest_version_qs = Club.history.filter(code=OuterRef("code")).order_by(
+            "-history_date"
+        )
+
+        latest_approved_version_qs = Club.history.filter(
+            code=OuterRef("code"), approved=True
+        ).order_by("-history_date")
+
+        return Club.objects.annotate(
+            latest_name=Subquery(latest_version_qs.values("name")[:1]),
+            latest_description=Subquery(latest_version_qs.values("description")[:1]),
+            latest_image=Subquery(latest_version_qs.values("image")[:1]),
+            latest_approved_name=Subquery(
+                latest_approved_version_qs.values("name")[:1]
+            ),
+            latest_approved_description=Subquery(
+                latest_approved_version_qs.values("description")[:1]
+            ),
+            latest_approved_image=Subquery(
+                latest_approved_version_qs.values("image")[:1]
+            ),
+        )
+
     @action(detail=True, methods=["GET"])
     def club_detail_diff(self, request, *args, **kwargs):
         """
@@ -2118,144 +2151,77 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
 
-        latest_approved_version = (
-            club.history.filter(approved=True)
-            .only("name", "description", "image")
-            .order_by("-history_date")
-            .first()
-        )
-
-        latest_version = (
-            club.history.only("name", "description", "image")
-            .order_by("-history_date")
-            .first()
-        )
-
-        # if the current version is not approved, return a diff
-        # if the club has never be approved, for each field, it's old data is None
-        if not club.approved:
-            return Response(
-                {
-                    club.code: {
-                        field: {
-                            "old": (
-                                getattr(latest_approved_version, field)
-                                if latest_approved_version
-                                else None
-                            ),
-                            "new": getattr(latest_version, field),
-                        }
-                        for field in ["name", "description", "image"]
-                    }
-                }
-            )
-
-        # if the current version is approved, no diff is returned
-        return Response({})
+        club = self._get_club_diff_queryset().get(pk=club.pk)
+        serializer = ClubDiffSerializer(club)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["GET"])
     def club_list_diff(self, request, *args, **kwargs):
         """
         Return old and new data for clubs that are pending approval.
+
         ---
         responses:
             "200":
                 content:
                     application/json:
                         schema:
-                            type: object
-                            properties:
-                                club_code:
+                            type: array
+                            items:
+                                type: object
+                                additionalProperties:
                                     type: object
-                                    description: club code
+                                    description: Diff of the club fields.
                                     properties:
                                         name:
                                             type: object
-                                            description: Changes in the name field
+                                            description: Changes in the name field.
                                             properties:
                                                 old:
                                                     type: string
-                                                    description: >
-                                                        Old name of the club
+                                                    nullable: true
+                                                    description: Old name of the club.
                                                 new:
                                                     type: string
-                                                    description: >
-                                                        New name of the club
+                                                    nullable: true
+                                                    description: New name of the club.
                                         description:
                                             type: object
                                             description: >
-                                                Changes in the club description
+                                                Changes in the description field.
                                             properties:
                                                 old:
                                                     type: string
+                                                    nullable: true
                                                     description: >
-                                                        Old description of the club
+                                                        Old description of the club.
                                                 new:
                                                     type: string
+                                                    nullable: true
                                                     description: >
-                                                        New description of the club
+                                                        New description of the club.
                                         image:
                                             type: object
-                                            description: >
-                                                Changes in the image of the club
+                                            description: Changes in the image field.
                                             properties:
                                                 old:
                                                     type: string
+                                                    nullable: true
                                                     description: >
-                                                        Old image URL of the club
+                                                        Old image URL of the club.
                                                 new:
                                                     type: string
+                                                    nullable: true
                                                     description: >
-                                                        New image URL of the club
+                                                        New image URL of the club.
         ---
         """
-        pending_clubs = Club.objects.filter(approved=None, active=True).only(
-            "code", "name", "description", "image"
+
+        pending_clubs = self._get_club_diff_queryset().filter(
+            approved=None, active=True
         )
-
-        # write subqueries
-        latest_versions_subquery = (
-            Club.history.filter(code=OuterRef("code"))
-            .order_by("-history_date")
-            .values("code")[:1]
-        )
-        latest_approved_versions_subquery = (
-            Club.history.filter(code=OuterRef("code"), approved=True)
-            .order_by("-history_date")
-            .values("code")[:1]
-        )
-
-        # get the latest versions of each club
-        latest_versions = Club.history.filter(
-            code__in=Subquery(latest_versions_subquery)
-        ).only("code", "name", "description", "image")
-
-        # get the latest approved versions of each club
-        latest_approved_versions = Club.history.filter(
-            code__in=Subquery(latest_approved_versions_subquery), approved=True
-        ).only("code", "name", "description", "image")
-
-        latest_versions_dict = {version.code: version for version in latest_versions}
-        latest_approved_versions_dict = {
-            version.code: version for version in latest_approved_versions
-        }
-
-        return Response(
-            {
-                club.code: {
-                    field: {
-                        "old": (
-                            getattr(latest_approved_versions_dict[club.code], field)
-                            if club.code in latest_approved_versions_dict
-                            else None
-                        ),
-                        "new": getattr(latest_versions_dict[club.code], field),
-                    }
-                    for field in ["name", "description", "image"]
-                }
-                for club in pending_clubs
-            }
-        )
+        serializer = ClubDiffSerializer(pending_clubs, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):

@@ -1399,7 +1399,10 @@ class ClubTestCase(TestCase):
             reverse("clubs-club-detail-diff", args=(new_club.code,))
         )
         new_data1 = json.loads(resp3.content.decode("utf-8"))
-        self.assertEquals(new_data1, {})
+        self.assertEqual(
+            new_data1["new-club"],
+            "No changes made since last approval",
+        )
 
     def test_club_list_diff(self):
         """
@@ -1449,23 +1452,24 @@ class ClubTestCase(TestCase):
         # Check that new clubs 1 and 2 have no old data
         resp = self.client.get(reverse("clubs-club-list-diff"))
         data = json.loads(resp.content.decode("utf-8"))
-
         # Check club1
-        self.assertEqual(data["club1"]["name"]["new"], "Club 1")
-        self.assertEqual(data["club1"]["name"]["old"], None)
-        self.assertEqual(data["club1"]["description"]["new"], "This is the first club.")
-        self.assertEqual(data["club1"]["description"]["old"], None)
+        self.assertEqual(data[0]["club1"]["name"]["new"], "Club 1")
+        self.assertEqual(data[0]["club1"]["name"]["old"], None)
+        self.assertEqual(
+            data[0]["club1"]["description"]["new"], "This is the first club."
+        )
+        self.assertEqual(data[0]["club1"]["description"]["old"], None)
 
         # Check club2
-        self.assertEqual(data["club2"]["name"]["new"], "Club 2")
-        self.assertEqual(data["club2"]["name"]["old"], None)
+        self.assertEqual(data[1]["club2"]["name"]["new"], "Club 2")
+        self.assertEqual(data[1]["club2"]["name"]["old"], None)
         self.assertEqual(
-            data["club2"]["description"]["new"], "This is the second club."
+            data[1]["club2"]["description"]["new"], "This is the second club."
         )
-        self.assertEqual(data["club2"]["description"]["old"], None)
+        self.assertEqual(data[1]["club2"]["description"]["old"], None)
 
         # club 3 should not be included, since currently approved
-        self.assertNotIn("club3", data)
+        self.assertNotEqual(3, len(data))
 
         # Approve club1
         club1.approved = True
@@ -1489,23 +1493,28 @@ class ClubTestCase(TestCase):
         resp2 = self.client.get(reverse("clubs-club-list-diff"))
         new_data = json.loads(resp2.content.decode("utf-8"))
 
-        # should not be equal since hasn't been approved
-        self.assertNotEqual(
-            new_data["club1"]["description"]["new"], "updated description."
+        # club 1 should have old and new data
+        self.assertEqual(
+            new_data[0]["club1"]["description"]["new"], "updated description."
+        )
+        self.assertEqual(
+            new_data[0]["club1"]["description"]["old"], "This is the first club."
         )
 
         # should has same data as before
-        self.assertEqual(data["club1"]["name"]["new"], "Club 1")
-        self.assertEqual(data["club1"]["name"]["old"], None)
-        self.assertEqual(data["club1"]["description"]["new"], "This is the first club.")
-        self.assertEqual(data["club1"]["description"]["old"], None)
+        self.assertEqual(new_data[0]["club1"]["name"]["new"], "Club 1")
+        self.assertEqual(data[0]["club1"]["name"]["old"], None)
+        self.assertEqual(
+            data[0]["club1"]["description"]["new"], "This is the first club."
+        )
+        self.assertEqual(data[0]["club1"]["description"]["old"], None)
 
         # Check that club2 remains in the pending list with no changes
-        self.assertEqual(new_data["club2"]["name"]["new"], "Club 2")
-        self.assertEqual(new_data["club2"]["name"]["old"], None)
+        self.assertEqual(new_data[1]["club2"]["name"]["new"], "Club 2")
+        self.assertEqual(new_data[1]["club2"]["name"]["old"], None)
 
         # Club3 should still not be included
-        self.assertNotIn("club3", new_data)
+        self.assertNotEqual(3, len(new_data))
 
         # Approve club1 to remove from pending list
         club1.approved = True
@@ -1514,8 +1523,8 @@ class ClubTestCase(TestCase):
         new_data2 = json.loads(resp3.content.decode("utf-8"))
 
         # Check that club1 is no longer in the pending list
-        self.assertNotIn("club1", new_data2)
-        self.assertIn("club2", new_data2)
+        self.assertEqual(1, len(new_data2))
+        self.assertIn("club2", new_data2[0])
 
     def test_club_modify_wrong_auth(self):
         """
