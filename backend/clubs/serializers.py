@@ -898,7 +898,10 @@ class ClubDiffSerializer(serializers.ModelSerializer):
                 is_same = False
 
         if is_same:
-            return {instance.code: "No changes made since last approval"}
+            return {
+                instance.code: "No changes that require approval made"
+                + " since last approval"
+            }
 
         return {instance.code: diff}
 
@@ -1094,10 +1097,6 @@ class ClubListSerializer(serializers.ModelSerializer):
                 "Short description of the club.",
             },
         }
-
-
-class ClubHistorySerializer(serializers.ModelSerializer):
-    diff = serializers.SerializerMethodField("get_diff")
 
 
 class MembershipClubListSerializer(ClubListSerializer):

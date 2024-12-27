@@ -1515,68 +1515,113 @@ class ClubTestCase(TestCase):
         # New club should not have any old data
         resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
         data = json.loads(resp.content.decode("utf-8"))
+
         self.assertEqual(data["new-club"]["name"]["new"], "New Club")
         self.assertEqual(data["new-club"]["name"]["old"], None)
+
+        self.assertEqual(
+            data["new-club"]["description"]["new"], "We're the spirits of open source."
+        )
+        self.assertEqual(data["new-club"]["description"]["old"], None)
+
+        self.assertEqual(data["new-club"]["image"]["new"], "")
+        self.assertEqual(data["new-club"]["image"]["old"], None)
 
         # approve club
         new_club.approved = True
         new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
         self.assertTrue(new_club.approved)
 
-        # make multiple changes to club
-        resp1 = self.client.patch(
-            reverse("clubs-detail", args=(new_club.code,)),
-            {"description": "We are open source, expect us."},
-            content_type="application/json",
-        )
-        # Ensure change successful
-        self.assertIn(resp1.status_code, [200, 201], resp1.content)
-
-        resp1 = self.client.patch(
+        # trigger reapproval by changing name
+        resp = self.client.patch(
             reverse("clubs-detail", args=(new_club.code,)),
             {"name": "New Club 2"},
             content_type="application/json",
         )
-        # Ensure change successful
-        self.assertIn(resp1.status_code, [200, 201], resp1.content)
 
-        resp1 = self.client.patch(
+        # Ensure change successful
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        new_club.refresh_from_db()
+        self.assertFalse(new_club.approved)
+        self.assertEqual(data["new-club"]["name"]["new"], "New Club 2")
+
+        # approve club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        # changing description should not trigger reapproval.
+        # Might later be changed back to trigger reapproval
+        resp = self.client.patch(
             reverse("clubs-detail", args=(new_club.code,)),
-            {"description": "Expect us. Expect us."},
+            {"description": "We are open source, expect us."},
             content_type="application/json",
         )
+
         # Ensure change successful
-        self.assertIn(resp1.status_code, [200, 201], resp1.content)
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(
+            data["new-club"],
+            "No changes that require approval made since last approval",
+        )
+
+        # change club name twice before approval
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 3"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 4"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # Ensure club is marked as not approved
         new_club.refresh_from_db()
         self.assertFalse(new_club.approved)
 
-        # Should now have old and new data
-        resp2 = self.client.get(
-            reverse("clubs-club-detail-diff", args=(new_club.code,))
-        )
-        new_data = json.loads(resp2.content.decode("utf-8"))
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        # should have latest unapproved name
         self.assertEqual(
-            new_data["new-club"]["description"]["new"],
-            "Expect us. Expect us.",
+            data["new-club"]["name"]["new"],
+            "New Club 4",
         )
+        # should have latest approved name
         self.assertEqual(
-            new_data["new-club"]["description"]["old"],
-            "We're the spirits of open source.",
-        )
-        self.assertEqual(
-            new_data["new-club"]["name"]["new"],
+            data["new-club"]["name"]["old"],
             "New Club 2",
         )
+        # should have latest description, since description doesn't require reapproval
         self.assertEqual(
-            new_data["new-club"]["name"]["old"],
-            "New Club",
+            data["new-club"]["description"]["new"],
+            "We are open source, expect us.",
+        )
+        # should have latest description
+        self.assertEqual(
+            data["new-club"]["description"]["old"],
+            "We are open source, expect us.",
         )
 
-        # attempt to get of approved club
+        # attempt to get diff of approved club
         new_club.approved = True
         new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
         self.assertTrue(new_club.approved)
         resp3 = self.client.get(
             reverse("clubs-club-detail-diff", args=(new_club.code,))
@@ -1584,7 +1629,7 @@ class ClubTestCase(TestCase):
         new_data1 = json.loads(resp3.content.decode("utf-8"))
         self.assertEqual(
             new_data1["new-club"],
-            "No changes made since last approval",
+            "No changes that require approval made since last approval",
         )
 
     def test_club_list_diff(self):
@@ -1624,7 +1669,7 @@ class ClubTestCase(TestCase):
             person=self.user1, club=club1, role=Membership.ROLE_OFFICER
         )
 
-        # Add officer to club 1
+        # Add officer to club 2
         Membership.objects.create(
             person=self.user1, club=club2, role=Membership.ROLE_OFFICER
         )
@@ -1638,76 +1683,65 @@ class ClubTestCase(TestCase):
         # Check club1
         self.assertEqual(data[0]["club1"]["name"]["new"], "Club 1")
         self.assertEqual(data[0]["club1"]["name"]["old"], None)
+
         self.assertEqual(
             data[0]["club1"]["description"]["new"], "This is the first club."
         )
         self.assertEqual(data[0]["club1"]["description"]["old"], None)
 
+        self.assertEqual(data[0]["club1"]["image"]["new"], "")
+        self.assertEqual(data[0]["club1"]["image"]["old"], None)
+
         # Check club2
         self.assertEqual(data[1]["club2"]["name"]["new"], "Club 2")
         self.assertEqual(data[1]["club2"]["name"]["old"], None)
+
         self.assertEqual(
             data[1]["club2"]["description"]["new"], "This is the second club."
         )
         self.assertEqual(data[1]["club2"]["description"]["old"], None)
 
+        self.assertEqual(data[1]["club2"]["image"]["new"], "")
+        self.assertEqual(data[1]["club2"]["image"]["old"], None)
+
         # club 3 should not be included, since currently approved
-        self.assertNotEqual(3, len(data))
+        self.assertEqual(2, len(data))
 
         # Approve club1
         club1.approved = True
         club1.save(update_fields=["approved"])
+        club1.refresh_from_db()
         self.assertTrue(club1.approved)
 
         # Make changes to club1
-        resp1 = self.client.patch(
+        resp = self.client.patch(
             reverse("clubs-detail", args=(club1.code,)),
             {"description": "updated description."},
             content_type="application/json",
         )
         # Ensure change successful
-        self.assertIn(resp1.status_code, [200, 201], resp1.content)
+        self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        # Club1 should now require reapproval and diff should have old and new data
+        # Club1 shouldn't require reapproval
+        # Description changes don't require reapproval
         club1.refresh_from_db()
-        self.assertFalse(club1.approved)
+        self.assertTrue(club1.approved)
 
-        # Check diff again
-        resp2 = self.client.get(reverse("clubs-club-list-diff"))
-        new_data = json.loads(resp2.content.decode("utf-8"))
-
-        # club 1 should have old and new data
-        self.assertEqual(
-            new_data[0]["club1"]["description"]["new"], "updated description."
-        )
-        self.assertEqual(
-            new_data[0]["club1"]["description"]["old"], "This is the first club."
-        )
-
-        # should has same data as before
-        self.assertEqual(new_data[0]["club1"]["name"]["new"], "Club 1")
-        self.assertEqual(data[0]["club1"]["name"]["old"], None)
-        self.assertEqual(
-            data[0]["club1"]["description"]["new"], "This is the first club."
-        )
-        self.assertEqual(data[0]["club1"]["description"]["old"], None)
-
-        # Check that club2 remains in the pending list with no changes
-        self.assertEqual(new_data[1]["club2"]["name"]["new"], "Club 2")
-        self.assertEqual(new_data[1]["club2"]["name"]["old"], None)
-
-        # Club3 should still not be included
-        self.assertNotEqual(3, len(new_data))
-
-        # Approve club1 to remove from pending list
-        club1.approved = True
-        club1.save(update_fields=["approved"])
-        resp3 = self.client.get(reverse("clubs-club-list-diff"))
-        new_data2 = json.loads(resp3.content.decode("utf-8"))
+        # get list diff
+        resp = self.client.get(reverse("clubs-club-list-diff"))
+        data = json.loads(resp.content.decode("utf-8"))
 
         # Check that club1 is no longer in the pending list
-        self.assertEqual(1, len(new_data2))
-        self.assertIn("club2", new_data2[0])
+        self.assertEqual(1, len(data))
+        self.assertIn("club2", data[0])
+
+        # Check diff again
+        resp = self.client.get(reverse("clubs-club-list-diff"))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        # Check that club2 remains in the pending list with no changes
+        self.assertEqual(data[0]["club2"]["name"]["new"], "Club 2")
+        self.assertEqual(data[0]["club2"]["name"]["old"], None)
 
     def test_club_modify_wrong_auth(self):
         """
