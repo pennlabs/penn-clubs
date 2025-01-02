@@ -20,6 +20,7 @@ from clubs.models import (
     Event,
     Membership,
     Ticket,
+    TicketSettings,
     TicketTransactionRecord,
     TicketTransferRecord,
 )
@@ -57,6 +58,11 @@ def commonSetUp(self):
         name="Test Event",
         start_time=timezone.now() + timezone.timedelta(days=2),
         end_time=timezone.now() + timezone.timedelta(days=3),
+    )
+
+    self.ticket_settings = TicketSettings.objects.create(
+        event=self.event1,
+        order_limit=10,
     )
 
     self.ticket_totals = [
@@ -212,14 +218,14 @@ class TicketEventTestCase(TestCase):
             format="json",
         )
 
-        self.event1.refresh_from_db()
+        self.ticket_settings.refresh_from_db()
 
         # Drop time should be set
-        self.assertIsNotNone(self.event1.ticket_drop_time)
+        self.assertIsNotNone(self.ticket_settings.drop_time)
 
         # Drop time should be 12 hours from initial ticket creation
         expected_drop_time = timezone.now() + timezone.timedelta(hours=12)
-        diff = abs(self.event1.ticket_drop_time - expected_drop_time)
+        diff = abs(self.ticket_settings.drop_time - expected_drop_time)
         self.assertTrue(diff < timezone.timedelta(minutes=5))
 
         # Move Django's internal clock 13 hours forward
@@ -469,8 +475,8 @@ class TicketEventTestCase(TestCase):
         )
 
     def test_get_tickets_before_drop_time(self):
-        self.event1.ticket_drop_time = timezone.now() + timedelta(days=1)
-        self.event1.save()
+        self.ticket_settings.drop_time = timezone.now() + timedelta(days=1)
+        self.ticket_settings.save()
 
         self.client.login(username=self.user1.username, password="test")
         resp = self.client.get(
@@ -626,8 +632,8 @@ class TicketEventTestCase(TestCase):
         self.client.login(username=self.user1.username, password="test")
 
         # Set drop time
-        self.event1.ticket_drop_time = timezone.now() + timedelta(hours=12)
-        self.event1.save()
+        self.ticket_settings.drop_time = timezone.now() + timedelta(hours=12)
+        self.ticket_settings.save()
 
         tickets_to_add = {
             "quantities": [
