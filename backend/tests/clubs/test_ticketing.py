@@ -283,6 +283,35 @@ class TicketEventTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
+    def test_create_tickets_with_settings(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        drop_time = timezone.now() + timedelta(days=1)
+        args = {
+            "quantities": [
+                {"type": "_normal", "count": 5, "price": 10},
+                {"type": "_premium", "count": 3, "price": 20},
+            ],
+            "order_limit": 2,
+            "drop_time": drop_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "fee_charged_to_buyer": True,
+        }
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.event1.refresh_from_db()
+        self.assertEqual(self.event1.ticket_settings.order_limit, 2)
+        self.assertAlmostEqual(
+            self.event1.ticket_settings.drop_time.timestamp(),
+            drop_time.timestamp(),
+            delta=1.0,  # allow 1 second difference to avoid flaky tests
+        )
+        self.assertTrue(self.event1.ticket_settings.fee_charged_to_buyer)
+
     def test_issue_tickets(self):
         self.client.login(username=self.user1.username, password="test")
         args = {
