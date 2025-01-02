@@ -1660,6 +1660,26 @@ class TicketTestCase(TestCase):
         self.assertEqual(resp.status_code, 404, resp.content)
         self.assertFalse(ticket.attended)
 
+    def test_update_no_valid_parameters(self):
+        self.client.login(username=self.user1.username, password="test")
+        Membership.objects.create(
+            person=self.user1,
+            club=self.club1,
+            title="Officer",
+            role=Membership.ROLE_OFFICER,
+        )
+        ticket = self.tickets1[0]
+        ticket.save()
+
+        resp = self.client.patch(
+            reverse("tickets-detail", args=(ticket.id,)),
+            format="json",
+        )
+        ticket.refresh_from_db()
+        self.assertEqual(resp.status_code, 400, resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEquals(data["detail"], "No valid update parameters provided.")
+
     def test_create_ticket_with_description(self):
         self.client.login(username=self.user1.username, password="test")
         qts = {

@@ -5245,12 +5245,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         description = request.data.get("description")
 
         # attendance update
-        if attended is not None:
-            if not isinstance(attended, bool):
-                return Response(
-                    {"detail": "Missing boolean attribute 'attended'."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if isinstance(attended, bool):
             ticket.attended = attended
             ticket.save()
             return Response(TicketSerializer(ticket).data)
