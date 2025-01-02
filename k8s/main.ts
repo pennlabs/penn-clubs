@@ -116,6 +116,13 @@ export class MyChart extends PennLabsChart {
       secret: clubsSecret,
       cmd: ["python", "manage.py", "graduate_users"],
     });
+
+    new CronJob(this, 'update-club-favorite-membership-counts', {
+      schedule: cronTime.everyDayAt(12),
+      image: backendImage,
+      secret: fyhSecret,
+      cmd: ["python", "manage.py", "update_club_counts"],
+    });
   }
 }
 
