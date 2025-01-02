@@ -1660,6 +1660,100 @@ class TicketTestCase(TestCase):
         self.assertEqual(resp.status_code, 404, resp.content)
         self.assertFalse(ticket.attended)
 
+    def test_create_ticket_with_description(self):
+        self.client.login(username=self.user1.username, password="test")
+        qts = {
+            "quantities": [
+                {
+                    "type": "_normal",
+                    "count": 20,
+                    "price": 10,
+                    "description": "This is a normal ticket.",
+                },
+                {
+                    "type": "_premium",
+                    "count": 10,
+                    "price": 20,
+                    "description": "This is a premium ticket.",
+                },
+            ]
+        }
+
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            qts,
+            format="json",
+        )
+
+        normal_tickets = Ticket.objects.filter(event=self.event1, type="_normal")
+        premium_tickets = Ticket.objects.filter(event=self.event1, type="_premium")
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(normal_tickets.first().description, "This is a normal ticket.")
+        self.assertEqual(
+            premium_tickets.first().description, "This is a premium ticket."
+        )
+
+    def test_update_ticket_description(self):
+        self.client.login(username=self.user1.username, password="test")
+        Membership.objects.create(
+            person=self.user1,
+            club=self.club1,
+            title="Officer",
+            role=Membership.ROLE_OFFICER,
+        )
+        ticket = self.tickets1[0]
+        ticket.save()
+
+        resp = self.client.patch(
+            reverse("tickets-detail", args=(ticket.id,)),
+            {"description": "This is a test description."},
+            format="json",
+        )
+
+        ticket.refresh_from_db()
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(ticket.description, "This is a test description.")
+
+    def test_update_description_sold_ticket(self):
+        self.client.login(username=self.user1.username, password="test")
+        Membership.objects.create(
+            person=self.user1,
+            club=self.club1,
+            title="Officer",
+            role=Membership.ROLE_OFFICER,
+        )
+        ticket = self.tickets1[0]
+        # ticket was sold to user2
+        ticket.owner = self.user2
+        ticket.save()
+
+        resp = self.client.patch(
+            reverse("tickets-detail", args=(ticket.id,)),
+            {"description": "This is a test description."},
+            format="json",
+        )
+
+        ticket.refresh_from_db()
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIsNone(ticket.description)
+
+    def test_update_ticket_description_non_officer(self):
+        # user1 is no longer an officer for the ticket's club
+        self.client.login(username=self.user1.username, password="test")
+        ticket = self.tickets1[0]
+        ticket.owner = self.user1
+        ticket.save()
+
+        resp = self.client.patch(
+            reverse("tickets-detail", args=(ticket.id,)),
+            {"description": "This is a test description."},
+            format="json",
+        )
+        ticket.refresh_from_db()
+        self.assertEqual(resp.status_code, 404, resp.content)
+        self.assertFalse(ticket.attended)
+
 
 class TicketModelTestCase(TestCase):
     """
