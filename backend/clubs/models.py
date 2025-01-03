@@ -1835,6 +1835,7 @@ class TicketSettings(models.Model):
     order_limit = models.IntegerField(null=True, blank=True)
     drop_time = models.DateTimeField(null=True, blank=True)
     fee_charged_to_buyer = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Ticket settings for {self.event.name}"
