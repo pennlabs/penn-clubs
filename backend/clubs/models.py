@@ -1862,6 +1862,9 @@ class TicketClass(models.Model):
             return True
         return False
 
+    class Meta:
+        unique_together = (("event", "name"),)
+
 
 class CartItem(models.Model):
     """

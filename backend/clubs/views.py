@@ -93,6 +93,7 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    CartItem,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -117,6 +118,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Ticket,
+    TicketClass,
     TicketTransactionRecord,
     TicketTransferRecord,
     Year,
@@ -2398,6 +2400,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     add_to_cart:
     Add a ticket for this event to cart
 
+    cart:
+    List all ticket items currently in a user's cart for the event
+
+    initiate_checkout:
+    Start the checkout process by creating a capture context
+
+    complete_checkout:
+    Complete the checkout process after we have obtained an auth on a user's card
+    and checked that there is sufficient inventory
     """
 
     permission_classes = [EventPermission | IsSuperuser]
@@ -2418,39 +2429,153 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return EventWriteSerializer
         return EventSerializer
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["get"])
     @transaction.atomic
-    @update_holds
-    def add_to_cart(self, request, *args, **kwargs):
+    def cart(self, request, *args, **kwargs):
         """
-        Add a certain number of tickets to the cart
+        Get the current cart for this event and validate quantities.
         ---
         requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            quantities:
-                                type: array
-                                items:
-                                    type: object
-                                    properties:
-                                        type:
-                                            type: string
-                                        count:
-                                            type: integer
+            content: {}
         responses:
             "200":
                 content:
                     application/json:
                         schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-                                success:
-                                    type: boolean
+                            type: object
+                            properties:
+                                items:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            ticket_class:
+                                                type: object
+                                                properties:
+                                                    id:
+                                                        type: integer
+                                                    name:
+                                                        type: string
+                                                    price:
+                                                        type: number
+                                                    remaining:
+                                                        type: integer
+                                                    group_discount:
+                                                        type: number
+                                                    group_size:
+                                                        type: integer
+                                            quantity:
+                                                type: integer
+                                            total_price:
+                                                type: number
+                                sold_out:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            ticket_class:
+                                                type: object
+                                                properties:
+                                                    id:
+                                                        type: integer
+                                                    name:
+                                                        type: string
+                                    quantity:
+                                        type: integer
+                                total:
+                                    type: number
+        ---
+        """
+        event = self.get_object()
+
+        cart, _ = Cart.objects.get_or_create(
+            event=event,
+            session_key=request.session.session_key,
+            defaults={"owner": request.user if request.user.is_authenticated else None},
+        )
+
+        items = []
+        sold_out = []
+
+        for item in cart.items.select_related("ticket_class").all():
+            ticket_class = item.ticket_class
+
+            # Check if current quantity exceeds available tickets
+            if item.quantity > ticket_class.remaining:
+                sold_out.append(
+                    {
+                        "ticket_class": {
+                            "id": ticket_class.id,
+                            "name": ticket_class.name,
+                        },
+                        "quantity": item.quantity - ticket_class.remaining,
+                    }
+                )
+                # Update cart item quantity if some tickets are still available
+                if ticket_class.remaining > 0:
+                    item.quantity = ticket_class.remaining
+                    item.save()
+                else:
+                    item.delete()
+                    continue
+
+            items.append(
+                {
+                    "ticket_class": {
+                        "id": ticket_class.id,
+                        "name": ticket_class.name,
+                        "price": float(ticket_class.price),
+                        "remaining": ticket_class.remaining,
+                        "group_discount": float(ticket_class.group_discount)
+                        if ticket_class.group_discount
+                        else 0,
+                        "group_size": ticket_class.group_size,
+                    },
+                    "quantity": item.quantity,
+                    "total_price": float(item.total_price()),
+                }
+            )
+
+        return Response(
+            {
+                "items": items,
+                "sold_out": sold_out,
+                "total": float(sum(item["total_price"] for item in items)),
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def add_to_cart(self, request, *args, **kwargs):
+        """
+            Add tickets to cart
+            ---
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                quantities:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            ticket_class_id:
+                                                type: integer
+                                            quantity:
+                                                type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                               type: object
+                               properties:
+                                    detail:
+                                        type: string
+                                    success:
+                                        type: boolean
             "403":
                 content:
                     application/json:
@@ -2464,31 +2589,35 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
-        cart, _ = Cart.objects.get_or_create(owner=self.request.user)
+        cart, _ = Cart.objects.get_or_create(
+            event=event,
+            session_key=request.session.session_key,
+            defaults={"owner": request.user if request.user.is_authenticated else None},
+        )
 
         # Check if the event has already ended
         if event.end_time < timezone.now():
             return Response(
                 {"detail": "This event has already ended", "success": False},
-                status=status.HTTP_403_FORBIDDEN,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Cannot add tickets that haven't dropped yet
         if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
             return Response(
                 {"detail": "Ticket drop time has not yet elapsed", "success": False},
-                status=status.HTTP_403_FORBIDDEN,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         quantities = request.data.get("quantities")
         if not quantities:
             return Response(
-                {"detail": "Quantities must be specified", "success": False},
+                {"detail": "No quantities specified", "success": False},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        num_requested = sum(item["count"] for item in quantities)
-        num_carted = cart.tickets.filter(event=event).count()
+        num_requested = sum(item["quantity"] for item in quantities)
+        num_carted = sum(item.quantity for item in cart.items.all())
 
         if num_requested + num_carted > event.ticket_order_limit:
             return Response(
@@ -2497,28 +2626,23 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     f"{event.ticket_order_limit}.",
                     "success": False,
                 },
-                status=status.HTTP_403_FORBIDDEN,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Attempt to add items to cart
         for item in quantities:
-            type = item["type"]
-            count = item["count"]
-
-            # Count unowned/unheld tickets of requested type
-            # We don't need a lock since we aren't changing the holder or owner
-            tickets = (
-                Ticket.objects.filter(
-                    event=event,
-                    type=type,
-                    owner__isnull=True,
-                    holder__isnull=True,
-                    buyable=True,
-                )
-                .prefetch_related("carts")
-                .exclude(carts__owner=self.request.user)
+            ticket_class = get_object_or_404(
+                TicketClass, id=item["ticket_class_id"], event=event, buyable=True
             )
+            quantity = item["quantity"]
 
-            if tickets.count() < count:
+            if quantity <= 0:
+                return Response(
+                    {"detail": "Quantity must be positive", "success": False},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if ticket_class.remaining < quantity:
                 return Response(
                     {
                         "detail": f"Not enough tickets of type {type} left!",
@@ -2526,19 +2650,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     },
                     status=status.HTTP_403_FORBIDDEN,
                 )
-            cart.tickets.add(*tickets[:count])
 
-        cart.save()
-        return Response(
-            {"detail": f"Successfully added {count} to cart", "success": True}
-        )
+            # Add or update cart item
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                ticket_class=ticket_class,
+                defaults={"quantity": quantity},
+            )
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save()
+
+        return Response({"detail": "Successfully added to cart", "success": True})
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
-    @update_holds
     def remove_from_cart(self, request, *args, **kwargs):
         """
-        Remove a certain type/number of tickets from the cart
+        Remove tickets from cart
         ---
         requestBody:
             content:
@@ -2551,9 +2680,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 items:
                                     type: object
                                     properties:
-                                        type:
-                                            type: string
-                                        count:
+                                        ticket_class_id:
+                                            type: integer
+                                        quantity:
                                             type: integer
         responses:
             "200":
@@ -2573,7 +2702,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if not quantities:
             return Response(
                 {
-                    "detail": "Quantities must be specified",
+                    "detail": "No quantities specified",
                     "success": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -2586,21 +2715,35 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        cart = get_object_or_404(Cart, owner=self.request.user)
+
+        cart = get_object_or_404(
+            Cart,
+            event=event,
+            session_key=request.session.session_key,
+            owner=request.user if request.user.is_authenticated else None,
+        )
 
         for item in quantities:
-            type = item["type"]
-            count = item["count"]
-            tickets_to_remove = cart.tickets.filter(type=type, event=event)
+            ticket_class = get_object_or_404(
+                TicketClass, id=item["ticket_class_id"], event=event
+            )
+            quantity = item["quantity"]
 
-            # Ensure we don't try to remove more tickets than we can
-            count = min(count, tickets_to_remove.count())
-            cart.tickets.remove(*tickets_to_remove[:count])
+            if quantity <= 0:
+                return Response(
+                    {"detail": "Quantity must be positive", "success": False},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        cart.save()
-        return Response(
-            {"detail": f"Successfully removed {count} from cart", "success": True}
-        )
+            cart_item = cart.items.filter(ticket_class=ticket_class).first()
+            if cart_item:
+                if cart_item.quantity <= quantity:
+                    cart_item.delete()
+                else:
+                    cart_item.quantity -= quantity
+                    cart_item.save()
+
+        return Response({"detail": "Successfully removed from cart", "success": True})
 
     @action(detail=True, methods=["get"])
     def buyers(self, request, *args, **kwargs):
@@ -5159,15 +5302,6 @@ class TicketViewSet(viewsets.ModelViewSet):
     partial_update:
     Update attendance for a ticket
 
-    cart:
-    List all unowned/unheld tickets currently in a user's cart
-
-    initiate_checkout:
-    Initiate a hold on the tickets in a user's cart and create a capture context
-
-    complete_checkout:
-    Complete the checkout process after we have obtained an auth on a user's card
-
     qr:
     Get a ticket's QR code
 
@@ -5179,30 +5313,6 @@ class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     http_method_names = ["get", "post", "patch"]
     lookup_field = "id"
-
-    @staticmethod
-    def _calculate_cart_total(cart) -> float:
-        """
-        Calculate the total price of all tickets in a cart, applying discounts
-        where appropriate. Does not validate that the cart is valid.
-
-        :param cart: Cart object
-        :return: Total price of all tickets in the cart
-        """
-        ticket_type_counts = {
-            item["type"]: item["count"]
-            for item in cart.tickets.values("type").annotate(count=Count("type"))
-        }
-        cart_total = sum(
-            (
-                ticket.price * (1 - ticket.group_discount)
-                if ticket.group_size
-                and ticket_type_counts[ticket.type] >= ticket.group_size
-                else ticket.price
-            )
-            for ticket in cart.tickets.all()
-        )
-        return cart_total
 
     def partial_update(self, request, *args, **kwargs):
         """
@@ -5242,125 +5352,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.attended = attended
         ticket.save()
         return Response(TicketSerializer(ticket).data)
-
-    @transaction.atomic
-    @update_holds
-    @action(detail=False, methods=["get"])
-    def cart(self, request, *args, **kwargs):
-        """
-        Validate tickets in a cart and return them. Replace in-cart tickets that
-        have been bought/held by someone else.
-        ---
-        requestBody:
-            content: {}
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                tickets:
-                                    allOf:
-                                        - $ref: "#/components/schemas/Ticket"
-                                sold_out:
-                                    type: array
-                                    items:
-                                        type: object
-                                        properties:
-                                            event:
-                                                type: object
-                                                properties:
-                                                    id:
-                                                        type: integer
-                                                    name:
-                                                        type: string
-                                            type:
-                                                type: string
-                                            count:
-                                                type: integer
-        ---
-        """
-
-        cart, _ = Cart.objects.prefetch_related("tickets").get_or_create(
-            owner=self.request.user
-        )
-
-        now = timezone.now()
-
-        tickets_to_replace = cart.tickets.filter(
-            Q(owner__isnull=False)
-            | Q(holder__isnull=False)
-            | Q(event__end_time__lt=now)
-        ).exclude(holder=self.request.user)
-
-        # In most cases, we won't need to replace, so exit early
-        if not tickets_to_replace.exists():
-            return Response(
-                {
-                    "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
-                    "sold_out": [],
-                },
-            )
-
-        # Attempt to replace all tickets that have gone stale or are for elapsed events
-        replacement_tickets, sold_out_tickets = [], []
-
-        tickets_in_cart = cart.tickets.values_list("id", flat=True)
-        tickets_to_replace = tickets_to_replace.select_related("event")
-
-        for ticket_class in tickets_to_replace.values(
-            "type", "event", "event__name", "event__end_time"
-        ).annotate(count=Count("id")):
-            # we don't need to lock, since we aren't updating holder/owner
-            if ticket_class["event__end_time"] < now:
-                # Event has elapsed, mark all tickets as sold out
-                sold_out_tickets.append(
-                    {
-                        "type": ticket_class["type"],
-                        "event": {
-                            "id": ticket_class["event"],
-                            "name": ticket_class["event__name"],
-                        },
-                        "count": ticket_class["count"],
-                    }
-                )
-                continue
-
-            available_tickets = Ticket.objects.filter(
-                event=ticket_class["event"],
-                type=ticket_class["type"],
-                buyable=True,  # should not be triggered as buyable is by ticket class
-                owner__isnull=True,
-                holder__isnull=True,
-            ).exclude(id__in=tickets_in_cart)[: ticket_class["count"]]
-
-            num_short = ticket_class["count"] - available_tickets.count()
-            if num_short > 0:
-                sold_out_tickets.append(
-                    {
-                        "type": ticket_class["type"],
-                        "event": {
-                            "id": ticket_class["event"],
-                            "name": ticket_class["event__name"],
-                        },
-                        "count": num_short,
-                    }
-                )
-
-            replacement_tickets.extend(list(available_tickets))
-
-        cart.tickets.remove(*tickets_to_replace)
-        if replacement_tickets:
-            cart.tickets.add(*replacement_tickets)
-        cart.save()
-
-        return Response(
-            {
-                "tickets": TicketSerializer(cart.tickets.all(), many=True).data,
-                "sold_out": sold_out_tickets,
-            },
-        )
 
     @action(detail=False, methods=["post"])
     @update_holds
