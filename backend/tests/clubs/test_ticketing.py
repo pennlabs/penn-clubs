@@ -615,9 +615,6 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(cart.tickets.filter(type="premium").count(), 2, cart.tickets)
 
     def test_add_to_cart_order_limit_exceeded(self):
-        self.ticket_settings.order_limit = 10
-        self.ticket_settings.save()
-
         self.client.login(username=self.user1.username, password="test")
 
         tickets_to_add = {
