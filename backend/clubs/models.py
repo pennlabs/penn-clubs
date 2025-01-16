@@ -1832,9 +1832,10 @@ class TicketSettings(models.Model):
     event = models.OneToOneField(
         Event, on_delete=models.CASCADE, related_name="ticket_settings"
     )
-    order_limit = models.IntegerField(null=True, blank=True, default=10)
+    order_limit = models.IntegerField(default=10, null=True, blank=True)
     drop_time = models.DateTimeField(null=True, blank=True)
     fee_charged_to_buyer = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Ticket settings for {self.event.name}"

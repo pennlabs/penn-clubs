@@ -2393,6 +2393,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     buyers:
     Get information about the buyers of an event's ticket
 
+    toggle_sales:
+    Toggle whether ticket sales are active
+
     remove_from_cart:
     Remove a ticket for this event from cart
 
@@ -2492,12 +2495,26 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        # Can't add tickets if ticket sales are not active
+        if not event.ticket_settings.active:
+            return Response(
+                {"detail": "Ticket sales are not active", "success": False},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         quantities = request.data.get("quantities")
         if not quantities:
             return Response(
                 {"detail": "Quantities must be specified", "success": False},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        for item in quantities:
+            if item.get("count", 0) <= 0:
+                return Response(
+                    {"detail": "Ticket quantities must be positive", "success": False},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         num_requested = sum(item["count"] for item in quantities)
         num_carted = cart.tickets.filter(event=event).count()
@@ -2696,9 +2713,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
 
-        if not event.has_tickets or (
-            event.ticket_settings.drop_time
-            and timezone.now() < event.ticket_settings.drop_time
+        if (
+            not event.has_tickets
+            or (
+                event.ticket_settings.drop_time
+                and timezone.now() < event.ticket_settings.drop_time
+            )
+            or not event.ticket_settings.active
         ):
             return Response({"totals": [], "available": []})
 
@@ -3157,6 +3178,81 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     f"Blast sent to {len(holder_emails)} ticket holders "
                     f"and {len(officer_emails)} officers"
                 )
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def toggle_sales(self, request, *args, **kwargs):
+        """
+        Toggle whether ticket sales are active for this event.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            active:
+                                type: boolean
+                                description: Whether ticket sales should be active
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+                                active:
+                                    type: boolean
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        event = self.get_object()
+
+        if not event.has_tickets:
+            return Response(
+                {"detail": "This event does not have any tickets", "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if (
+            event.ticket_settings.drop_time
+            and timezone.now() < event.ticket_settings.drop_time
+        ):
+            return Response(
+                {
+                    "detail": "Cannot toggle ticket sales before tickets have dropped",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        active = request.data.get("active", None)
+        if active is None:
+            return Response(
+                {"detail": "Active attribute must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        event.ticket_settings.active = active
+        event.ticket_settings.save()
+
+        return Response(
+            {
+                "success": True,
+                "detail": f"Ticket sales are now {'active' if active else 'inactive'}",
+                "active": active,
             }
         )
 

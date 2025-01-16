@@ -615,6 +615,9 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(cart.tickets.filter(type="premium").count(), 2, cart.tickets)
 
     def test_add_to_cart_order_limit_exceeded(self):
+        self.ticket_settings.order_limit = 10
+        self.ticket_settings.save()
+
         self.client.login(username=self.user1.username, password="test")
 
         tickets_to_add = {
@@ -782,6 +785,109 @@ class TicketEventTestCase(TestCase):
             reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
         )
         self.assertEqual(resp_bought.status_code, 400, resp_bought.content)
+
+    def test_toggle_ticket_sales(self):
+        """Test toggling ticket sales on and off"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Test activating sales
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.data["success"])
+        self.assertTrue(resp.data["active"])
+
+        # Verify ticket settings were updated
+        self.event1.refresh_from_db()
+        self.assertTrue(self.event1.ticket_settings.active)
+
+        # Test deactivating sales
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": False},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.data["success"])
+        self.assertFalse(resp.data["active"])
+
+        # Verify ticket settings were updated
+        self.event1.refresh_from_db()
+        self.assertFalse(self.event1.ticket_settings.active)
+
+    def test_toggle_ticket_sales_no_tickets(self):
+        """Test toggling ticket sales for event without tickets"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Delete all tickets
+        Ticket.objects.filter(event=self.event1).delete()
+
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.data["success"])
+        self.assertIn("does not have any tickets", resp.data["detail"])
+
+    def test_toggle_ticket_sales_before_drop(self):
+        """Test toggling ticket sales before drop time"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Set future drop time
+        self.event1.ticket_settings.drop_time = timezone.now() + timezone.timedelta(
+            days=1
+        )
+        self.event1.ticket_settings.save()
+
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.data["success"])
+
+    def test_add_to_cart_inactive_sales(self):
+        """Test adding tickets to cart when sales are inactive"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Deactivate ticket sales
+        self.event1.ticket_settings.active = False
+        self.event1.ticket_settings.save()
+
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 1},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertFalse(resp.data["success"])
+        self.assertIn("Ticket sales are not active", resp.data["detail"])
+
+    def test_get_tickets_inactive_sales(self):
+        """Test getting tickets when sales are inactive"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Deactivate ticket sales
+        self.event1.ticket_settings.active = False
+        self.event1.ticket_settings.save()
+
+        resp = self.client.get(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk))
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["totals"], [])
+        self.assertEqual(resp.data["available"], [])
 
 
 @dataclass
