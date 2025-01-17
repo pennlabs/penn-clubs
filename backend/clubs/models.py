@@ -1077,7 +1077,7 @@ class SearchQuery(models.Model):
         return "<SearchQuery: {} at {}>".format(self.query, self.created_at)
 
 
-class Request(models.Model):
+class JoinRequest(models.Model):
     """
     Abstract base class for Membership Request and Ownership Request
     """
@@ -1097,7 +1097,7 @@ class Request(models.Model):
         unique_together = (("requester", "club"),)
 
 
-class MembershipRequest(Request):
+class MembershipRequest(JoinRequest):
     """
     Used when users are not in the club but request membership from the owner
     """
@@ -1128,7 +1128,7 @@ class MembershipRequest(Request):
             )
 
 
-class OwnershipRequest(Request):
+class OwnershipRequest(JoinRequest):
     """
     Represents a user's request to take ownership of a club
     """

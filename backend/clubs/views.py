@@ -3943,7 +3943,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     accept:
     Accept an ownership request as a club owner.
 
-    old_requests:
+    all:
     Return a list of ownership requests older than a week. Used by Superusers.
     """
 
@@ -3954,7 +3954,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     lookup_field = "requester__username"
 
     def get_queryset(self):
-        if self.action != "all_requests":
+        if self.action != "all":
             return OwnershipRequest.objects.filter(
                 club__code=self.kwargs["club_code"], withdrawn=False
             )
@@ -3997,7 +3997,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
         return Response({"success": True})
 
     @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
-    def all_requests(self, request, *args, **kwargs):
+    def all(self, request, *args, **kwargs):
         """
         View unaddressed ownership requests, sorted by date.
         ---
