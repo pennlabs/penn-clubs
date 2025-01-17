@@ -115,13 +115,13 @@ const ClubPage = ({
     const newClub = { ...club }
     logEvent(!newClub.is_request ? 'request' : 'unrequest', code)
     const req = !newClub.is_request
-      ? doApiRequest('/requests/?format=json', {
+      ? doApiRequest('/requests/membership/?format=json', {
           method: 'POST',
           body: {
             club: code,
           },
         })
-      : doApiRequest(`/requests/${code}/?format=json`, {
+      : doApiRequest(`/requests/membership/${code}/?format=json`, {
           method: 'DELETE',
         })
 

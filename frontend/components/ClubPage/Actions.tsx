@@ -229,7 +229,7 @@ export const RequestMembershipButton = ({
 
                   // sanity check
                   const resp = await doApiRequest(
-                    `/requests/${club.code}/?format=json`,
+                    `/requests/membership/${club.code}/?format=json`,
                   )
 
                   if (resp.ok) {
