@@ -230,6 +230,7 @@ class EventPermission(permissions.BasePermission):
             "create_tickets",
             "issue_tickets",
             "email_blast",
+            "toggle_sales",
         ]:
             if not request.user.is_authenticated:
                 return False
