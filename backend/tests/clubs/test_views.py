@@ -3186,14 +3186,14 @@ class ClubTestCase(TestCase):
             0,
         )
 
-    def test_ownership_requests_list_all_requests(self):
+    def test_ownership_requests_list_all(self):
         """
         Test the ownership requests list all requests feature
         """
 
         self.client.login(username=self.user5.username, password="test")
         resp = self.client.get(
-            reverse("club-ownership-requests-all-requests", args=("anystring",))
+            reverse("club-ownership-requests-all", args=("anystring",))
         )
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(len(resp.json()), 0, resp.content)
@@ -3227,7 +3227,7 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user5.username, password="test")
         resp = self.client.get(
-            reverse("club-ownership-requests-all-requests", args=("anystring",))
+            reverse("club-ownership-requests-all", args=("anystring",))
         )
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(len(resp.json()), 3, resp.content)
