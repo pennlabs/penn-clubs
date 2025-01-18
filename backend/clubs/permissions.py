@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import permissions
 
-from clubs.models import Club, Membership
+from clubs.models import Club, Event, Membership
 
 
 def codes_extract_helper(obj, key):
@@ -562,3 +562,43 @@ class NotePermission(permissions.BasePermission):
             return True
         else:
             return request.user.is_authenticated
+
+
+class TicketTransactionPermission(permissions.BasePermission):
+    """
+    Superusers can see and refund all transactions. Else, event must be specified.
+    Officers and above can see and refund transactions for specified events.
+    """
+
+    def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
+
+        event_id = request.query_params.get("event_id")
+        if not event_id:
+            return False
+
+        if not request.user.is_authenticated:
+            return False
+
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+
+        try:
+            event = Event.objects.get(id=event_id)
+            membership = find_membership_helper(request.user, event.club)
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        except Event.DoesNotExist:
+            return False
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+
+        if not request.user.is_authenticated:
+            return False
+
+        membership = find_membership_helper(
+            request.user, obj.tickets.first().event.club
+        )
+        return membership is not None and membership.role <= Membership.ROLE_OFFICER
