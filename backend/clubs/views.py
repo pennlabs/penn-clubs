@@ -142,6 +142,7 @@ from clubs.permissions import (
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    TicketTransactionPermission,
     WhartonApplicationPermission,
     find_membership_helper,
 )
@@ -193,6 +194,7 @@ from clubs.serializers import (
     TagSerializer,
     TestimonialSerializer,
     TicketSerializer,
+    TicketTransactionRecordSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -5911,9 +5913,8 @@ class TicketViewSet(viewsets.ModelViewSet):
             total_amount=float(order_info["amountDetails"]["totalAmount"]),
             buyer_first_name=order_info["billTo"]["firstName"],
             buyer_last_name=order_info["billTo"]["lastName"],
-            # TODO: investigate why phone numbers don't show in test API
-            buyer_phone=order_info["billTo"].get("phoneNumber", None),
             buyer_email=order_info["billTo"]["email"],
+            buyer_phone=order_info["billTo"]["phoneNumber"],
         )
         tickets.update(owner=user, holder=None, transaction_record=transaction_record)
 
@@ -5935,6 +5936,99 @@ class TicketViewSet(viewsets.ModelViewSet):
         """
         holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
         tickets.update(holder=user, holding_expiration=holding_expiration)
+
+
+class TicketTransactionRecordViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing ticket transaction records.
+
+    list: Get transaction records for specified event. Superusers can see all records.
+    retrieve: Get details of a specific transaction record.
+    refund: Process refund of a transaction. Frees up tickets and sends emails.
+    """
+
+    queryset = TicketTransactionRecord.objects.all()
+    permission_classes = [TicketTransactionPermission | IsSuperuser]
+    serializer_class = TicketTransactionRecordSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if (
+            self.request.user.has_perm("clubs.generate_reports")
+            or self.request.user.is_superuser
+        ):
+            return queryset
+
+        event_id = self.request.query_params.get("event_id", None)
+        if not event_id:
+            return queryset.none()
+
+        return queryset.filter(tickets__event_id=event_id)
+
+    @action(detail=True, methods=["post"])
+    def refund(self, request, *args, **kwargs):
+        """
+        Process a refund for a transaction record.
+
+        Marks the transaction as refunded, makes tickets available again,
+        and sends confirmation emails to the buyer and event organizer.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+        ---
+        """
+        transaction = self.get_object()
+
+        # Check if already refunded
+        if transaction.refunded:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "This transaction has already been refunded.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # TODO: refund tickets through CyberSource API
+
+        with transaction.atomic():
+            transaction.refunded = True
+            transaction.save(update_fields=["refunded"])
+
+            # Make tickets available again
+            tickets = transaction.tickets.all()
+            tickets.update(owner=None, holder=None, transaction_record=None)
+
+            # Send confirmation emails
+            transaction.send_refund_confirmation_emails()
+
+        return Response(
+            {
+                "success": True,
+                "detail": "Successfully processed refund and notified all parties.",
+            }
+        )
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):

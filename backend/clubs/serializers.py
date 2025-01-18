@@ -57,6 +57,7 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    TicketTransactionRecord,
     Year,
 )
 from clubs.utils import clean
@@ -1795,6 +1796,32 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = ("id", "event", "type", "owner", "attended", "price")
+
+
+class TicketTransactionRecordSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ticket transaction records, including related ticket information
+    and buyer details.
+    """
+
+    tickets = TicketSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TicketTransactionRecord
+        fields = [
+            "id",
+            "reconciliation_id",
+            "total_amount",
+            "buyer_first_name",
+            "buyer_last_name",
+            "buyer_email",
+            "buyer_phone",
+            "tickets",
+            "refunded",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
 
 
 class UserUUIDSerializer(serializers.ModelSerializer):
