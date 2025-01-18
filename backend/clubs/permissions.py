@@ -571,18 +571,18 @@ class TicketTransactionPermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        if request.user.is_superuser:
-            return True
-
-        event_id = request.query_params.get("event_id")
-        if not event_id:
-            return False
-
         if not request.user.is_authenticated:
             return False
 
+        if request.user.is_superuser:
+            return True
+
         if request.user.has_perm("clubs.manage_club"):
             return True
+
+        event_id = request.query_params.get("event_id", None)
+        if not event_id:
+            return False
 
         try:
             event = Event.objects.get(id=event_id)

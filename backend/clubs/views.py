@@ -5975,6 +5975,13 @@ class TicketTransactionRecordViewSet(viewsets.ModelViewSet):
         Marks the transaction as refunded, makes tickets available again,
         and sends confirmation emails to the buyer and event organizer.
         ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties: {}
+                        required: []
         responses:
             "200":
                 content:
