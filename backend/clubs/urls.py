@@ -45,6 +45,7 @@ from clubs.views import (
     SubscribeViewSet,
     TagViewSet,
     TestimonialViewSet,
+    TicketTransactionRecordViewSet,
     TicketViewSet,
     UserGroupAPIView,
     UserPermissionAPIView,
@@ -73,6 +74,9 @@ router.register(r"searches", SearchQueryViewSet, basename="searches")
 router.register(r"memberships", MembershipViewSet, basename="members")
 router.register(r"requests", MembershipRequestViewSet, basename="requests")
 router.register(r"tickets", TicketViewSet, basename="tickets")
+router.register(
+    r"transactions", TicketTransactionRecordViewSet, basename="transactions"
+)
 
 router.register(r"schools", SchoolViewSet, basename="schools")
 router.register(r"majors", MajorViewSet, basename="majors")
