@@ -1,0 +1,26 @@
+<!-- TYPES:
+first_name:
+    type: string
+event_names:
+    type: string
+amount:
+    type: decimal
+-->
+
+{% extends 'emails/base.html' %}
+
+{% block content %}
+<h2>Ticket Refund Confirmation</h2>
+
+<p style="font-size: 1.2em">
+    {{ first_name }}, this email confirms that your tickets for <b>{{ event_names }}</b> have been refunded. The refund amount of <b>${{ amount }}</b> will be processed back to your original payment method.
+</p>
+
+<p style="font-size: 1.2em">
+    The refunded tickets are no longer valid for entry to the event(s). If you would like to attend in the future, you will need to purchase new tickets if they are still available.
+</p>
+
+<p style="font-size: 1.2em">
+    If you have any questions about this refund, feel free to respond to this email.
+</p>
+{% endblock %}

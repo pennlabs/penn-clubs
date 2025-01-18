@@ -1869,10 +1869,49 @@ class TicketTransactionRecord(models.Model):
 
     reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
     total_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    buyer_phone = PhoneNumberField(null=True, blank=True)
     buyer_first_name = models.CharField(max_length=100)
     buyer_last_name = models.CharField(max_length=100)
-    buyer_email = models.EmailField(blank=True, null=True)
+    buyer_email = models.EmailField()
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    refunded = models.BooleanField(default=False)
+
+    def send_confirmation_email(self):
+        """
+        Send confirmation emails to both the buyer and event organizers after a refund
+        """
+        if not self.refunded:
+            raise ValueError(
+                "Cannot send refund confirmation for non-refunded transaction."
+            )
+
+        tickets = self.tickets.all()
+        events = set(ticket.event for ticket in tickets)
+
+        club_emails = set()
+        for event in events:
+            if event.club.email:
+                club_emails.add(event.club.email)
+
+            officer_emails = Membership.objects.filter(
+                club=event.club, role__lte=Membership.ROLE_OFFICER
+            ).values_list("person__email", flat=True)
+            club_emails.update(officer_emails)
+
+        context = {
+            "first_name": self.buyer_first_name,
+            "event_names": ", ".join(event.name for event in events),
+            "amount": "{:.2f}".format(self.total_amount),
+        }
+
+        send_mail_helper(
+            name="ticket_refund",
+            subject="Your ticket purchase has been refunded",
+            emails=[self.buyer_email],
+            bcc=list(club_emails),
+            context=context,
+        )
 
 
 class Ticket(models.Model):
