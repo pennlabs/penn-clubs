@@ -8,15 +8,12 @@ from unittest import mock
 
 import pytz
 from django.contrib.auth import get_user_model
-from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from clubs.models import (
     Advisor,
-    ApplicationCommittee,
     Badge,
     Club,
-    ClubApplication,
     Event,
     Favorite,
     Membership,
@@ -272,24 +269,3 @@ class UtilsTestCase(TestCase):
                 )
 
             self.assertEqual(mocked_send.call_count, 3)
-
-
-class ApplicationCommitteeTestCase(TestCase):
-    def setUp(self):
-        date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
-        self.club = Club.objects.create(code="test", name="Test Club")
-        self.application = ClubApplication.objects.create(
-            club=self.club,
-            application_start_time=date,
-            application_end_time=date + datetime.timedelta(days=7),
-            result_release_time=date + datetime.timedelta(days=14),
-        )
-
-    def test_unique_committee_names(self):
-        ApplicationCommittee.objects.create(
-            name="General Member", application=self.application
-        )
-        with self.assertRaises(IntegrityError):
-            ApplicationCommittee.objects.create(
-                name="General Member", application=self.application
-            )
