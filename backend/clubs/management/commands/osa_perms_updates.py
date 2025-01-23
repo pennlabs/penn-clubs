@@ -9,7 +9,6 @@ from clubs.models import Club
 
 class Command(BaseCommand):
     help = "Give superuser to hard-coded user accounts affiliated with OSA."
-    web_execute = True
 
     def handle(self, *args, **kwargs):
         User = get_user_model()
