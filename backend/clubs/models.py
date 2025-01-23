@@ -1690,6 +1690,9 @@ class ApplicationCommittee(models.Model):
     def __str__(self):
         return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
 
+    class Meta:
+        unique_together = (("name", "application"),)
+
 
 class ApplicationQuestion(CloneModel):
     """
