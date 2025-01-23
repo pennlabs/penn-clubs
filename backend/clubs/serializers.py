@@ -2857,7 +2857,8 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         )
 
         # Committee names must be unique
-        if len(set(committees)) != len(committees):
+        normalized_committees = [name.strip().lower() for name in committees]
+        if len(set(normalized_committees)) != len(normalized_committees):
             raise serializers.ValidationError("Committee names must be unique")
 
         if prev_committee_names != committees:
