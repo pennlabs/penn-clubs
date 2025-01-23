@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = "Merges committees with duplicate names within the same application"
+    web_execute = True
 
     def add_arguments(self, parser):
         parser.add_argument(
