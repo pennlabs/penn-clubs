@@ -11,8 +11,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--dry-run",
-            "--club",
             help="Run without making any changes",
+        )
+        parser.add_argument(
+            "--club",
+            help="Only merge committees for this club",
         )
         parser.set_defaults(dry_run=False)
 
