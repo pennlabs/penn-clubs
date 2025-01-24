@@ -11,8 +11,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--dry-run",
-            dest="dry_run",
-            action="store_true",
             help="Run without making any changes",
         )
         parser.set_defaults(dry_run=False)
