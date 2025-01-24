@@ -11,23 +11,32 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--dry-run",
+            "--club",
             help="Run without making any changes",
         )
         parser.set_defaults(dry_run=False)
 
     def handle(self, *args, **kwargs):
         dry_run = kwargs["dry_run"]
+        club_id = kwargs["club"]
+
         if dry_run:
             self.stdout.write("Running in dry run mode, no changes will be made.")
 
         try:
             with transaction.atomic():
                 # Find committees that have the same name within an application
-                duplicate_committees = (
-                    ApplicationCommittee.objects.values("name", "application")
-                    .annotate(count=Count("id"))
-                    .filter(count__gt=1)
+                committees_query = ApplicationCommittee.objects.values(
+                    "name", "application"
                 )
+                if club_id:
+                    committees_query = committees_query.filter(
+                        application__club_id=club_id
+                    )
+
+                duplicate_committees = committees_query.annotate(
+                    count=Count("id")
+                ).filter(count__gt=1)
 
                 total_merged = 0
                 for duplicate in duplicate_committees:
