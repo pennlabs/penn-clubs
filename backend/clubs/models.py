@@ -1879,6 +1879,7 @@ class Ticket(models.Model):
         blank=True,
         null=True,
     )
+    description = models.TextField(null=True, blank=True)
     holding_expiration = models.DateTimeField(null=True, blank=True, db_index=True)
     carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
     price = models.DecimalField(max_digits=5, decimal_places=2)

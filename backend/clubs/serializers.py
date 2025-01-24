@@ -1794,7 +1794,7 @@ class TicketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = ("id", "event", "type", "owner", "attended", "price")
+        fields = ("id", "event", "description", "type", "owner", "attended", "price")
 
 
 class UserUUIDSerializer(serializers.ModelSerializer):
