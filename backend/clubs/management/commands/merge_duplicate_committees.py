@@ -11,17 +11,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--dry-run",
+            action="store_true",
             help="Run without making any changes",
         )
         parser.add_argument(
             "--club",
-            help="Only merge committees for this club",
+            help="Only merge committees for this club code",
         )
-        parser.set_defaults(dry_run=False)
+        parser.set_defaults(dry_run=True, club=None)
 
     def handle(self, *args, **kwargs):
         dry_run = kwargs["dry_run"]
-        club_id = kwargs["club"]
+        club_code = kwargs["club"]
 
         if dry_run:
             self.stdout.write("Running in dry run mode, no changes will be made.")
@@ -32,9 +33,9 @@ class Command(BaseCommand):
                 committees_query = ApplicationCommittee.objects.values(
                     "name", "application"
                 )
-                if club_id:
+                if club_code is not None:
                     committees_query = committees_query.filter(
-                        application__club_id=club_id
+                        application__club__code=club_code
                     )
 
                 duplicate_committees = committees_query.annotate(
@@ -63,20 +64,16 @@ class Command(BaseCommand):
                     for committee in committees[1:]:
                         try:
                             if not dry_run:
-                                # Update ApplicationSubmission foreign keys
                                 submissions_moved = (
                                     ApplicationSubmission.objects.filter(
                                         committee=committee
                                     ).update(committee=primary_committee)
                                 )
 
-                                # Move M2M relationships from ApplicationQuestion
                                 for question in committee.applicationquestion_set.all():
                                     question.committees.remove(committee)
                                     question.committees.add(primary_committee)
 
-                                # Delete the duplicate committee (ClubApplication
-                                # relation will be handled automatically by Django)
                                 committee.delete()
 
                                 self.stdout.write(
@@ -94,7 +91,7 @@ class Command(BaseCommand):
                                 )
 
                                 self.stdout.write(
-                                    f"[DRY RUN] Would move {submission_count} "
+                                    f"Would move {submission_count} "
                                     f"submissions and update {question_count} "
                                     f"questions from committee {committee.id} to "
                                     f"{primary_committee.id}"
@@ -110,7 +107,6 @@ class Command(BaseCommand):
                             raise
 
                 if dry_run:
-                    self.stdout.write("Dry run completed - rolling back")
                     return
 
                 self.stdout.write(
@@ -121,7 +117,5 @@ class Command(BaseCommand):
 
         except Exception as e:
             self.stderr.write(
-                self.style.ERROR(
-                    f"{'DRY RUN ' if dry_run else ''}Error merging committees: {str(e)}"
-                )
+                self.style.ERROR(f"{'(Dry run) ' if dry_run else ''}Error: {str(e)}")
             )
