@@ -34,7 +34,7 @@ class Command(BaseCommand):
                     normalized_name=models.functions.Lower(
                         models.functions.Trim("name")
                     )
-                ).values("name", "normalized_name", "application")
+                ).values("normalized_name", "application")
                 if club_code is not None:
                     committees_query = committees_query.filter(
                         application__club__code=club_code
@@ -46,20 +46,27 @@ class Command(BaseCommand):
 
                 total_merged = 0
                 for duplicate in duplicate_committees:
-                    name = duplicate["name"]
+                    normalized_name = duplicate["normalized_name"]
                     application_id = duplicate["application"]
 
-                    committees = ApplicationCommittee.objects.filter(
-                        name=name, application=application_id
-                    ).order_by("id")
+                    committees = (
+                        ApplicationCommittee.objects.filter(application=application_id)
+                        .annotate(
+                            normalized_name=models.functions.Lower(
+                                models.functions.Trim("name")
+                            )
+                        )
+                        .filter(normalized_name=normalized_name)
+                        .order_by("id")
+                    )
 
                     primary_committee = committees.first()
                     if not primary_committee:
                         continue
 
                     self.stdout.write(
-                        f"Processing duplicate committees with name '{name}' "
-                        f"in application {application_id}"
+                        f"Processing duplicate committees with name "
+                        f"'{normalized_name}' in application {application_id}"
                     )
 
                     # Merge all other committees into the primary one
