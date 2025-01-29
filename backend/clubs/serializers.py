@@ -2804,6 +2804,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             return image.url
 
     def validate(self, data):
+        # Validate acceptance and rejection emails
         acceptance_template = data.get("acceptance_email", "")
         rejection_template = data.get("rejection_email", "")
 
@@ -2814,68 +2815,73 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                 "Your application email templates contain invalid variables!"
             )
 
-        if all(
-            field in data
-            for field in [
-                "application_start_time",
-                "application_end_time",
-                "result_release_time",
-            ]
-        ):
-            application_start_time = data["application_start_time"]
-            application_end_time = data["application_end_time"]
-            result_release_time = data["result_release_time"]
+        # Check that application times make sense
+        application_times = [
+            "application_start_time",
+            "application_end_time",
+            "result_release_time",
+        ]
+        if all(field in data for field in application_times):
+            start = data["application_start_time"]
+            end = data["application_end_time"]
+            release = data["result_release_time"]
 
-            if application_start_time > application_end_time:
+            if start > end:
                 raise serializers.ValidationError(
-                    "Your application start time must be less than the end time!"
+                    "Your application's start time must be less than its end time!"
                 )
 
-            if application_end_time > result_release_time:
+            if end > release:
                 raise serializers.ValidationError(
-                    """Your application end time must be less than
-                    the result release time!"""
+                    "Your application's end time must be less than the result release "
+                    "time!"
                 )
 
         return data
 
+    def validate_committees(self, value):
+        """Validate committee names are unique"""
+        if not value:
+            return []
+
+        normalized_committees = [name.strip().lower() for name in value]
+        if len(set(normalized_committees)) != len(normalized_committees):
+            raise serializers.ValidationError("Committee names must be unique")
+
+        # Strip whitespace from names
+        return [name.strip() for name in value]
+
     def save(self):
         application_obj = super().save()
-        # manually create committee objects as Django does
-        # not support nested serializers out of the box
-        request = self.context["request"].data
-        # only allow modifications to committees if the application is not yet open
-        now = timezone.now()
-        prev_committees = ApplicationCommittee.objects.filter(
-            application=application_obj
-        )
-        prev_committee_names = sorted(list(map(lambda x: x.name, prev_committees)))
-        committees = sorted(
-            list(
-                map(
-                    lambda x: x["value"] if "value" in x else x["name"],
-                    request["committees"] if "committees" in request else [],
-                )
-            )
-        )
-        if prev_committee_names != committees:
-            if application_obj.application_start_time < now:
-                raise serializers.ValidationError(
-                    "You cannot edit committees once the application is open"
-                )
-            # nasty hack for idempotency
-            prev_committee_names = prev_committees.values("name")
-            for prev_committee in prev_committees:
-                if prev_committee.name not in committees:
-                    prev_committee.delete()
 
-            for name in committees:
-                if name not in prev_committee_names:
-                    ApplicationCommittee.objects.create(
-                        name=name,
-                        application=application_obj,
-                    )
-            cache.delete(f"clubapplication:{application_obj.id}")
+        if application_obj.application_start_time < timezone.now():
+            raise serializers.ValidationError(
+                "You cannot edit committees once the application is open"
+            )
+
+        existing_committees = ApplicationCommittee.objects.filter(
+            application=application_obj
+        ).values("name", flat=True)
+        existing_committees = set(existing_committees)
+
+        committees = self.validated_data.get("committees", [])
+        committees = set(committees)
+
+        if existing_committees == committees:
+            return application_obj
+
+        for committee_name in committees:
+            if committee_name in existing_committees:
+                continue
+            ApplicationCommittee.objects.create(
+                name=committee_name, application=application_obj
+            )
+
+        ApplicationCommittee.objects.filter(application=application_obj).exclude(
+            name__in=committees
+        ).delete()
+
+        cache.delete(f"clubapplication:{application_obj.id}")
 
         return application_obj
 

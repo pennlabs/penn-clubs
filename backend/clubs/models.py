@@ -1674,7 +1674,7 @@ class ApplicationCommittee(models.Model):
     may have multiple committees to which students can apply.
     """
 
-    name = models.TextField(blank=True)
+    name = models.CharField(max_length=255)
     application = models.ForeignKey(
         ClubApplication,
         related_name="committees",
@@ -1689,6 +1689,9 @@ class ApplicationCommittee(models.Model):
 
     def __str__(self):
         return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
+
+    class Meta:
+        unique_together = (("name", "application"),)
 
 
 class ApplicationQuestion(CloneModel):

@@ -19,6 +19,7 @@ from ics import Calendar
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -2936,6 +2937,54 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 403)
+
+    def test_application_duplicate_committees(self):
+        """
+        Test that duplicate committees are rejected when creating/updating applications.
+        """
+        date = datetime.datetime.now() + datetime.timedelta(days=1)
+
+        self.client.login(username=self.user5.username, password="test")
+
+        # Test creating new application with duplicates
+        response = self.client.post(
+            reverse("club-applications-list", args=(self.club1.code,)),
+            data={
+                "name": "Test Application",
+                "application_start_time": date,
+                "application_end_time": date + datetime.timedelta(days=7),
+                "result_release_time": date + datetime.timedelta(days=14),
+                "committees": [{"name": "General Member"}, {"name": "General Member"}],
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Committee names must be unique", str(response.content))
+
+        # Create valid application for patch test
+        application = ClubApplication.objects.create(
+            name="Test Application",
+            club=self.club1,
+            application_start_time=date,
+            application_end_time=date + datetime.timedelta(days=7),
+            result_release_time=date + datetime.timedelta(days=14),
+        )
+        ApplicationCommittee.objects.create(
+            name="General Member", application=application
+        )
+
+        # Try to update with duplicate committees
+        response = self.client.patch(
+            reverse("club-applications-detail", args=(self.club1.code, application.id)),
+            data={
+                "committees": [{"name": "General Member"}, {"name": "General Member"}]
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Committee names must be unique", str(response.content))
 
 
 class HealthTestCase(TestCase):
