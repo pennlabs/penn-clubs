@@ -2444,9 +2444,12 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
 
                 if data["word_limit"] + current_limit - instance_limit > 500:
                     raise serializers.ValidationError(
-                        f"The total word limit of questions in committee \
-                        ''{committee['name']} ' should not exceed 500. \
-                        Current: {current_limit}"
+                        f"The cumulative word limit of questions should not "
+                        f"exceed 500 words as required by the Wharton Council. "
+                        f"Committee '{committee['name']}' currently has a cumulative "
+                        f"word limit of {current_limit} words. Please consult the "
+                        f"Wharton Council's guide to club applications if you have any "
+                        f"questions."
                     )
         return value
 
