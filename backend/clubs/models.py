@@ -1674,7 +1674,7 @@ class ApplicationCommittee(models.Model):
     may have multiple committees to which students can apply.
     """
 
-    name = models.TextField(blank=True)
+    name = models.CharField(max_length=255)
     application = models.ForeignKey(
         ClubApplication,
         related_name="committees",
