@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.db import models, transaction
 from django.db.models import Count
 
-from clubs.models import ApplicationCommittee, ApplicationSubmission
+from clubs.models import ApplicationCommittee
 
 
 class Command(BaseCommand):
@@ -73,11 +73,11 @@ class Command(BaseCommand):
                     for committee in committees[1:]:
                         try:
                             if not dry_run:
-                                submissions_moved = (
-                                    ApplicationSubmission.objects.filter(
-                                        committee=committee
-                                    ).update(committee=primary_committee)
-                                )
+                                submissions_moved = 0
+                                for submission in committee.submissions.all():
+                                    submission.committee = primary_committee
+                                    submission.save()
+                                    submissions_moved += 1
 
                                 for question in committee.applicationquestion_set.all():
                                     question.committees.remove(committee)
@@ -92,9 +92,7 @@ class Command(BaseCommand):
                                 )
                                 total_merged += 1
                             else:
-                                submission_count = ApplicationSubmission.objects.filter(
-                                    committee=committee
-                                ).count()
+                                submission_count = committee.submissions.count()
                                 question_count = (
                                     committee.applicationquestion_set.count()
                                 )
