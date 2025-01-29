@@ -60,7 +60,7 @@ class Command(BaseCommand):
                         .order_by("id")
                     )
 
-                    primary_committee = committees.first()
+                    primary_committee = committees.last()
                     if not primary_committee:
                         continue
 
