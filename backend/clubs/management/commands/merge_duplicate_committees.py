@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Count
 
 from clubs.models import ApplicationCommittee, ApplicationSubmission
@@ -30,9 +30,11 @@ class Command(BaseCommand):
         try:
             with transaction.atomic():
                 # Find committees that have the same name within an application
-                committees_query = ApplicationCommittee.objects.values(
-                    "name", "application"
-                )
+                committees_query = ApplicationCommittee.objects.annotate(
+                    normalized_name=models.functions.Lower(
+                        models.functions.Trim("name")
+                    )
+                ).values("name", "normalized_name", "application")
                 if club_code is not None:
                     committees_query = committees_query.filter(
                         application__club__code=club_code
