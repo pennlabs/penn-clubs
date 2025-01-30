@@ -6980,10 +6980,10 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         )
         df = pd.DataFrame(ApplicationSubmissionCSVSerializer(data, many=True).data)
         resp = HttpResponse(
-            content_type="text/csv",
+            content_type="text/csv; charset=utf-8-sig",  # support special chars
             headers={"Content-Disposition": "attachment;filename=submissions.csv"},
         )
-        df.to_csv(index=True, path_or_buf=resp)
+        df.to_csv(index=True, path_or_buf=resp, encoding="utf-8-sig")
         return resp
 
     @action(detail=False, methods=["get"])
