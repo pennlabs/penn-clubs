@@ -6935,7 +6935,6 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
-    @method_decorator(cache_page(60 * 60 * 2))
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
         """
