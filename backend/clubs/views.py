@@ -6540,6 +6540,11 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         end = cycle.end_date
         release = cycle.release_date
 
+        # Remove cycle for club applications from non-included clubs
+        ClubApplication.objects.filter(application_cycle=cycle).exclude(
+            club__code__in=club_codes
+        ).update(application_cycle=None)
+
         # Some apps need to be created - use the default Wharton Template
         prompt_one = (
             "Tell us about a time you took " "initiative or demonstrated leadership"
