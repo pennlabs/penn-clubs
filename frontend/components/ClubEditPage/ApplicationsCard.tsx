@@ -323,7 +323,9 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               as={DateTimeField}
               required={true}
               helpText={`The date when your application opens. ${
-                club.is_wharton ? 'Read-only.' : ''
+                club.is_wharton
+                  ? 'Since your club is managed by Wharton Council, this field is read-only.'
+                  : ''
               }`}
             />
             <Field
@@ -331,7 +333,9 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               as={DateTimeField}
               required={true}
               helpText={`The date when your application closes. ${
-                club.is_wharton ? 'Read-only.' : ''
+                club.is_wharton
+                  ? 'Since your club is managed by Wharton Council, this field is read-only.'
+                  : ''
               }`}
             />
             <Field
@@ -339,7 +343,9 @@ export default function ApplicationsCard({ club }: Props): ReactElement {
               as={DateTimeField}
               required={true}
               helpText={`The latest date that your ${OBJECT_NAME_SINGULAR} will be releasing admission results. ${
-                club.is_wharton ? 'Read-only.' : ''
+                club.is_wharton
+                  ? 'Since your club is managed by Wharton Council, this field is read-only.'
+                  : ''
               }`}
             />
             <Field
