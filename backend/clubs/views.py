@@ -117,6 +117,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Ticket,
+    TicketSettings,
     TicketTransactionRecord,
     TicketTransferRecord,
     Year,
@@ -2392,6 +2393,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     buyers:
     Get information about the buyers of an event's ticket
 
+    toggle_sales:
+    Toggle whether ticket sales are active
+
     remove_from_cart:
     Remove a ticket for this event from cart
 
@@ -2464,6 +2468,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
+
+        # Check if event has any tickets
+        if not event.has_tickets:
+            return Response(
+                {"detail": "This event does not have any tickets", "success": False},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         # Check if the event has already ended
@@ -2474,9 +2486,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             )
 
         # Cannot add tickets that haven't dropped yet
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+        if (
+            event.ticket_settings.drop_time
+            and timezone.now() < event.ticket_settings.drop_time
+        ):
             return Response(
                 {"detail": "Ticket drop time has not yet elapsed", "success": False},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Can't add tickets if ticket sales are not active
+        if not event.ticket_settings.active:
+            return Response(
+                {"detail": "Ticket sales are not active", "success": False},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -2487,14 +2509,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        for item in quantities:
+            if item.get("count", 0) <= 0:
+                return Response(
+                    {"detail": "Ticket quantities must be positive", "success": False},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         num_requested = sum(item["count"] for item in quantities)
         num_carted = cart.tickets.filter(event=event).count()
 
-        if num_requested + num_carted > event.ticket_order_limit:
+        if (
+            event.ticket_settings.order_limit
+            and num_requested + num_carted > event.ticket_settings.order_limit
+        ):
             return Response(
                 {
                     "detail": f"Order exceeds the maximum ticket limit of "
-                    f"{event.ticket_order_limit}.",
+                    f"{event.ticket_settings.order_limit}.",
                     "success": False,
                 },
                 status=status.HTTP_403_FORBIDDEN,
@@ -2680,20 +2712,26 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
-        tickets = Ticket.objects.filter(event=event)
 
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+        if (
+            not event.has_tickets
+            or (
+                event.ticket_settings.drop_time
+                and timezone.now() < event.ticket_settings.drop_time
+            )
+            or not event.ticket_settings.active
+        ):
             return Response({"totals": [], "available": []})
 
         # Take price of first ticket of given type for now
         totals = (
-            tickets.values("type")
+            event.tickets.values("type")
             .annotate(price=Max("price"))
             .annotate(count=Count("type"))
             .order_by("type")
         )
         available = (
-            tickets.filter(owner__isnull=True, holder__isnull=True, buyable=True)
+            event.tickets.filter(owner__isnull=True, holder__isnull=True, buyable=True)
             .values("type")
             .annotate(price=Max("price"))
             .annotate(count=Count("type"))
@@ -2705,7 +2743,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def create_tickets(self, request, *args, **kwargs):
         """
-        Create ticket offerings for event
+        Create or update ticket offerings for an event.
+
+        This endpoint allows configuring ticket types, quantities, prices, and settings.
+        Tickets cannot be modified after they have been dropped or sold.
+
         ---
         requestBody:
             content:
@@ -2717,6 +2759,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 type: array
                                 items:
                                     type: object
+                                    required:
+                                        - type
+                                        - count
+                                        - price
+                                        - transferable
                                     properties:
                                         type:
                                             type: string
@@ -2725,26 +2772,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                         price:
                                             type: number
                                         group_size:
-                                            type: number
-                                            required: false
+                                            type: integer
                                         group_discount:
                                             type: number
                                             format: float
-                                            required: false
                                         transferable:
                                             type: boolean
                                         buyable:
                                             type: boolean
-                                            required: false
                             order_limit:
-                                type: int
-                                required: false
+                                type: integer
                             drop_time:
                                 type: string
                                 format: date-time
-                                required: false
+                            fee_charged_to_buyer:
+                                type: boolean
         responses:
             "200":
+                description: Tickets created successfully
                 content:
                     application/json:
                         schema:
@@ -2753,6 +2798,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 detail:
                                     type: string
             "400":
+                description: Invalid request parameters
                 content:
                     application/json:
                         schema:
@@ -2761,6 +2807,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 detail:
                                     type: string
             "403":
+                description: Tickets cannot be modified
                 content:
                     application/json:
                         schema:
@@ -2772,19 +2819,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
 
-        # Tickets can't be edited after they've dropped
-        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
-            return Response(
-                {"detail": "Tickets cannot be edited after they have dropped"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        # Tickets can't be edited after they've been sold or held
-        if (
-            Ticket.objects.filter(event=event)
-            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
-            .exists()
-        ):
+        # Tickets can't be edited after they've been sold or checked out
+        if event.tickets.filter(
+            Q(owner__isnull=False) | Q(holder__isnull=False)
+        ).exists():
             return Response(
                 {
                     "detail": "Tickets cannot be edited after they have been "
@@ -2792,6 +2830,47 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
+
+        ticket_settings, _ = TicketSettings.objects.get_or_create(event=event)
+
+        # Tickets can't be edited after they've dropped
+        if (
+            event.ticket_settings.drop_time
+            and timezone.now() > event.ticket_settings.drop_time
+        ):
+            return Response(
+                {"detail": "Tickets cannot be edited after they have dropped"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        order_limit = request.data.get("order_limit", None)
+        if order_limit is not None:
+            ticket_settings.order_limit = order_limit
+            ticket_settings.save()
+
+        drop_time = request.data.get("drop_time", None)
+        if drop_time is not None:
+            try:
+                drop_time = datetime.datetime.strptime(drop_time, "%Y-%m-%dT%H:%M:%S%z")
+            except ValueError as e:
+                return Response(
+                    {"detail": f"Invalid drop time: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if drop_time < timezone.now():
+                return Response(
+                    {"detail": "Specified drop time has already elapsed"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            ticket_settings.drop_time = drop_time
+            ticket_settings.save()
+
+        fee_charged_to_buyer = request.data.get("fee_charged_to_buyer", None)
+        if fee_charged_to_buyer is not None:
+            ticket_settings.fee_charged_to_buyer = fee_charged_to_buyer
+            ticket_settings.save()
 
         quantities = request.data.get("quantities", [])
         if not quantities:
@@ -2855,35 +2934,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             for item in quantities
             for _ in range(item["count"])
         ]
-
         Ticket.objects.bulk_create(tickets)
-
-        order_limit = request.data.get("order_limit", None)
-        if order_limit is not None:
-            event.ticket_order_limit = order_limit
-            event.save()
-
-        drop_time = request.data.get("drop_time", None)
-        if drop_time is not None:
-            try:
-                drop_time = datetime.datetime.strptime(drop_time, "%Y-%m-%dT%H:%M:%S%z")
-            except ValueError as e:
-                return Response(
-                    {"detail": f"Invalid drop time: {str(e)}"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            if drop_time < timezone.now():
-                return Response(
-                    {"detail": "Specified drop time has already elapsed"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            event.ticket_drop_time = drop_time
-            event.save()
 
         cache.delete(f"clubs:{event.club.id}-authed")
         cache.delete(f"clubs:{event.club.id}-anon")
+
         return Response({"detail": "Successfully created tickets"})
 
     @action(detail=True, methods=["post"])
@@ -3123,6 +3178,81 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     f"Blast sent to {len(holder_emails)} ticket holders "
                     f"and {len(officer_emails)} officers"
                 )
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def toggle_sales(self, request, *args, **kwargs):
+        """
+        Toggle whether ticket sales are active for this event.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            active:
+                                type: boolean
+                                description: Whether ticket sales should be active
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+                                active:
+                                    type: boolean
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        event = self.get_object()
+
+        if not event.has_tickets:
+            return Response(
+                {"detail": "This event does not have any tickets", "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if (
+            event.ticket_settings.drop_time
+            and timezone.now() < event.ticket_settings.drop_time
+        ):
+            return Response(
+                {
+                    "detail": "Cannot toggle ticket sales before tickets have dropped",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        active = request.data.get("active", None)
+        if active is None:
+            return Response(
+                {"detail": "Active attribute must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        event.ticket_settings.active = active
+        event.ticket_settings.save()
+
+        return Response(
+            {
+                "success": True,
+                "detail": f"Ticket sales are now {'active' if active else 'inactive'}",
+                "active": active,
             }
         )
 
