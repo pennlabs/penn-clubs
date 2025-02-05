@@ -465,7 +465,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Your event start time must be less than the end time!"
             )
-        if ticket_drop_time is not None and ticket_drop_time > end_time:
+        if ticket_drop_time is not None and ticket_drop_time >= end_time:
             raise serializers.ValidationError(
                 "Your ticket drop time must be before the event ends!"
             )
