@@ -3216,7 +3216,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         if (
             "ticket_drop_time" in request.data
-            and parse(request.data["ticket_drop_time"]) >= timezone.now()
+            and (
+                event.ticket_drop_time is None  # case where sales immediately start
+                or event.ticket_drop_time <= timezone.now()
+            )
             and Ticket.objects.filter(event=event, owner__isnull=False).exists()
         ):
             raise DRFValidationError(
