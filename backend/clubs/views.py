@@ -3211,11 +3211,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         """
         Do not let club admins modify the ticket drop time
-        if tickets have already been sold.
+        if tickets have potentially been sold through the checkout process.
         """
         event = self.get_object()
         if (
             "ticket_drop_time" in request.data
+            and parse(request.data["ticket_drop_time"]) >= timezone.now()
             and Ticket.objects.filter(event=event, owner__isnull=False).exists()
         ):
             raise DRFValidationError(

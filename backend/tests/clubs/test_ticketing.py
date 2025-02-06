@@ -1320,6 +1320,53 @@ class TicketTestCase(TestCase):
         ).exists()
         self.assertTrue(record_exists)
 
+    def test_initiate_checkout_after_ticket_drop_time_edit(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        tickets = [Ticket(type="free", event=self.event1, price=0.0) for _ in range(3)]
+        Ticket.objects.bulk_create(tickets)
+
+        # Add a few free tickets to cart
+        tickets_to_add = {
+            "quantities": [
+                {"type": "free", "count": 3},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Set drop time ahead of current time
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            {
+                "ticket_drop_time": (
+                    timezone.now() + timezone.timedelta(hours=12)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # Initiate checkout
+        with patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context:
+            cap_context_data = "abcde"
+            fake_cap_context.return_value = cap_context_data, 200, None
+            resp = self.client.post(reverse("tickets-initiate-checkout"))
+            # Ticket should not be checked out
+            self.assertEqual(resp.status_code, 403, resp.content)
+
     def test_initiate_concurrent_checkouts(self):
         self.client.login(username=self.user1.username, password="test")
 
