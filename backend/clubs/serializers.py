@@ -458,9 +458,17 @@ class ClubEventSerializer(serializers.ModelSerializer):
         end_time = data.get(
             "end_time", self.instance.end_time if self.instance is not None else None
         )
+        ticket_drop_time = data.get(
+            "ticket_drop_time",
+            self.instance.ticket_drop_time if self.instance is not None else None,
+        )
         if start_time is not None and end_time is not None and start_time > end_time:
             raise serializers.ValidationError(
                 "Your event start time must be less than the end time!"
+            )
+        if ticket_drop_time is not None and ticket_drop_time >= end_time:
+            raise serializers.ValidationError(
+                "Your ticket drop time must be before the event ends!"
             )
         return data
 
@@ -508,6 +516,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "location",
             "name",
             "start_time",
+            "ticket_drop_time",
             "ticketed",
             "type",
             "url",

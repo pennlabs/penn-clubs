@@ -51,10 +51,26 @@ def commonSetUp(self):
         email="example@example.com",
     )
 
+    self.unapproved_club = Club.objects.create(
+        code="unapproved-club",
+        name="Unapproved Club",
+        approved=False,
+        ghost=False,
+        email="example2@example.com",
+    )
+
     self.event1 = Event.objects.create(
         code="test-event",
         club=self.club1,
         name="Test Event",
+        start_time=timezone.now() + timezone.timedelta(days=2),
+        end_time=timezone.now() + timezone.timedelta(days=3),
+    )
+
+    self.unapproved_event = Event.objects.create(
+        code="unapproved-event",
+        club=self.unapproved_club,
+        name="Unapproved Event",
         start_time=timezone.now() + timezone.timedelta(days=2),
         end_time=timezone.now() + timezone.timedelta(days=3),
     )
@@ -73,6 +89,11 @@ def commonSetUp(self):
         for _ in range(10)
     ]
 
+    self.unapproved_tickets = [
+        Ticket.objects.create(type="normal", event=self.unapproved_event, price=15.0)
+        for _ in range(20)
+    ]
+
 
 class TicketEventTestCase(TestCase):
     """
@@ -87,6 +108,30 @@ class TicketEventTestCase(TestCase):
 
     def test_create_ticket_offerings(self):
         self.client.login(username=self.user1.username, password="test")
+
+        # Test invalid start_time, ticket_drop_time editing
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            {
+                "ticket_drop_time": (
+                    self.event1.end_time + timezone.timedelta(days=20)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            {
+                "start_time": (
+                    self.event1.end_time + timezone.timedelta(days=20)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
         qts = {
             "quantities": [
                 {"type": "_normal", "count": 20, "price": 10},
@@ -276,6 +321,18 @@ class TicketEventTestCase(TestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Changing ticket drop time should fail
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            {
+                "ticket_drop_time": (
+                    timezone.now() + timezone.timedelta(hours=12)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
 
     def test_issue_tickets(self):
         self.client.login(username=self.user1.username, password="test")
@@ -468,21 +525,6 @@ class TicketEventTestCase(TestCase):
             data["available"],
         )
 
-    def test_get_tickets_before_drop_time(self):
-        self.event1.ticket_drop_time = timezone.now() + timedelta(days=1)
-        self.event1.save()
-
-        self.client.login(username=self.user1.username, password="test")
-        resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
-        )
-        self.assertEqual(resp.status_code, 200, resp.content)
-        data = resp.json()
-
-        # Tickets shouldn't be available before the drop time
-        self.assertEqual(data["totals"], [])
-        self.assertEqual(data["available"], [])
-
     def test_get_tickets_buyers(self):
         self.client.login(username=self.user1.username, password="test")
 
@@ -642,6 +684,50 @@ class TicketEventTestCase(TestCase):
 
         # Tickets should not be added to cart before drop time
         self.assertEqual(resp.status_code, 403, resp.content)
+
+    def test_add_to_cart_unapproved_club(self):
+        self.client.login(username=self.user1.username, password="test")
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 2},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-add-to-cart",
+                args=(self.unapproved_club.code, self.unapproved_event.pk),
+            ),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse(
+                "club-events-add-to-cart",
+                args=(self.unapproved_club.code, self.unapproved_event.pk),
+            ),
+            tickets_to_add,
+            format="json",
+        )
+        # Cannot see event
+        self.assertEqual(resp.status_code, 404, resp.content)
+
+    def test_add_to_cart_nonexistent_club(self):
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 2},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-add-to-cart",
+                args=("Random club name", self.unapproved_event.pk),
+            ),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 404, resp.content)
 
     def test_remove_from_cart(self):
         self.client.login(username=self.user1.username, password="test")
@@ -1271,6 +1357,53 @@ class TicketTestCase(TestCase):
             reconciliation_id="None"
         ).exists()
         self.assertTrue(record_exists)
+
+    def test_initiate_checkout_after_ticket_drop_time_edit(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        tickets = [Ticket(type="free", event=self.event1, price=0.0) for _ in range(3)]
+        Ticket.objects.bulk_create(tickets)
+
+        # Add a few free tickets to cart
+        tickets_to_add = {
+            "quantities": [
+                {"type": "free", "count": 3},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Set drop time ahead of current time
+        resp = self.client.patch(
+            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            {
+                "ticket_drop_time": (
+                    timezone.now() + timezone.timedelta(hours=12)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # Initiate checkout
+        with patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context:
+            cap_context_data = "abcde"
+            fake_cap_context.return_value = cap_context_data, 200, None
+            resp = self.client.post(reverse("tickets-initiate-checkout"))
+            # Ticket should not be checked out
+            self.assertEqual(resp.status_code, 403, resp.content)
 
     def test_initiate_concurrent_checkouts(self):
         self.client.login(username=self.user1.username, password="test")

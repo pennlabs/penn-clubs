@@ -229,6 +229,14 @@ class ClubTestCase(TestCase):
             visibility=Advisor.ADVISOR_VISIBILITY_ALL,
         )
 
+    def test_directory(self):
+        """
+        Test retrieving the club directory.
+        """
+        resp = self.client.get(reverse("clubs-directory"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 1)
+
     def test_advisor_visibility(self):
         """
         Tests each tier of advisor visibility.

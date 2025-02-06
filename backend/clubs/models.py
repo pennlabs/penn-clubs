@@ -355,6 +355,7 @@ class Club(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # signifies the existence of a previous instance within history with approved=True
     ghost = models.BooleanField(default=False)
     history = HistoricalRecords(cascade_delete_history=True)
 

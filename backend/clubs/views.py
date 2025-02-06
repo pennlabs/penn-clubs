@@ -1766,7 +1766,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         serializer = ClubMinimalSerializer(
             Club.objects.all()
-            .exclude(Q(approved=False) | Q(archived=True))
+            .exclude((~Q(approved=True) & Q(ghost=False)) | Q(archived=True))
             .order_by(Lower("name")),
             many=True,
         )
@@ -2468,6 +2468,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
+        club = Club.objects.filter(code=event.club.code).first()
+        # As clubs cannot go from historically approved to unapproved, we can
+        # check here without checking further on in the checkout process
+        # (the only exception is archiving a club, which is checked)
+        if not club:
+            return Response(
+                {"detail": "Related club does not exist", "success": False},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        elif not club.approved and not club.ghost:
+            return Response(
+                {
+                    "detail": """This club has not been approved
+                                 and cannot sell tickets.""",
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         # Check if the event has already ended
@@ -2686,9 +2704,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
-            return Response({"totals": [], "available": []})
-
         # Take price of first ticket of given type for now
         totals = (
             tickets.values("type")
@@ -2777,7 +2792,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
 
         # Tickets can't be edited after they've dropped
-        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
+        if event.ticket_drop_time and timezone.now() >= event.ticket_drop_time:
             return Response(
                 {"detail": "Tickets cannot be edited after they have dropped"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -3284,24 +3299,64 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return super().destroy(request, *args, **kwargs)
 
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Do not let club admins modify the ticket drop time
+        if tickets have potentially been sold through the checkout process.
+        """
+        event = self.get_object()
+        if (
+            "ticket_drop_time" in request.data
+            and (
+                event.ticket_drop_time is None  # case where sales immediately start
+                or event.ticket_drop_time <= timezone.now()
+            )
+            and Ticket.objects.filter(event=event, owner__isnull=False).exists()
+        ):
+            raise DRFValidationError(
+                detail="""Ticket drop times cannot be edited
+                        after tickets have been sold."""
+            )
+        return super().partial_update(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = Event.objects.all()
         is_club_specific = self.kwargs.get("club_code") is not None
         if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
-            qs = qs.filter(
-                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
-                club__archived=False,
-            )
+            # Check if the user is an officer or admin
+            if not self.request.user.is_authenticated or (
+                not self.request.user.has_perm("clubs.manage_club")
+                and not Membership.objects.filter(
+                    person=self.request.user,
+                    club__code=self.kwargs["club_code"],
+                    role__lte=Membership.ROLE_OFFICER,
+                ).exists()
+            ):
+                qs = qs.filter(
+                    Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
+                    club__archived=False,
+                )
         else:
-            qs = qs.filter(
-                Q(club__approved=True)
-                | Q(type=Event.FAIR)
-                | Q(club__ghost=True)
-                | Q(club__isnull=True),
-                Q(club__isnull=True) | Q(club__archived=False),
-            )
-
+            if not (
+                self.request.user.is_authenticated
+                and self.request.user.has_perm("clubs.manage_club")
+            ):
+                officer_clubs = (
+                    Membership.objects.filter(
+                        person=self.request.user, role__lte=Membership.ROLE_OFFICER
+                    ).values_list("club", flat=True)
+                    if self.request.user.is_authenticated
+                    else []
+                )
+                qs = qs.filter(
+                    Q(club__approved=True)
+                    | Q(club__id__in=list(officer_clubs))
+                    | Q(type=Event.FAIR)
+                    | Q(club__ghost=True)
+                    | Q(club__isnull=True),
+                    Q(club__isnull=True) | Q(club__archived=False),
+                )
         return (
             qs.select_related("club", "creator")
             .prefetch_related(
@@ -5485,8 +5540,13 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         tickets_to_replace = cart.tickets.filter(
             Q(owner__isnull=False)
+            | Q(event__club__archived=True)
             | Q(holder__isnull=False)
             | Q(event__end_time__lt=now)
+            | (
+                Q(event__ticket_drop_time__gt=timezone.now())
+                & Q(event__ticket_drop_time__isnull=False)
+            )
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
@@ -5523,6 +5583,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                 continue
 
             available_tickets = Ticket.objects.filter(
+                Q(event__ticket_drop_time__lte=timezone.now())
+                | Q(event__ticket_drop_time__isnull=True),
                 event=ticket_class["event"],
                 type=ticket_class["type"],
                 buyable=True,  # should not be triggered as buyable is by ticket class
@@ -5617,6 +5679,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
             Q(holder__isnull=True) | Q(holder=self.request.user),
+            Q(event__ticket_drop_time__lte=timezone.now())
+            | Q(event__ticket_drop_time__isnull=True),
+            event__club__archived=False,
             owner__isnull=True,
             buyable=True,
         )
