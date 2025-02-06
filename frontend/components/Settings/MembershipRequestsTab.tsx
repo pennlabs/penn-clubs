@@ -15,7 +15,7 @@ const MembershipRequestsTab = (): ReactElement => {
   const [requests, setRequests] = useState<MembershipRequest[] | null>(null)
 
   const fetchTable = (): void => {
-    doApiRequest('/requests/?format=json')
+    doApiRequest('/requests/membership/?format=json')
       .then((resp) => resp.json())
       .then(setRequests)
   }
@@ -29,9 +29,9 @@ const MembershipRequestsTab = (): ReactElement => {
   }
 
   const withdrawRequest = (code: string): void => {
-    doApiRequest(`/requests/${code}/?format=json`, { method: 'DELETE' }).then(
-      fetchTable,
-    )
+    doApiRequest(`/requests/membership/${code}/?format=json`, {
+      method: 'DELETE',
+    }).then(fetchTable)
   }
 
   return (

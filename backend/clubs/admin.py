@@ -38,6 +38,7 @@ from clubs.models import (
     MembershipRequest,
     Note,
     NoteTag,
+    OwnershipRequest,
     Profile,
     QuestionAnswer,
     RecurringEvent,
@@ -263,23 +264,53 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 
 class MembershipRequestAdmin(admin.ModelAdmin):
-    search_fields = ("person__username", "person__email", "club__name", "club__pk")
-    list_display = ("person", "club", "email", "withdrew", "is_member")
-    list_filter = ("withdrew",)
+    search_fields = (
+        "requester__username",
+        "requester__email",
+        "club__name",
+        "club__pk",
+    )
+    list_display = ("requester", "club", "email", "withdrawn", "is_member")
+    list_filter = ("withdrawn",)
 
-    def person(self, obj):
-        return obj.person.username
+    def requester(self, obj):
+        return obj.requester.username
 
     def club(self, obj):
         return obj.club.name
 
     def email(self, obj):
-        return obj.person.email
+        return obj.requester.email
 
     def is_member(self, obj):
-        return obj.club.membership_set.filter(person__pk=obj.person.pk).exists()
+        return obj.club.membership_set.filter(person__pk=obj.requester.pk).exists()
 
     is_member.boolean = True
+
+
+class OwnershipRequestAdmin(admin.ModelAdmin):
+    search_fields = (
+        "requester__username",
+        "requester__email",
+        "club__name",
+        "created_at",
+    )
+    list_display = ("requester", "club", "email", "withdrawn", "is_owner", "created_at")
+    list_filter = ("withdrawn",)
+
+    def requester(self, obj):
+        return obj.requester.username
+
+    def club(self, obj):
+        return obj.club.name
+
+    def email(self, obj):
+        return obj.requester.email
+
+    def is_owner(self, obj):
+        return obj.club.membership_set.filter(
+            person__pk=obj.requester.pk, role=Membership.ROLE_OWNER
+        ).exists()
 
 
 class MembershipAdmin(admin.ModelAdmin):
@@ -443,6 +474,7 @@ admin.site.register(MembershipRequest, MembershipRequestAdmin)
 admin.site.register(Major, MajorAdmin)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
+admin.site.register(OwnershipRequest, OwnershipRequestAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
 admin.site.register(RecurringEvent)
