@@ -2788,7 +2788,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
 
         # Tickets can't be edited after they've dropped
-        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
+        if event.ticket_drop_time and timezone.now() >= event.ticket_drop_time:
             return Response(
                 {"detail": "Tickets cannot be edited after they have dropped"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -5297,7 +5297,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 continue
 
             available_tickets = Ticket.objects.filter(
-                Q(event__ticket_drop_time__lt=timezone.now())
+                Q(event__ticket_drop_time__lte=timezone.now())
                 | Q(event__ticket_drop_time__isnull=True),
                 event=ticket_class["event"],
                 type=ticket_class["type"],
@@ -5393,7 +5393,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
             Q(holder__isnull=True) | Q(holder=self.request.user),
-            Q(event__ticket_drop_time__lt=timezone.now())
+            Q(event__ticket_drop_time__lte=timezone.now())
             | Q(event__ticket_drop_time__isnull=True),
             event__club__archived=False,
             owner__isnull=True,
