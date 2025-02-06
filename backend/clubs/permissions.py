@@ -451,6 +451,9 @@ class OwnershipRequestPermission(permissions.BasePermission):
         if "club_code" not in view.kwargs:
             return False
 
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+
         obj = Club.objects.get(code=view.kwargs["club_code"])
         membership = find_membership_helper(request.user, obj)
         return membership is not None and membership.role == Membership.ROLE_OWNER

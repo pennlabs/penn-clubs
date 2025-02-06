@@ -3983,15 +3983,12 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
         ---
         """
         request_object = self.get_object()
-        membership, created = Membership.objects.get_or_create(
+
+        Membership.objects.update_or_create(
             person=request_object.requester,
             club=request_object.club,
             defaults={"role": Membership.ROLE_OWNER},
         )
-
-        if not created and membership.role != Membership.ROLE_OWNER:
-            membership.role = Membership.ROLE_OWNER
-            membership.save(update_fields=["role"])
 
         request_object.delete()
         return Response({"success": True})

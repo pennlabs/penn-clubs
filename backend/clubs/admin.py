@@ -295,7 +295,7 @@ class OwnershipRequestAdmin(admin.ModelAdmin):
         "club__name",
         "created_at",
     )
-    list_display = ("requester", "club", "email", "withdrawn", "created_at")
+    list_display = ("requester", "club", "email", "withdrawn", "is_owner", "created_at")
     list_filter = ("withdrawn",)
 
     def requester(self, obj):
@@ -306,6 +306,11 @@ class OwnershipRequestAdmin(admin.ModelAdmin):
 
     def email(self, obj):
         return obj.requester.email
+
+    def is_owner(self, obj):
+        return obj.club.membership_set.filter(
+            person__pk=obj.requester.pk, role=Membership.ROLE_OWNER
+        ).exists()
 
 
 class MembershipAdmin(admin.ModelAdmin):
