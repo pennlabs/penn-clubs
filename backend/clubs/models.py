@@ -1566,6 +1566,45 @@ class Profile(models.Model):
         return self.user.username
 
 
+class BaseQuestion(CloneModel):
+    """
+    Abstract model used to represent a question (e.g. ApplicationQuestion)
+    """
+
+    FREE_RESPONSE = 1
+    MULTIPLE_CHOICE = 2
+    SHORT_ANSWER = 3
+    INFO_TEXT = 4
+    QUESTION_TYPES = (
+        (FREE_RESPONSE, "Free Response"),
+        (MULTIPLE_CHOICE, "Multiple Choice"),
+        (SHORT_ANSWER, "Short Answer"),
+        (INFO_TEXT, "Informational Text"),
+    )
+
+    question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)
+    prompt = models.TextField(blank=True)
+    precedence = models.IntegerField(default=0)
+    word_limit = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class BaseMultipleChoice(models.Model):
+    """
+    Abstract model used to represent a multiple choice selection to a question
+    """
+
+    value = models.TextField(blank=True)
+
+    class Meta:
+        abstract = True
+
+
 class ApplicationCycle(models.Model):
     """
     Represents an application cycle attached to club applications
@@ -1691,44 +1730,25 @@ class ApplicationCommittee(models.Model):
         return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
 
 
-class ApplicationQuestion(CloneModel):
+class ApplicationQuestion(BaseQuestion):
     """
     Represents a question of a custom application
     """
 
-    FREE_RESPONSE = 1
-    MULTIPLE_CHOICE = 2
-    SHORT_ANSWER = 3
-    INFO_TEXT = 4
-    QUESTION_TYPES = (
-        (FREE_RESPONSE, "Free Response"),
-        (MULTIPLE_CHOICE, "Multiple Choice"),
-        (SHORT_ANSWER, "Short Answer"),
-        (INFO_TEXT, "Informational Text"),
-    )
-
-    question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)
-    prompt = models.TextField(blank=True)
-    precedence = models.IntegerField(default=0)
-    word_limit = models.IntegerField(default=0)
     application = models.ForeignKey(
         ClubApplication, related_name="questions", on_delete=models.CASCADE
     )
     committee_question = models.BooleanField(default=False)
     committees = models.ManyToManyField("ApplicationCommittee", blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-
     _clone_m2o_or_o2m_fields = ["multiple_choice"]
 
 
-class ApplicationMultipleChoice(models.Model):
+class ApplicationMultipleChoice(BaseMultipleChoice):
     """
     Represents a multiple choice selection in an application question
     """
 
-    value = models.TextField(blank=True)
     question = models.ForeignKey(
         ApplicationQuestion,
         related_name="multiple_choice",
