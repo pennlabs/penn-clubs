@@ -2743,6 +2743,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: integer
                                         price:
                                             type: number
+                                        description:
+                                            type: string
+                                            required: false
                                         group_size:
                                             type: number
                                             required: false
@@ -2866,6 +2869,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 event=event,
                 type=item["type"],
                 price=item.get("price", 0),
+                description=item.get("description", None),
                 group_discount=item.get("group_discount", 0),
                 group_size=item.get("group_size", None),
                 transferable=item.get("transferable", True),
@@ -5456,7 +5460,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         """
-        Update a ticket's attendance (only accessible by club officers)
+        Update a ticket's description or attendance (only accessible by club officers)
         ---
         requestBody:
             content:
@@ -5466,6 +5470,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                         properties:
                             attended:
                                 type: boolean
+                            description:
+                                type: string
         responses:
             "200":
                 content:
@@ -5482,16 +5488,33 @@ class TicketViewSet(viewsets.ModelViewSet):
                                     type: string
         ---
         """
-        attended = request.data.get("attended")
-        if attended is None or not isinstance(attended, bool):
-            return Response(
-                {"detail": "Missing boolean attribute 'attended'."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         ticket = self.get_object()
-        ticket.attended = attended
-        ticket.save()
-        return Response(TicketSerializer(ticket).data)
+
+        # Get request data
+        attended = request.data.get("attended")
+        description = request.data.get("description")
+
+        # attendance update
+        if isinstance(attended, bool):
+            ticket.attended = attended
+            ticket.save()
+            return Response(TicketSerializer(ticket).data)
+
+        # description update
+        if description is not None:
+            if ticket.owner is not None:
+                return Response(
+                    {"detail": "Cannot update description of a sold ticket."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            ticket.description = description
+            ticket.save()
+            return Response(TicketSerializer(ticket).data)
+
+        return Response(
+            {"detail": "No valid update parameters provided."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @transaction.atomic
     @update_holds
