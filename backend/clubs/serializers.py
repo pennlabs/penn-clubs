@@ -43,6 +43,7 @@ from clubs.models import (
     MembershipRequest,
     Note,
     NoteTag,
+    OwnershipRequest,
     Profile,
     QuestionAnswer,
     Report,
@@ -457,9 +458,17 @@ class ClubEventSerializer(serializers.ModelSerializer):
         end_time = data.get(
             "end_time", self.instance.end_time if self.instance is not None else None
         )
+        ticket_drop_time = data.get(
+            "ticket_drop_time",
+            self.instance.ticket_drop_time if self.instance is not None else None,
+        )
         if start_time is not None and end_time is not None and start_time > end_time:
             raise serializers.ValidationError(
                 "Your event start time must be less than the end time!"
+            )
+        if ticket_drop_time is not None and ticket_drop_time >= end_time:
+            raise serializers.ValidationError(
+                "Your ticket drop time must be before the event ends!"
             )
         return data
 
@@ -507,6 +516,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "location",
             "name",
             "start_time",
+            "ticket_drop_time",
             "ticketed",
             "type",
             "url",
@@ -636,7 +646,9 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         obj.save()
 
         # if a membership request exists, delete it
-        MembershipRequest.objects.filter(person=user, club=self.instance.club).delete()
+        MembershipRequest.objects.filter(
+            requester=user, club=self.instance.club
+        ).delete()
 
         return instance
 
@@ -1267,7 +1279,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
-        return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
+        return obj.membershiprequests.filter(requester=user, withdrawn=False).exists()
 
     def get_target_years(self, obj):
         qset = TargetYear.objects.filter(club=obj).select_related("target_years")
@@ -1940,20 +1952,22 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
     Used by club owners/officers to see who has requested to join the club.
     """
 
-    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     name = serializers.SerializerMethodField("get_full_name")
-    username = serializers.CharField(source="person.username", read_only=True)
-    email = serializers.EmailField(source="person.email", read_only=True)
+    username = serializers.CharField(source="requester.username", read_only=True)
+    email = serializers.EmailField(source="requester.email", read_only=True)
 
-    school = SchoolSerializer(many=True, source="person.profile.school", read_only=True)
-    major = MajorSerializer(many=True, source="person.profile.major", read_only=True)
+    school = SchoolSerializer(
+        many=True, source="requester.profile.school", read_only=True
+    )
+    major = MajorSerializer(many=True, source="requester.profile.major", read_only=True)
     graduation_year = serializers.IntegerField(
-        source="person.profile.graduation_year", read_only=True
+        source="requester.profile.graduation_year", read_only=True
     )
 
     def get_full_name(self, obj):
-        return obj.person.get_full_name()
+        return obj.requester.get_full_name()
 
     class Meta:
         model = MembershipRequest
@@ -1964,15 +1978,10 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
             "graduation_year",
             "major",
             "name",
-            "person",
+            "requester",
             "school",
             "username",
         )
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=MembershipRequest.objects.all(), fields=["club", "person"]
-            )
-        ]
 
 
 class UserMembershipRequestSerializer(serializers.ModelSerializer):
@@ -1980,23 +1989,64 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
     Used by the UserSerializer to return the clubs that the user has sent request to.
     """
 
-    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     club_name = serializers.CharField(source="club.name", read_only=True)
 
-    def create(self, validated_data):
-        """
-        Send an email when a membership request is created.
-        """
-        obj = super().create(validated_data)
-
-        obj.send_request(self.context["request"])
-
-        return obj
-
     class Meta:
         model = MembershipRequest
-        fields = ("club", "club_name", "person")
+        fields = ("club", "club_name", "requester")
+
+
+class OwnershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by club owners to see who has requested to be owner of the club.
+    """
+
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    name = serializers.SerializerMethodField("get_full_name")
+    username = serializers.CharField(source="requester.username", read_only=True)
+    email = serializers.EmailField(source="requester.email", read_only=True)
+
+    school = SchoolSerializer(
+        many=True, source="requester.profile.school", read_only=True
+    )
+    major = MajorSerializer(many=True, source="requester.profile.major", read_only=True)
+    graduation_year = serializers.IntegerField(
+        source="requester.profile.graduation_year", read_only=True
+    )
+
+    def get_full_name(self, obj):
+        return obj.requester.get_full_name()
+
+    class Meta:
+        model = OwnershipRequest
+        fields = (
+            "club",
+            "created_at",
+            "email",
+            "graduation_year",
+            "major",
+            "name",
+            "requester",
+            "school",
+            "username",
+        )
+
+
+class UserOwnershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by the users to return the clubs that the user has sent an OwnershipRequest to.
+    """
+
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    club_name = serializers.CharField(source="club.name", read_only=True)
+
+    class Meta:
+        model = OwnershipRequest
+        fields = ("club", "club_name", "requester")
 
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):

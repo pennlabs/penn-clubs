@@ -36,6 +36,8 @@ from clubs.views import (
     MemberViewSet,
     NoteViewSet,
     OptionListView,
+    OwnershipRequestManagementViewSet,
+    OwnershipRequestViewSet,
     QuestionAnswerViewSet,
     ReportViewSet,
     SchoolViewSet,
@@ -71,7 +73,12 @@ router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
 router.register(r"searches", SearchQueryViewSet, basename="searches")
 router.register(r"memberships", MembershipViewSet, basename="members")
-router.register(r"requests", MembershipRequestViewSet, basename="requests")
+router.register(
+    r"requests/membership", MembershipRequestViewSet, basename="membership-requests"
+)
+router.register(
+    r"requests/ownership", OwnershipRequestViewSet, basename="ownership-requests"
+)
 router.register(r"tickets", TicketViewSet, basename="tickets")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
@@ -108,6 +115,11 @@ clubs_router.register(
     r"membershiprequests",
     MembershipRequestOwnerViewSet,
     basename="club-membership-requests",
+)
+clubs_router.register(
+    r"ownershiprequests",
+    OwnershipRequestManagementViewSet,
+    basename="club-ownership-requests",
 )
 clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 clubs_router.register(

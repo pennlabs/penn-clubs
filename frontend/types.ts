@@ -62,6 +62,7 @@ export interface ClubEvent {
   location: string | null
   name: string
   ticketed: boolean
+  ticket_drop_time: string | null
   pinned: boolean
   start_time: string
   type: ClubEventType
