@@ -111,7 +111,7 @@
     "istanbul-lib-coverage": "^3.2.2",
     "local-ssl-proxy": "^2.0.5",
     "nyc": "^15.0.0",
-    "prettier": "^3.2.5",
+    "prettier": "^3.5.0",
     "swc-plugin-coverage-instrument": "^0.0.25",
     "typescript": "^5.3.3",
     "wait-on": "^7.2.0"
