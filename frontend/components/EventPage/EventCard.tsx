@@ -39,10 +39,13 @@ const TicketsPill = styled.div`
 
 const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
-const EventCard = (props: { event: ClubEvent }): ReactElement => {
+const EventCard = (props: {
+  event: ClubEvent & { clubPublic?: boolean }
+}): ReactElement => {
   const {
     image_url: imageUrl,
     club_name: clubName,
+    clubPublic,
     start_time,
     end_time,
     name,
@@ -77,6 +80,7 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
       )}
       <ClubName>{clubName}</ClubName>
       <EventName>{name}</EventName>
+      {clubPublic === false && <p>This event is not shown to the public.</p>}
       {ticketed && (
         <TicketsPill
           style={{

@@ -1,17 +1,14 @@
 import { Field } from 'formik'
 import moment from 'moment'
-import React, { ReactElement, useRef, useState } from 'react'
+import Link from 'next/link'
+import { forwardRef, ReactElement, RefObject, useRef, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { LIGHT_GRAY } from '../../constants'
 import { Club, ClubEvent, ClubEventType } from '../../types'
 import { stripTags } from '../../utils'
-import {
-  FAIR_NAME,
-  OBJECT_EVENT_TYPES,
-  OBJECT_NAME_SINGULAR,
-} from '../../utils/branding'
+import { FAIR_NAME, OBJECT_EVENT_TYPES } from '../../utils/branding'
 import { Device, Icon, Line, Modal, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import {
@@ -311,51 +308,6 @@ const eventTableFields = [
   },
 ]
 
-const eventFields = (
-  <>
-    <Field
-      name="name"
-      as={TextField}
-      required
-      helpText="Provide a descriptive name for the planned event."
-    />
-    <Field
-      name="url"
-      as={TextField}
-      type="url"
-      helpText="Provide a videoconference link to join the event (Zoom, Google Meet, etc)."
-      label="Meeting Link"
-    />
-    <Field name="image" as={FileField} isImage />
-    <Field
-      name="type"
-      as={SelectField}
-      required
-      choices={EVENT_TYPES}
-      serialize={({ value }) => value}
-      isMulti={false}
-      valueDeserialize={(val) => EVENT_TYPES.find((x) => x.value === val)}
-    />
-    <Field
-      name="start_time"
-      required
-      placeholder="Provide a start time for the event"
-      as={DateTimeField}
-    />
-    <Field
-      name="end_time"
-      required
-      placeholder="Provide a end time for the event"
-      as={DateTimeField}
-    />
-    <Field
-      name="description"
-      placeholder="Type your event description here!"
-      as={RichTextField}
-    />
-  </>
-)
-
 const EventPreviewContainer = styled.div`
   display: flex;
   justify-content: space-around;
@@ -401,50 +353,122 @@ const CreateContainer = styled.div`
   align-items: center;
 `
 
-const CreateTickets = ({ event, club }: { event: ClubEvent; club: Club }) => {
-  const [show, setShow] = useState(false)
-  const showModal = () => setShow(true)
-  const hideModal = () => setShow(false)
-
-  return (
-    <CreateContainer>
-      <div className="is-pulled-left">
-        <Text style={{ padding: 0, margin: 0 }}>
-          {event.ticketed ? 'Add' : 'Create'} ticket offerings for this event
-        </Text>
-      </div>
-      <div className="is-pulled-right">
-        <button
-          onClick={() => {
-            showModal()
-          }}
-          disabled={!event.name}
-          className="button is-primary"
-        >
-          Create
-        </button>
-      </div>
-      {show && (
-        <Modal
-          width="50vw"
-          show={show}
-          closeModal={hideModal}
-          marginBottom={false}
-        >
-          <TicketsModal
-            club={club}
-            event={event}
-            onSuccessfulSubmit={hideModal}
-          />
-        </Modal>
-      )}
-    </CreateContainer>
-  )
+interface CreateTicketsProps {
+  event: ClubEvent
+  club: Club
 }
+
+const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
+  ({ event, club }, ticketDroptimeRef) => {
+    const [show, setShow] = useState(false)
+
+    const showModal = () => setShow(true)
+    const hideModal = () => setShow(false)
+
+    return (
+      <CreateContainer>
+        <div className="is-pulled-left">
+          <Text style={{ padding: 0, margin: 0 }}>
+            {event.ticketed ? 'Add' : 'Create'} ticket offerings for this event
+          </Text>
+        </div>
+        <div className="is-pulled-right">
+          <button
+            onClick={showModal}
+            disabled={!event.name}
+            className="button is-primary"
+          >
+            Create
+          </button>
+        </div>
+        {show && (
+          <Modal
+            width="50vw"
+            show={show}
+            closeModal={hideModal}
+            marginBottom={false}
+          >
+            <TicketsModal
+              club={club}
+              event={event}
+              onSuccessfulSubmit={hideModal}
+              closeModal={() => {
+                hideModal()
+                if (ticketDroptimeRef && 'current' in ticketDroptimeRef) {
+                  const divRef = ticketDroptimeRef as RefObject<HTMLDivElement>
+                  ticketDroptimeRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                  })
+                  divRef.current?.querySelector('input')?.focus()
+                }
+              }}
+            />
+          </Modal>
+        )}
+      </CreateContainer>
+    )
+  },
+)
 
 export default function EventsCard({ club }: EventsCardProps): ReactElement {
   const [deviceContents, setDeviceContents] = useState<any>({})
   const eventDetailsRef = useRef<HTMLDivElement>(null)
+  const ticketDroptimeRef = useRef<HTMLDivElement>(null)
+
+  const eventFields = (
+    <>
+      <Field
+        name="name"
+        as={TextField}
+        required
+        helpText="Provide a descriptive name for the planned event."
+      />
+      <Field
+        name="url"
+        as={TextField}
+        type="url"
+        helpText="Provide a videoconference link to join the event (Zoom, Google Meet, etc)."
+        label="Meeting Link"
+      />
+      <Field name="image" as={FileField} isImage />
+      <Field
+        name="type"
+        as={SelectField}
+        required
+        choices={EVENT_TYPES}
+        serialize={({ value }) => value}
+        isMulti={false}
+        valueDeserialize={(val) => EVENT_TYPES.find((x) => x.value === val)}
+      />
+      <Field
+        name="start_time"
+        required
+        placeholder="Provide a start time for the event"
+        as={DateTimeField}
+      />
+      <Field
+        name="end_time"
+        required
+        placeholder="Provide a end time for the event"
+        as={DateTimeField}
+      />
+      <div ref={ticketDroptimeRef} className="mb-3">
+        {/* TODO: modify field components to support ref props after forwardRef() is depreciated in React 19 */}
+        <Field
+          name="ticket_drop_time"
+          id="ticket_drop_time"
+          placeholder="Provide a time when event tickets will first be available (not changeable after first ticket sold)"
+          as={DateTimeField}
+        />
+      </div>
+      <Field
+        name="description"
+        placeholder="Type your event description here!"
+        as={RichTextField}
+      />
+    </>
+  )
 
   const event = {
     ...deviceContents,
@@ -458,10 +482,18 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
   return (
     <BaseCard title="Events">
       <Text>
-        Manage events for this {OBJECT_NAME_SINGULAR}. Events that have already
-        passed are hidden by default.
+        {club.approved || club.is_ghost
+          ? 'Manage events for this club. Events that have already passed are hidden by default.'
+          : 'Note: you must be an approved club to create publicly-viewable events.'}
       </Text>
       <ModelForm
+        actions={(object) => (
+          <Link legacyBehavior href={{ pathname: `/events/${object.id}` }}>
+            <button className="button is-info is-small">
+              <Icon name="eye" /> Page
+            </button>
+          </Link>
+        )}
         baseUrl={`/clubs/${club.code}/events/`}
         listParams={`&end_time__gte=${new Date().toISOString()}`}
         fields={eventFields}
@@ -480,7 +512,7 @@ export default function EventsCard({ club }: EventsCardProps): ReactElement {
         }}
       />
       <Line />
-      <CreateTickets event={event} club={club} />
+      <CreateTickets event={event} club={club} ref={ticketDroptimeRef} />
       <Line />
       <div ref={eventDetailsRef}>
         <EventPreview event={event} />

@@ -24,7 +24,7 @@ const internalCache = new LRUCache({ max: 500 })
 
 /**
  * Cache the return value of a function.
- * This should only be used with publically available information.
+ * This should only be used with publicly available information.
  * The time should be specified in milliseconds.
  */
 export async function cache<T>(

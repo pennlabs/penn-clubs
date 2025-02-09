@@ -107,6 +107,7 @@ from clubs.models import (
     MembershipInvite,
     MembershipRequest,
     Note,
+    OwnershipRequest,
     QuestionAnswer,
     RecurringEvent,
     Report,
@@ -138,6 +139,7 @@ from clubs.permissions import (
     MemberPermission,
     MembershipRequestPermission,
     NotePermission,
+    OwnershipRequestPermission,
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
@@ -181,6 +183,7 @@ from clubs.serializers import (
     MembershipSerializer,
     MinimalUserProfileSerializer,
     NoteSerializer,
+    OwnershipRequestSerializer,
     QuestionAnswerSerializer,
     ReportClubSerializer,
     ReportSerializer,
@@ -197,6 +200,7 @@ from clubs.serializers import (
     UserMembershipInviteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
+    UserOwnershipRequestSerializer,
     UserProfileSerializer,
     UserSerializer,
     UserSubscribeSerializer,
@@ -1762,7 +1766,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         serializer = ClubMinimalSerializer(
             Club.objects.all()
-            .exclude(Q(approved=False) | Q(archived=True))
+            .exclude((~Q(approved=True) & Q(ghost=False)) | Q(archived=True))
             .order_by(Lower("name")),
             many=True,
         )
@@ -2464,6 +2468,24 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
+        club = Club.objects.filter(code=event.club.code).first()
+        # As clubs cannot go from historically approved to unapproved, we can
+        # check here without checking further on in the checkout process
+        # (the only exception is archiving a club, which is checked)
+        if not club:
+            return Response(
+                {"detail": "Related club does not exist", "success": False},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        elif not club.approved and not club.ghost:
+            return Response(
+                {
+                    "detail": """This club has not been approved
+                                 and cannot sell tickets.""",
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         cart, _ = Cart.objects.get_or_create(owner=self.request.user)
 
         # Check if the event has already ended
@@ -2682,9 +2704,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
 
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
-            return Response({"totals": [], "available": []})
-
         # Take price of first ticket of given type for now
         totals = (
             tickets.values("type")
@@ -2773,7 +2792,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
 
         # Tickets can't be edited after they've dropped
-        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
+        if event.ticket_drop_time and timezone.now() >= event.ticket_drop_time:
             return Response(
                 {"detail": "Tickets cannot be edited after they have dropped"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -3280,24 +3299,64 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return super().destroy(request, *args, **kwargs)
 
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Do not let club admins modify the ticket drop time
+        if tickets have potentially been sold through the checkout process.
+        """
+        event = self.get_object()
+        if (
+            "ticket_drop_time" in request.data
+            and (
+                event.ticket_drop_time is None  # case where sales immediately start
+                or event.ticket_drop_time <= timezone.now()
+            )
+            and Ticket.objects.filter(event=event, owner__isnull=False).exists()
+        ):
+            raise DRFValidationError(
+                detail="""Ticket drop times cannot be edited
+                        after tickets have been sold."""
+            )
+        return super().partial_update(request, *args, **kwargs)
+
     def get_queryset(self):
         qs = Event.objects.all()
         is_club_specific = self.kwargs.get("club_code") is not None
         if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
-            qs = qs.filter(
-                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
-                club__archived=False,
-            )
+            # Check if the user is an officer or admin
+            if not self.request.user.is_authenticated or (
+                not self.request.user.has_perm("clubs.manage_club")
+                and not Membership.objects.filter(
+                    person=self.request.user,
+                    club__code=self.kwargs["club_code"],
+                    role__lte=Membership.ROLE_OFFICER,
+                ).exists()
+            ):
+                qs = qs.filter(
+                    Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
+                    club__archived=False,
+                )
         else:
-            qs = qs.filter(
-                Q(club__approved=True)
-                | Q(type=Event.FAIR)
-                | Q(club__ghost=True)
-                | Q(club__isnull=True),
-                Q(club__isnull=True) | Q(club__archived=False),
-            )
-
+            if not (
+                self.request.user.is_authenticated
+                and self.request.user.has_perm("clubs.manage_club")
+            ):
+                officer_clubs = (
+                    Membership.objects.filter(
+                        person=self.request.user, role__lte=Membership.ROLE_OFFICER
+                    ).values_list("club", flat=True)
+                    if self.request.user.is_authenticated
+                    else []
+                )
+                qs = qs.filter(
+                    Q(club__approved=True)
+                    | Q(club__id__in=list(officer_clubs))
+                    | Q(type=Event.FAIR)
+                    | Q(club__ghost=True)
+                    | Q(club__isnull=True),
+                    Q(club__isnull=True) | Q(club__archived=False),
+                )
         return (
             qs.select_related("club", "creator")
             .prefetch_related(
@@ -3864,15 +3923,27 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         If a membership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
-        obj = MembershipRequest.objects.filter(
-            club__code=club, person=request.user
-        ).first()
-        if obj is not None:
-            obj.withdrew = False
-            obj.save(update_fields=["withdrew"])
-            return Response(UserMembershipRequestSerializer(obj).data)
+        club_instance = Club.objects.filter(code=club).first()
+        if club_instance is None:
+            return Response(
+                {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
-        return super().create(request, *args, **kwargs)
+        create_defaults = {"club": club_instance, "requester": request.user}
+
+        obj, created = MembershipRequest.objects.update_or_create(
+            club__code=club,
+            requester=request.user,
+            defaults={"withdrawn": False, "created_at": timezone.now()},
+            create_defaults=create_defaults,
+        )
+
+        if created:
+            obj.send_request(request)
+
+        serializer = self.get_serializer(obj, many=False)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -3882,15 +3953,15 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
-        obj.withdrew = True
-        obj.save(update_fields=["withdrew"])
+        obj.withdrawn = True
+        obj.save(update_fields=["withdrawn"])
 
-        return Response({"success": True})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user,
-            withdrew=False,
+            requester=self.request.user,
+            withdrawn=False,
             club__archived=False,
         )
 
@@ -3907,11 +3978,11 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     serializer_class = MembershipRequestSerializer
     permission_classes = [MembershipRequestPermission | IsSuperuser]
     http_method_names = ["get", "post", "delete"]
-    lookup_field = "person__username"
+    lookup_field = "requester__username"
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            club__code=self.kwargs["club_code"], withdrew=False
+            club__code=self.kwargs["club_code"], withdrawn=False
         )
 
     @action(detail=True, methods=["post"])
@@ -3935,10 +4006,189 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         request_object = self.get_object()
         Membership.objects.get_or_create(
-            person=request_object.person, club=request_object.club
+            person=request_object.requester, club=request_object.club
         )
         request_object.delete()
         return Response({"success": True})
+
+
+class OwnershipRequestViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has sent ownership request to.
+
+    create: Sent ownership request to a club.
+
+    destroy: Deleted a ownership request from a club.
+    """
+
+    serializer_class = UserOwnershipRequestSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "club__code"
+    http_method_names = ["get", "post", "delete"]
+
+    def create(self, request, *args, **kwargs):
+        """
+        If a ownership request object already exists, reuse it.
+        """
+        club = request.data.get("club", None)
+        club_instance = Club.objects.filter(code=club).first()
+        if club_instance is None:
+            return Response(
+                {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        create_defaults = {"club": club_instance, "requester": request.user}
+
+        obj, created = OwnershipRequest.objects.update_or_create(
+            club__code=club,
+            requester=request.user,
+            defaults={"withdrawn": False, "created_at": timezone.now()},
+            create_defaults=create_defaults,
+        )
+
+        if created:
+            obj.send_request(request)
+
+        serializer = self.get_serializer(obj, many=False)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Don't actually delete the ownership request when it is withdrawn.
+
+        This is to keep track of repeat ownership requests and avoid spamming the club
+        owners with requests.
+        """
+        obj = self.get_object()
+        obj.withdrawn = True
+        obj.save(update_fields=["withdrawn"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def get_queryset(self):
+        return OwnershipRequest.objects.filter(
+            requester=self.request.user,
+            withdrawn=False,
+            club__archived=False,
+        )
+
+
+class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of users who have sent ownership request to the club.
+
+    destroy:
+    Delete a ownership request for a specific user.
+
+    accept:
+    Accept an ownership request as a club owner.
+
+    all:
+    Return a list of ownership requests older than a week. Used by Superusers.
+    """
+
+    serializer_class = OwnershipRequestSerializer
+
+    permission_classes = [OwnershipRequestPermission | IsSuperuser]
+    http_method_names = ["get", "post", "delete"]
+    lookup_field = "requester__username"
+
+    def get_queryset(self):
+        if self.action != "all":
+            return OwnershipRequest.objects.filter(
+                club__code=self.kwargs["club_code"], withdrawn=False
+            )
+        else:
+            return OwnershipRequest.objects.filter(withdrawn=False).order_by(
+                "created_at"
+            )
+
+    @action(detail=True, methods=["post"])
+    def accept(self, request, *args, **kwargs):
+        """
+        Accept an ownership request as a club owner.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: >
+                                        True if this request was properly processed.
+        ---
+        """
+        request_object = self.get_object()
+
+        Membership.objects.update_or_create(
+            person=request_object.requester,
+            club=request_object.club,
+            defaults={"role": Membership.ROLE_OWNER},
+        )
+
+        request_object.delete()
+        return Response({"success": True})
+
+    @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
+    def all(self, request, *args, **kwargs):
+        """
+        View unaddressed ownership requests, sorted by date.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    club:
+                                        type: string
+                                    created_at:
+                                        type: string
+                                        format: date-time
+                                    email:
+                                        type: string
+                                    graduation_year:
+                                        type: integer
+                                    major:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                name:
+                                                    type: string
+                                    name:
+                                        type: string
+                                    school:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                name:
+                                                    type: string
+                                                is_graduate:
+                                                    type: boolean
+                                    username:
+                                        type: string
+        ---
+        """
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+
+        return Response(serializer.data)
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -5290,8 +5540,13 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         tickets_to_replace = cart.tickets.filter(
             Q(owner__isnull=False)
+            | Q(event__club__archived=True)
             | Q(holder__isnull=False)
             | Q(event__end_time__lt=now)
+            | (
+                Q(event__ticket_drop_time__gt=timezone.now())
+                & Q(event__ticket_drop_time__isnull=False)
+            )
         ).exclude(holder=self.request.user)
 
         # In most cases, we won't need to replace, so exit early
@@ -5328,6 +5583,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                 continue
 
             available_tickets = Ticket.objects.filter(
+                Q(event__ticket_drop_time__lte=timezone.now())
+                | Q(event__ticket_drop_time__isnull=True),
                 event=ticket_class["event"],
                 type=ticket_class["type"],
                 buyable=True,  # should not be triggered as buyable is by ticket class
@@ -5422,6 +5679,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         # are locked, we shouldn't block.
         tickets = cart.tickets.select_for_update(skip_locked=True).filter(
             Q(holder__isnull=True) | Q(holder=self.request.user),
+            Q(event__ticket_drop_time__lte=timezone.now())
+            | Q(event__ticket_drop_time__isnull=True),
+            event__club__archived=False,
             owner__isnull=True,
             buyable=True,
         )

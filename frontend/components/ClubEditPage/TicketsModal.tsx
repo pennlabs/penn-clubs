@@ -224,10 +224,12 @@ type Ticket = {
 const TicketsModal = ({
   event,
   club,
+  closeModal,
   onSuccessfulSubmit,
 }: {
   event: ClubEvent
   club: Club
+  closeModal: () => void
   onSuccessfulSubmit: () => void
 }): ReactElement => {
   const { large_image_url, image_url, club_name, name, id } = event
@@ -325,7 +327,7 @@ const TicketsModal = ({
       <ModalBody>
         <Title>{name}</Title>
         <Text>
-          Create new tickets for this event. For our alpha, only free tickets
+          Create new tickets for this event. For our beta, only free tickets
           will be supported for now: stay tuned for payments integration!
         </Text>
         <Line />
@@ -355,6 +357,24 @@ const TicketsModal = ({
             New Ticket Class
           </button>
         </SectionContainer>
+        {!event.ticket_drop_time && (
+          <SectionContainer>
+            <p className="help">
+              You can optionally add a time in which after when tickets will be
+              available{' '}
+              <a
+                onClick={(e) => {
+                  setSubmitting(false)
+                  closeModal()
+                }}
+              >
+                within the event's edit page
+              </a>
+              . Please note that this cannot be changed once any tickets are
+              sold.
+            </p>
+          </SectionContainer>
+        )}
         <div>
           {submitting ? (
             <>
