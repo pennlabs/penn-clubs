@@ -336,7 +336,7 @@ const ApplicationPage = ({
                 <>
                   <SubmitNotificationSpan style={{ color: 'green' }}>
                     <Icon name="check-circle" alt="success" /> Saved! (Click{' '}
-                    <a href="/apply/submissions">here</a> to see your
+                    <a href="/settings#submissions">here</a> to see your
                     submissions)
                   </SubmitNotificationSpan>
                 </>
