@@ -1,4 +1,5 @@
 import { DateTime, Settings } from 'luxon'
+import moment from 'moment-timezone'
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import Link from 'next/link'
 import React, { useState } from 'react'
@@ -7,6 +8,7 @@ import styled from 'styled-components'
 
 import { BaseLayout } from '~/components/BaseLayout'
 import {
+  Icon,
   Metadata,
   Modal,
   StrongText,
@@ -31,6 +33,7 @@ import {
 } from '~/constants'
 import { Club, ClubEvent, TicketAvailability } from '~/types'
 import { doApiRequest, EMPTY_DESCRIPTION } from '~/utils'
+import { APPROVAL_AUTHORITY } from '~/utils/branding'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
 Settings.defaultZone = 'America/New_York'
@@ -50,10 +53,18 @@ export const getServerSideProps = (async (ctx) => {
   // TODO: Add caching
   const [baseProps, event] = await Promise.all([
     getBaseProps(ctx),
-    doApiRequest(`/events/${id}`, data).then(
-      (resp) => resp.json() as Promise<ClubEvent>,
-    ),
+    doApiRequest(`/events/${id}`, data).then((resp) => {
+      if (!resp.ok) {
+        return null
+      }
+      return resp.json() as Promise<ClubEvent>
+    }),
   ])
+  if (!event) {
+    return {
+      notFound: true,
+    }
+  }
   const [club, tickets] = await Promise.all([
     doApiRequest(`/clubs/${event.club}/`, data).then(
       (resp) => resp.json() as Promise<Club>,
@@ -186,6 +197,7 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
         borderBottom: '1px solid #e0e0e0',
         borderTop: '1px solid #e0e0e0',
       }}
+      id={ticket.type}
     >
       <div
         style={{
@@ -256,6 +268,12 @@ const EventPage: React.FC<EventPageProps> = ({
 
   const image = event.image_url ?? club.image_url
 
+  const notDroppedYet =
+    event.ticket_drop_time !== null &&
+    new Date(event.ticket_drop_time) > new Date()
+
+  const historicallyApproved = club.approved !== true && !club.is_ghost
+
   return (
     <>
       <Modal
@@ -317,6 +335,14 @@ const EventPage: React.FC<EventPageProps> = ({
       <BaseLayout {...baseProps}>
         <Metadata title="Events" />
         <MainWrapper>
+          {!club.active && !club.is_ghost && (
+            <div className="notification is-info is-light">
+              <Icon name="alert-circle" style={{ marginTop: '-3px' }} />
+              This event is hosted by a club that has not been approved by the{' '}
+              {APPROVAL_AUTHORITY} and is therefore not visible to the public
+              yet.
+            </div>
+          )}
           <GridWrapper>
             <div>
               <Title>{event.name}</Title>
@@ -349,7 +375,19 @@ const EventPage: React.FC<EventPageProps> = ({
               {event.ticketed && (
                 <Card>
                   <StrongText>Tickets</StrongText>
-                  <Text>
+                  {notDroppedYet && (
+                    <>
+                      <Text>
+                        Tickets will be available for purchase on{' '}
+                        {moment(event.ticket_drop_time)
+                          .tz('America/New_York')
+                          .format('LLL')}
+                        .
+                      </Text>
+                      <Divider />
+                    </>
+                  )}
+                  <Text className="has-text-weight-medium">
                     {totalAvailableTickets > 0
                       ? `${totalAvailableTickets} tickets available`
                       : 'Sold out'}
@@ -363,11 +401,22 @@ const EventPage: React.FC<EventPageProps> = ({
                   <button
                     className="button is-primary is-fullwidth mt-4"
                     disabled={
-                      totalAvailableTickets === 0 || endTime < DateTime.now()
+                      totalAvailableTickets === 0 ||
+                      endTime < DateTime.now() ||
+                      notDroppedYet ||
+                      historicallyApproved
                     }
                     onClick={() => setShowTicketModal(true)}
                   >
-                    {endTime < DateTime.now() ? 'Event Ended' : 'Get Tickets'}
+                    {historicallyApproved
+                      ? 'Club Not Approved'
+                      : endTime < DateTime.now()
+                        ? 'Event Ended'
+                        : notDroppedYet
+                          ? 'Tickets Not Available Yet'
+                          : totalAvailableTickets === 0
+                            ? 'Sold Out'
+                            : 'Get Tickets'}
                   </button>
                 </Card>
               )}

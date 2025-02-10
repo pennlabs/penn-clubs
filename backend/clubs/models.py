@@ -355,6 +355,7 @@ class Club(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # signifies the existence of a previous instance within history with approved=True
     ghost = models.BooleanField(default=False)
     history = HistoricalRecords(cascade_delete_history=True)
 
@@ -1077,49 +1078,89 @@ class SearchQuery(models.Model):
         return "<SearchQuery: {} at {}>".format(self.query, self.created_at)
 
 
-class MembershipRequest(models.Model):
+class JoinRequest(models.Model):
     """
-    Used when users are not in the club but request membership from the owner
+    Abstract base class for Membership Request and Ownership Request
     """
 
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    requester = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="%(class)ss"
+    )
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="%(class)ss")
 
-    withdrew = models.BooleanField(default=False)
+    withdrawn = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        abstract = True
+        unique_together = (("requester", "club"),)
+
+
+class MembershipRequest(JoinRequest):
+    """
+    Used when users are not in the club but request membership from the owner
+    """
+
     def __str__(self):
-        return "<MembershipRequest: {} for {}, with email {}>".format(
-            self.person.username, self.club.code, self.person.email
-        )
+        return f"<MembershipRequest: {self.requester.username} for {self.club.code}>"
 
     def send_request(self, request=None):
         domain = get_domain(request)
+        edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
+        club_name = self.club.name
+        full_name = self.requester.get_full_name()
 
         context = {
-            "club_name": self.club.name,
-            "edit_url": "{}/member".format(
-                settings.EDIT_URL.format(domain=domain, club=self.club.code)
-            ),
-            "full_name": self.person.get_full_name(),
+            "club_name": club_name,
+            "edit_url": f"{edit_url}/member",
+            "full_name": full_name,
         }
 
         emails = self.club.get_officer_emails()
 
         if emails:
             send_mail_helper(
-                name="request",
-                subject="Membership Request from {} for {}".format(
-                    self.person.get_full_name(), self.club.name
-                ),
+                name="membership_request",
+                subject=f"Membership Request from {full_name} for {club_name}",
                 emails=emails,
                 context=context,
             )
 
-    class Meta:
-        unique_together = (("person", "club"),)
+
+class OwnershipRequest(JoinRequest):
+    """
+    Represents a user's request to take ownership of a club
+    """
+
+    def __str__(self):
+        return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"
+
+    def send_request(self, request=None):
+        domain = get_domain(request)
+        edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
+        club_name = self.club.name
+        full_name = self.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "edit_url": f"{edit_url}/member",
+            "full_name": full_name,
+        }
+
+        owner_emails = list(
+            self.club.membership_set.filter(
+                role=Membership.ROLE_OWNER, active=True
+            ).values_list("person__email", flat=True)
+        )
+
+        send_mail_helper(
+            name="ownership_request",
+            subject=f"Ownership Request from {full_name} for {club_name}",
+            emails=owner_emails,
+            context=context,
+        )
 
 
 class Advisor(models.Model):
