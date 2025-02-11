@@ -282,8 +282,8 @@ class ClubBadgePermission(permissions.BasePermission):
 
 class ClubItemPermission(permissions.BasePermission):
     """
-    Officers and above can create/update/delete events or testimonials.
-    Everyone else can view and list events or testimonials.
+    Officers and above can create/update/delete applications or testimonials.
+    Everyone else can view and list applications or testimonials.
     """
 
     def has_permission(self, request, view):
@@ -302,7 +302,14 @@ class ClubItemPermission(permissions.BasePermission):
                 return True
             obj = Club.objects.get(code=view.kwargs["club_code"])
             membership = find_membership_helper(request.user, obj)
-            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+            return (
+                membership is not None and membership.role <= Membership.ROLE_OFFICER
+            ) or (
+                obj.is_wharton
+                and WhartonApplicationPermission.check_wharton_council_officer(
+                    self, request
+                )
+            )
         else:
             return True
 
