@@ -163,6 +163,10 @@ class ClubPermission(permissions.BasePermission):
         # user must be in club or parent club to perform non-view actions
         membership = find_membership_helper(request.user, obj)
         if membership is None:
+            if obj.is_wharton:
+                return WhartonApplicationPermission.check_wharton_council_officer(
+                    self, request
+                )
             return False
         # user has to be an owner to delete a club, an officer to edit it
         if view.action in {"destroy"}:
@@ -338,15 +342,14 @@ class WhartonApplicationPermission(permissions.BasePermission):
     Grants permission if the user is an officer of Wharton Council
     """
 
-    WHARTON_COUNCIL_CLUB_CODE = "wharton-council"
-
     def check_wharton_council_officer(self, request):
+        WHARTON_COUNCIL_CLUB_CODE = "wharton-council"
         if not request.user.is_authenticated:
             return False
         user = get_user_model().objects.filter(username=request.user).first()
         if user is not None:
             membership = Membership.objects.filter(
-                club__code=self.WHARTON_COUNCIL_CLUB_CODE, person=user
+                club__code=WHARTON_COUNCIL_CLUB_CODE, person=user
             ).first()
             if membership is not None:
                 return membership.role <= Membership.ROLE_OFFICER
