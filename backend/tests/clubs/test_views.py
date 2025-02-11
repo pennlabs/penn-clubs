@@ -182,6 +182,22 @@ class ClubTestCase(TestCase):
             email="example@example.com",
         )
 
+        self.wc = Club.objects.create(
+            code="wharton-council",
+            name="Wharton Council",
+            approved=True,
+            email="example@example.com",
+        )
+
+        # a lot of tests (e.g. directory) implicitly assume some constant of clubs
+        self.NUM_CLUBS = 2
+
+        self.wc_badge = Badge.objects.create(
+            club=self.wc,
+            label="Wharton Council",
+            description="Wharton Council",
+        )
+
         self.event1 = Event.objects.create(
             code="test-event",
             club=self.club1,
@@ -235,7 +251,7 @@ class ClubTestCase(TestCase):
         """
         resp = self.client.get(reverse("clubs-directory"))
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(len(resp.data), self.NUM_CLUBS)
 
     def test_advisor_visibility(self):
         """
@@ -1576,6 +1592,38 @@ class ClubTestCase(TestCase):
         self.assertEqual(data["description"], "We do stuff.")
         self.assertEqual(len(data["tags"]), 2)
 
+    def test_club_wc_modify(self):
+        """
+        Wharton Council officers should be able to modify associated clubs.
+        """
+        wc_club = Club.objects.create(
+            name="WC Member Club",
+            code="wc-club",
+            description="We love Wharton",
+        )
+        Membership.objects.create(
+            person=self.user4, club=self.wc, role=Membership.ROLE_OFFICER
+        )
+
+        self.client.login(username=self.user4.username, password="test")
+
+        # assert that we can't modify a non-WC club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(wc_club.code,)),
+            {"description": "We hate Wharton"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # assert that we can modify a WC club
+        wc_club.badges.add(self.wc_badge)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(wc_club.code,)),
+            {"description": "We hate Wharton"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
     def test_club_archive_no_auth(self):
         """
         Unauthenticated users should not be able to archive a club.
@@ -1613,6 +1661,7 @@ class ClubTestCase(TestCase):
         self.club1.save()
 
         # ensure club was put back on clubs endpoint
+        cache.clear()
         resp = self.client.get(reverse("clubs-list"))
         self.assertIn(resp.status_code, [200], resp.content)
         codes = [club["code"] for club in resp.data]
@@ -2012,7 +2061,7 @@ class ClubTestCase(TestCase):
             reverse("clubs-list"), {"format": "xlsx", "fields": "name"}
         )
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertEqual(1, len(res.data[0]))
 
@@ -2021,14 +2070,14 @@ class ClubTestCase(TestCase):
             reverse("clubs-list"), {"format": "xlsx", "fields": "name,code"}
         )
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertEqual(2, len(res.data[0]))
 
     def test_club_report_selects_all_fields(self):
         res = self.client.get(reverse("clubs-list"), {"format": "xlsx"})
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertTrue(len(res.data[0]) > 2)
 

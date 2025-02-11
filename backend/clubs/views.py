@@ -173,6 +173,7 @@ from clubs.serializers import (
     EventSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
+    FakeView,
     FavoriteSerializer,
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
@@ -4522,15 +4523,6 @@ class FavoriteCalendarAPIView(APIView):
         response = HttpResponse(calendar, content_type="text/calendar")
         response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
         return response
-
-
-class FakeView(object):
-    """
-    Dummy view used for permissions checking by the UserPermissionAPIView.
-    """
-
-    def __init__(self, action):
-        self.action = action
 
 
 class UserGroupAPIView(APIView):

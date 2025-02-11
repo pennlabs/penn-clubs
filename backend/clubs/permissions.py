@@ -164,9 +164,7 @@ class ClubPermission(permissions.BasePermission):
         membership = find_membership_helper(request.user, obj)
         if membership is None:
             if obj.is_wharton:
-                return WhartonApplicationPermission.check_wharton_council_officer(
-                    self, request
-                )
+                return check_wharton_council_officer(self, request)
             return False
         # user has to be an owner to delete a club, an officer to edit it
         if view.action in {"destroy"}:
@@ -304,12 +302,7 @@ class ClubItemPermission(permissions.BasePermission):
             membership = find_membership_helper(request.user, obj)
             return (
                 membership is not None and membership.role <= Membership.ROLE_OFFICER
-            ) or (
-                obj.is_wharton
-                and WhartonApplicationPermission.check_wharton_council_officer(
-                    self, request
-                )
-            )
+            ) or (obj.is_wharton and check_wharton_council_officer(self, request))
         else:
             return True
 
@@ -344,29 +337,30 @@ class IsSuperuser(permissions.BasePermission):
         return request.user.is_authenticated and request.user.is_superuser
 
 
+def check_wharton_council_officer(self, request):
+    WHARTON_COUNCIL_CLUB_CODE = "wharton-council"
+    if not request.user.is_authenticated:
+        return False
+    user = get_user_model().objects.filter(username=request.user).first()
+    if user is not None:
+        membership = Membership.objects.filter(
+            club__code=WHARTON_COUNCIL_CLUB_CODE, person=user
+        ).first()
+        if membership is not None:
+            return membership.role <= Membership.ROLE_OFFICER
+    return False
+
+
 class WhartonApplicationPermission(permissions.BasePermission):
     """
     Grants permission if the user is an officer of Wharton Council
     """
 
-    def check_wharton_council_officer(self, request):
-        WHARTON_COUNCIL_CLUB_CODE = "wharton-council"
-        if not request.user.is_authenticated:
-            return False
-        user = get_user_model().objects.filter(username=request.user).first()
-        if user is not None:
-            membership = Membership.objects.filter(
-                club__code=WHARTON_COUNCIL_CLUB_CODE, person=user
-            ).first()
-            if membership is not None:
-                return membership.role <= Membership.ROLE_OFFICER
-        return False
-
     def has_object_permission(self, request, view, obj):
-        return self.check_wharton_council_officer(request)
+        return check_wharton_council_officer(self, request)
 
     def has_permission(self, request, view):
-        return self.check_wharton_council_officer(request)
+        return check_wharton_council_officer(self, request)
 
 
 def DjangoPermission(perm):
