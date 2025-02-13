@@ -94,50 +94,55 @@ const AppsContainer = styled.div`
   min-height: 60vh;
 `
 
-function ApplicationsPage({ whartonapplications }): ReactElement {
-  if ('detail' in whartonapplications) {
-    return <Text>{whartonapplications.detail}</Text>
+function ApplicationsPage({ whartonApplications }): ReactElement {
+  if ('detail' in whartonApplications) {
+    return <Text>{whartonApplications.detail}</Text>
   }
 
   return (
     <AppsContainer>
       <div className="columns is-multiline is-desktop is-tablet">
-        {whartonapplications != null && whartonapplications.length > 0 ? (
-          whartonapplications.map((application) => (
-            <CardWrapper className={'column is-half-desktop'}>
-              <Link href={application.external_url} target="_blank">
-                <Card className="card">
-                  <MainInfo>
-                    <div>
-                      <ClubName>{application.name}</ClubName>
-                      <DateInterval
-                        start={application.application_start_time}
-                        end={application.application_end_time}
-                      />
-                    </div>
-                    <div>
-                      {application.club_image_url != null &&
-                        application.club_image_url !== '' && (
-                          <LazyLoad>
-                            <Image src={application.club_image_url} />
-                          </LazyLoad>
-                        )}
-                    </div>
-                  </MainInfo>
-                  {application.description &&
-                    application.description.length && (
-                      <DescriptionWrapper
-                        dangerouslySetInnerHTML={{
-                          __html: application.description,
-                        }}
-                      ></DescriptionWrapper>
-                    )}
-                </Card>
-              </Link>
-            </CardWrapper>
-          ))
+        {whartonApplications != null && whartonApplications.length > 0 ? (
+          <div>
+            <Text>
+              Note: only current Wharton applications are displayed on this page{' '}
+            </Text>
+            {whartonApplications.map((application) => (
+              <CardWrapper className={'column is-half-desktop'}>
+                <Link href={application.external_url} target="_blank">
+                  <Card className="card">
+                    <MainInfo>
+                      <div>
+                        <ClubName>{application.name}</ClubName>
+                        <DateInterval
+                          start={application.application_start_time}
+                          end={application.application_end_time}
+                        />
+                      </div>
+                      <div>
+                        {application.club_image_url != null &&
+                          application.club_image_url !== '' && (
+                            <LazyLoad>
+                              <Image src={application.club_image_url} />
+                            </LazyLoad>
+                          )}
+                      </div>
+                    </MainInfo>
+                    {application.description &&
+                      application.description.length && (
+                        <DescriptionWrapper
+                          dangerouslySetInnerHTML={{
+                            __html: application.description,
+                          }}
+                        ></DescriptionWrapper>
+                      )}
+                  </Card>
+                </Link>
+              </CardWrapper>
+            ))}
+          </div>
         ) : (
-          <Text>No applications are currently available.</Text>
+          <Text>No Wharton applications are currently available.</Text>
         )}
       </div>
     </AppsContainer>
@@ -153,8 +158,9 @@ ApplicationsPage.getInitialProps = async (ctx: NextPageContext) => {
     ['whartonapplications'],
     ctx,
   )) as BulkResp
+
   return {
-    ...data,
+    whartonApplications: data.whartonapplications,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }

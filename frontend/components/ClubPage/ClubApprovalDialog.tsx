@@ -117,7 +117,7 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
                 </TextQuote>
               ) : (
                 <TextQuote className="py-0">
-                  <b>Submitted for re-approval</b> on{' '}
+                  <b>Submitted for approval</b> on{' '}
                   {moment(item.history_date)
                     .tz('America/New_York')
                     .format('LLL')}
