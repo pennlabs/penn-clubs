@@ -108,8 +108,8 @@ const sites = {
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
     CLUB_EMPTY_STATE: (
       <>
-        Looking for university resources? Check out{' '}
-        <a href="https://hub.provost.upenn.edu/">Hub@Penn</a>!
+        View all clubs, including those inactive or pending approval, in our{' '}
+        <a href="/directory">directory</a>!
       </>
     ),
 
