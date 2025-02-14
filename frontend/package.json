@@ -65,7 +65,7 @@
     "clean": "eslint \"./{pages,components,constants,cypress}/**/*.{js,ts,tsx}\" \"*.{js,ts,tsx}\" --fix",
     "test": "tsc --noemit",
     "integration": "./test.sh",
-    "dev": "bun run server.js",
+    "dev": "env TURBOPACK=1 bun run server.js",
     "ssl-proxy": "bunx local-ssl-proxy --source 3001 --target 3000 --key localhost+2-key.pem --cert localhost+2.pem",
     "build": "env NODE_ENV=production bunx next build",
     "start": "env NODE_ENV=production bun server.js",
