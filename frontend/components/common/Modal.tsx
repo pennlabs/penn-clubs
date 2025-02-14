@@ -71,7 +71,7 @@ export const Modal = ({
   closeModal,
   marginBottom = true,
   width,
-}: ModalProps): ReactElement => {
+}: ModalProps): ReactElement<any> => {
   const focusRef = useRef<HTMLDivElement>(null)
 
   const handleKeyPress = ({ key, keyCode }) => {

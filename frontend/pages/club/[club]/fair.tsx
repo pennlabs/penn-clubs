@@ -53,7 +53,7 @@ type FairProps = {
   club: Club
 }
 
-const Fair = ({ authenticated, club }: FairProps): ReactElement | null => {
+const Fair = ({ authenticated, club }: FairProps): ReactElement<any> | null => {
   if (!club) return null
   if (!club.code) {
     return (

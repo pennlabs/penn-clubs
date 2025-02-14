@@ -49,7 +49,7 @@ const LargeIcon = styled(Icon)`
 
 type RankItemData = {
   name: string
-  description: string | ReactElement
+  description: string | ReactElement<any>
   points?: [number, string][]
 }
 
@@ -57,7 +57,7 @@ type RankListProps = {
   items: RankItemData[]
 }
 
-const RankList = ({ items }: RankListProps): ReactElement => {
+const RankList = ({ items }: RankListProps): ReactElement<any> => {
   return (
     <div className="is-clearfix mb-5">
       {items.map(({ name, description, points }) => (
@@ -88,7 +88,7 @@ const RankList = ({ items }: RankListProps): ReactElement => {
   )
 }
 
-const Applications = (): ReactElement => (
+const Applications = (): ReactElement<any> => (
   <Container background={SNOW}>
     <Metadata title={`Creating ${OBJECT_NAME_TITLE_SINGULAR} Applications`} />
     <InfoPageTitle>

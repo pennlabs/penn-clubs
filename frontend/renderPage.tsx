@@ -206,7 +206,7 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
                     <LoginModal show={modal} closeModal={closeModal} />
                     <Header authenticated={authenticated} userInfo={userInfo} />
                     <Wrapper>
-                      <Page {...props} {...state} />
+                      <Page {...(props as any)} {...state} />
                     </Wrapper>
                     <Footer />
                   </RenderPageWrapper>
@@ -458,14 +458,14 @@ export function renderListPage<T>(
     static permissions?: string[]
     static getAdditionalPermissions?: (ctx: NextPageContext) => string[]
 
-    render(): ReactElement {
+    render(): ReactElement<any> {
       const { authenticated } = this.props
 
       if (authenticated === null) {
         return <Loading />
       }
 
-      return <Page {...this.props} />
+      return <Page {...(this.props as any)} />
     }
   }
 

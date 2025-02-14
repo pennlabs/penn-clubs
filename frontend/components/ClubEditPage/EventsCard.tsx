@@ -283,7 +283,7 @@ const eventTableFields = [
   {
     name: 'start_time',
     label: 'Start Time',
-    converter: (a: string): ReactElement => <TimeAgo date={a} />,
+    converter: (a: string): ReactElement<any> => <TimeAgo date={a} />,
   },
   {
     name: 'type',
@@ -294,7 +294,7 @@ const eventTableFields = [
   {
     name: 'is_ics_event',
     label: 'ICS',
-    converter: (a: boolean): ReactElement => {
+    converter: (a: boolean): ReactElement<any> => {
       return a ? (
         <span className="has-text-success">
           <Icon name="check" />
@@ -395,7 +395,8 @@ const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
               closeModal={() => {
                 hideModal()
                 if (ticketDroptimeRef && 'current' in ticketDroptimeRef) {
-                  const divRef = ticketDroptimeRef as RefObject<HTMLDivElement>
+                  const divRef =
+                    ticketDroptimeRef as RefObject<HTMLDivElement | null>
                   ticketDroptimeRef.current?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'center',
@@ -411,7 +412,9 @@ const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
   },
 )
 
-export default function EventsCard({ club }: EventsCardProps): ReactElement {
+export default function EventsCard({
+  club,
+}: EventsCardProps): ReactElement<any> {
   const [deviceContents, setDeviceContents] = useState<any>({})
   const eventDetailsRef = useRef<HTMLDivElement>(null)
   const ticketDroptimeRef = useRef<HTMLDivElement>(null)

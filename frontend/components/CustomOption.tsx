@@ -18,12 +18,12 @@ type Entity = {
 /**
  * A toolbar widget for the editor to add custom variables to personalized outcome notifications.
  */
-const CustomOption = (props: Props): ReactElement => {
+const CustomOption = (props: Props): ReactElement<any> => {
   const [showModal, setShowModal] = useState<boolean>(false)
 
   const [variableSelected, setVariableSelected] = useState<string>('name')
   const [errorMessage, setErrorMessage] = useState<
-    ReactElement | string | null
+    ReactElement<any> | string | null
   >(null)
 
   const helperText = String.raw`

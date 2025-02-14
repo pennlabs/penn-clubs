@@ -168,7 +168,7 @@ function parsePie(obj): PieData {
 
 export default function AnalyticsCard({
   club,
-}: AnalyticsCardProps): ReactElement {
+}: AnalyticsCardProps): ReactElement<any> {
   const [visits, setVisits] = useState<LineData>([])
   const [favorites, setFavorites] = useState<LineData>([])
   const [subscriptions, setSubscriptions] = useState<LineData>([])

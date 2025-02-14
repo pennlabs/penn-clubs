@@ -170,7 +170,7 @@ export const Collapsible = ({
   children,
   active,
   name,
-}: CollapsibleProps): ReactElement => {
+}: CollapsibleProps): ReactElement<any> => {
   const [isActive, setActive] = useState<boolean | null>(active ?? null)
   const [defaultActive, setDefaultActive] = useState<boolean>(true)
 
@@ -261,7 +261,7 @@ export const SearchBarCheckboxItem = ({
   param,
   label,
   options,
-}: SearchBarCheckboxItemProps): ReactElement => {
+}: SearchBarCheckboxItemProps): ReactElement<any> => {
   const searchCallback = useContext(SearchBarContext)
   if (searchCallback == null) {
     throw new Error('This component must be used inside a search bar!')
@@ -303,7 +303,7 @@ export const SearchBarCheckboxItem = ({
 export const SearchBarOptionItem = ({
   param,
   label,
-}: SearchBarOptionItemProps): ReactElement => {
+}: SearchBarOptionItemProps): ReactElement<any> => {
   const searchCallback = useContext(SearchBarContext)
   if (searchCallback == null) {
     throw new Error('This component must be used inside a search bar!')
@@ -329,7 +329,7 @@ export const SearchBarOptionItem = ({
  */
 export const SearchBarTextItem = ({
   param,
-}: SearchBarTextItemProps): ReactElement => {
+}: SearchBarTextItemProps): ReactElement<any> => {
   const searchCallback = useContext(SearchBarContext)
   if (searchCallback == null) {
     throw new Error('This component must be used inside a search bar!')
@@ -337,7 +337,7 @@ export const SearchBarTextItem = ({
 
   const [nameInput, setNameInput] = useState<string>('')
   const [timeout, storeTimeout] = useState<number | null>(null)
-  const inputRef = useRef() as React.MutableRefObject<HTMLInputElement>
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     timeout !== null && clearTimeout(timeout)
@@ -432,7 +432,7 @@ export const SearchBarTagItem = ({
   param,
   options,
   label,
-}: SearchBarTagItemProps): ReactElement => {
+}: SearchBarTagItemProps): ReactElement<any> => {
   const searchCallback = useContext(SearchBarContext)
   if (searchCallback == null) {
     throw new Error('This component must be used inside a search bar!')
@@ -486,7 +486,7 @@ const SearchBar = ({
   updateSearch,
   searchInput,
   children,
-}: SearchBarProps): ReactElement => {
+}: SearchBarProps): ReactElement<any> => {
   const [scrollAmount, setScrollAmount] = useState<number>(
     parseFloat(FULL_NAV_HEIGHT),
   )

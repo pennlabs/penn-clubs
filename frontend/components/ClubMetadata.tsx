@@ -16,7 +16,7 @@ type Props = {
   club: Club | null
 }
 
-const ClubMetadata = ({ club }: Props): ReactElement | null => {
+const ClubMetadata = ({ club }: Props): ReactElement<any> | null => {
   if (!club) {
     return null
   }

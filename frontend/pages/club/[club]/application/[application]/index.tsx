@@ -5,7 +5,7 @@ import { Container, Icon, Title } from 'components/common'
 import { Field, Form, Formik } from 'formik'
 import moment from 'moment'
 import { NextPageContext } from 'next'
-import { ReactElement, useState } from 'react'
+import { type JSX, ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
@@ -113,7 +113,7 @@ const ApplicationPage = ({
   application,
   questions,
   initialValues,
-}): ReactElement => {
+}): ReactElement<any> => {
   if (!userInfo) {
     return <AuthPrompt />
   }

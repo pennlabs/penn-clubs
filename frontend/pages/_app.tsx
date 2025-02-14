@@ -8,7 +8,7 @@ import { ReactElement } from 'react'
 
 import RouteProgressBar from '~/components/RouteProgressBar'
 
-const App = ({ Component, pageProps }: AppProps): ReactElement => {
+const App = ({ Component, pageProps }: AppProps): ReactElement<any> => {
   return (
     <>
       <Component {...pageProps} />

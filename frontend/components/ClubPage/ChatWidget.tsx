@@ -20,9 +20,9 @@ type Props = {
   code: string
 }
 
-const ChatWidget = ({ code }: Props): ReactElement => {
+const ChatWidget = ({ code }: Props): ReactElement<any> => {
   const ws = useRef<WebSocket | null>(null)
-  const [messages, setMessages] = useState<ReactElement[]>([])
+  const [messages, setMessages] = useState<ReactElement<any>[]>([])
   const [input, setInput] = useState<string>('')
   const [inputEnabled, setInputEnabled] = useState<boolean>(false)
   const messagesEle = createRef<HTMLDivElement>()

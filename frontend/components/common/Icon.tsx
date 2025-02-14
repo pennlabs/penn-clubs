@@ -41,7 +41,7 @@ export const Icon = ({
   noMargin,
   noAlign,
   ...props
-}: IconProps): ReactElement | null => {
+}: IconProps): ReactElement<any> | null => {
   const svg = reqSvgs(`./${name}.svg`)
   if (!show || !svg || !svg.default) {
     return null

@@ -89,14 +89,14 @@ const ClubForm = ({
   clubId,
   tab,
   userInfo,
-}: ClubFormProps): ReactElement => {
+}: ClubFormProps): ReactElement<any> => {
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
 
   const router = useRouter()
 
   const notify = (
-    msg: string | ReactElement,
+    msg: string | ReactElement<any>,
     type: TypeOptions = 'info',
   ): void => {
     toast[type](msg)
@@ -107,7 +107,7 @@ const ClubForm = ({
     club,
     isEdit: isEditNew,
   }: {
-    message: ReactElement | string | null
+    message: ReactElement<any> | string | null
     club?: Club
     isEdit?: boolean
   }): Promise<void> => {
@@ -219,7 +219,7 @@ const ClubForm = ({
   let tabs: {
     name: string
     label: string
-    content: ReactElement
+    content: ReactElement<any>
     disabled?: boolean
   }[] = []
 

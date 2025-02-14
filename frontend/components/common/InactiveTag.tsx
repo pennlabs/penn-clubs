@@ -16,4 +16,4 @@ const Span = styled.span`
   font-weight: 500;
 `
 
-export const InactiveTag = (): ReactElement => <Span>Inactive</Span>
+export const InactiveTag = (): ReactElement<any> => <Span>Inactive</Span>

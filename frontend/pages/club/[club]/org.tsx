@@ -51,7 +51,7 @@ type OrgTree =
     }
   | { detail: string }
 
-const OrgChild = (tree: OrgTree): ReactElement => {
+const OrgChild = (tree: OrgTree): ReactElement<any> => {
   if ('detail' in tree) {
     return <ErrorText>{tree.detail}</ErrorText>
   }
@@ -95,7 +95,7 @@ type Props = {
   club: Club
 }
 
-const OrganizationPage = ({ club }: Props): ReactElement => {
+const OrganizationPage = ({ club }: Props): ReactElement<any> => {
   const [children, setChildren] = useState<OrgTree | null>(null)
   const [parents, setParents] = useState<OrgTree | null>(null)
 

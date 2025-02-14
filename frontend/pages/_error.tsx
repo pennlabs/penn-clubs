@@ -22,7 +22,7 @@ type ErrorProps = {
 const Error = ({
   statusCode = 500,
   message = 'Something went wrong',
-}: ErrorProps): ReactElement => (
+}: ErrorProps): ReactElement<any> => (
   <Container background={SNOW} fullHeight>
     <Metadata />
     <Center>

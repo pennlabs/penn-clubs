@@ -10,7 +10,7 @@ import { OBJECT_NAME_TITLE } from 'utils/branding'
 
 import { BG_GRADIENT, WHITE } from '~/constants/colors'
 
-function UserRenewal({ userInfo, authenticated }): ReactElement {
+function UserRenewal({ userInfo, authenticated }): ReactElement<any> {
   const canApprove = apiCheckPermission('clubs.approve_club')
 
   if (authenticated === null) {

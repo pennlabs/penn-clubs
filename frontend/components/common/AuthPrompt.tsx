@@ -46,7 +46,7 @@ const AuthPrompt = ({
   title = 'One last step...',
   children = `To make the most of ${SITE_NAME} features, like bookmarking and subscribing to ${OBJECT_NAME_PLURAL}, please login using your PennKey.`,
   hasLogin = true,
-}: AuthPromptProps): ReactElement => {
+}: AuthPromptProps): ReactElement<any> => {
   const [nextLink, setNextLink] = useState<string>('/')
 
   useEffect(() => {

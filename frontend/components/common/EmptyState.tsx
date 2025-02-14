@@ -22,7 +22,7 @@ export const EmptyState = ({
   size,
   style,
   ...props
-}: EmptyStateProps): ReactElement => (
+}: EmptyStateProps): ReactElement<any> => (
   <Image
     src={`/static/img/${name}.svg`}
     alt={alt}
