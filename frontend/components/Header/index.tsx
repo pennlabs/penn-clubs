@@ -141,7 +141,7 @@ function withFading<T>(
   invert: boolean,
   max: number,
 ): React.ComponentType<T> {
-  return (props): ReactElement<any> => {
+  return (props: any): ReactElement<any> => {
     const [opacity, setOpacity] = useState<number>(invert ? 1 : 0)
 
     useEffect(() => {

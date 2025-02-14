@@ -337,7 +337,7 @@ export const SearchBarTextItem = ({
 
   const [nameInput, setNameInput] = useState<string>('')
   const [timeout, storeTimeout] = useState<number | null>(null)
-  const inputRef = useRef(undefined) as React.MutableRefObject<HTMLInputElement>
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     timeout !== null && clearTimeout(timeout)

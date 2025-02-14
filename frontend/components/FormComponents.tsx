@@ -88,9 +88,9 @@ type FieldWrapperProps = BasicFormField & { isError?: boolean }
  * to specify the input itself.
  */
 function useFieldWrapper<T extends FieldWrapperProps>(
-  Element: React.ComponentType<zzOmit<T, 'label' | 'noLabel' | 'helpText'>>,
+  Element: React.ComponentType<Omit<T, 'label' | 'noLabel' | 'helpText'>>,
 ): (props: T) => ReactElement<any> {
-  return (props: T) => {
+  return (props: any) => {
     const { label, noLabel, helpText, ...other } = props
     const { status } = useFormikContext()
     const actualLabel = label ?? titleize(props.name)

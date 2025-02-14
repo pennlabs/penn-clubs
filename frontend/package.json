@@ -70,7 +70,7 @@
     "dev": "bun run server.js",
     "ssl-proxy": "bunx local-ssl-proxy --source 3001 --target 3000 --key localhost+2-key.pem --cert localhost+2.pem",
     "build": "env NODE_ENV=production bunx next build",
-    "start": "env NODE_ENV=production node server.js",
+    "start": "env NODE_ENV=production bun server.js",
     "storybook": "start-storybook -s ./public -p 6006",
     "build-storybook": "build-storybook -o public/storybook"
   },
