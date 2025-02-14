@@ -28,7 +28,7 @@ const PaginatedClubDisplay = ({
   displayClubs,
   tags,
   display,
-}: ClubDisplayProps): ReactElement => {
+}: ClubDisplayProps): ReactElement<any> => {
   const [isLoading, setLoading] = useState<boolean>(false)
   const [clubs, setClubs] = useState<Club[]>(displayClubs.results)
   const [nextUrl, setNextUrl] = useState<string | null>(null)

@@ -53,7 +53,7 @@ export const Metadata = ({
   type,
   twitterUsername,
   twitterCardType,
-}: MetadataProps): ReactElement => (
+}: MetadataProps): ReactElement<any> => (
   <Head>
     <title>{title}</title>
 
@@ -62,7 +62,7 @@ export const Metadata = ({
     <meta name="theme-color" content="#ffffff" />
     <meta
       name="description"
-      content={description.replace(/<\/?[^>]+(>|$)/g, '').trim()}
+      content={description?.replace(/<\/?[^>]+(>|$)/g, '').trim()}
     />
     <meta name="keywords" content={keywords} />
     <meta name="author" content={author} />

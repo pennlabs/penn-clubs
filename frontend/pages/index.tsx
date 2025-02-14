@@ -91,7 +91,7 @@ type SplashProps = {
   clubCount: number
 }
 
-export const ListLoadIndicator = (): ReactElement => {
+export const ListLoadIndicator = (): ReactElement<any> => {
   return (
     <progress className="progress is-small" max={100}>
       Loading...
@@ -103,7 +103,7 @@ const SearchTags = ({
   searchInput,
   setSearchInput,
   optionMapping,
-}): ReactElement => {
+}): ReactElement<any> => {
   const tags = Object.keys(optionMapping)
     .map((param) => {
       return (searchInput[param] ?? '')
@@ -190,7 +190,7 @@ const SearchTags = ({
 /**
  * The top bar search input, used for Hub@Penn.
  */
-const TopSearchBar = ({ onChange }): ReactElement => {
+const TopSearchBar = ({ onChange }): ReactElement<any> => {
   const searchTimeout = useRef<number | null>(null)
   const [searchValue, setSearchValue] = useState<string>('')
 
@@ -232,7 +232,7 @@ const TopSearchBar = ({ onChange }): ReactElement => {
 /**
  * A scroll to top button at the bottom right corner of the page.
  */
-const ScrollTopButton = (): ReactElement | null => {
+const ScrollTopButton = (): ReactElement<any> | null => {
   const [isTop, setIsTop] = useState<boolean>(true)
 
   useEffect(() => {
@@ -276,7 +276,7 @@ const searchIsEmpty = (input: SearchInput): boolean => {
   return (!search || !search.length) && !Object.entries(rest).length
 }
 
-const Splash = (props: SplashProps): ReactElement => {
+const Splash = (props: SplashProps): ReactElement<any> => {
   const fairIsOpen = useSetting('FAIR_OPEN')
   const fairIsVirtual = useSetting('FAIR_VIRTUAL')
   const preFair = useSetting('PRE_FAIR')

@@ -23,11 +23,11 @@ type Props = {
 const ProfileForm = ({
   settings,
   onUpdate = () => undefined,
-}: Props): ReactElement => {
+}: Props): ReactElement<any> => {
   const [schools, setSchools] = useState([])
   const [majors, setMajors] = useState([])
   const [errorMessage, setErrorMessage] = useState<
-    ReactElement | string | null
+    ReactElement<any> | string | null
   >(null)
 
   useEffect(() => {

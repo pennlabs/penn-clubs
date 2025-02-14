@@ -36,7 +36,7 @@ const SubtitleText = styled.div`
   display: inline-block;
 `
 
-const LogoWithText = (): ReactElement => {
+const LogoWithText = (): ReactElement<any> => {
   return (
     <Wrapper>
       <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />

@@ -325,7 +325,7 @@ export function titleize(str: string): string {
  */
 export function formatResponse(
   err: { [key: string]: string } | string,
-): ReactElement {
+): ReactElement<any> {
   if (typeof err === 'string') {
     return <>{err}</>
   }

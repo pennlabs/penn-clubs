@@ -12,7 +12,7 @@ type CreateReportPageProps = {
   tags: Tag[]
 }
 
-const CreateReportPage = (props: CreateReportPageProps): ReactElement => {
+const CreateReportPage = (props: CreateReportPageProps): ReactElement<any> => {
   return <EditReportPage {...props} report={null} />
 }
 

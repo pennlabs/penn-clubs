@@ -10,7 +10,7 @@ export const Device = ({
   children,
   style,
   type = 'iphone',
-}: DeviceProps): ReactElement => (
+}: DeviceProps): ReactElement<any> => (
   <>
     <Head>
       <link

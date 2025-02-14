@@ -31,7 +31,7 @@ const QueueTableModal = ({
   bulkAction,
   isApproving,
   templates,
-}: QueueTableModalProps): ReactElement => {
+}: QueueTableModalProps): ReactElement<any> => {
   const [comment, setComment] = useState<string>('')
   const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
 
@@ -114,7 +114,10 @@ type QueueTableProps = {
 }
 /* TODO: refactor with Table component when render and search
 functionality are disconnected */
-const QueueTable = ({ clubs, templates }: QueueTableProps): ReactElement => {
+const QueueTable = ({
+  clubs,
+  templates,
+}: QueueTableProps): ReactElement<any> => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
@@ -276,7 +279,7 @@ const SmallTitle = styled.div`
   }
 `
 
-const QueueTab = (): ReactElement => {
+const QueueTab = (): ReactElement<any> => {
   const [pendingClubs, setPendingClubs] = useState<Club[] | null>(null)
   const [approvedClubs, setApprovedClubs] = useState<Club[] | null>(null)
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)

@@ -9,7 +9,7 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
-  notify?: (message: ReactElement | string, type?: string) => void
+  notify?: (message: ReactElement<any> | string, type?: string) => void
   onUpdate?: () => void
 }
 
@@ -17,7 +17,7 @@ export default function EnableSubscriptionCard({
   club,
   notify = () => undefined,
   onUpdate = () => undefined,
-}: Props): ReactElement {
+}: Props): ReactElement<any> {
   const [active, enable] = useState(club.enables_subscription)
   const changeEnableSubscription = () => {
     doApiRequest(`/clubs/${club.code}/?format=json`, {

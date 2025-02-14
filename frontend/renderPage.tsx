@@ -458,7 +458,7 @@ export function renderListPage<T>(
     static permissions?: string[]
     static getAdditionalPermissions?: (ctx: NextPageContext) => string[]
 
-    render(): ReactElement {
+    render(): ReactElement<any> {
       const { authenticated } = this.props
 
       if (authenticated === null) {

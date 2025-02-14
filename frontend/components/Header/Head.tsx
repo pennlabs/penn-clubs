@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-const Heading = (): ReactElement => {
+const Heading = (): ReactElement<any> => {
   useEffect(() => {
     if (!window.GA_INITIALIZED) {
       initGA()

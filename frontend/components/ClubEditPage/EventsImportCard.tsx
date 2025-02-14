@@ -18,7 +18,7 @@ type EventsImportCardProps = {
 export default function EventsImportCard({
   club,
   onFetchEvents,
-}: EventsImportCardProps): ReactElement {
+}: EventsImportCardProps): ReactElement<any> {
   const [isFetching, setFetching] = useState<boolean>(false)
   const [isDeleting, setDeleting] = useState<boolean>(false)
 

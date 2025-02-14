@@ -69,7 +69,7 @@ const Invite = ({
   inviter: initialInviter,
   error: initialError,
   authenticated,
-}: InviteProps & { authenticated: boolean | null }): ReactElement => {
+}: InviteProps & { authenticated: boolean | null }): ReactElement<any> => {
   const router = useRouter()
   const [isPublic, setIsPublic] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(initialError)

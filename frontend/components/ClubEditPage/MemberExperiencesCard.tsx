@@ -13,7 +13,7 @@ type MemberExperiencesCardProps = {
 
 export default function MemberExperiencesCard({
   club,
-}: MemberExperiencesCardProps): ReactElement {
+}: MemberExperiencesCardProps): ReactElement<any> {
   return (
     <BaseCard title="Student Experiences">
       <Text>

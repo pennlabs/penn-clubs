@@ -19,7 +19,7 @@ import { fixDeserialize } from '../reports/ReportForm'
 /**
  * A component where the user can enter a list of club names and get a list of club codes in response.
  */
-const ClubNameLookup = (): ReactElement => {
+const ClubNameLookup = (): ReactElement<any> => {
   const [input, setInput] = useState<string>('')
   const [output, setOutput] = useState<string>('')
   const [isLoading, setLoading] = useState<boolean>(false)

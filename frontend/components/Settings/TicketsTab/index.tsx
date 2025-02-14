@@ -114,7 +114,10 @@ export enum ModalType {
   QR_CODE,
 }
 
-const TicketsTab = ({ className, userInfo }: TicketsTabProps): ReactElement => {
+const TicketsTab = ({
+  className,
+  userInfo,
+}: TicketsTabProps): ReactElement<any> => {
   const [tickets, setTickets] = useState<any>(null)
   const [shownModal, setShownModal] = useState<ModalType>(ModalType.NONE)
   const [expandedEvents, setExpandedEvents] = useState(new Set())

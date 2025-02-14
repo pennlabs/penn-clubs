@@ -107,7 +107,7 @@ export const FilterHeader = ({
   name,
   id,
   toggleActive,
-}: FilterHeaderProps): ReactElement => (
+}: FilterHeaderProps): ReactElement<any> => (
   <>
     <Line />
     <DropdownHeader onClick={() => toggleActive()}>
@@ -143,7 +143,7 @@ const DropdownFilter = ({
   color,
   options,
   updateTag,
-}: DropdownFilterProps): ReactElement => {
+}: DropdownFilterProps): ReactElement<any> => {
   /**
    * Returns if the supplied tag is in the list of selected tags
    *

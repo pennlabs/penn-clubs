@@ -50,7 +50,7 @@ export const SubscribeIcon = ({
   absolute = false,
   padding,
   onSubscribe = () => null,
-}: SubscribeIconProps): ReactElement => {
+}: SubscribeIconProps): ReactElement<any> => {
   const [subscribe, setSubscribe] = useState<boolean>(club.is_subscribe)
   const authCheck = useContext(AuthCheckContext)
 

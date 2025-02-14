@@ -26,7 +26,7 @@ function AdminPage({
   scripts,
   fair,
   reports,
-}): ReactElement {
+}): ReactElement<any> {
   if (!userInfo) {
     return <AuthPrompt />
   } else if (

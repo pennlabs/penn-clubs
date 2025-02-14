@@ -82,7 +82,7 @@ export const ProfilePic = ({
   fontSize,
   size = 'is-64x64',
   isCentered = true,
-}: ProfilePicProps): ReactElement => {
+}: ProfilePicProps): ReactElement<any> => {
   const { name, image } = user
   if (image)
     return (

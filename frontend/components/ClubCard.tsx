@@ -96,7 +96,7 @@ type ClubCardProps = {
   fullWidth?: boolean
 }
 
-const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement => {
+const ClubCard = ({ club, fullWidth }: ClubCardProps): ReactElement<any> => {
   const { name, active, approved, subtitle, tags, enables_subscription, code } =
     club
   const img = club.image_url

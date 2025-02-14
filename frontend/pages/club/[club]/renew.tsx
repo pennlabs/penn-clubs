@@ -93,7 +93,9 @@ type Props = {
   onChecked?: () => void
 }
 
-const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
+const PolicyBox = ({
+  onChecked = () => undefined,
+}: Props): ReactElement<any> => {
   const [numChecked, setNumChecked] = useState<number>(0)
 
   const policies = [
@@ -179,7 +181,7 @@ const PolicyBox = ({ onChecked = () => undefined }: Props): ReactElement => {
   )
 }
 
-const RenewPage = (props: RenewPageProps): ReactElement => {
+const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   const {
     club: initialClub,
     authenticated,
@@ -194,7 +196,7 @@ const RenewPage = (props: RenewPageProps): ReactElement => {
   const [step, setStep] = useState<number>(0)
   const [changeStatus, setChangeStatus] = useState<boolean>(false)
   const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement | null
+    string | ReactElement<any> | null
   >(null)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 

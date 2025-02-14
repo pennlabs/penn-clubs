@@ -18,7 +18,7 @@ import {
 
 import { BG_GRADIENT, WHITE } from '~/constants'
 
-function FairsPage({ userInfo, fairs, memberships }): ReactElement {
+function FairsPage({ userInfo, fairs, memberships }): ReactElement<any> {
   if (!userInfo) {
     return <AuthPrompt />
   }

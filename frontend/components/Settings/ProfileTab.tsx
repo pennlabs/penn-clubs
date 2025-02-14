@@ -38,7 +38,7 @@ type ProfileTabProps = {
   defaults: UserInfo
 }
 
-const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement => {
+const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement<any> => {
   const [profile, setProfile] = useState(defaults)
 
   const { name, username, email, image_url } = profile

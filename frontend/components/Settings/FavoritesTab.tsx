@@ -13,7 +13,7 @@ type FavoritesTabProps = {
   keyword: 'bookmark' | 'subscription'
 }
 
-const FavoritesTab = ({ keyword }: FavoritesTabProps): ReactElement => {
+const FavoritesTab = ({ keyword }: FavoritesTabProps): ReactElement<any> => {
   const [favorites, setFavorites] = useState<Club[]>([])
   const [isLoading, setLoading] = useState<boolean>(true)
 
