@@ -3,19 +3,6 @@
 const express = require('express')
 const next = require('next')
 
-const devProxy = {
-  '/api': {
-    target: 'http://localhost:8000',
-    changeOrigin: true,
-    ws: true,
-  },
-  '/__debug__': {
-    // this allows django debug toolbar to work properly
-    target: 'http://localhost:8000',
-    changeOrigin: true,
-  },
-}
-
 const port = parseInt(process.env.PORT, 10) || 3000
 const env = process.env.NODE_ENV
 const dev = env !== 'production'
