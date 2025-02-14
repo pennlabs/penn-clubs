@@ -63,23 +63,21 @@ Use `$ ./manage.py test` to run unit tests.
 ### Frontend
 
 Running the frontend requires [Node.js](https://nodejs.org/en/) and
-[Yarn](https://yarnpkg.com/getting-started/install).
+[Bun](https://bun.sh).
 
 **Please ensure you are using Node 20**. Our codebase does not support other
 versions of Node (v20.11.1 is stable).
 
-You will need to set the following environment variables on the frontend:
+You will need to set the following environment variables on the frontend in production:
 
 - `NEXT_PUBLIC_GOOGLE_API_KEY`
 - `NEXT_PUBLIC_SITE_NAME` (Optional)
   - Specify `clubs` to show Penn Clubs and `fyh` to show Hub@Penn.
 
 1. Enter the `frontend` directory with a **new terminal window**. Don't kill your backend server!
-2. Install dependencies using `yarn install` in the project directory.
-3. Run application using `yarn dev`.
+2. Install dependencies using `bun install` in the project directory.
+3. Run application using `bun dev`.
 4. Access application at [http://localhost:3000](http://localhost:3000).
-
-Use `$ yarn test` to run Cypress tests.
 
 ### Development
 
