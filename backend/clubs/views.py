@@ -6535,7 +6535,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         email_type = self.request.data.get("email_type")["id"]
 
         subject = f"Application Update for {app.name}"
-        n, skip = 0, 0
+        n, skip = 0, collections.defaultdict(int)
 
         allow_resend = self.request.data.get("allow_resend")
 
@@ -6545,12 +6545,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         mass_emails = []
         invitee_emails = []
         for submission in submissions:
-            if (
-                (not allow_resend and submission.notified)
-                or submission.status == ApplicationSubmission.PENDING
-                or not (submission.reason and submission.user.email)
-            ):
-                skip += 1
+            if not allow_resend and submission.notified:
+                skip["already_notified"] += 1
+                continue
+            elif submission.status == ApplicationSubmission.PENDING:
+                skip["pending"] += 1
+                continue
+            elif not (submission.reason and submission.user.email):
+                skip["no_reason"] += 1
                 continue
             elif (
                 submission.status == ApplicationSubmission.ACCEPTED
@@ -6617,10 +6619,17 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 invite.send_mail(self.request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
+        skip_msg = ""
+        if skip["already_notified"]:
+            skip_msg += f" {skip['already_notified']} already notified"
+        if skip["pending"]:
+            skip_msg += f" {skip['pending']} still marked as pending"
+        if skip["no_reason"]:
+            skip_msg += f" {skip['no_reason']} have no reason provided"
         return Response(
             {
                 "detail": f"{dry_run_msg} emails to {n} people, "
-                f"skipping {skip} due to one of (already notified, no reason, no email)"
+                f"{skip_msg if skip_msg else ''}",
             }
         )
 
