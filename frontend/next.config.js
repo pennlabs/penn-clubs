@@ -33,10 +33,6 @@ module.exports = {
     if (process.env.NODE_ENV !== 'production') {
       rewrites.push(
         {
-          source: '/api/admin/:path*',
-          destination: 'http://localhost:8000/api/admin/:path*',
-        },
-        {
           source: '/api/:path((?!api/.*$).*)',
           destination: 'http://localhost:8000/api/:path/',
         },
