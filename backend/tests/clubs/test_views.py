@@ -193,7 +193,7 @@ class ClubTestCase(TestCase):
         self.NUM_CLUBS = 2
 
         self.wc_badge = Badge.objects.create(
-            club=self.wc,
+            org=self.wc,
             label="Wharton Council",
             description="Wharton Council",
         )
@@ -1592,11 +1592,12 @@ class ClubTestCase(TestCase):
         self.assertEqual(data["description"], "We do stuff.")
         self.assertEqual(len(data["tags"]), 2)
 
-    def test_club_wc_modify(self):
+    def test_club_modify_child(self):
         """
-        Wharton Council officers should be able to modify associated clubs.
+        Officers of parent clubs should be able to modify child clubs
+        (e.g. clubs with the parent badge).
         """
-        wc_club = Club.objects.create(
+        child_club = Club.objects.create(
             name="WC Member Club",
             code="wc-club",
             description="We love Wharton",
@@ -1607,18 +1608,19 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user4.username, password="test")
 
-        # assert that we can't modify a non-WC club
+        # assert that we can't modify a non-child club
         resp = self.client.patch(
-            reverse("clubs-detail", args=(wc_club.code,)),
+            reverse("clubs-detail", args=(child_club.code,)),
             {"description": "We hate Wharton"},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-        # assert that we can modify a WC club
-        wc_club.badges.add(self.wc_badge)
+        # assert that we can modify a child club
+        child_club.badges.add(self.wc_badge)
+        call_command("sync")
         resp = self.client.patch(
-            reverse("clubs-detail", args=(wc_club.code,)),
+            reverse("clubs-detail", args=(child_club.code,)),
             {"description": "We hate Wharton"},
             content_type="application/json",
         )
