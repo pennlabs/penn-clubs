@@ -189,7 +189,7 @@ class ClubTestCase(TestCase):
             email="example@example.com",
         )
 
-        # a lot of tests (e.g. directory) implicitly assume some constant of clubs
+        # some tests (e.g. directory) implicitly assume some constant number of clubs
         self.NUM_CLUBS = 2
 
         self.wc_badge = Badge.objects.create(

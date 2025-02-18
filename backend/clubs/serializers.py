@@ -1023,7 +1023,8 @@ class ClubListSerializer(serializers.ModelSerializer):
         if instance.ghost and not instance.approved:
             user = self.context["request"].user
 
-            # users that can edit the club can see its pending status
+            # admins, club members, and anyone with permission to edit the club
+            # can see its latest, potentially unapproved version
             can_see_pending = (
                 user.has_perm("clubs.see_pending_clubs")
                 or user.has_perm("clubs.manage_club")
