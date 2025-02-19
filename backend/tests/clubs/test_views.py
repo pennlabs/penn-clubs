@@ -1617,8 +1617,20 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
         # assert that we can modify a child club
-        child_club.badges.add(self.wc_badge)
-        call_command("sync")
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("badge-clubs-list", args=(self.wc_badge.id,)),
+            {"club": child_club.code},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        child_club.refresh_from_db()
+        self.assertEqual(child_club.badges.count(), 1)
+        self.assertEqual(child_club.badges.all()[0], self.wc_badge)
+        self.assertEqual(child_club.parent_orgs.count(), 1)
+        self.assertEqual(child_club.parent_orgs.all()[0], self.wc)
+
+        self.client.login(username=self.user4.username, password="test")
         resp = self.client.patch(
             reverse("clubs-detail", args=(child_club.code,)),
             {"description": "We hate Wharton"},

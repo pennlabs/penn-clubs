@@ -80,6 +80,7 @@ from social_django.utils import load_strategy
 from tatsu.exceptions import FailedParse
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
+from clubs.management.commands.sync import Command as SyncCommand
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     AdminNote,
@@ -7539,12 +7540,15 @@ class BadgeClubViewSet(viewsets.ModelViewSet):
         badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
         club = get_object_or_404(Club, code=request.data["club"])
         club.badges.add(badge)
+        SyncCommand().sync_badge(badge)
         return Response({"success": True})
 
     def destroy(self, request, *args, **kwargs):
         club = self.get_object()
         badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
         club.badges.remove(badge)
+        club.parent_orgs.remove(badge.org)
+        SyncCommand().sync_badge(badge)
         return Response({"success": True})
 
     def get_queryset(self):
