@@ -29,6 +29,7 @@ jobs:
       gitSha: ${{ github.sha }}
       nodeVersion: 20.11.1
       skipReactPublish: true
+      skipCodecov: true
 
   build-backend:
     name: Build backend
