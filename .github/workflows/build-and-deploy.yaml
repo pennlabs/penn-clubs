@@ -8,7 +8,7 @@ on: push
 jobs:
   backend-check:
     name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@bump-reusable-workflows
+    uses: pennlabs/shared-actions/.github/workflows/django.yaml@v0.1.5
     secrets: inherit
     with:
       projectName: pennclubs
@@ -20,7 +20,7 @@ jobs:
 
   frontend-check:
     name: "Frontend Check"
-    uses: pennlabs/shared-actions/.github/workflows/react.yaml@bump-reusable-workflows
+    uses: pennlabs/shared-actions/.github/workflows/react.yaml@v0.1.5
     secrets: inherit
     with:
       path: frontend
@@ -117,7 +117,7 @@ jobs:
 
   deploy:
     name: "Deploy"
-    uses: pennlabs/shared-actions/.github/workflows/deployment.yaml@v0.1.3-patch.1
+    uses: pennlabs/shared-actions/.github/workflows/deployment.yaml@v0.1.5
 
     with:
       githubRef: ${{ github.ref }}
