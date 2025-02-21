@@ -110,6 +110,7 @@
     "nyc": "^15.1.0",
     "prettier": "^3.5.1",
     "swc-plugin-coverage-instrument": "^0.0.25",
+    "typescript": "5.5.4",
     "wait-on": "^7.2.0"
   },
   "engines": {
