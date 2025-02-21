@@ -21,6 +21,7 @@ jobs:
   frontend-check:
     name: "Frontend Check"
     uses: pennlabs/shared-actions/.github/workflows/react.yaml@bump-reusable-workflows
+    secrets: inherit
     with:
       path: frontend
       imageName: pennlabs/penn-clubs-frontend # inputs are required for build purposes but are not used for check
