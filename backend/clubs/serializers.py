@@ -890,6 +890,34 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
 
 
+class ClubDiffSerializer(serializers.ModelSerializer):
+    diff = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Club
+        fields = ["code"]
+
+    def to_representation(self, instance):
+        fields = ["name", "description", "image"]
+        diff = {}
+        is_same = True
+        for field in fields:
+            diff[field] = {
+                "old": getattr(instance, f"latest_approved_{field}", None),
+                "new": getattr(instance, f"latest_{field}", None),
+            }
+            if diff[field]["old"] != diff[field]["new"]:
+                is_same = False
+
+        if is_same:
+            return {
+                instance.code: "No changes that require approval made"
+                + " since last approval"
+            }
+
+        return {instance.code: diff}
+
+
 class ClubListSerializer(serializers.ModelSerializer):
     """
     The club list serializer returns a subset of the information that the full
