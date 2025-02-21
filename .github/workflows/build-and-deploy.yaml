@@ -8,7 +8,7 @@ on: push
 jobs:
   backend-check:
     name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@507f4cf1cc88259fc8625fb3a35bd3f18fc91cd5
+    uses: pennlabs/shared-actions/.github/workflows/django.yaml@dce350275e1aa43afc3bf5662fd0855d24357a82
     secrets: inherit
     with:
       projectName: pennclubs
@@ -17,6 +17,7 @@ jobs:
       flake: false
       black: false
       ruff: true
+      dependencyManager: uv
 
   build-backend:
     name: Build backend
