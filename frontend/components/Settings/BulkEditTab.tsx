@@ -100,21 +100,27 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
           equivalent to or higher than the selected group will be notified.
         </Text>
         <Formik
-          initialValues={{ target: '', content: '' }}
+          initialValues={{
+            target: { id: 'leaders', name: 'Leaders' },
+            content: '',
+          }}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
             try {
               const resp = await doApiRequest(
-                '/clubs/email-blast/?format=json',
+                '/clubs/email_blast/?format=json',
                 {
                   method: 'POST',
-                  body: values,
+                  body: {
+                    target: values.target.id,
+                    content: values.content,
+                  },
                 },
               )
               const data = await resp.json()
-              if (data.detail) {
-                toast.success(data.detail, { hideProgressBar: true })
-              } else if (data.error) {
+              if (data.error) {
                 toast.error(data.error, { hideProgressBar: true })
+              } else if (data.detail) {
+                toast.success(data.detail, { hideProgressBar: true })
               }
             } finally {
               setSubmitting(false)
