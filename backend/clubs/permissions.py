@@ -171,6 +171,11 @@ class ClubPermission(permissions.BasePermission):
             return membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
+        if view.action in {"email_blast"}:
+            return request.user.is_authenticated and (
+                request.user.is_staff or request.user.has_perm("clubs.manage_club")
+            )
+
         if view.action in {
             "children",
             "create",
