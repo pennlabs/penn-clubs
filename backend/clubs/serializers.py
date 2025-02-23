@@ -1797,6 +1797,10 @@ class TicketSerializer(serializers.ModelSerializer):
         fields = ("id", "event", "type", "owner", "attended", "price")
 
 
+class CartSerializer(serializers.ModelSerializer):
+    pass  # TODO: implement
+
+
 class UserUUIDSerializer(serializers.ModelSerializer):
     """
     Used to get the uuid of a user (for ICS Calendar export)
