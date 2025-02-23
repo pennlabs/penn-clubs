@@ -93,6 +93,73 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
   return (
     <>
       <div className="box">
+        <div className="is-size-4">Email Blast</div>
+        <Text>
+          Sends an email blast to the selected group of users. Select a target
+          group and provide the message content. All active users with roles
+          equivalent to or higher than the selected group will be notified. The
+          subject line is nondescriptive, so it is recommended to explicitly
+          state the sender within the email body.
+        </Text>
+        <Formik
+          initialValues={{
+            target: { id: 'leaders', name: 'Leaders' },
+            content: '',
+          }}
+          onSubmit={async (values, { setSubmitting, resetForm }) => {
+            try {
+              const resp = await doApiRequest(
+                '/clubs/email_blast/?format=json',
+                {
+                  method: 'POST',
+                  body: {
+                    target: values.target.id,
+                    content: values.content,
+                  },
+                },
+              )
+              const data = await resp.json()
+              if (data.error) {
+                toast.error(data.error, { hideProgressBar: true })
+              } else if (data.detail) {
+                toast.success(data.detail, { hideProgressBar: true })
+              }
+            } finally {
+              setSubmitting(false)
+              resetForm()
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form>
+              <Field
+                name="target"
+                as={SelectField}
+                choices={[
+                  { value: 'leaders', label: 'Leaders' },
+                  { value: 'officers', label: 'Officers' },
+                  { value: 'all', label: 'All' },
+                ]}
+                label="Target Group"
+              />
+              <Field
+                name="content"
+                as={TextField}
+                type="textarea"
+                label="Message Content"
+              />
+              <button
+                type="submit"
+                className="button is-primary"
+                disabled={isSubmitting}
+              >
+                <Icon name="mail" /> Send Email Blast
+              </button>
+            </Form>
+          )}
+        </Formik>
+      </div>
+      <div className="box">
         <div className="is-size-4">{OBJECT_NAME_TITLE_SINGULAR} Editing</div>
         <Text>
           You can use the form below to perform bulk editing on{' '}

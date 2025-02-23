@@ -45,7 +45,7 @@ function AdminPage({
   const tabs = [
     {
       name: 'bulk',
-      label: 'Bulk Editing',
+      label: 'Club Management',
       content: () => (
         <BulkEditTab badges={badges} clubfairs={clubfairs} tags={tags} />
       ),

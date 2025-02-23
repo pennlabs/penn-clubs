@@ -3490,6 +3490,76 @@ class ClubTestCase(TestCase):
             0,
         )
 
+    def test_email_blast(self):
+        Membership.objects.create(
+            club=self.club1, person=self.user1, role=Membership.ROLE_OWNER, active=True
+        )
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user2,
+            role=Membership.ROLE_OFFICER,
+            active=True,
+        )
+        Membership.objects.create(
+            club=self.club1, person=self.user3, role=Membership.ROLE_MEMBER, active=True
+        )
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user4,
+            role=Membership.ROLE_OFFICER,
+            active=False,
+        )
+
+        # Need staff perms to send blasts
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "test"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        self.client.login(username=self.user5.username, password="test")
+
+        # All fields are required
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"content": "test"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "test"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Blast sent to 1 recipients", resp.data["detail"])
+
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "officers", "content": "test"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Blast sent to 2 recipients", resp.data["detail"])
+
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "all", "content": "test"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
+
 
 class HealthTestCase(TestCase):
     def test_health(self):

@@ -2191,6 +2191,99 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return Response(fields)
 
+    @action(detail=False, methods=["post"])
+    def email_blast(self, request, *args, **kwargs):
+        """
+        Send email blast to targeted (active) club members.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            content:
+                                type: string
+                                description: The content of the email blast to send
+                            target:
+                                type: string
+                                description: Must be one of leaders, officers, or all
+                        required:
+                            - content
+                            - target
+        responses:
+            "200":
+                description: Email blast was sent successfully
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: A message indicating how many
+                                        recipients received the blast
+            "400":
+                description: Content or target field was empty or missing
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating content
+                                        or target was not provided correctly
+        ---
+        """
+        if "target" not in request.data:
+            return Response(
+                {"detail": "Target must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target = request.data.get("target").lower().strip()
+        roles = {
+            "leaders": Membership.ROLE_OWNER,
+            "officers": Membership.ROLE_OFFICER,
+            "all": Membership.ROLE_MEMBER,
+        }
+
+        if target not in roles:
+            return Response(
+                {"detail": "Target must be one of: leaders, officers, all"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        content = request.data.get("content", "").strip()
+        if not content:
+            return Response(
+                {"detail": "Content must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target_role = roles[target]
+
+        emails = list(
+            Membership.objects.filter(role__lte=target_role, active=True)
+            .values_list("person__email", flat=True)
+            .distinct()
+        )
+
+        send_mail_helper(
+            name="blast",
+            subject=f"Update from {settings.BRANDING_SITE_NAME}",
+            emails=emails,
+            context={
+                "sender": settings.BRANDING_SITE_NAME,
+                "content": content,
+                "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
+            },
+            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
+        )
+
+        return Response({"detail": (f"Blast sent to {len(emails)} recipients")})
+
     def get_serializer_class(self):
         """
         Return a serializer class that is appropriate for the action being performed.
@@ -3125,15 +3218,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        reply_emails = event.club.get_officer_emails()
+
         send_mail_helper(
             name="blast",
             subject=f"Update on {event.name} from {event.club.name}",
             emails=emails,
             context={
                 "sender": event.club.name,
-                "content": request.data.get("content"),
-                "reply_emails": event.club.get_officer_emails(),
+                "content": content,
+                "reply_emails": reply_emails,
             },
+            reply_to=reply_emails,
         )
 
         return Response(
