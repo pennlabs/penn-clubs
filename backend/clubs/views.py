@@ -2243,8 +2243,13 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             )
 
         target = request.data.get("target").lower().strip()
+        roles = {
+            "leaders": Membership.ROLE_OWNER,
+            "officers": Membership.ROLE_OFFICER,
+            "all": Membership.ROLE_MEMBER,
+        }
 
-        if target not in ["leaders", "officers", "all"]:
+        if target not in roles:
             return Response(
                 {"detail": "Target must be one of: leaders, officers, all"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -2257,11 +2262,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        target_role = {
-            "leaders": Membership.ROLE_OWNER,
-            "officers": Membership.ROLE_OFFICER,
-            "all": Membership.ROLE_MEMBER,
-        }[target]
+        target_role = roles[target]
 
         emails = list(
             Membership.objects.filter(role__lte=target_role, active=True)

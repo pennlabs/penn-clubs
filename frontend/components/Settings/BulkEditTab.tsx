@@ -97,7 +97,9 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
         <Text>
           Sends an email blast to the selected group of users. Select a target
           group and provide the message content. All active users with roles
-          equivalent to or higher than the selected group will be notified.
+          equivalent to or higher than the selected group will be notified. The
+          subject line is nondescriptive, so it is recommended to explicitly
+          state the sender within the email body.
         </Text>
         <Formik
           initialValues={{
