@@ -3543,7 +3543,7 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 1 recipients", resp.data["detail"])
-
+        self.assertEqual(len(mail.outbox), 1)
         resp = self.client.post(
             reverse("clubs-email-blast"),
             {"target": "officers", "content": "test"},
@@ -3551,6 +3551,7 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 2 recipients", resp.data["detail"])
+        self.assertEqual(len(mail.outbox), 2)
 
         resp = self.client.post(
             reverse("clubs-email-blast"),
@@ -3559,6 +3560,7 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
+        self.assertEqual(len(mail.outbox), 3)
 
 
 class HealthTestCase(TestCase):
