@@ -103,18 +103,21 @@ const PolicyBox = ({
       name: 'Nondiscrimination',
       content: (
         <div>
-          In alignment with the University of Pennsylvania’s Nondiscrimination
-          Statement, student-run organizations are expected to uphold a
-          commitment to non-discrimination. This means that these organizations
-          will not engage in discriminatory practices based on factors such as
-          race, color, sex, sexual orientation, gender identity, religion,
-          creed, national or ethnic origin, citizenship status, age, disability,
-          veteran status, or any other legally protected class status. It is
-          essential for student organizations to recognize the University’s
-          dedication to providing academic, social, and recreational programs
-          and services that are equally accessible to all, and as such, all
-          student-run organizations are required to conduct themselves and their
-          activities in accordance with this commitment.
+          Student organizations must fully comply with the University of
+          Pennsylvania's Nondiscrimination Statement. The University of
+          Pennsylvania seeks talented students, faculty, and staff with a wide
+          variety of backgrounds, experiences, and perspectives. The University
+          of Pennsylvania does not discriminate on the basis of race, color,
+          sex, sexual orientation, religion, creed, national origin (including
+          shared ancestry or ethnic characteristics), citizenship status, age,
+          disability, veteran status or any other class protected under
+          applicable federal, state, or local law in the administration of its
+          admissions, financial aid, educational or athletic programs, or other
+          University-administered programs or in its employment practices.
+          Questions or complaints regarding this policy should be directed to
+          the executive director of the Office of Equal Opportunity Programs;
+          Franklin Building, 3451 Walnut Street, Suite 421, Philadelphia, PA
+          19104-6106; or (215) 898-6993.
         </div>
       ),
     },
