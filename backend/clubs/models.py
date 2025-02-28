@@ -1646,6 +1646,20 @@ class BaseMultipleChoice(models.Model):
         abstract = True
 
 
+class BaseQuestionResponse(models.Model):
+    """
+    Represents a response to a question.
+    """
+
+    text = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
 class ApplicationCycle(models.Model):
     """
     Represents an application cycle attached to club applications
@@ -1839,14 +1853,13 @@ class ApplicationSubmission(models.Model):
         unique_together = (("user", "application", "committee"),)
 
 
-class ApplicationQuestionResponse(models.Model):
+class ApplicationQuestionResponse(BaseQuestionResponse):
     """
     Represents a response to a question in a custom application. The fields here are
     a union of all possible fields from all types of questions (most principally free
     response, but also multiple choice, essay response, etc.).
     """
 
-    text = models.TextField(blank=True)
     question = models.ForeignKey(
         ApplicationQuestion, related_name="responses", on_delete=models.CASCADE
     )
@@ -1863,9 +1876,6 @@ class ApplicationQuestionResponse(models.Model):
         null=True,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
     class Meta:
         unique_together = (("question", "submission"),)
 
@@ -1880,6 +1890,69 @@ class Cart(models.Model):
     )
     # Capture context from Cybersource should be 8297 chars
     checkout_context = models.CharField(max_length=8297, blank=True, null=True)
+
+
+class CheckoutQuestion(BaseQuestion):
+    """
+    Represents a question asked to ticket buyers in checkout
+    """
+
+    event = models.ForeignKey(Event, related_name="questions", on_delete=models.CASCADE)
+
+    optional = models.BooleanField(default=False)
+
+    _clone_m2o_or_o2m_fields = ["multiple_choice"]
+
+
+class CheckoutMultipleChoice(BaseMultipleChoice):
+    """
+    Represents a multiple choice selection in a checkout question
+    """
+
+    question = models.ForeignKey(
+        CheckoutQuestion,
+        related_name="multiple_choice",
+        on_delete=models.CASCADE,
+    )
+
+
+class CheckoutQuestionSubmission(models.Model):
+    """
+    Represents a complete set of responses to questions of checkout
+    """
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class CheckoutQuestionResponse(BaseQuestionResponse):
+    """
+    Represents a response to a checkout question
+    """
+
+    question = models.ForeignKey(
+        CheckoutQuestion, related_name="responses", on_delete=models.CASCADE
+    )
+    submission = models.ForeignKey(
+        CheckoutQuestionSubmission,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+    multiple_choice = models.ForeignKey(
+        CheckoutMultipleChoice,
+        related_name="responses",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["question", "submission"],
+                name="checkout_response_unique_question_submission",
+            )
+        ]
 
 
 class TicketQuerySet(models.query.QuerySet):
@@ -1956,6 +2029,13 @@ class Ticket(models.Model):
     buyable = models.BooleanField(default=True)
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
+        related_name="tickets",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    submission = models.ForeignKey(
+        CheckoutQuestionSubmission,
         related_name="tickets",
         on_delete=models.SET_NULL,
         blank=True,

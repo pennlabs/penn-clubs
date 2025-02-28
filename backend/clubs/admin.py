@@ -23,6 +23,9 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    CheckoutQuestion,
+    CheckoutQuestionResponse,
+    CheckoutQuestionSubmission,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -451,6 +454,34 @@ class ClubApprovalResponseTemplateAdmin(admin.ModelAdmin):
     search_fields = ("title", "content")
 
 
+class CheckoutQuestionResponseAdmin(admin.ModelAdmin):
+    search_fields = (
+        "question",
+        "submission",
+    )
+    list_display = ("question", "submission", "multiple_choice", "created_at")
+
+
+class CheckoutQuestionSubmissionAdmin(admin.ModelAdmin):
+    def ticket_count(self, obj):
+        return obj.tickets.count()
+
+    def tickets_all(self, obj):
+        return obj.tickets.all()
+
+    search_fields = ("id",)
+    list_display = ("id", "ticket_count", "tickets_all", "created_at")
+
+
+class CheckoutQuestionAdmin(admin.ModelAdmin):
+    search_fields = (
+        "id",
+        "event",
+    )
+    list_display = ("id", "event", "prompt", "optional", "created_at")
+    list_filter = ("created_at",)
+
+
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
 admin.site.register(ApplicationExtension)
@@ -459,6 +490,9 @@ admin.site.register(ApplicationQuestion)
 admin.site.register(ApplicationQuestionResponse)
 admin.site.register(ApplicationSubmission, ApplicationSubmissionAdmin)
 admin.site.register(Advisor, AdvisorAdmin)
+admin.site.register(CheckoutQuestion, CheckoutQuestionAdmin)
+admin.site.register(CheckoutQuestionResponse, CheckoutQuestionResponseAdmin)
+admin.site.register(CheckoutQuestionSubmission, CheckoutQuestionSubmissionAdmin)
 admin.site.register(Club, ClubAdmin)
 admin.site.register(ClubFair, ClubFairAdmin)
 admin.site.register(ClubApplication)

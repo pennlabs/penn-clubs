@@ -29,6 +29,10 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    CheckoutMultipleChoice,
+    CheckoutQuestion,
+    CheckoutQuestionResponse,
+    CheckoutQuestionSubmission,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -3096,3 +3100,75 @@ class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubApprovalResponseTemplate
         fields = ("id", "author", "title", "content", "created_at", "updated_at")
+
+
+class CheckoutMultipleChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CheckoutMultipleChoice
+        fields = ("value",)
+
+
+class CheckoutQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer):
+    multiple_choice = CheckoutMultipleChoiceSerializer(
+        many=True, required=False, read_only=True
+    )
+
+    def create(self, validated_data):
+        # remove club from request we do not use it
+        validated_data.pop("club")
+
+        event_id = self.context["view"].kwargs.get("event_id")
+        validated_data["event"] = Event.objects.filter(pk=event_id).first()
+
+        return super().create(validated_data)
+
+    def save(self):
+        question_obj = super().save()
+        # manually create multiple choice answers as Django does not
+        # support nested serializers out of the box
+        request = self.context["request"].data
+        if "multiple_choice" in request:
+            multiple_choice = request["multiple_choice"]
+            CheckoutMultipleChoice.objects.filter(question=question_obj).delete()
+            for choice in multiple_choice:
+                CheckoutMultipleChoice.objects.create(
+                    value=choice["value"],
+                    question=question_obj,
+                )
+
+        return question_obj
+
+    class Meta:
+        model = CheckoutQuestion
+        fields = (
+            "id",
+            "question_type",
+            "prompt",
+            "word_limit",
+            "multiple_choice",
+            "question_type",
+            "precedence",
+            "optional",
+        )
+
+
+class CheckoutQuestionResponseSerializer(serializers.ModelSerializer):
+    multiple_choice = CheckoutMultipleChoiceSerializer(required=False, read_only=True)
+    question_type = serializers.CharField(
+        source="question.question_type", read_only=True
+    )
+    question = CheckoutQuestionSerializer(required=False, read_only=True)
+
+    class Meta:
+        model = CheckoutQuestionResponse
+        fields = ("text", "multiple_choice", "question_type", "question")
+
+
+class CheckoutQuestionSubmissionSerializer(serializers.ModelSerializer):
+    responses = CheckoutQuestionResponseSerializer(
+        many=True, required=False, read_only=True
+    )
+
+    class Meta:
+        CheckoutQuestionSubmission
+        fields = ("responses",)

@@ -93,6 +93,7 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    CheckoutQuestion,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -161,6 +162,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    CheckoutQuestionSerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
@@ -2663,6 +2665,58 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         )
 
         return Response({"buyers": buyers})
+
+    # @action(detail=True, methods=["get"])
+    # def responses(self, request, *args, **kwargs):
+    #     """
+    #     Get responses and other information about ticket buyers
+    #     ---
+    #     requestBody: {}
+    #     responses:
+    #         "200":
+    #             content:
+    #                 application/json:
+    #                     schema:
+    #                         type: object
+    #                         properties:
+    #                             buyers:
+    #                                 type: array
+    #                                 items:
+    #                                     type: object
+    #                                     properties:
+    #                                         fullname:
+    #                                             type: string
+    #                                         id:
+    #                                             type: string
+    #                                         owner_id:
+    #                                             type: integer
+    #                                         type:
+    #                                             type: string
+    #                                         attended:
+    #                                             type: boolean
+    #                                         submission:
+    #                                             type: object
+    #                                             properties:
+    #                                                 responses:
+    #                                                     type: array
+    #                                                     items:
+    #                                                         type: object
+    #                                                         properties:
+    #                                                             text:
+    #                                                                 type: string
+    #                                                             question:
+
+    #     ---
+    #     """
+    #     tickets = Ticket.objects.filter(event=self.get_object()).annotate(
+    #         fullname=Concat("owner__first_name", Value(" "), "owner__last_name")
+    #     )
+
+    #     buyers = tickets.filter(owner__isnull=False).values(
+    #         "fullname", "id", "owner_id", "type", "attended", "owner__email"
+    #     )
+
+    #     return Response({"buyers": buyers})
 
     @action(detail=True, methods=["get"])
     def tickets(self, request, *args, **kwargs):
@@ -8056,3 +8110,94 @@ def email_preview(request):
             "variables": json.dumps(initial_context, indent=4),
         },
     )
+
+
+class CheckoutQuestionViewSet(viewsets.ModelViewSet):
+    """
+    create: Create a question for an event.
+    list: List questions in a given event.
+    destroy: Delete a question.
+    update: Update a question.
+    """
+
+    permission_classes = [ClubItemPermission | IsSuperuser]
+    serializer_class = CheckoutQuestionSerializer
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        return CheckoutQuestion.objects.filter(
+            event__pk=self.kwargs["event_id"]
+        ).order_by("precedence")
+
+    def destroy(self, *args, **kwargs):
+        """
+        Invalidate caches before destroying
+        """
+        event_id = self.kwargs["event_id"]
+        key = f"checkoutquestions:{event_id}"
+        cache.delete(key)
+        return super().destroy(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        """
+        Invalidate caches before creating
+        """
+        event_id = self.kwargs["event_id"]
+        key = f"checkoutquestions:{event_id}"
+        cache.delete(key)
+        return super().create(*args, **kwargs)
+
+    def update(self, *args, **kwargs):
+        """
+        Invalidate caches before updating
+        """
+        event_id = self.kwargs["event_id"]
+        key = f"checkoutquestions:{event_id}"
+        cache.delete(key)
+        return super().update(*args, **kwargs)
+
+    def list(self, *args, **kwargs):
+        """
+        Manually cache responses for one hour
+        """
+
+        event_id = self.kwargs["event_id"]
+        key = f"checkoutquestions:{event_id}"
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
+
+        data = CheckoutQuestionSerializer(self.get_queryset(), many=True).data
+        cache.set(key, data, 60 * 60)
+        return Response(data)
+
+    @action(detail=False, methods=["post"])
+    def precedence(self, *args, **kwargs):
+        """
+        Updates the precedence of questions so they are ordered the same way as
+        arranged by the officer creating the checkout questions after they drag and drop
+        the different questions to re-order them
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: array
+                        items:
+                            type: integer
+        responses:
+            "200":
+                content: {}
+        ---
+        """
+        event_id = self.kwargs["event_id"]
+        precedence = self.request.data.get("precedence", [])
+        for index, question_pk in enumerate(precedence):
+            question = CheckoutQuestion.objects.filter(pk=question_pk).first()
+            if question is not None:
+                question.precedence = index
+                question.save()
+
+        key = f"checkoutquestions:{event_id}"
+        cache.delete(key)
+        return Response([])
