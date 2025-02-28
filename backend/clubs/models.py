@@ -117,7 +117,7 @@ def send_mail_helper(
                 )
         else:  # assumes attachment is an image
             image = MIMEImage(attachment["content"], _subtype=attachment["mimetype"])
-            image.add_header("Content-ID", f'<{context["cid"]}>')
+            image.add_header("Content-ID", f"<{context['cid']}>")
             image.add_header(
                 "Content-Disposition", "inline", filename=attachment["filename"]
             )

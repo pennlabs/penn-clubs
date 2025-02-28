@@ -12,6 +12,8 @@ import string
 from functools import wraps
 from typing import Tuple
 from urllib.parse import urlparse
+import diff
+import BeautifulSoup
 
 import jwt
 import pandas as pd
@@ -355,6 +357,74 @@ def validate_transient_token(cc: str, tt: str) -> Tuple[bool, str]:
 
     except Exception as e:
         return (False, str(e))
+
+
+def description_diff_helper(latest_approved_description, latest_description):
+    # Get the diff between old and new HTML
+    html_text = diff(latest_approved_description, latest_description)
+    soup = BeautifulSoup(html_text, "html.parser")
+
+    # remove background-color from all elements
+    for tag in soup.find_all(style=True):
+        tag["style"] = re.sub(
+            r"background-color:\s*[^;]+;?\s*", "", tag["style"]
+        ).strip()
+        if not tag["style"]:  # If the style attribute is now empty, remove it
+            del tag["style"]
+
+    # apply new background color to children of del tags
+    for tag in soup.find_all(["del", "ins"]):
+        bg_color = "#ffbdbd" if tag.name == "del" else "#dafdd5"
+        for child in tag.find_all(True):
+            child["style"] = (
+                child.get("style", "") + f"; background-color: {bg_color};"
+            ).strip("; ")
+
+    # unwrap nested <del> tags inside <ins> and vice versa
+    for del_tag in soup.find_all("del"):
+        for nested_ins in del_tag.find_all("ins"):
+            nested_ins.unwrap()  # Removes the <ins> tag but keeps its content
+    for ins_tag in soup.find_all("ins"):
+        for nested_del in ins_tag.find_all("del"):
+            nested_del.unwrap()  # Removes the <del> tag but keeps its content
+
+    # highlight / style the <del> and <ins> tags
+    for tag in soup.find_all(["del", "ins"]):
+        if tag.name == "del":
+            tag["style"] = (
+                "text-decoration: none; background-color: #ffbdbd; opacity: 0.3;"
+            )
+        elif tag.name == "ins":
+            tag["style"] = (
+                "text-decoration: none; background-color: #dafdd5; opacity: 1;"
+            )
+
+    # Color content with same content but different tag yellow
+    for del_tag in soup.find_all("del"):
+        next_tag = del_tag.find_next_sibling("ins")
+        if next_tag and next_tag.get_text() == del_tag.get_text():
+            del_tag.decompose()
+            next_tag["style"] = re.sub(
+                r"background-color:\s*[^;]+;?\s*", "", next_tag.get("style", "")
+            )
+            next_tag["style"] = (
+                next_tag.get("style", "") + " background-color: #fff2bd;"
+            )
+            for child in next_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+    for ins_tag in soup.find_all("ins"):
+        next_tag = ins_tag.find_next_sibling("del")
+        if next_tag and next_tag.get_text() == ins_tag.get_text():
+            next_tag.decompose()
+            next_tag["style"] = re.sub(
+                r"background-color:\s*[^;]+;?\s*", "", next_tag.get("style", "")
+            )
+            ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
+            for child in next_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+
+    # convert soup back to a string and return
+    return str(soup)
 
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -2075,8 +2145,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"""clubs:{club.id}-{"authed" if self.request.user.is_authenticated
-                                            else "anon"}"""
+        key = f"""clubs:{club.id}-{
+            "authed" if self.request.user.is_authenticated else "anon"
+        }"""
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -2147,19 +2218,26 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             code=OuterRef("code"), approved=True
         ).order_by("-history_date")
 
+        latest_description_text = Subquery(latest_version_qs.values("description")[:1])
+        latest_approved_description_text = Subquery(
+            latest_approved_version_qs.values("description")[:1]
+        )
+        description_difference = description_diff_helper(
+            latest_approved_description_text, latest_description_text
+        )
+
         return Club.objects.annotate(
             latest_name=Subquery(latest_version_qs.values("name")[:1]),
-            latest_description=Subquery(latest_version_qs.values("description")[:1]),
+            latest_description=latest_description_text,
             latest_image=Subquery(latest_version_qs.values("image")[:1]),
             latest_approved_name=Subquery(
                 latest_approved_version_qs.values("name")[:1]
             ),
-            latest_approved_description=Subquery(
-                latest_approved_version_qs.values("description")[:1]
-            ),
+            latest_approved_description=latest_approved_description_text,
             latest_approved_image=Subquery(
                 latest_approved_version_qs.values("image")[:1]
             ),
+            description_difference=description_difference,
         )
 
     @action(detail=True, methods=["GET"])
@@ -2203,6 +2281,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                                     type: string
                                                     description: >
                                                         New description of the club
+                                                diff:
+                                                    type: string
+                                                    description: >
+                                                        Diffed description of the club
                                         image:
                                             type: object
                                             description: >
@@ -6572,7 +6654,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         clone.application_end_time = now + datetime.timedelta(days=30)
         clone.result_release_time = now + datetime.timedelta(days=40)
         clone.external_url = (
-            f"https://pennclubs.com/club/{clone.club.code}/" f"application/{clone.pk}"
+            f"https://pennclubs.com/club/{clone.club.code}/application/{clone.pk}"
         )
         clone.save()
         return Response([])
@@ -6712,7 +6794,7 @@ class WhartonCyclesView(viewsets.ModelViewSet):
 
         # Some apps need to be created - use the default Wharton Template
         prompt_one = (
-            "Tell us about a time you took " "initiative or demonstrated leadership"
+            "Tell us about a time you took initiative or demonstrated leadership"
         )
         prompt_two = "Tell us about a time you faced a challenge and how you solved it"
         prompt_three = "Tell us about a time you collaborated well in a team"

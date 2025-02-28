@@ -896,6 +896,7 @@ class ClubDiffSerializer(serializers.ModelSerializer):
             }
             if diff[field]["old"] != diff[field]["new"]:
                 is_same = False
+        diff["description"]["diff"] = getattr(instance, "description_difference", None)
 
         if is_same:
             return {
