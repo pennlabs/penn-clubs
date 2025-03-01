@@ -27,7 +27,9 @@ import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
 import {
   cache,
   doApiRequest,
+  getCurrentRelativePath,
   isClubFieldShown,
+  LOGIN_URL,
   OptionsContext,
   PermissionsContext,
 } from './utils'
@@ -197,6 +199,9 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
         const { props, state, closeModal } = this
         const { modal } = state
         const { authenticated, userInfo } = props
+        if (!authenticated) {
+          window.location.href = `${LOGIN_URL}?next=${getCurrentRelativePath()}`
+        }
         return (
           <>
             <OptionsContext.Provider value={this.props.options}>
