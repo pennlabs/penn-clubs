@@ -13,7 +13,7 @@ from functools import wraps
 from typing import Tuple
 from urllib.parse import urlparse
 import diff
-import BeautifulSoup
+from bs4 import BeautifulSoup
 
 import jwt
 import pandas as pd
@@ -370,7 +370,7 @@ def description_diff_helper(latest_approved_description, latest_description):
             r"background-color:\s*[^;]+;?\s*", "", tag["style"]
         ).strip()
         if not tag["style"]:  # If the style attribute is now empty, remove it
-            del tag["style"]
+            del tag["style"]``
 
     # apply new background color to children of del tags
     for tag in soup.find_all(["del", "ins"]):

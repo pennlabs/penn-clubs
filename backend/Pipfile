@@ -31,14 +31,14 @@ qrcode = "*"
 python-dateutil = "*"
 psycopg2 = "*"
 django-simple-history = "*"
-channels = {extras = ["daphne"], version = "*"}
+channels = {extras = ["daphne"] }
 django-runtime-options = "*"
 social-auth-app-django = "*"
 django-redis = "*"
 channels-redis = "*"
-uwsgi = {version ="==2.0.24", sys_platform = "== 'linux'"}
-uvloop = {version = "*", sys_platform = "== 'linux'"}
-uvicorn = {extras = ["standard"], version = "*"}
+uwsgi = { sys_platform = "== 'linux'"}
+uvloop = { sys_platform = "== 'linux'"}
+uvicorn = {extras = ["standard"] }
 gunicorn = "*"
 httptools = "*"
 ics = "*"
@@ -57,6 +57,7 @@ inflection = "*"
 cybersource-rest-client-python = "*"
 pyjwt = "*"
 freezegun = "*"
+html-diff = "*"
 
 [requires]
 python_version = "3.11"
