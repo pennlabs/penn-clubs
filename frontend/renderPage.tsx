@@ -27,11 +27,14 @@ import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
 import {
   cache,
   doApiRequest,
+  getCurrentRelativePath,
   isClubFieldShown,
+  isDevelopment,
+  LOGIN_URL,
   OptionsContext,
   PermissionsContext,
 } from './utils'
-import { SITE_ID } from './utils/branding'
+import { LOGIN_REQUIRED_ALL, SITE_ID } from './utils/branding'
 import { logException } from './utils/sentry'
 
 export const ToastStyle = styled.div`
@@ -197,6 +200,9 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
         const { props, state, closeModal } = this
         const { modal } = state
         const { authenticated, userInfo } = props
+        if (LOGIN_REQUIRED_ALL && !isDevelopment() && !authenticated) {
+          window.location.href = `${LOGIN_URL}?next=${getCurrentRelativePath()}`
+        }
         return (
           <>
             <OptionsContext.Provider value={this.props.options}>
