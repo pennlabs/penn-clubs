@@ -864,17 +864,20 @@ class ClubFair(models.Model):
         events = []
         with transaction.atomic():
             for club in club_query:
-                obj, _ = Event.objects.get_or_create(
+                fair_event_group, _ = EventGroup.objects.get_or_create(
                     code=f"fair-{club.code}-{self.id}-{suffix}",
                     club=club,
                     type=EventGroup.FAIR,
-                    defaults={
-                        "name": self.name,
-                        "start_time": start_time,
-                        "end_time": end_time,
-                    },
                 )
-                events.append(obj)
+                fair_event, created = Event.objects.get_or_create(
+                    start_time=start_time,
+                    end_time=end_time,
+                    group=fair_event_group,
+                )
+                if created:
+                    fair_event.code = f"{fair_event_group.code}-{fair_event.id}"
+                    fair_event.save(update_fields=["code"])
+                events.append(fair_event)
         return events
 
     def __str__(self):
