@@ -409,7 +409,6 @@ class Club(models.Model):
                 for ev in tries:
                     if ev:
                         ev.club = self
-                        ev.name = event.name.strip()
                         ev.start_time = event.begin.datetime
                         ev.end_time = event.end.datetime
                         ev.location = event.location
@@ -430,7 +429,7 @@ class Club(models.Model):
                         # add event to group
                         event_group, _ = EventGroup.objects.get_or_create(
                             code=ev.code,
-                            name=ev.name,
+                            name=event.name.strip()[:255],
                         )
                         ev.group = event_group
 
@@ -459,7 +458,7 @@ class Club(models.Model):
                                 if val in {EventGroup.FAIR}:
                                     continue
                                 if (
-                                    lbl.lower() in ev.name.lower()
+                                    lbl.lower() in event_group.name.lower()
                                     or lbl.lower() in event_group.description.lower()
                                 ):
                                     event_group.type = val
@@ -482,10 +481,9 @@ class Club(models.Model):
                                 parsed = parsed._replace(scheme="https")
                             event_group.url = parsed.geturl()
 
+                        # enforve length limit
                         if event_group.url:
                             event_group.url = ev.url[:2048]
-                        if event_group.name:
-                            event_group.name = event_group.name[:255]
 
                         event_group.save()
                         ev.save(update_fields=["group"])
@@ -914,11 +912,11 @@ class RecurringEvent(models.Model):
     """
 
     def __str__(self):
-        events = self.event_set.all()
+        events = self.event_set.prefetch_related("group").all()
         if events.exists():
             first_event = events.first()
             last_event = events.last()
-            name = first_event.name
+            name = first_event.group.name
             return (
                 f"{name}: "
                 f"{first_event.start_time} - {last_event.end_time} "
@@ -934,7 +932,7 @@ class EventGroup(models.Model):
     potentially different locations.
     """
 
-    code = models.SlugField(max_length=255, db_index=True)
+    code = models.SlugField(max_length=255, db_index=True, unique=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
     club = models.ForeignKey(
@@ -947,6 +945,9 @@ class EventGroup(models.Model):
     )
     url = models.URLField(max_length=2048, null=True, blank=True)
     description = models.TextField(blank=True)  # rich html
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -984,8 +985,7 @@ class Event(models.Model):
         blank=True,
         related_name="events",
     )
-    name = models.CharField(max_length=255)
-    code = models.SlugField(max_length=255, db_index=True)
+    code = models.SlugField(max_length=255, db_index=True, unique=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
@@ -1007,7 +1007,7 @@ class Event(models.Model):
         return create_thumbnail_helper(self, request, 400)
 
     def __str__(self):
-        return self.name
+        return self.group.name
 
 
 class Favorite(models.Model):
@@ -2007,7 +2007,7 @@ class Ticket(models.Model):
 
         context = {
             "first_name": self.owner.first_name,
-            "name": self.event.name,
+            "name": self.event.group.name,
             "type": self.type,
             "start_time": self.event.start_time,
             "end_time": self.event.end_time,
@@ -2019,7 +2019,7 @@ class Ticket(models.Model):
             send_mail_helper(
                 name="ticket_confirmation",
                 subject=f"Ticket confirmation for {self.owner.get_full_name()}"
-                f" to {self.event.name}",
+                f" to {self.event.group.name}",
                 emails=[self.owner.email],
                 context=context,
                 attachment={
@@ -2062,13 +2062,13 @@ class TicketTransferRecord(models.Model):
             "sender_first_name": self.sender.first_name,
             "receiver_first_name": self.receiver.first_name,
             "receiver_username": self.receiver.username,
-            "event_name": self.ticket.event.name,
+            "event_name": self.ticket.event.group.name,
             "type": self.ticket.type,
         }
 
         send_mail_helper(
             name="ticket_transfer",
-            subject=f"Ticket transfer confirmation for {self.ticket.event.name}",
+            subject=f"Ticket transfer confirmation for {self.ticket.event.group.name}",
             emails=[self.sender.email, self.receiver.email],
             context=context,
         )
