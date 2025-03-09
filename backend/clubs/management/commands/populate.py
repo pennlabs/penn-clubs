@@ -21,6 +21,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     Event,
+    EventGroup,
     Major,
     Membership,
     Profile,
@@ -512,33 +513,52 @@ class Command(BaseCommand):
 
         # Create an event for right now so cypress can test current events
         live_event_club = Club.objects.all()[0]
-        event, created = Event.objects.get_or_create(
+
+        event_group, _ = EventGroup.objects.get_or_create(
+            name=f"Test EventGroup for {live_event_club.name}",
+            code=f"test-event-group-for-club-{live_event_club}",
             club=live_event_club,
-            code="test-event-for-club-now",
+            creator=ben,
+            description="This is the description for this event.",
+        )
+        event, created = Event.objects.get_or_create(
+            group=event_group,
             defaults={
                 "creator": ben,
-                "name": f"Test Event now for {live_event_club.name}",
-                "description": "This is the description for this event.",
                 "start_time": now,
                 "end_time": now + datetime.timedelta(hours=1),
             },
         )
+        if created:
+            event.code = f"{event.group.code}-{event.id}"
+            contents = get_image(event_image_url)
+            event.group.image.save("image.png", ContentFile(contents))
+            event.save(update_fields=["code"])
 
         # create a global event for testing
-        Event.objects.get_or_create(
+        glovbal_event_group, _ = EventGroup.objects.get_or_create(
+            name="Test Global Event Group",
+            code="test-global-event-group",
             club=None,
-            code="test-global-event",
+            creator=ben,
+            description="This is the description for this event."
+            "does not belong to any club.",
+        )
+
+        global_event, created = Event.objects.get_or_create(
+            group=glovbal_event_group,
             defaults={
                 "creator": ben,
-                "name": "Test Global Event",
-                "description": "This is a global event that "
-                "does not belong to any club.",
                 "start_time": now + datetime.timedelta(days=1),
                 "end_time": now
                 + datetime.timedelta(days=1)
                 + datetime.timedelta(hours=1),
             },
         )
+
+        if created:
+            global_event.code = f"{global_event.group.code}-{global_event.id}"
+            global_event.save(update_fields=["code"])
 
         # create a club fair one month from now
         fair, _ = ClubFair.objects.update_or_create(
@@ -586,10 +606,6 @@ class Command(BaseCommand):
             club.badges.add(fair_cat_badge)
 
         fair.create_events()
-
-        if created:
-            contents = get_image(event_image_url)
-            event.image.save("image.png", ContentFile(contents))
 
         # create a club application
         club = Club.objects.get(code="empty-club")
@@ -721,21 +737,28 @@ class Command(BaseCommand):
                         + datetime.timedelta(hours=i + 1)
                     )
 
-                event, created = Event.objects.get_or_create(
+                event_group, _ = EventGroup.objects.get_or_create(
+                    name=f"Test EventGroup for {club.name}",
+                    code=f"test-event-group-for-club-{club}-{j}",
                     club=club,
+                    creator=ben,
+                    description="This is the description for this event.",
+                )
+                event, created = Event.objects.get_or_create(
                     code="test-event-for-club-{}-{}".format(club, j),
+                    group=event_group,
                     defaults={
                         "creator": ben,
-                        "name": f"Test Event #{j} for {club.name}",
-                        "description": "This is the description for this event.",
                         "start_time": start_time,
                         "end_time": end_time,
                     },
                 )
 
                 if created:
+                    event.code = f"{event.group.code}-{event.id}"
                     contents = get_image(event_image_url)
-                    event.image.save("image.png", ContentFile(contents))
+                    event.group.image.save("image.png", ContentFile(contents))
+                    event.save(update_fields=["code"])
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
@@ -765,7 +788,7 @@ class Command(BaseCommand):
 
         hr = Club.objects.get(code="harvard-rejects")
 
-        hr_events = Event.objects.filter(club=hr)
+        hr_events = Event.objects.filter(group__club=hr)
 
         for idx, e in enumerate(hr_events[:3]):
             # Switch up person every so often
