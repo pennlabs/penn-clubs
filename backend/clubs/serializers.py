@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -36,6 +36,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubVisit,
     Event,
+    EventGroup,
     Favorite,
     Major,
     Membership,
@@ -360,22 +361,184 @@ class ClubEventSerializer(serializers.ModelSerializer):
     Within the context of an existing club, return events that are a part of this club.
     """
 
-    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
-    image_url = serializers.SerializerMethodField("get_image_url")
-    large_image_url = serializers.SerializerMethodField("get_large_image_url")
-    url = serializers.SerializerMethodField("get_event_url")
     ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    pinned = serializers.BooleanField(read_only=True)
 
     def get_ticketed(self, obj) -> bool:
         return obj.tickets.count() > 0
 
-    def get_event_url(self, obj):
+    def validate(self, data):
+        start_time = data.get(
+            "start_time",
+            self.instance.start_time if self.instance is not None else None,
+        )
+        end_time = data.get(
+            "end_time", self.instance.end_time if self.instance is not None else None
+        )
+        if start_time is not None and end_time is not None and start_time > end_time:
+            raise serializers.ValidationError(
+                "Your event start time must be less than the end time!"
+            )
+        return data
+
+    def update(self, instance, validated_data):
+        # ensure user cannot update start time or end time for a fair event
+        user = self.context["request"].user
+        if not (user.is_authenticated and user.has_perm("clubs.see_fair_status")):
+            if instance and instance.type == Event.FAIR:
+                unchanged_fields = {"start_time", "end_time"}
+                for field in unchanged_fields:
+                    if (
+                        field in validated_data
+                        and not getattr(self.instance, field, None)
+                        == validated_data[field]
+                    ):
+                        raise serializers.ValidationError(
+                            "You cannot change the meeting time for a fair event! "
+                            "If you would like to, please contact the fair organizers."
+                        )
+
+        return super().update(instance, validated_data)
+
+    # might be redundant since EventWriteSerializer handles event creation and updates
+    # TODO: investigate
+    def save(self):
+        if "club" not in self.validated_data:
+            self.validated_data["club"] = Club.objects.get(
+                code=self.context["view"].kwargs.get("club_code")
+            )
+
+        if not self.validated_data.get("code") and self.validated_data.get("name"):
+            self.validated_data["code"] = slugify(self.validated_data["name"])
+
+        return super().save()
+
+    class Meta:
+        model = Event
+        fields = [
+            "creator",
+            "end_time",
+            "id",
+            "is_ics_event",
+            "location",
+            "start_time",
+            "ticketed",
+            "pinned",
+        ]
+
+
+class EventSerializer(ClubEventSerializer):
+    """
+    A serializer for an event that includes basic associated club information.
+    """
+
+    club = serializers.SlugRelatedField(
+        queryset=Club.objects.all(), required=False, slug_field="code"
+    )
+    club_name = serializers.SerializerMethodField()
+    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
+    pinned = serializers.BooleanField(read_only=True)
+
+    def get_club_name(self, obj):
+        if obj.club is None:
+            return None
+        return obj.club.name
+
+    class Meta:
+        model = Event
+        fields = ClubEventSerializer.Meta.fields + [
+            "club",
+            "club_name",
+            "badges",
+            "pinned",
+        ]
+
+
+class EventWriteSerializer(EventSerializer):
+    """
+    A serializer for an event that is used when creating/editing the event.
+
+    Enables URL checking for the url field.
+    """
+
+    url = serializers.CharField(
+        max_length=2048, required=False, allow_blank=True, allow_null=True
+    )
+
+    group = serializers.SlugRelatedField(
+        queryset=EventGroup.objects.all(), slug_field="code", required=True
+    )
+
+    def create(self, validated_data):
+        # if group not in payload, retrieve it from view context
+        if "group" not in self.validated_data:
+            group_code = self.context["view"].kwargs.get("group_code")
+            self.validated_data["group"] = EventGroup.objects.get(code=group_code)
+
+        event = super().create(validated_data)
+        # add event code
+        event.code = f"{event.group.code}-{event.id}"
+        event.save(update_fields=["code"])
+        return event
+
+
+class EventGroupSerializer(serializers.ModelSerializer):
+    """
+    Serializer for event groups
+    - handles group level fields
+    - optionally accepts nested event data on creation
+    - includes basic associated club information
+    """
+
+    club = serializers.SlugRelatedField(
+        queryset=Club.objects.all(), required=False, slug_field="code"
+    )
+    club_name = serializers.SerializerMethodField()
+    badges = BadgeSerializer(source="club.badges", many=True)
+    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
+    image_url = serializers.SerializerMethodField("get_image_url")
+    large_image_url = serializers.SerializerMethodField("get_large_image_url")
+    url = serializers.SerializerMethodField("get_event_group_url")
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    events = EventSerializer(many=True, required=False)
+
+    class Meta:
+        model = EventGroup
+        fields = [
+            "code",
+            "name",
+            "club",
+            "club_name",
+            "badges",
+            "type",
+            "url",
+            "description",
+            "image",
+            "image_small",
+            "creator",
+            "events",
+        ]
+        read_only_fields = [
+            "code",
+            "club_name",
+            "badges",
+            "image_url",
+            "large_image_url",
+            "creator",
+        ]
+
+    def get_club_name(self, obj):
+        if obj.club is None:
+            return None
+        return obj.club.name
+
+    def get_event_group_url(self, obj):
         # if no url, return that
         if not obj.url:
             return obj.url
 
-        # if is zoom link, hide url unless authenticated
+        # if the url is a zoom link, hide url unless authenticated
         if "request" in self.context and "zoom.us" in urlparse(obj.url).netloc:
             user = self.context["request"].user
             if user.is_authenticated:
@@ -449,107 +612,20 @@ class ClubEventSerializer(serializers.ModelSerializer):
         """
         return clean(bleach.linkify(value))
 
-    def validate(self, data):
-        start_time = data.get(
-            "start_time",
-            self.instance.start_time if self.instance is not None else None,
-        )
-        end_time = data.get(
-            "end_time", self.instance.end_time if self.instance is not None else None
-        )
-        if start_time is not None and end_time is not None and start_time > end_time:
-            raise serializers.ValidationError(
-                "Your event start time must be less than the end time!"
-            )
-        return data
+    def create(self, validated_data):
+        events_data = validated_data.pop("events", [])
 
-    def update(self, instance, validated_data):
-        # ensure user cannot update start time or end time for a fair event
-        user = self.context["request"].user
-        if not (user.is_authenticated and user.has_perm("clubs.see_fair_status")):
-            if instance and instance.type == Event.FAIR:
-                unchanged_fields = {"start_time", "end_time"}
-                for field in unchanged_fields:
-                    if (
-                        field in validated_data
-                        and not getattr(self.instance, field, None)
-                        == validated_data[field]
-                    ):
-                        raise serializers.ValidationError(
-                            "You cannot change the meeting time for a fair event! "
-                            "If you would like to, please contact the fair organizers."
-                        )
+        if not validated_data["code"] and validated_data["name"]:
+            validated_data["code"] = slugify(validated_data["name"])
 
-        return super().update(instance, validated_data)
-
-    def save(self):
-        if "club" not in self.validated_data:
-            self.validated_data["club"] = Club.objects.get(
-                code=self.context["view"].kwargs.get("club_code")
-            )
-
-        if not self.validated_data.get("code") and self.validated_data.get("name"):
-            self.validated_data["code"] = slugify(self.validated_data["name"])
-
-        return super().save()
-
-    class Meta:
-        model = Event
-        fields = [
-            "creator",
-            "description",
-            "end_time",
-            "id",
-            "image",
-            "image_url",
-            "is_ics_event",
-            "large_image_url",
-            "location",
-            "name",
-            "start_time",
-            "ticketed",
-            "type",
-            "url",
-        ]
-
-
-class EventSerializer(ClubEventSerializer):
-    """
-    A serializer for an event that includes basic associated club information.
-    """
-
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(), required=False, slug_field="code"
-    )
-    club_name = serializers.SerializerMethodField()
-    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
-    pinned = serializers.BooleanField(read_only=True)
-
-    def get_club_name(self, obj):
-        if obj.club is None:
-            return None
-        return obj.club.name
-
-    class Meta:
-        model = Event
-        fields = ClubEventSerializer.Meta.fields + [
-            "club",
-            "club_name",
-            "badges",
-            "pinned",
-        ]
-
-
-class EventWriteSerializer(EventSerializer):
-    """
-    A serializer for an event that is used when creating/editing the event.
-
-    Enables URL checking for the url field.
-    """
-
-    url = serializers.CharField(
-        max_length=2048, required=False, allow_blank=True, allow_null=True
-    )
+        with transaction.atomic():
+            event_group = EventGroup.objects.create(**validated_data)
+            for event_data in events_data:
+                event = Event.objects.create(group=event_group, **event_data)
+                # set the event code to be the <group_code>-<event.id>
+                event.code = f"{event_group.code}-{event.id}"
+                event.save(update_fields=["code"])
+        return event_group
 
     def update(self, instance, validated_data):
         """

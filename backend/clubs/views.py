@@ -3163,7 +3163,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         send_mail_helper(
             name="blast",
-            subject=f"Update on {event.name} from {event.club.name}",
+            subject=f"Update on {event.group.name} from {event.club.name}",
             emails=emails,
             context={
                 "sender": event.club.name,
@@ -4372,7 +4372,7 @@ class FavoriteCalendarAPIView(APIView):
 
         for event in all_events:
             e = ICSEvent()
-            e.name = "{} - {}".format(event.club.name, event.name)
+            e.name = "{} - {}".format(event.club.name, event.group.name)
             e.begin = event.start_time
 
             # ensure event is at least 15 minutes for display purposes

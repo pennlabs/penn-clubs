@@ -229,25 +229,28 @@ class ClubFairAdmin(admin.ModelAdmin):
     list_filter = ("start_time", "end_time")
 
 
-class EventAdmin(admin.ModelAdmin):
-    list_display = ("name", "get_club", "get_event_type", "start_time", "end_time")
-    search_fields = ("name", "club__name")
-    list_filter = ("start_time", "end_time")
-
-    def get_club(self, obj):
-        return obj.group.club.name if (obj.group and obj.group.club) else None
-
-    def get_event_type(sefl, obj):
-        return obj.group.type if obj.group else None
-
-    get_club.short_description = "Club"
-    get_event_type.short_description = "Type"
-
-
 class EventInline(TabularInline):
     model = Event
     extra = 1
-    fields = ("name", "start_time", "end_time", "location")
+    fields = ("start_time", "end_time", "location")
+
+
+class EventAdmin(admin.ModelAdmin):
+    list_display = ("get_name", "get_club", "get_event_type", "start_time", "end_time")
+    search_fields = ("name", "group__club__name")
+    list_filter = ("start_time", "end_time")
+
+    @admin.display(description="Club")
+    def get_club(self, obj):
+        return obj.group.club.name if (obj.group and obj.group.club) else None
+
+    @admin.display(description="Type")
+    def get_event_type(self, obj):
+        return obj.group.type if obj.group else None
+
+    @admin.display(description="Name")
+    def get_name(self, obj):
+        return obj.group.name if obj.group else None
 
 
 class EventGroupAdmin(admin.ModelAdmin):
