@@ -25,6 +25,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
+from django.utils.text import slugify
 from ics import Calendar
 from jinja2 import Environment, meta
 from model_clone.models import CloneModel
@@ -415,11 +416,16 @@ class Club(models.Model):
                         # save event to add to group
                         ev.save()
                         # add event to group, and ensure length limits are met
+                        # don't create with name as name similar names with different
+                        # punctuations result in the same slug
                         event_group, _ = EventGroup.objects.get_or_create(
-                            name=event.name.strip()[:255],
-                            code="-".join(event.name.strip().lower().split())[:255],
+                            code=slugify(event.name)[:255],
                             club=self,
                         )
+                        # now add name if none
+                        if event_group.name is None:
+                            event_group.name = event.name.strip()[:255]
+
                         ev.group = event_group
                         ev.code = f"{event_group.code}-{ev.id}"[:255]
 

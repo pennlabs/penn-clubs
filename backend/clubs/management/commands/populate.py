@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
+from django.utils.text import slugify
 from options.models import Option
 
 from clubs.models import (
@@ -516,7 +517,7 @@ class Command(BaseCommand):
 
         event_group, _ = EventGroup.objects.get_or_create(
             name=f"Test EventGroup for {live_event_club.name}",
-            code=f"test-event-group-for-club-{live_event_club}",
+            code=f"test-event-group-for-club-{slugify(live_event_club)}",
             club=live_event_club,
             creator=ben,
             description="This is the description for this event.",
@@ -739,13 +740,13 @@ class Command(BaseCommand):
 
                 event_group, _ = EventGroup.objects.get_or_create(
                     name=f"Test EventGroup for {club.name}",
-                    code=f"test-event-group-for-club-{club}-{j}",
+                    code=f"test-event-group-for-club-{slugify(club.name)}-{j}",
                     club=club,
                     creator=ben,
                     description="This is the description for this event.",
                 )
                 event, created = Event.objects.get_or_create(
-                    code="test-event-for-club-{}-{}".format(club, j),
+                    code="test-event-for-club-{}-{}".format(slugify(club.name), j),
                     group=event_group,
                     defaults={
                         "creator": ben,
