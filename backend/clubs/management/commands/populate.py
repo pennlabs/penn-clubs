@@ -746,7 +746,6 @@ class Command(BaseCommand):
                     description="This is the description for this event.",
                 )
                 event, created = Event.objects.get_or_create(
-                    code="test-event-for-club-{}-{}".format(slugify(club.name), j),
                     group=event_group,
                     defaults={
                         "creator": ben,
