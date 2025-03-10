@@ -15,7 +15,7 @@ from clubs.models import (
     Badge,
     Club,
     ClubFair,
-    Event,
+    EventGroup,
     Membership,
     MembershipInvite,
     send_mail_helper,
@@ -542,9 +542,9 @@ class Command(BaseCommand):
                 emails_disp = emails or "officers"
                 if limit:
                     if club.events.filter(
-                        ~Q(url="") & ~Q(url__isnull=True),
+                        ~Q(url="") & ~Q(group__url__isnull=True),
                         start_time__gte=now,
-                        type=Event.FAIR,
+                        group__type=EventGroup.FAIR,
                     ).exists():
                         self.stdout.write(
                             f"Skipping {club.name}, fair event already set up."
@@ -566,10 +566,10 @@ class Command(BaseCommand):
             return
         elif action == "urgent_virtual_fair":
             clubs = fair.participating_clubs.filter(
-                Q(events__url="") | Q(events__url__isnull=True),
-                events__type=Event.FAIR,
-                events__start_time__gte=fair.start_time,
-                events__end_time__lte=fair.end_time,
+                Q(event_groups__url="") | Q(event_groups__url__isnull=True),
+                event_groups__type=EventGroup.FAIR,
+                event_groups__events__start_time__gte=fair.start_time,
+                event_groups__events__end_time__lte=fair.end_time,
             )
             if clubs_allowlist:
                 self.stdout.write(f"Using clubs allowlist: {clubs_allowlist}")
@@ -600,9 +600,9 @@ class Command(BaseCommand):
             return
         elif action == "post_virtual_fair":
             clubs = fair.participating_clubs.filter(
-                events__type=Event.FAIR,
-                events__start_time__gte=fair.start_time,
-                events__end_time__lte=fair.end_time,
+                event_groups__type=EventGroup.FAIR,
+                event_groups__events__start_time__gte=fair.start_time,
+                event_groups__events__end_time__lte=fair.end_time,
             )
             if clubs_allowlist:
                 clubs = clubs.filter(code__in=clubs_allowlist)

@@ -30,6 +30,7 @@ from clubs.models import (
     ClubApplication,
     ClubFair,
     Event,
+    EventGroup,
     Favorite,
     Membership,
     MembershipInvite,
@@ -126,7 +127,7 @@ class ImportCalendarTestCase(TestCase):
 
         call_command("import_calendar_events")
 
-        self.assertGreaterEqual(self.club1.events.count(), 25)
+        self.assertGreaterEqual(self.club1.all_events.count(), 25)
 
     def test_import_nonstandard_ics(self):
         """
@@ -138,10 +139,10 @@ class ImportCalendarTestCase(TestCase):
         ):
             call_command("import_calendar_events")
 
-        ev = self.club1.events.first()
+        ev_group = self.club1.event_groups.prefetch_related("events").first()
 
-        self.assertIsNotNone(ev)
-        self.assertEqual(ev.name, "Just a Test")
+        self.assertIsNotNone(ev_group.events.first())
+        self.assertEqual(ev_group.name, "Just a Test")
 
     def test_import_calendar_events(self):
         """
@@ -154,20 +155,22 @@ class ImportCalendarTestCase(TestCase):
 
             m.assert_called_with(self.club1.ics_import_url)
 
-        desired = self.club1.events.first()
+        desired_group = self.club1.event_groups.prefetch_related("events").first()
+        desired_event = desired_group.events.first()
 
         # ensure event exists with right values
-        self.assertIsNotNone(desired)
-        self.assertEqual(desired.name, "A test event")
-        self.assertEqual(desired.description, "A test description")
+        self.assertIsNotNone(desired_group)
+        self.assertIsNotNone(desired_group.events.first())
+        self.assertEqual(desired_group.name, "A test event")
+        self.assertEqual(desired_group.description, "A test description")
 
         # ensure difference between calendar date and imported date is
         # less than one second
         self.assertLessEqual(
-            abs(desired.start_time - now), datetime.timedelta(seconds=1)
+            abs(desired_event.start_time - now), datetime.timedelta(seconds=1)
         )
         self.assertLessEqual(
-            desired.end_time - (now + datetime.timedelta(minutes=60)),
+            desired_event.end_time - (now + datetime.timedelta(minutes=60)),
             datetime.timedelta(seconds=1),
         )
 
@@ -178,10 +181,10 @@ class ImportCalendarTestCase(TestCase):
             m.assert_called_with(self.club1.ics_import_url)
 
         # ensure that only one event exists
-        self.assertEqual(self.club1.events.count(), 1)
+        self.assertEqual(self.club1.all_events.count(), 1)
 
         # screw up the uuid
-        desired.ics_uuid = uuid.uuid4()
+        desired_event.ics_uuid = uuid.uuid4()
 
         # run the script again, make sure still only one event
         with mock.patch("requests.get", side_effect=mocked_requests_get(now)) as m:
@@ -190,7 +193,7 @@ class ImportCalendarTestCase(TestCase):
             m.assert_called_with(self.club1.ics_import_url)
 
         # ensure that only one event exists
-        self.assertEqual(self.club1.events.count(), 1)
+        self.assertEqual(self.club1.all_events.count(), 1)
 
 
 class SendInvitesTestCase(TestCase):
@@ -527,13 +530,16 @@ class RankTestCase(TestCase):
         now = timezone.now()
 
         # add an event
-        Event.objects.create(
+        EventGroup.objects.create(
             code="test-event-1",
             name="Test Event 1",
             club=Club.objects.first(),
+            description="This is a test event!",
+        )
+        Event.objects.create(
+            code="test-event-1-1",
             start_time=now,
             end_time=now + datetime.timedelta(hours=2),
-            description="This is a test event!",
         )
 
         # run the rank command
