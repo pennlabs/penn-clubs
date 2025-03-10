@@ -424,7 +424,7 @@ class Club(models.Model):
                             club=self,
                         )
                         # now add name if none
-                        if event_group.name is None:
+                        if event_group.name == "":
                             event_group.name = event.name.strip()[:255]
 
                         ev.group = event_group
@@ -521,10 +521,10 @@ class Club(models.Model):
 
         eastern = pytz.timezone("America/New_York")
 
-        events = self.events.filter(
+        events = self.all_events.filter(
             start_time__gte=fair.start_time,
             end_time__lte=fair.end_time,
-            type=EventGroup.FAIR,
+            group__type=EventGroup.FAIR,
         ).order_by("start_time")
         event = events.select_related("group").first()
         fstr = "%B %d, %Y %I:%M %p"
@@ -707,6 +707,10 @@ class Club(models.Model):
                 context=context,
                 reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
+
+    @property
+    def all_events(self):
+        return Event.objects.filter(group__club=self)
 
     class Meta:
         ordering = ["name"]
