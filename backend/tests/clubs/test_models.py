@@ -15,6 +15,7 @@ from clubs.models import (
     Badge,
     Club,
     Event,
+    EventGroup,
     Favorite,
     Membership,
     Note,
@@ -129,18 +130,36 @@ class ProfileTestCase(TestCase):
         self.assertTrue(self.person.profile)
 
 
+class EventGroupTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
+        self.club = Club.objects.create(
+            code="a", name="a", subtitle="a", founded=date, description="a", size=1
+        )
+        self.event_group = EventGroup.objects.create(
+            name="a", club=self.club, description="a"
+        )
+        self.event_group.save()
+
+    def test_str(self):
+        self.assertEqual(str(self.event_group), self.event_group.name + " Group")
+
+
 class EventTestCase(TestCase):
     def setUp(self):
         date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
         self.club = Club.objects.create(
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )
-        self.event = Event.objects.create(
-            name="a", club=self.club, start_time=date, end_time=date, description="a"
-        )
+        self.event = Event.objects.create(start_time=date, end_time=date)
 
     def test_str(self):
-        self.assertEqual(str(self.event), self.event.name)
+        self.assertEqual(str(self.event), "this event has no group")
+
+        self.event.group = EventGroup.objects.create(
+            name="a", club=self.club, description="a"
+        )
+        self.assertEqual(str(self.event), self.event.group.name)
 
 
 class FavoriteTestCase(TestCase):
