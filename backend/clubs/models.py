@@ -2086,3 +2086,44 @@ def user_create(sender, instance, created, **kwargs):
 def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+
+
+class RegistrationQueueSettings(models.Model):
+    """
+    Singleton model to store registration queue settings.
+    Only one instance of this model should exist.
+    """
+
+    reapproval_queue_open = models.BooleanField(
+        default=True,
+        help_text="Controls whether existing clubs can submit for reapproval",
+    )
+    new_approval_queue_open = models.BooleanField(
+        default=True, help_text="Controls whether new clubs can submit for approval"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="modified_queue_settings",
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to ensure this is a singleton.
+        """
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get(cls):
+        """
+        Get or create singleton instance of QueueSettings.
+        """
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "Registration Queue Settings"
