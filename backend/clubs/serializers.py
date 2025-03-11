@@ -46,6 +46,7 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -3096,3 +3097,15 @@ class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubApprovalResponseTemplate
         fields = ("id", "author", "title", "content", "created_at", "updated_at")
+
+
+class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegistrationQueueSettings
+        fields = [
+            "reapproval_queue_open",
+            "new_approval_queue_open",
+            "updated_at",
+            "updated_by",
+        ]
+        read_only_fields = ["updated_at", "updated_by"]
