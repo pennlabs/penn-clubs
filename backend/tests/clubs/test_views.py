@@ -3491,7 +3491,6 @@ class ClubTestCase(TestCase):
             0,
         )
 
-
     def test_email_blast(self):
         Membership.objects.create(
             club=self.club1, person=self.user1, role=Membership.ROLE_OWNER, active=True
@@ -3563,8 +3562,8 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
         self.assertEqual(len(mail.outbox), 3)
-        
- def test_checkout_questions_create_list_precedence(self):
+
+    def test_checkout_questions_create_list_precedence(self):
         """
         Test the checkout questions feature
         """
