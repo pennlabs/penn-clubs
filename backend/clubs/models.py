@@ -1017,7 +1017,8 @@ class Event(models.Model):
         return create_thumbnail_helper(self, request, 400)
 
     def __str__(self):
-        return self.group.name
+        # TODO: come back to this. Should groups be required?
+        return self.group.name if self.group else "this event has no group"
 
 
 class Favorite(models.Model):
