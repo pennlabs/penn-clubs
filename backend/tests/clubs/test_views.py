@@ -3569,3 +3569,63 @@ class HealthTestCase(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data, {"message": "OK"})
+
+
+class RegistrationQueueSettingsTestCase(TestCase):
+    """
+    Test the registration queue settings view.
+    """
+
+    def setUp(self):
+        self.client = Client()
+
+        self.user = get_user_model().objects.create_user(
+            "user", "user@example.com", "password"
+        )
+        self.superuser = get_user_model().objects.create_user(
+            "super", "super@example.com", "password", is_superuser=True
+        )
+
+    def test_get_settings_permissions(self):
+        resp = self.client.get(reverse("queue-settings"))
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        self.client.login(username="user", password="password")
+        resp = self.client.get(reverse("queue-settings"))
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        self.client.login(username="super", password="password")
+        resp = self.client.get(reverse("queue-settings"))
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = resp.json()
+        self.assertIn("reapproval_queue_open", data)
+        self.assertIn("new_approval_queue_open", data)
+
+    def test_update_settings(self):
+        self.client.login(username="user", password="password")
+        resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {"reapproval_queue_open": False, "new_approval_queue_open": False}
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        self.client.login(username="super", password="password")
+        resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {"reapproval_queue_open": False, "new_approval_queue_open": False}
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = resp.json()
+        self.assertFalse(data["reapproval_queue_open"])
+        self.assertFalse(data["new_approval_queue_open"])
+
+        resp = self.client.get(reverse("queue-settings"))
+        data = resp.json()
+        self.assertFalse(data["reapproval_queue_open"])
+        self.assertFalse(data["new_approval_queue_open"])
