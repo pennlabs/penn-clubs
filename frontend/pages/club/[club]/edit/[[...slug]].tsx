@@ -6,7 +6,7 @@ import { doApiRequest, isClubFieldShown } from 'utils'
 
 type EditPageProps = React.ComponentProps<typeof ClubEditPage>
 
-const Edit = (props: EditPageProps): ReactElement => {
+const Edit = (props: EditPageProps): ReactElement<any> => {
   return <ClubEditPage {...props} />
 }
 

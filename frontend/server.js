@@ -3,19 +3,6 @@
 const express = require('express')
 const next = require('next')
 
-const devProxy = {
-  '/api': {
-    target: 'http://localhost:8000',
-    changeOrigin: true,
-    ws: true,
-  },
-  '/__debug__': {
-    // this allows django debug toolbar to work properly
-    target: 'http://localhost:8000',
-    changeOrigin: true,
-  },
-}
-
 const port = parseInt(process.env.PORT, 10) || 3000
 const env = process.env.NODE_ENV
 const dev = env !== 'production'
@@ -30,16 +17,6 @@ app
   .prepare()
   .then(() => {
     const server = express()
-
-    // Set up the development proxy to the backend
-    if (dev && devProxy) {
-      const { createProxyMiddleware } = require('http-proxy-middleware')
-      Object.keys(devProxy).forEach(function (context) {
-        const proxy = createProxyMiddleware(context, devProxy[context])
-        server.use(context, proxy)
-        console.log(`-> Using proxy middleware for route ${context}`)
-      })
-    }
 
     // Default catch-all handler to allow Next.js to handle all other routes
     server.all('*', (req, res) => handle(req, res))

@@ -34,7 +34,7 @@ const DirectoryList = styled.ul`
   }
 `
 
-const Directory = ({ clubs }: Props): ReactElement => {
+const Directory = ({ clubs }: Props): ReactElement<any> => {
   return (
     <>
       <Container fullHeight background={SNOW}>

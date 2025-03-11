@@ -28,7 +28,7 @@ const HappeningNowContainer = styled.p<{
 const HappeningNow = (props: {
   urgent?: boolean
   floatRight?: boolean
-}): ReactElement => (
+}): ReactElement<any> => (
   <HappeningNowContainer {...props}>HAPPENING NOW</HappeningNowContainer>
 )
 

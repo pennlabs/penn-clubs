@@ -26,7 +26,7 @@ function AdminPage({
   scripts,
   fair,
   reports,
-}): ReactElement {
+}): ReactElement<any> {
   if (!userInfo) {
     return <AuthPrompt />
   } else if (
@@ -45,7 +45,7 @@ function AdminPage({
   const tabs = [
     {
       name: 'bulk',
-      label: 'Bulk Editing',
+      label: 'Club Management',
       content: () => (
         <BulkEditTab badges={badges} clubfairs={clubfairs} tags={tags} />
       ),

@@ -10,7 +10,7 @@ type ContactProps = {
 export function Contact({
   email,
   point = 'pennclubs',
-}: ContactProps): ReactElement {
+}: ContactProps): ReactElement<any> {
   let finalEmail = email || CONTACT_EMAIL
 
   if (SITE_ID === 'clubs') {

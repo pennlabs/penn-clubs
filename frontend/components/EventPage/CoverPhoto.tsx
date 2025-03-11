@@ -43,10 +43,10 @@ const CoverPhotoImage = styled.div`
 
 interface CoverPhotoProps {
   image: string | null
-  fallback: ReactElement
+  fallback: ReactElement<any>
 }
 
-const CoverPhoto = ({ image, fallback }: CoverPhotoProps): ReactElement =>
+const CoverPhoto = ({ image, fallback }: CoverPhotoProps): ReactElement<any> =>
   image ? (
     <CoverPhotoImage style={{ backgroundImage: `url(${image})` }} />
   ) : (

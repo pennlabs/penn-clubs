@@ -1,4 +1,4 @@
-FROM node:20.11.1-buster-slim
+FROM oven/bun:1.2.2-slim
 
 LABEL maintainer="Penn Labs"
 
@@ -6,10 +6,10 @@ WORKDIR /app/
 
 # Copy project dependencies
 COPY package.json /app/
-COPY yarn.lock /app/
+COPY bun.lock /app/
 
 # Install project dependencies
-RUN yarn install --frozen-lockfile --production=false
+RUN bun install --frozen-lockfile
 
 # Copy project files
 COPY . /app/
@@ -18,6 +18,6 @@ COPY . /app/
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build project
-RUN yarn build
+RUN bun run build
 
-CMD ["yarn", "start"]
+CMD ["bun", "run", "start"]

@@ -6,7 +6,7 @@ import { SITE_NAME } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import { CheckboxField, SelectField, TextField } from '../FormComponents'
 
-const ScriptBox = ({ script, useWs }): ReactElement => {
+const ScriptBox = ({ script, useWs }): ReactElement<any> => {
   const ws = useRef<WebSocket | null>(null)
   const [isLoading, setLoading] = useState<boolean>(false)
   const [output, setOutput] = useState<string | null>(null)

@@ -48,7 +48,7 @@ const Input = styled.input`
 `
 
 const notify = (
-  msg: ReactElement | string,
+  msg: ReactElement<any> | string,
   type: TypeOptions = 'info',
 ): void => {
   toast[type](msg)
@@ -231,7 +231,7 @@ const TicketsModal = ({
   club: Club
   closeModal: () => void
   onSuccessfulSubmit: () => void
-}): ReactElement => {
+}): ReactElement<any> => {
   const { large_image_url, image_url, club_name, name, id } = event
 
   const [submitting, setSubmitting] = useState(false)

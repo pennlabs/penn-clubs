@@ -63,7 +63,7 @@ const Toggle = <T,>({
   active,
   toggle,
   club,
-}: ToggleProps<T>): ReactElement => {
+}: ToggleProps<T>): ReactElement<any> => {
   function handleClick(): void {
     toggle(club)
   }

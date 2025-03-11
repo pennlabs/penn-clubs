@@ -41,7 +41,7 @@ export const ActionLink = styled.a<LinkProps>`
   }
 `
 
-const Feedback = (): ReactElement => (
+const Feedback = (): ReactElement<any> => (
   <ActionLink
     $offsetAddition={0}
     rel="noopener noreferrer"

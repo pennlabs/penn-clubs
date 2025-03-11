@@ -110,6 +110,13 @@ export class MyChart extends PennLabsChart {
       cmd: ["python", "manage.py", "expire_membership_invites"],
     });
 
+    new CronJob(this, 'sync', {
+      schedule: cronTime.everyDayAt(12),
+      image: backendImage,
+      secret: clubsSecret,
+      cmd: ["python", "manage.py", "sync"],
+    });
+
     new CronJob(this, 'graduate-users', {
       schedule: cronTime.everyYearIn(1, 1, 12, 0),
       image: backendImage,

@@ -140,7 +140,7 @@ const truncate = (str: string, len = 54): string => {
   return `${str.substring(0, len)}...`
 }
 
-const Flyer = ({ club }: { club: string }): ReactElement => {
+const Flyer = ({ club }: { club: string }): ReactElement<any> => {
   const [clubs, setClubs] = useState<Club[] | null>(null)
   const [count, setCount] = useState<number>(0)
   const [failedClubs, setFailedClubs] = useState<string[]>([])

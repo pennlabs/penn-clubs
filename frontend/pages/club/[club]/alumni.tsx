@@ -22,7 +22,7 @@ const AlumniPage = ({
   club,
   alumni,
   userInfo,
-}: AlumniPageProps): ReactElement => {
+}: AlumniPageProps): ReactElement<any> => {
   if (!userInfo) {
     return <AuthPrompt />
   }

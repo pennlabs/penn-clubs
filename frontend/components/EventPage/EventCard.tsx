@@ -41,7 +41,7 @@ const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
 const EventCard = (props: {
   event: ClubEvent & { clubPublic?: boolean }
-}): ReactElement => {
+}): ReactElement<any> => {
   const {
     image_url: imageUrl,
     club_name: clubName,

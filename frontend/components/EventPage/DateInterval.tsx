@@ -40,7 +40,7 @@ const DateInterval = ({
   start: Date
   end: Date
   className?: string
-}): ReactElement => (
+}): ReactElement<any> => (
   <p className={className} suppressHydrationWarning>
     {dateIntervalString(start, end)}{' '}
   </p>

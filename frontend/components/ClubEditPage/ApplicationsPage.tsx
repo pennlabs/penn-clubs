@@ -135,7 +135,7 @@ const SubmissionModal = (props: {
   application: Application | null
   submission: ApplicationSubmission | null
   onLinkClicked?: () => void
-}): ReactElement => {
+}): ReactElement<any> => {
   const { submission } = props
   const initialValues = {}
   const wordCounts = {}
@@ -211,11 +211,11 @@ const NotificationModal = (props: {
   club: string
   application: Application | null
   updateSubmissions: (arr: Array<ApplicationSubmission>) => void
-}): ReactElement => {
+}): ReactElement<any> => {
   const { submissions, club, application, updateSubmissions } = props
   const initialValues = { dry_run: true }
   const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement | null
+    string | ReactElement<any> | null
   >(null)
   const options = [
     { value: 'acceptance', label: 'Acceptance' },
@@ -319,10 +319,10 @@ const ReasonModal = (props: {
   club: string
   application: Application | null
   updateSubmissions: (s: { name: string }) => void
-}): ReactElement => {
+}): ReactElement<any> => {
   const { submissions, club, application, updateSubmissions } = props
   const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement | null
+    string | ReactElement<any> | null
   >(null)
   const initialValues = {}
   return (
@@ -391,7 +391,7 @@ export default function ApplicationsPage({
   club,
 }: {
   club: Club
-}): ReactElement {
+}): ReactElement<any> {
   const [applications, setApplications] = useState<Array<Application>>([])
   const [currentApplication, setCurrentApplication] =
     useState<Application | null>(null)
@@ -463,7 +463,7 @@ export default function ApplicationsPage({
   )
 
   const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement | null
+    string | ReactElement<any> | null
   >(null)
 
   const [status, setStatus] = useState<ApplicationStatusType>(

@@ -55,7 +55,7 @@ class BaseDocument extends Document {
     }
   }
 
-  render(): ReactElement {
+  render(): ReactElement<any> {
     return (
       <Html lang="en">
         <Head>

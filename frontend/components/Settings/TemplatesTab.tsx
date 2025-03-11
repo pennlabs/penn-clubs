@@ -14,7 +14,7 @@ type TemplatesTabProps = {
 
 export default function TemplatesTab({
   templates,
-}: TemplatesTabProps): ReactElement {
+}: TemplatesTabProps): ReactElement<any> {
   return (
     <>
       <Text>

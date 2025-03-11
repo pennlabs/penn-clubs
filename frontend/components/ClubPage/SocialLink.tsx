@@ -12,7 +12,11 @@ type SocialLinkProps = {
   type: string
 }
 
-const SocialLink = ({ club, item, type }: SocialLinkProps): ReactElement => {
+const SocialLink = ({
+  club,
+  item,
+  type,
+}: SocialLinkProps): ReactElement<any> => {
   let url, text
 
   if (type === 'Email') {

@@ -108,7 +108,7 @@ const ClubTabCard = ({
   toggleActive,
   togglePublic,
   leaveClub,
-}: ClubTabCardProps): ReactElement => {
+}: ClubTabCardProps): ReactElement<any> => {
   const { club, role, title, active, public: isPublic } = membership
   const { code, name } = club
   const roleDisplay = getRoleDisplay(role)

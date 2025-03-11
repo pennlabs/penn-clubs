@@ -11,7 +11,7 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 
-const ListRenewalDialog = (): ReactElement => {
+const ListRenewalDialog = (): ReactElement<any> => {
   const year = getCurrentSchoolYear()
 
   return (

@@ -10,7 +10,7 @@ export default function TicketsViewCard({
   club,
 }: {
   club: Club
-}): ReactElement {
+}): ReactElement<any> {
   const eventsTableFields = [
     { label: 'Event Name', name: 'name' },
     {

@@ -14,7 +14,7 @@ type QuestionsCardProps = {
 
 export default function QuestionsCard({
   club,
-}: QuestionsCardProps): ReactElement {
+}: QuestionsCardProps): ReactElement<any> {
   return (
     <BaseCard title="Student Questions">
       <p className="mb-3">

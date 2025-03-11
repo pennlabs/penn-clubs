@@ -10,7 +10,7 @@ type BaseCardProps = React.PropsWithChildren<{
 export default function BaseCard({
   children,
   title,
-}: BaseCardProps): ReactElement {
+}: BaseCardProps): ReactElement<any> {
   return (
     <div className="card" style={{ marginBottom: 20 }}>
       <div className="card-header">

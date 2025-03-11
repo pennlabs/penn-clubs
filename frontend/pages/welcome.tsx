@@ -61,7 +61,7 @@ const Welcome = ({
   authenticated,
   userInfo: initialUserInfo,
   nextUrl,
-}: WelcomeProps): ReactElement => {
+}: WelcomeProps): ReactElement<any> => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(
     initialUserInfo ?? null,
   )

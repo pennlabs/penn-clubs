@@ -109,7 +109,7 @@ const Ticket: React.FC<TicketProps> = ({
   buyers,
   event,
   home,
-}): ReactElement => {
+}): ReactElement<any> => {
   if (home) {
     return (
       <Center>

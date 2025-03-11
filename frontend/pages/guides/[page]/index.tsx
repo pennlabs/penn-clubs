@@ -45,7 +45,7 @@ const MarkdownContent = styled.div.attrs({ className: 'content' })`
   }
 `
 
-const GuidePage = ({ title, contents, toc }): ReactElement => {
+const GuidePage = ({ title, contents, toc }): ReactElement<any> => {
   return (
     <Container background={SNOW}>
       <Metadata title={title} />
