@@ -154,7 +154,6 @@ events_router.register(
     r"checkoutquestions", CheckoutQuestionViewSet, basename="event-checkout-questions"
 )
 
-
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),

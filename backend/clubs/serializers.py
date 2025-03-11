@@ -31,8 +31,6 @@ from clubs.models import (
     Badge,
     CheckoutMultipleChoice,
     CheckoutQuestion,
-    CheckoutQuestionResponse,
-    CheckoutQuestionSubmission,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -3150,25 +3148,3 @@ class CheckoutQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "precedence",
             "optional",
         )
-
-
-class CheckoutQuestionResponseSerializer(serializers.ModelSerializer):
-    multiple_choice = CheckoutMultipleChoiceSerializer(required=False, read_only=True)
-    question_type = serializers.CharField(
-        source="question.question_type", read_only=True
-    )
-    question = CheckoutQuestionSerializer(required=False, read_only=True)
-
-    class Meta:
-        model = CheckoutQuestionResponse
-        fields = ("text", "multiple_choice", "question_type", "question")
-
-
-class CheckoutQuestionSubmissionSerializer(serializers.ModelSerializer):
-    responses = CheckoutQuestionResponseSerializer(
-        many=True, required=False, read_only=True
-    )
-
-    class Meta:
-        CheckoutQuestionSubmission
-        fields = ("responses",)
