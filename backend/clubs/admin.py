@@ -23,6 +23,7 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    CheckoutQuestion,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -451,6 +452,15 @@ class ClubApprovalResponseTemplateAdmin(admin.ModelAdmin):
     search_fields = ("title", "content")
 
 
+class CheckoutQuestionAdmin(admin.ModelAdmin):
+    search_fields = (
+        "id",
+        "event",
+    )
+    list_display = ("id", "event", "prompt", "optional", "created_at")
+    list_filter = ("created_at",)
+
+
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
 admin.site.register(ApplicationExtension)
@@ -459,6 +469,7 @@ admin.site.register(ApplicationQuestion)
 admin.site.register(ApplicationQuestionResponse)
 admin.site.register(ApplicationSubmission, ApplicationSubmissionAdmin)
 admin.site.register(Advisor, AdvisorAdmin)
+admin.site.register(CheckoutQuestion, CheckoutQuestionAdmin)
 admin.site.register(Club, ClubAdmin)
 admin.site.register(ClubFair, ClubFairAdmin)
 admin.site.register(ClubApplication)
