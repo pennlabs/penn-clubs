@@ -2,6 +2,7 @@ import datetime
 import io
 import json
 import os
+import random
 from collections import Counter
 from unittest.mock import MagicMock, patch
 
@@ -3572,23 +3573,33 @@ class ClubTestCase(TestCase):
 
         questions = [
             {
-                "question": "First question made",
+                "prompt": "First question made",
                 "type": CheckoutQuestion.FREE_RESPONSE,
                 "optional": True,
             },
             {
-                "question": "Second question made",
+                "prompt": "Second question made",
                 "type": CheckoutQuestion.FREE_RESPONSE,
                 "optional": False,
             },
             {
-                "question": "Third question made",
+                "prompt": "Third question made",
                 "type": CheckoutQuestion.MULTIPLE_CHOICE,
                 "optional": True,
                 "multiple_choice": [
                     {"value": "Option 1"},
                     {"value": "Option 2"},
                     {"value": "Option 3"},
+                ],
+            },
+            {
+                "prompt": "Fourth question made",
+                "type": CheckoutQuestion.MULTIPLE_CHOICE,
+                "optional": False,
+                "multiple_choice": [
+                    {"value": "Option A"},
+                    {"value": "Option B"},
+                    {"value": "Option C"},
                 ],
             },
         ]
@@ -3617,6 +3628,62 @@ class ClubTestCase(TestCase):
                 content_type="application/json",
             )
             self.assertEqual(resp.status_code, 201, resp.content)
+
+        resp = self.client.get(
+            reverse(
+                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), len(questions), resp.content)
+
+        for question in questions:
+            self.assertIn(
+                question["prompt"], [q["prompt"] for q in resp.json()], resp.content
+            )
+            if question.get("multiple_choice"):
+                self.assertSetEqual(
+                    set([mc["value"] for mc in question["multiple_choice"]]),
+                    set(
+                        [
+                            mc["value"]
+                            for mc in [
+                                q["multiple_choice"]
+                                for q in resp.json()
+                                if q["prompt"] == question["prompt"]
+                            ][0]
+                        ]
+                    ),
+                    resp.content,
+                )
+        # Test precedence
+        shuffledquestions = resp.json()
+        random.seed(0)
+        random.shuffle(shuffledquestions)
+        question_ids = [id for id in [q["id"] for q in shuffledquestions]]
+        resp = self.client.post(
+            reverse(
+                "event-checkout-questions-precedence",
+                args=(self.club1.code, self.event1.id),
+            ),
+            {"precedence": question_ids},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        resp = self.client.get(
+            reverse(
+                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), len(questions), resp.content)
+        for index, question in enumerate(shuffledquestions):
+            self.assertEqual(
+                index,
+                [q["precedence"] for q in resp.json() if q["id"] == question["id"]][0],
+                resp.content,
+            )
 
     def test_checkout_questions_update_delete(self):
         self.client.login(username=self.user1.username, password="test")
