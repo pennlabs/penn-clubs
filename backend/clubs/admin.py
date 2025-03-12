@@ -42,6 +42,7 @@ from clubs.models import (
     Profile,
     QuestionAnswer,
     RecurringEvent,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -498,3 +499,4 @@ admin.site.register(TicketTransferRecord)
 admin.site.register(Cart)
 admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
+admin.site.register(RegistrationQueueSettings)

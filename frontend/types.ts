@@ -434,3 +434,10 @@ export type Template = {
   title: string
   content: string
 }
+
+export type RegistrationQueueSettings = {
+  reapproval_queue_open: boolean
+  new_approval_queue_open: boolean
+  updated_at: string
+  updated_by: string
+}
