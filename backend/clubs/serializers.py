@@ -3116,4 +3116,4 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
         read_only_fields = ["updated_at", "updated_by"]
 
     def get_updated_by(self, obj):
-        return obj.updated_by.get_full_name()
+        return obj.updated_by.get_full_name() if obj.updated_by else "N/A"

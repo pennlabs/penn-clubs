@@ -397,55 +397,8 @@ const QueueTab = (): ReactElement<any> => {
           <div className="mb-3">
             From the progress bar below, you can see the current approval status
             of all {OBJECT_NAME_PLURAL} across {SITE_NAME}.{' '}
-            {registrationQueueSettings && (
-              <>
-                <br />
-                The approval queue is currently
-                <b>
-                  {registrationQueueSettings.reapproval_queue_open
-                    ? ' open'
-                    : ' closed'}
-                </b>{' '}
-                for reapproval requests and
-                <b>
-                  {registrationQueueSettings.new_approval_queue_open
-                    ? ' open'
-                    : ' closed'}
-                </b>{' '}
-                for new requests.
-                <span
-                  title={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
-                >
-                  <Icon name="clock" className="ml-1" />
-                </span>
-              </>
-            )}
           </div>
         </div>
-        {registrationQueueSettings && (
-          <QueueSettingsButtonStack direction="column">
-            <QueueSettingsButton
-              open={registrationQueueSettings.reapproval_queue_open}
-              for="reapproval_queue_open"
-              setOpen={(open) =>
-                setRegistrationQueueSettings({
-                  ...registrationQueueSettings,
-                  reapproval_queue_open: open,
-                })
-              }
-            />
-            <QueueSettingsButton
-              open={registrationQueueSettings.new_approval_queue_open}
-              for="new_approval_queue_open"
-              setOpen={(open) =>
-                setRegistrationQueueSettings({
-                  ...registrationQueueSettings,
-                  new_approval_queue_open: open,
-                })
-              }
-            />
-          </QueueSettingsButtonStack>
-        )}
       </QueueSectionHeader>
       <MultiProgressBar className="has-background-light mb-3 is-clearfix">
         {totalClubsCount > 0 && (
@@ -483,6 +436,69 @@ const QueueTab = (): ReactElement<any> => {
           {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
         </li>
       </ul>
+      {registrationQueueSettings && (
+        <>
+          <QueueSectionHeader>
+            <div>
+              <SmallTitle>Status</SmallTitle>
+              <div className="mb-3">
+                The approval queue is currently
+                <b
+                  className={
+                    registrationQueueSettings.reapproval_queue_open
+                      ? 'has-text-success'
+                      : 'has-text-danger'
+                  }
+                >
+                  {registrationQueueSettings.reapproval_queue_open
+                    ? ' open'
+                    : ' closed'}
+                </b>{' '}
+                for reapproval requests and
+                <b
+                  className={
+                    registrationQueueSettings.new_approval_queue_open
+                      ? 'has-text-success'
+                      : 'has-text-danger'
+                  }
+                >
+                  {registrationQueueSettings.new_approval_queue_open
+                    ? ' open'
+                    : ' closed'}
+                </b>{' '}
+                for new requests.
+                <span
+                  title={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
+                >
+                  <Icon name="clock" className="ml-1" />
+                </span>
+              </div>
+            </div>
+          </QueueSectionHeader>
+          <QueueSettingsButtonStack direction="row">
+            <QueueSettingsButton
+              open={registrationQueueSettings.reapproval_queue_open}
+              for="reapproval_queue_open"
+              setOpen={(open) =>
+                setRegistrationQueueSettings({
+                  ...registrationQueueSettings,
+                  reapproval_queue_open: open,
+                })
+              }
+            />
+            <QueueSettingsButton
+              open={registrationQueueSettings.new_approval_queue_open}
+              for="new_approval_queue_open"
+              setOpen={(open) =>
+                setRegistrationQueueSettings({
+                  ...registrationQueueSettings,
+                  new_approval_queue_open: open,
+                })
+              }
+            />
+          </QueueSettingsButtonStack>
+        </>
+      )}
       <QueueTable clubs={pendingClubs} templates={templates} />
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">
