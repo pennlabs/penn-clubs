@@ -212,11 +212,11 @@ class EventPermission(permissions.BasePermission):
         Do not allow transitions from and to club fair event.
         """
         # prevent circular import
-        from clubs.models import Event
+        from clubs.models import EventGroup
 
-        FAIR_TYPE = Event.FAIR
+        FAIR_TYPE = EventGroup.FAIR
 
-        old_type = obj.type
+        old_type = obj.group.type
         new_type = request.data.get("type", old_type)
 
         if view.action in ["update", "partial_update"]:
@@ -234,7 +234,7 @@ class EventPermission(permissions.BasePermission):
         ]:
             if not request.user.is_authenticated:
                 return False
-            membership = find_membership_helper(request.user, obj.club)
+            membership = find_membership_helper(request.user, obj.group.club)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         elif view.action in ["add_to_cart", "remove_from_cart"]:
             return request.user.is_authenticated
