@@ -33,6 +33,7 @@ from clubs.models import (
     Favorite,
     Membership,
     MembershipInvite,
+    RegistrationQueueSettings,
     Subscribe,
     Tag,
     get_mail_type_annotation,
@@ -376,11 +377,16 @@ class SendInvitesTestCase(TestCase):
             "django.utils.timezone.now",
             return_value=now,
         ):
-            with mock.patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", False):
-                call_command("daily_notifications", stderr=errors)
+            queue_settings = RegistrationQueueSettings.get()
+            queue_settings.reapproval_queue_open = False
+            queue_settings.save()
+            call_command("daily_notifications", stderr=errors)
             self.assertFalse(any(m.to == [self.user1.email] for m in mail.outbox))
-            with mock.patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
-                call_command("daily_notifications", stderr=errors)
+
+            queue_settings.reapproval_queue_open = True
+            queue_settings.save()
+            call_command("daily_notifications", stderr=errors)
+
         # ensure approval email was sent out
         self.assertTrue(any(m.to == [self.user1.email] for m in mail.outbox))
 

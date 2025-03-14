@@ -110,6 +110,7 @@ from clubs.models import (
     OwnershipRequest,
     QuestionAnswer,
     RecurringEvent,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -185,6 +186,7 @@ from clubs.serializers import (
     NoteSerializer,
     OwnershipRequestSerializer,
     QuestionAnswerSerializer,
+    RegistrationQueueSettingsSerializer,
     ReportClubSerializer,
     ReportSerializer,
     SchoolSerializer,
@@ -8152,3 +8154,89 @@ def email_preview(request):
             "variables": json.dumps(initial_context, indent=4),
         },
     )
+
+
+class RegistrationQueueSettingsView(APIView):
+    """
+    View to get and update registration queue settings.
+    Only superusers can update settings.
+    """
+
+    permission_classes = [IsSuperuser]
+
+    def get(self, request):
+        """
+        Return the current queue settings.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reapproval_queue_open:
+                                    type: boolean
+                                new_approval_queue_open:
+                                    type: boolean
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+        ---
+        """
+        queue_setting = RegistrationQueueSettings.get()
+        serializer = RegistrationQueueSettingsSerializer(queue_setting)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        """
+        Update the queue settings.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            reapproval_queue_open:
+                                type: boolean
+                            new_approval_queue_open:
+                                type: boolean
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reapproval_queue_open:
+                                    type: boolean
+                                new_approval_queue_open:
+                                    type: boolean
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+        ---
+        """
+        queue_setting = RegistrationQueueSettings.get()
+        serializer = RegistrationQueueSettingsSerializer(
+            queue_setting, data=request.data, partial=True
+        )
+
+        if serializer.is_valid():
+            queue_setting = serializer.save(updated_by=request.user)
+            return Response(RegistrationQueueSettingsSerializer(queue_setting).data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
