@@ -2094,6 +2094,8 @@ class RegistrationQueueSettings(models.Model):
     Only one instance of this model should exist.
     """
 
+    SINGLETON_PK = 1
+
     reapproval_queue_open = models.BooleanField(
         default=True,
         help_text="Controls whether existing clubs can submit for reapproval",
@@ -2114,16 +2116,30 @@ class RegistrationQueueSettings(models.Model):
         """
         Override save method to ensure this is a singleton.
         """
-        self.pk = 1
+        if self.pk and self.pk != self.SINGLETON_PK:
+            raise ValueError("Use get() to retrieve singleton instance")
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """
+        Prevent deletion of singleton instance.
+        """
+        if self.pk and self.pk == self.SINGLETON_PK:
+            raise ValueError("Cannot delete singleton instance")
+
+    @classmethod
+    def create(cls, **kwargs):
+        """
+        Prevent creation of new singleton instance.
+        """
+        raise ValueError("Use get() to retrieve singleton instance")
 
     @classmethod
     def get(cls):
         """
         Get or create singleton instance of QueueSettings.
         """
-        obj, created = cls.objects.get_or_create(pk=1)
+        if cls.objects.count() > 1:
+            raise ValueError("Multiple instances of RegistrationQueueSettings found")
+        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
         return obj
-
-    def __str__(self):
-        return "Registration Queue Settings"

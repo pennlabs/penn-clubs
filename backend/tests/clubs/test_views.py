@@ -3574,13 +3574,16 @@ class RegistrationQueueSettingsTestCase(TestCase):
         )
 
     def test_get_settings_permissions(self):
+        # unauthenticated users can't access
         resp = self.client.get(reverse("queue-settings"))
         self.assertEqual(resp.status_code, 403, resp.content)
 
+        # non-superusers can't access
         self.client.login(username="user", password="password")
         resp = self.client.get(reverse("queue-settings"))
         self.assertEqual(resp.status_code, 403, resp.content)
 
+        # superusers can access
         self.client.login(username="super", password="password")
         resp = self.client.get(reverse("queue-settings"))
         self.assertEqual(resp.status_code, 200, resp.content)
@@ -3589,6 +3592,7 @@ class RegistrationQueueSettingsTestCase(TestCase):
         self.assertIn("new_approval_queue_open", data)
 
     def test_update_settings(self):
+        # non-superusers can't update
         self.client.login(username="user", password="password")
         resp = self.client.patch(
             reverse("queue-settings"),
@@ -3599,6 +3603,7 @@ class RegistrationQueueSettingsTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 403, resp.content)
 
+        # superusers can update
         self.client.login(username="super", password="password")
         resp = self.client.patch(
             reverse("queue-settings"),
