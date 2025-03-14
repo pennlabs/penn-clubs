@@ -142,7 +142,7 @@ class EventGroupTestCase(TestCase):
         self.event_group.save()
 
     def test_str(self):
-        self.assertEqual(str(self.event_group), self.event_group.name + " Group")
+        self.assertEqual(str(self.event_group), self.event_group.name)
 
 
 class EventTestCase(TestCase):

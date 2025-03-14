@@ -979,7 +979,7 @@ class EventGroup(models.Model):
     type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
 
     def __str__(self):
-        return self.name + " Group"
+        return self.name
 
 
 class Event(models.Model):
