@@ -2116,7 +2116,7 @@ def club_delete_cleanup(sender, instance, **kwargs):
         instance.image_small.delete(save=True)
 
 
-@receiver(models.signals.post_delete, sender=Event)
+@receiver(models.signals.post_delete, sender=EventGroup)
 def event_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
