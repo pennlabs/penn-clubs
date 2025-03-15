@@ -193,6 +193,17 @@ class EventPermission(permissions.BasePermission):
     Everyone else can view and list events.
     """
 
+    def _get_event_group(self, obj):
+        """
+        helper function to consistently get the EventGroup from object
+        """
+        from clubs.models import Event
+
+        if isinstance(obj, Event):
+            return obj.group
+        # assume obj is an EventGroup
+        return obj
+
     def has_permission(self, request, view):
         if view.action in ["create", "update", "partial_update", "destroy"]:
             if "club_code" not in view.kwargs:
@@ -216,7 +227,11 @@ class EventPermission(permissions.BasePermission):
 
         FAIR_TYPE = EventGroup.FAIR
 
-        old_type = obj.group.type
+        # ensure obj is an EventGroup
+        obj = self._get_event_group(obj)
+
+        # get type of group if obj an Event instance
+        old_type = obj.type
         new_type = request.data.get("type", old_type)
 
         if view.action in ["update", "partial_update"]:
@@ -233,7 +248,7 @@ class EventPermission(permissions.BasePermission):
         ]:
             if not request.user.is_authenticated:
                 return False
-            membership = find_membership_helper(request.user, obj.group.club)
+            membership = find_membership_helper(request.user, obj.club)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         elif view.action in ["add_to_cart", "remove_from_cart"]:
             return request.user.is_authenticated
