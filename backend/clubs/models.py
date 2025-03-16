@@ -982,6 +982,9 @@ class EventGroup(models.Model):
 
     type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
 
+    def create_thumbnail(self, request=None):
+        return create_thumbnail_helper(self, request, 400)
+
     def __str__(self):
         return self.name
 
@@ -1014,9 +1017,6 @@ class Event(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def create_thumbnail(self, request=None):
-        return create_thumbnail_helper(self, request, 400)
 
     @property
     def has_tickets(self):
