@@ -922,9 +922,16 @@ class RecurringEvent(models.Model):
 
     def __str__(self):
         events = self.event_set.prefetch_related("group").all()
-        if events.exists():
+        count = events.count()
+
+        # if events exist
+        if count > 0:
             first_event = events.first()
-            last_event = events.last()
+            if count > 1:
+                last_event = events.last()
+            else:
+                # only one, event so first == last
+                last_event = first_event
             name = first_event.group.name
             return (
                 f"{name}: "
