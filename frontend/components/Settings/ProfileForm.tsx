@@ -1,8 +1,9 @@
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 
-import { PROFILE_ROUTE } from '../../constants'
+import { CLUB_APPLY_ROUTE, PROFILE_ROUTE } from '../../constants'
 import { UserInfo } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
@@ -24,11 +25,14 @@ const ProfileForm = ({
   settings,
   onUpdate = () => undefined,
 }: Props): ReactElement<any> => {
+  const router = useRouter()
   const [schools, setSchools] = useState([])
   const [majors, setMajors] = useState([])
   const [errorMessage, setErrorMessage] = useState<
     ReactElement<any> | string | null
   >(null)
+  const [showNotification, setShowNotification] = useState<boolean>(false)
+  const [fromApplication, setFromApplication] = useState<string | null>(null)
 
   useEffect(() => {
     doApiRequest('/schools/?format=json')
@@ -38,7 +42,13 @@ const ProfileForm = ({
     doApiRequest('/majors/?format=json')
       .then((resp) => resp.json())
       .then(setMajors)
-  }, [])
+
+    // Check if redirected from application page with incomplete profile
+    if (router.query.from_application) {
+      setShowNotification(true)
+      setFromApplication(router.query.from_application as string)
+    }
+  }, [router.query])
 
   function submit(data, { setSubmitting, setStatus }): Promise<void> {
     const infoSubmit = () => {
@@ -82,6 +92,17 @@ const ProfileForm = ({
 
   return (
     <>
+      {showNotification && (
+        <div className="notification is-warning">
+          <button
+            className="delete"
+            onClick={() => setShowNotification(false)}
+          ></button>
+          <strong>Please complete your profile information:</strong> You need to
+          provide your graduation year, school, and major to apply for club
+          memberships.
+        </div>
+      )}
       <Formik
         initialValues={{ ...settings, image: settings.image_url }}
         onSubmit={submit}
@@ -122,14 +143,24 @@ const ProfileForm = ({
                   </>
                 }
               />
-              <button
-                type="submit"
-                disabled={!dirty || isSubmitting}
-                className="button is-success"
-              >
-                <Icon alt="save" name={dirty ? 'edit' : 'check-circle'} />
-                {dirty ? 'Save' : 'Saved!'}
-              </button>
+              <div className="buttons is-flex is-horizontal">
+                <button
+                  type="submit"
+                  disabled={!dirty || isSubmitting}
+                  className="button is-success mr-2"
+                >
+                  <Icon alt="save" name={dirty ? 'edit' : 'check-circle'} />
+                  {dirty ? 'Save' : 'Saved!'}
+                </button>
+                {fromApplication && (
+                  <Link
+                    href={CLUB_APPLY_ROUTE(fromApplication)}
+                    className="button is-link"
+                  >
+                    Return to Application <Icon name="chevrons-right" />
+                  </Link>
+                )}
+              </div>
             </FormStyle>
           </Form>
         )}
