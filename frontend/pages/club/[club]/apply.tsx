@@ -174,7 +174,12 @@ const ApplyPage = ({ club, applications }: Props): ReactElement<any> => {
                 </div>
                 <button
                   onClick={() => {
-                    router.push(app.external_url)
+                    router.push(
+                      app.external_url.replace(
+                        /https?:\/\/pennclubs\.com/g,
+                        'http://localhost:3000',
+                      ),
+                    )
                   }}
                   className="button is-success mt-3"
                   disabled={new Date() < new Date(app.application_start_time)}
