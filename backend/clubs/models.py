@@ -428,7 +428,6 @@ class Club(models.Model):
                             event_group.name = event.name.strip()[:255]
 
                         ev.group = event_group
-                        ev.code = f"{event_group.code}-{ev.id}"[:255]
 
                         event_group.description = clean(event.description.strip())
                         # extract urls from description
@@ -489,7 +488,7 @@ class Club(models.Model):
                             ev.location = ev.location[:255]
 
                         event_group.save()
-                        ev.save(update_fields=["group", "code"])
+                        ev.save(update_fields=["group"])
 
                         modified_events.append(ev)
                         break
@@ -877,14 +876,11 @@ class ClubFair(models.Model):
                     club=club,
                     type=EventGroup.FAIR,
                 )
-                fair_event, created = Event.objects.get_or_create(
+                fair_event, _ = Event.objects.get_or_create(
                     start_time=start_time,
                     end_time=end_time,
                     group=fair_event_group,
                 )
-                if created:
-                    fair_event.code = f"{fair_event_group.code}-{fair_event.id}"
-                    fair_event.save(update_fields=["code"])
                 events.append(fair_event)
         return events
 
@@ -1005,7 +1001,6 @@ class Event(models.Model):
         blank=True,
         related_name="events",
     )
-    code = models.SlugField(max_length=255, db_index=True, unique=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
