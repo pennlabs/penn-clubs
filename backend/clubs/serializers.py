@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -356,7 +356,7 @@ class AdvisorSerializer(
         fields = ("id", "name", "title", "department", "email", "phone", "visibility")
 
 
-class ClubEventSerializer(serializers.ModelSerializer):
+class EventSerializer(serializers.ModelSerializer):
     """
     Within the context of an existing club, return events that are a part of this club.
     """
@@ -367,6 +367,32 @@ class ClubEventSerializer(serializers.ModelSerializer):
 
     def get_ticketed(self, obj) -> bool:
         return obj.tickets.count() > 0
+
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "start_time",
+            "end_time",
+            "ticket_drop_time",
+            "location",
+            "creator",
+            "ticketed",
+            "pinned",
+            "is_ics_event",
+        ]
+
+
+class EventWriteSerializer(serializers.ModelSerializer):
+    """
+    A serializer for an event that is used when creating/editing the event.
+    Simultaneously create an event group if not provided.
+    """
+
+    group = serializers.SlugRelatedField(
+        queryset=EventGroup.objects.all(), slug_field="code", required=False
+    )
+    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     def validate(self, data):
         start_time = data.get(
@@ -383,10 +409,16 @@ class ClubEventSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
+        # prevents user from changing the group of an event
+        if "group" in validated_data and validated_data["group"] != instance.group:
+            raise serializers.ValidationError(
+                "You cannot change the group of an existing event!"
+            )
+
         # ensure user cannot update start time or end time for a fair event
         user = self.context["request"].user
         if not (user.is_authenticated and user.has_perm("clubs.see_fair_status")):
-            if instance and instance.type == Event.FAIR:
+            if instance and instance.group.type == EventGroup.FAIR:
                 unchanged_fields = {"start_time", "end_time"}
                 for field in unchanged_fields:
                     if (
@@ -401,180 +433,37 @@ class ClubEventSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-    # might be redundant since EventWriteSerializer handles event creation and updates
-    # TODO: investigate
-    def save(self):
-        if "club" not in self.validated_data:
-            self.validated_data["club"] = Club.objects.get(
-                code=self.context["view"].kwargs.get("club_code")
-            )
-
-        if not self.validated_data.get("code") and self.validated_data.get("name"):
-            self.validated_data["code"] = slugify(self.validated_data["name"])
-
-        return super().save()
-
     class Meta:
         model = Event
         fields = [
-            "creator",
-            "end_time",
             "id",
-            "is_ics_event",
-            "location",
+            "group",
+            "ticket_drop_time",
             "start_time",
-            "ticketed",
-            "pinned",
+            "end_time",
+            "location",
+            "creator",
         ]
 
 
-class EventSerializer(ClubEventSerializer):
+class BaseEventGroupSerializer(serializers.ModelSerializer):
     """
-    A serializer for an event that includes basic associated club information.
-    """
-
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(), required=False, slug_field="code"
-    )
-    club_name = serializers.SerializerMethodField()
-    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
-    pinned = serializers.BooleanField(read_only=True)
-
-    def get_club_name(self, obj):
-        if obj.club is None:
-            return None
-        return obj.club.name
-
-    class Meta:
-        model = Event
-        fields = ClubEventSerializer.Meta.fields + [
-            "club",
-            "club_name",
-            "badges",
-            "pinned",
-        ]
-
-
-class EventWriteSerializer(EventSerializer):
-    """
-    A serializer for an event that is used when creating/editing the event.
-
-    Enables URL checking for the url field.
+    base read serializer for event groups.
+    returns minimal information about the event group.
     """
 
-    url = serializers.CharField(
-        max_length=2048, required=False, allow_blank=True, allow_null=True
-    )
-
-    group = serializers.SlugRelatedField(
-        queryset=EventGroup.objects.all(), slug_field="code", required=True
-    )
-
-    def create(self, validated_data):
-        # if group not in payload, retrieve it from view context
-        if "group" not in self.validated_data:
-            group_code = self.context["view"].kwargs.get("group_code")
-            self.validated_data["group"] = EventGroup.objects.get(code=group_code)
-
-        event = super().create(validated_data)
-        # add event code
-        event.code = f"{event.group.code}-{event.id}"
-        event.save(update_fields=["code"])
-        return event
-
-
-class EventGroupSerializer(serializers.ModelSerializer):
-    """
-    Serializer for event groups
-    - handles group level fields
-    - optionally accepts nested event data on creation
-    - includes basic associated club information
-    """
-
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(), required=False, slug_field="code"
-    )
-    club_name = serializers.SerializerMethodField()
-    badges = BadgeSerializer(source="club.badges", many=True)
-    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
-    image_url = serializers.SerializerMethodField("get_image_url")
-    large_image_url = serializers.SerializerMethodField("get_large_image_url")
-    url = serializers.SerializerMethodField("get_event_group_url")
+    events = serializers.SerializerMethodField()
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    events = EventSerializer(many=True, required=False)
-
-    class Meta:
-        model = EventGroup
-        fields = [
-            "code",
-            "name",
-            "club",
-            "club_name",
-            "badges",
-            "type",
-            "url",
-            "description",
-            "image",
-            "image_small",
-            "creator",
-            "events",
-        ]
-        read_only_fields = [
-            "code",
-            "club_name",
-            "badges",
-            "image_url",
-            "large_image_url",
-            "creator",
-        ]
-
-    def get_club_name(self, obj):
-        if obj.club is None:
-            return None
-        return obj.club.name
-
-    def get_event_group_url(self, obj):
-        # if no url, return that
-        if not obj.url:
-            return obj.url
-
-        # if the url is a zoom link, hide url unless authenticated
-        if "request" in self.context and "zoom.us" in urlparse(obj.url).netloc:
-            user = self.context["request"].user
-            if user.is_authenticated:
-                return obj.url
-            return "(Login to view url)"
-
-        return obj.url
-
-    def get_large_image_url(self, obj):
-        image = obj.image
-
-        # correct path rendering
-        if not image:
-            return None
-        if image.url.startswith("http"):
-            return image.url
-        elif "request" in self.context:
-            return self.context["request"].build_absolute_uri(image.url)
-        else:
-            return image.url
-
-    def get_image_url(self, obj):
-        # use thumbnail if exists
-        image = obj.image_small
-        if not image:
-            image = obj.image
-
-        # fix image path in development
-        if not image:
-            return None
-        if image.url.startswith("http"):
-            return image.url
-        elif "request" in self.context:
-            return self.context["request"].build_absolute_uri(image.url)
-        else:
-            return image.url
+    url = serializers.CharField(
+        source="get_event_group_url",
+        max_length=2048,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+    club = serializers.SlugRelatedField(
+        queryset=Club.objects.all(), required=False, slug_field="code"
+    )
 
     def validate_url(self, value):
         """
@@ -612,26 +501,163 @@ class EventGroupSerializer(serializers.ModelSerializer):
         """
         return clean(bleach.linkify(value))
 
-    def create(self, validated_data):
-        events_data = validated_data.pop("events", [])
+    def get_events(self, obj):
+        """
+        return all events in group or only future events if based on context
+        """
+        # check if future_events have been prefetched
+        if hasattr(obj, "future_events"):
+            events = obj.future_events
+        else:
+            # check if we need to only future events
+            if self.context.get("future_events", False):
+                now = timezone.now()
+                events = obj.events.filter(start_time__gte=now)
+            else:
+                # get all events
+                events = obj.events.all()
 
-        if not validated_data["code"] and validated_data["name"]:
-            validated_data["code"] = slugify(validated_data["name"])
+        return EventSerializer(events, many=True, context=self.context).data
 
-        with transaction.atomic():
-            event_group = EventGroup.objects.create(**validated_data)
-            for event_data in events_data:
-                event = Event.objects.create(group=event_group, **event_data)
-                # set the event code to be the <group_code>-<event.id>
-                event.code = f"{event_group.code}-{event.id}"
-                event.save(update_fields=["code"])
-        return event_group
+    def get_event_group_url(self, obj):
+        # if no url, return that
+        if not obj.url:
+            return obj.url
+
+        # if the url is a zoom link, hide url unless authenticated
+        if "request" in self.context and "zoom.us" in urlparse(obj.url).netloc:
+            user = self.context["request"].user
+            if user.is_authenticated:
+                return obj.url
+            return "(Login to view url)"
+
+        return obj.url
+
+    class Meta:
+        model = EventGroup
+        fields = [
+            "id",
+            "code",
+            "name",
+            "description",
+            "type",
+            "club",
+            "url",
+            "creator",
+            "events",
+        ]
+
+
+class EventGroupSerializer(BaseEventGroupSerializer):
+    """
+    Serializer for event groups
+    - includes basic associated club information
+    - handles group level fields
+    - includes basic associated club information
+    """
+
+    club_name = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField("get_image_url")
+    large_image_url = serializers.SerializerMethodField("get_large_image_url")
+    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
+    pinned = serializers.BooleanField(read_only=True)
+
+    def get_club_name(self, obj):
+        if obj.club is None:
+            return None
+        return obj.club.name
+
+    def get_image_url(self, obj):
+        # use thumbnail if exists
+        image = obj.image_small
+        if not image:
+            image = obj.image
+
+        # fix image path in development
+        if not image:
+            return None
+        if image.url.startswith("http"):
+            return image.url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(image.url)
+        else:
+            return image.url
+
+    def get_large_image_url(self, obj):
+        image = obj.image
+
+        # correct path rendering
+        if not image:
+            return None
+        if image.url.startswith("http"):
+            return image.url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(image.url)
+        else:
+            return image.url
+
+    class Meta:
+        model = EventGroup
+        fields = BaseEventGroupSerializer.Meta.fields + [
+            "club_name",
+            "badges",
+            "pinned",
+            "image_url",
+            "large_image_url",
+        ]
+        read_only_fields = [
+            "code",
+            "club_name",
+            "image_url",
+            "large_image_url",
+            "creator",
+        ]
+
+
+class EventGroupWriteSerializer(EventGroupSerializer):
+    """
+    Write serializer responsible for creating and updating event groups.
+    - generates a code if not provided
+    - sets the club based on the view route if not provided
+    """
+
+    code = serializers.CharField(required=False)
+    name = serializers.CharField(required=True)
+    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
+    events = serializers.ListField(
+        child=serializers.DictField(), required=False, write_only=True
+    )
+    url = serializers.CharField(
+        max_length=2048, required=False, allow_blank=True, allow_null=True
+    )
+
+    def validate(self, data):
+        # TODO: find out which types don't require a club
+        if "club" not in data and (
+            "type" not in data or "type" in data and data["type"] != EventGroup.FAIR
+        ):
+            club_code = self.context["view"].kwargs["club_code"]
+            try:
+                data["club"] = Club.objects.get(code=club_code)
+            except Club.DoesNotExist:
+                raise serializers.ValidationError({"club": "Club not found."})
+        return data
+
+    def save(self):
+        # if no code given, generate one from the name
+        if (
+            self.validated_data.get("code") is None
+            and self.validated_data.get("name") is not None
+        ):
+            self.validated_data["code"] = slugify(self.validated_data["name"])
+
+        return super().save()
 
     def update(self, instance, validated_data):
         """
         Enforce only changing the meeting link to Zoom links for activities fair events.
         """
-        if instance.type == Event.FAIR and "url" in validated_data:
+        if instance.type == EventGroup.FAIR and "url" in validated_data:
             old_url = instance.url or ""
             new_url = validated_data.get("url", "")
             # if the two urls are not equal, perform additional checks
@@ -647,6 +673,20 @@ class EventGroupSerializer(serializers.ModelSerializer):
                     )
 
         return super().update(instance, validated_data)
+
+    class Meta:
+        model = EventGroup
+        fields = [
+            "code",
+            "name",
+            "club",
+            "type",
+            "description",
+            "url",
+            "image",
+            "image_small",
+            "events",
+        ]
 
 
 class FavouriteEventSerializer(EventSerializer):
@@ -1274,7 +1314,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
-    events = serializers.SerializerMethodField("get_events")
+    event_groups = serializers.SerializerMethodField("get_event_groups")
     is_request = serializers.SerializerMethodField("get_is_request")
     student_types = serializers.SerializerMethodField("get_target_student_types")
     approved_comment = serializers.CharField(required=False, allow_blank=True)
@@ -1301,13 +1341,18 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
 
-    def get_events(self, obj):
+    def get_event_groups(self, obj):
         now = timezone.now()
-        return ClubEventSerializer(
-            obj.events.filter(end_time__gte=now).order_by("start_time"),
-            many=True,
-            read_only=True,
-            context=self.context,
+        event_groups = obj.event_groups.prefetch_related(
+            Prefetch(
+                "events",
+                queryset=Event.objects.filter(end_time__gte=now).order_by("start_time"),
+            )
+        )
+        # filter out groups with no events that have not yet ended
+        event_groups = [group for group in event_groups if group.events]
+        return EventGroupSerializer(
+            event_groups, many=True, read_only=True, context=self.context
         ).data
 
     def get_is_ghost(self, obj):
@@ -1789,7 +1834,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "beta",
             "created_at",
             "description",
-            "events",
+            "event_groups",
             "facebook",
             "github",
             "how_to_get_involved",
