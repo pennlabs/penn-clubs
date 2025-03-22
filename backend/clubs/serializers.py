@@ -374,7 +374,6 @@ class EventSerializer(serializers.ModelSerializer):
             "id",
             "start_time",
             "end_time",
-            "ticket_drop_time",
             "location",
             "creator",
             "ticketed",
@@ -438,7 +437,6 @@ class EventWriteSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "group",
-            "ticket_drop_time",
             "start_time",
             "end_time",
             "location",

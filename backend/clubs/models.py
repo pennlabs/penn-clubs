@@ -1025,8 +1025,11 @@ class Event(models.Model):
         return self.tickets.exists()
 
     def __str__(self):
-        # TODO: come back to this. Should groups be required?
-        return self.group.name if self.group else "this event has no group"
+        return (
+            f"{self.group.name}: ({self.start_time} - {self.end_time})"
+            if self.group
+            else "This event has no group"
+        )
 
 
 class Favorite(models.Model):
@@ -1892,7 +1895,7 @@ class TicketSettings(models.Model):
     active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Ticket settings for {self.event.name}"
+        return f"Ticket settings for {self.event.group.name}"
 
 
 class TicketQuerySet(models.query.QuerySet):

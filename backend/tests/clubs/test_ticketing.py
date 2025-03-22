@@ -18,6 +18,7 @@ from clubs.models import (
     Cart,
     Club,
     Event,
+    EventGroup,
     Membership,
     Ticket,
     TicketSettings,
@@ -52,12 +53,15 @@ def commonSetUp(self):
         email="example@example.com",
     )
 
-    self.event1 = Event.objects.create(
+    self.event_group1 = EventGroup.objects.create(
         code="test-event",
         club=self.club1,
         name="Test Event",
+    )
+    self.event1 = Event.objects.create(
         start_time=timezone.now() + timezone.timedelta(days=2),
         end_time=timezone.now() + timezone.timedelta(days=3),
+        group=self.event_group1,
     )
 
     self.ticket_settings = TicketSettings.objects.create(
@@ -100,7 +104,10 @@ class TicketEventTestCase(TestCase):
         }
 
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             qts,
             format="json",
         )
@@ -130,7 +137,10 @@ class TicketEventTestCase(TestCase):
         }
 
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             qts,
             format="json",
         )
@@ -158,7 +168,10 @@ class TicketEventTestCase(TestCase):
         }
 
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             qts,
             format="json",
         )
@@ -192,7 +205,10 @@ class TicketEventTestCase(TestCase):
 
         for data in bad_data:
             resp = self.client.put(
-                reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+                reverse(
+                    "club-eventgroup-events-tickets",
+                    args=(self.club1.code, self.event1.group.code, self.event1.pk),
+                ),
                 data,
                 format="json",
             )
@@ -212,7 +228,10 @@ class TicketEventTestCase(TestCase):
             ),
         }
         _ = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             args,
             format="json",
         )
@@ -230,7 +249,10 @@ class TicketEventTestCase(TestCase):
         # Move Django's internal clock 13 hours forward
         with freezegun.freeze_time(timezone.now() + timezone.timedelta(hours=13)):
             resp = self.client.put(
-                reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+                reverse(
+                    "club-eventgroup-events-tickets",
+                    args=(self.club1.code, self.event1.group.code, self.event1.pk),
+                ),
                 args,
                 format="json",
             )
@@ -249,7 +271,10 @@ class TicketEventTestCase(TestCase):
             ],
         }
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             args,
             format="json",
         )
@@ -262,7 +287,10 @@ class TicketEventTestCase(TestCase):
 
         # Recreating tickets should fail
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             args,
             format="json",
         )
@@ -276,7 +304,10 @@ class TicketEventTestCase(TestCase):
 
         # Recreating tickets should fail
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             args,
             format="json",
         )
@@ -296,7 +327,10 @@ class TicketEventTestCase(TestCase):
             "fee_charged_to_buyer": True,
         }
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "eventgroup-events-tickets",
+                args=(self.event1.group.code, self.event1.pk),
+            ),
             args,
             format="json",
         )
@@ -323,7 +357,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-eventgroup-events-issue-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
             ),
             args,
             format="json",
@@ -356,7 +391,8 @@ class TicketEventTestCase(TestCase):
 
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-eventgroup-events-issue-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
             ),
             args,
             format="json",
@@ -375,7 +411,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-eventgroup-events-issue-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
             ),
             args,
             format="json",
@@ -394,7 +431,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-eventgroup-events-issue-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
             ),
             args,
             format="json",
@@ -414,7 +452,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-eventgroup-events-issue-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
             ),
             args,
             format="json",
@@ -444,7 +483,10 @@ class TicketEventTestCase(TestCase):
         ticket1.save()
 
         resp = self.client.post(
-            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-email-blast",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             {"content": "Test email blast content"},
             format="json",
         )
@@ -458,14 +500,17 @@ class TicketEventTestCase(TestCase):
         self.assertIn(self.user1.email, email.to)
 
         self.assertEqual(
-            email.subject, f"Update on {self.event1.name} from {self.club1.name}"
+            email.subject, f"Update on {self.event1.group.name} from {self.club1.name}"
         )
         self.assertIn("Test email blast content", email.body)
 
     def test_email_blast_empty_content(self):
         self.client.login(username=self.user1.username, password="test")
         resp = self.client.post(
-            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-email-blast",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             {"content": ""},
             format="json",
         )
@@ -476,7 +521,10 @@ class TicketEventTestCase(TestCase):
         Ticket.objects.all().delete()
 
         resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = resp.json()
@@ -490,7 +538,10 @@ class TicketEventTestCase(TestCase):
             ticket.save()
 
         resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-tickets",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = resp.json()
@@ -508,7 +559,10 @@ class TicketEventTestCase(TestCase):
 
         self.client.login(username=self.user1.username, password="test")
         resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "eventgroup-events-tickets",
+                args=(self.event1.group.code, self.event1.pk),
+            ),
         )
         self.assertEqual(resp.status_code, 200, resp.content)
         data = resp.json()
@@ -526,7 +580,10 @@ class TicketEventTestCase(TestCase):
             ticket.save()
 
         resp = self.client.get(
-            reverse("club-events-buyers", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-buyers",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
         )
 
         data = resp.json()
@@ -542,7 +599,10 @@ class TicketEventTestCase(TestCase):
             ticket.save()
 
         resp = self.client.get(
-            reverse("club-events-buyers", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-buyers",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
         )
 
         self.assertEqual(resp.status_code, 403, resp)
@@ -557,7 +617,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -581,7 +644,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -602,7 +668,8 @@ class TicketEventTestCase(TestCase):
             }
             resp = self.client.post(
                 reverse(
-                    "club-events-add-to-cart", args=(self.club1.code, self.event1.pk)
+                    "club-eventgroup-events-add-to-cart",
+                    args=(self.club1.code, self.event1.group.code, self.event1.pk),
                 ),
                 tickets_to_add,
                 format="json",
@@ -627,7 +694,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -650,7 +720,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -672,7 +745,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -691,7 +767,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -712,7 +791,8 @@ class TicketEventTestCase(TestCase):
 
         resp = self.client.post(
             reverse(
-                "club-events-remove-from-cart", args=(self.club1.code, self.event1.pk)
+                "club-eventgroup-events-remove-from-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
             ),
             tickets_to_remove,
             format="json",
@@ -734,7 +814,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -754,7 +837,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-remove-from-cart", args=(self.club1.code, self.event1.pk)
+                "club-eventgroup-events-remove-from-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
             ),
             tickets_to_remove,
             format="json",
@@ -772,7 +856,10 @@ class TicketEventTestCase(TestCase):
 
         self.client.login(username=self.user1.username, password="test")
         resp_held = self.client.delete(
-            reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
+            reverse(
+                "club-eventgroup-events-detail",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            )
         )
         self.assertEqual(resp_held.status_code, 400, resp_held.content)
 
@@ -782,7 +869,10 @@ class TicketEventTestCase(TestCase):
         self.tickets1[0].save()
 
         resp_bought = self.client.delete(
-            reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
+            reverse(
+                "club-eventgroup-events-detail",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            )
         )
         self.assertEqual(resp_bought.status_code, 400, resp_bought.content)
 
@@ -792,7 +882,10 @@ class TicketEventTestCase(TestCase):
 
         # Test activating sales
         resp = self.client.post(
-            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "eventgroup-events-toggle-sales",
+                args=(self.event1.group.code, self.event1.pk),
+            ),
             {"active": True},
             format="json",
         )
@@ -806,7 +899,10 @@ class TicketEventTestCase(TestCase):
 
         # Test deactivating sales
         resp = self.client.post(
-            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "eventgroup-events-toggle-sales",
+                args=(self.event1.group.code, self.event1.pk),
+            ),
             {"active": False},
             format="json",
         )
@@ -826,7 +922,10 @@ class TicketEventTestCase(TestCase):
         Ticket.objects.filter(event=self.event1).delete()
 
         resp = self.client.post(
-            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "eventgroup-events-toggle-sales",
+                args=(self.event1.group.code, self.event1.pk),
+            ),
             {"active": True},
             format="json",
         )
@@ -845,7 +944,10 @@ class TicketEventTestCase(TestCase):
         self.event1.ticket_settings.save()
 
         resp = self.client.post(
-            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "eventgroup-events-toggle-sales",
+                args=(self.event1.group.code, self.event1.pk),
+            ),
             {"active": True},
             format="json",
         )
@@ -866,7 +968,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "eventgroup-events-add-to-cart",
+                args=(self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -883,7 +988,10 @@ class TicketEventTestCase(TestCase):
         self.event1.ticket_settings.save()
 
         resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk))
+            reverse(
+                "eventgroup-events-tickets",
+                args=(self.event1.group.code, self.event1.pk),
+            )
         )
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data["totals"], [])
@@ -1135,7 +1243,7 @@ class TicketTestCase(TestCase):
             "type": self.tickets1[0].type,
             "event": {
                 "id": self.tickets1[0].event.id,
-                "name": self.tickets1[0].event.name,
+                "name": self.tickets1[0].event.group.name,
             },
             "count": 2,
         }
@@ -1174,7 +1282,7 @@ class TicketTestCase(TestCase):
             "type": self.tickets1[0].type,
             "event": {
                 "id": self.event1.id,
-                "name": self.event1.name,
+                "name": self.event1.group.name,
             },
             "count": 5,
         }
@@ -1262,7 +1370,7 @@ class TicketTestCase(TestCase):
                 msg.subject,
             )
             self.assertIn(self.user1.first_name, msg.body)
-            self.assertIn(self.event1.name, msg.body)
+            self.assertIn(self.event1.group.name, msg.body)
             self.assertIsNotNone(msg.attachments)
 
     def test_initiate_checkout_non_free_tickets(self):
@@ -1276,7 +1384,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1323,7 +1434,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1371,7 +1485,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1423,7 +1540,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1551,7 +1671,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroup-events-add-to-cart",
+                args=(self.club1.code, self.event1.group.code, self.event1.pk),
+            ),
             tickets_to_add,
             format="json",
         )

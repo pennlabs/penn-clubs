@@ -154,12 +154,12 @@ class EventTestCase(TestCase):
         self.event = Event.objects.create(start_time=date, end_time=date)
 
     def test_str(self):
-        self.assertEqual(str(self.event), "this event has no group")
+        self.assertEqual(str(self.event), "This event has no group")
 
         self.event.group = EventGroup.objects.create(
             name="a", club=self.club, description="a"
         )
-        self.assertEqual(str(self.event), self.event.group.name)
+        self.assertTrue(f"{self.event.group.name}:" in str(self.event))
 
 
 class FavoriteTestCase(TestCase):

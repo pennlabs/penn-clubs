@@ -28,6 +28,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     Event,
+    EventGroup,
     Favorite,
     Membership,
     MembershipInvite,
@@ -180,13 +181,17 @@ class ClubTestCase(TestCase):
             email="example@example.com",
         )
 
-        self.event1 = Event.objects.create(
+        self.event_group1 = EventGroup.objects.create(
             code="test-event",
             club=self.club1,
             name="Test Event",
+            url="https://zoom.us/j/4880003126",
+        )
+
+        self.event1 = Event.objects.create(
+            group=self.event_group1,
             start_time=timezone.now() + timezone.timedelta(days=2),
             end_time=timezone.now() + timezone.timedelta(days=3),
-            url="https://zoom.us/j/4880003126",
         )
 
         self.question1 = QuestionAnswer.objects.create(
@@ -345,15 +350,18 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("clubs-notes-about", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-    def test_event_upload(self):
+    def test_event_group_upload(self):
         """
-        Test uploading an event image.
+        Test uploading an event group image.
         """
         self.client.login(username=self.user5.username, password="test")
 
         # successful image upload
         resp = self.client.post(
-            reverse("club-events-upload", args=(self.club1.code, self.event1.id)),
+            reverse(
+                "club-eventgroups-upload",
+                args=(self.club1.code, self.event_group1.code),
+            ),
             {"image": io.BytesIO(b"")},
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -507,59 +515,62 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse("favorites-detail", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
+    # TODO: write test eventgroup-list tests
     def test_event_list(self):
         """
         Test listing club events.
         """
         self.client.login(username=self.user5.username, password="test")
 
-        e2_start = timezone.now() - timezone.timedelta(days=3)
-        e2_end = timezone.now() - timezone.timedelta(days=2)
-        Event.objects.create(
+        e1_start = timezone.now() - timezone.timedelta(days=3)
+        e1_end = timezone.now() - timezone.timedelta(days=2)
+
+        # create event groups
+        event_group2 = EventGroup.objects.create(
             code="test-event-2",
             club=self.club1,
-            name="Past Test Event 2",
-            start_time=e2_start,
-            end_time=e2_end,
-            type=Event.FAIR,
+            name="Test Event 2",
+            type=EventGroup.FAIR,
+        )
+
+        # create events
+        Event.objects.create(
+            group=event_group2,
+            start_time=e1_start,
+            end_time=e1_end,
         )
         Event.objects.create(
-            code="test-event-3",
-            club=self.club1,
-            name="Present Test Event 3",
+            group=event_group2,
             start_time=timezone.now() - timezone.timedelta(days=3),
             end_time=timezone.now() + timezone.timedelta(days=2),
-            type=Event.FAIR,
-        )
-        self.event1.type = Event.FAIR
-        self.event1.save()
-
-        # test global event
-        Event.objects.create(
-            code="test-event-4",
-            club=None,
-            name="Test Global Event",
-            start_time=timezone.now() + timezone.timedelta(days=2),
-            end_time=timezone.now() + timezone.timedelta(days=3),
-            type=Event.OTHER,
         )
 
-        # list events without a club to namespace.
-        now = timezone.now()
-        resp = self.client.get(
-            reverse("events-list"),
-            {"end_time__gte": now},
+        # list all events in group using (global) route
+        resp1 = self.client.get(
+            reverse("eventgroup-events-list", args=(event_group2.code,)),
             content_type="application/json",
         )
-        self.assertIn(resp.status_code, [200], resp.content)
-        self.assertEqual(len(resp.data), 3, resp.content)
+
+        self.assertIn(resp1.status_code, [200], resp1.content)
+
+        # list all events in group using club-specific route
+        resp2 = self.client.get(
+            reverse(
+                "club-eventgroup-events-list", args=(self.club1.code, event_group2.code)
+            ),
+            content_type="application/json",
+        )
+
+        self.assertIn(resp2.status_code, [200], resp2.content)
+        # ensure same results
+        self.assertTrue(len(resp1.data) == len(resp2.data) == 2)
 
         # list events with a filter
         resp = self.client.get(
-            reverse("events-list"),
+            reverse("eventgroup-events-list", args=(event_group2.code,)),
             {
-                "start_time__gte": e2_start.isoformat(),
-                "end_time__lte": e2_end.isoformat(),
+                "start_time__gte": e1_start.isoformat(),
+                "end_time__lte": e1_end.isoformat(),
             },
             content_type="application/json",
         )
@@ -575,61 +586,80 @@ class ClubTestCase(TestCase):
 
         # cannot change non-fair event to fair event
         resp = self.client.patch(
-            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
-            {"type": Event.FAIR},
+            reverse(
+                "club-eventgroups-detail",
+                args=(self.club1.code, self.event_group1.pk),
+            ),
+            {"type": EventGroup.FAIR},
             content_type="application/json",
         )
         self.assertFalse(200 <= resp.status_code < 300, resp.data)
 
-        e2 = Event.objects.create(
+        eg2 = EventGroup.objects.create(
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
-            start_time=timezone.now() - timezone.timedelta(days=3),
-            end_time=timezone.now() + timezone.timedelta(days=2),
-            type=Event.FAIR,
+            type=EventGroup.FAIR,
         )
 
         # cannot change fair event to non-fair event
         resp = self.client.patch(
-            reverse("club-events-detail", args=(self.club1.code, e2.pk)),
-            {"type": Event.RECRUITMENT},
+            reverse("club-eventgroups-detail", args=(self.club1.code, eg2.code)),
+            {"type": EventGroup.RECRUITMENT},
             content_type="application/json",
         )
         self.assertFalse(200 <= resp.status_code < 300, resp.data)
 
         # test can change other properties
         resp = self.client.patch(
-            reverse("club-events-detail", args=(self.club1.code, e2.pk)),
+            reverse(
+                "club-eventgroups-detail",
+                args=(
+                    self.club1.code,
+                    eg2.code,
+                ),
+            ),
             {"name": "New name for event"},
             content_type="application/json",
         )
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
 
         # can only change link for non activities fair
-        e2.type = Event.OTHER
-        e2.save()
+        eg2.type = EventGroup.OTHER
+        eg2.save()
 
         # test google zoom link parsing
         resp = self.client.patch(
-            reverse("club-events-detail", args=(self.club1.code, e2.pk)),
+            reverse(
+                "club-eventgroups-detail",
+                args=(
+                    self.club1.code,
+                    eg2.code,
+                ),
+            ),
             {"url": "https://www.google.com/url?q=https://upenn.zoom.us/j/123456789"},
             content_type="application/json",
         )
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
-        e2.refresh_from_db()
-        self.assertEqual(e2.url, "https://upenn.zoom.us/j/123456789")
+        eg2.refresh_from_db()
+        self.assertEqual(eg2.url, "https://upenn.zoom.us/j/123456789")
 
         # revert that
-        e2.type = Event.FAIR
-        e2.save()
+        eg2.type = EventGroup.FAIR
+        eg2.save()
 
         # ensure we can't delete the event as a normal user
         resp = self.client.delete(
-            reverse("club-events-detail", args=(self.club1.code, e2.pk))
+            reverse(
+                "club-eventgroups-detail",
+                args=(
+                    self.club1.code,
+                    eg2.code,
+                ),
+            )
         )
         self.assertIn(resp.status_code, [400, 401, 403], resp.data)
-        self.assertTrue(Event.objects.filter(pk=e2.pk).exists())
+        self.assertTrue(EventGroup.objects.filter(pk=eg2.pk).exists())
 
     def test_event_favorited_users(self):
         """
@@ -660,25 +690,37 @@ class ClubTestCase(TestCase):
 
         st = timezone.now() + timezone.timedelta(days=2)
         et = timezone.now() + timezone.timedelta(days=3)
+
         # add one event for every club
-        Event.objects.bulk_create(
+        event_groups = EventGroup.objects.bulk_create(
             [
-                Event(
+                EventGroup(
                     code=f"{i}",
                     name=f"Test Event for #{i}",
                     club=Club.objects.get(code=f"club-{i}"),
-                    start_time=st,
-                    end_time=et,
                 )
                 for i in range(1, 7)
             ]
         )
+        Event.objects.bulk_create(
+            [
+                Event(
+                    group=eg,
+                    start_time=st,
+                    end_time=et,
+                )
+                for i, eg in enumerate(event_groups, 1)
+            ]
+        )
 
         # add an event outside the 30-day window
-        Event.objects.create(
+        event_group6 = EventGroup.objects.create(
             code="test-event-6",
             name="Test Bad Event for Club 1",
             club=Club.objects.get(code="club-1"),
+        )
+        Event.objects.create(
+            group=event_group6,
             start_time=timezone.now() - timezone.timedelta(days=33),
             end_time=timezone.now() - timezone.timedelta(days=32),
         )
@@ -720,51 +762,99 @@ class ClubTestCase(TestCase):
         )
 
         # set event start and end dates
-        start_date = datetime.datetime.now() - datetime.timedelta(days=3)
+        now = datetime.datetime.now()
+        start_date = now - datetime.timedelta(days=3)
         end_date = start_date + datetime.timedelta(hours=2)
 
-        # add event
+        # add event through event group route
         resp = self.client.post(
-            reverse("club-events-list", args=(self.club1.code,)),
+            reverse("club-eventgroups-list", args=(self.club1.code,)),
             {
                 "name": "Interest Meeting",
                 "description": "Interest Meeting on Friday!",
-                "location": "JMHH G06",
-                "type": Event.RECRUITMENT,
-                "start_time": start_date.isoformat(),
-                "end_time": end_date.isoformat(),
+                "type": EventGroup.RECRUITMENT,
+                "events": [
+                    {
+                        "start_time": start_date.isoformat(),
+                        "end_time": end_date.isoformat(),
+                        "location": "JMHH G06",
+                    },
+                ],
             },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        id = json.loads(resp.content)["id"]
+        group_code = json.loads(resp.content)["code"]
 
         # ensure event exists
-        self.assertEqual(Event.objects.filter(name="Interest Meeting").count(), 1)
-        self.assertEqual(Event.objects.get(name="Interest Meeting").creator, self.user4)
+        self.assertEqual(
+            Event.objects.filter(group__name="Interest Meeting").count(), 1
+        )
+        self.assertEqual(
+            Event.objects.get(group__name="Interest Meeting").creator, self.user4
+        )
+
+        # attempt adding event to non-existent group
+        resp = self.client.post(
+            reverse("club-eventgroup-events-list", args=(self.club1.code, group_code)),
+            {
+                "start_time": now + datetime.timedelta(days=2),
+                "end_time": now + datetime.timedelta(days=3),
+                "group": "does-not-exist",
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 404], resp.content)
+
+        # add event through event route
+        resp = self.client.post(
+            reverse("club-eventgroup-events-list", args=(self.club1.code, group_code)),
+            {
+                "start_time": now + datetime.timedelta(days=2),
+                "end_time": now + datetime.timedelta(days=3),
+            },
+            content_type="application/json",
+        )
+        event_id = json.loads(resp.content)["id"]
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure new event added
+        self.assertEqual(
+            Event.objects.filter(group__name="Interest Meeting").count(), 2
+        )
 
         # update event
+        new_start_time = now + datetime.timedelta(days=4)
+        new_end_time = new_start_time + datetime.timedelta(days=1)
         resp = self.client.patch(
-            reverse("club-events-detail", args=(self.club1.code, id)),
+            reverse(
+                "club-eventgroup-events-detail",
+                args=(self.club1.code, group_code, event_id),
+            ),
             {
-                "name": "Awesome Interest Meeting",
-                "description": "Interest meeting is actually on Sunday!",
-                "location": "JMHH 256",
-                "start_time": start_date + datetime.timedelta(days=1),
-                "end_time": end_date + datetime.timedelta(days=1),
+                "start_time": new_start_time.isoformat(),
+                "end_time": new_end_time.isoformat(),
+                "location": "AGM 214",
             },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure event is updated
-        self.assertEqual(Event.objects.get(id=id).name, "Awesome Interest Meeting")
+        self.assertEqual(Event.objects.get(id=event_id).location, "AGM 214")
 
         # delete event
         resp = self.client.delete(
-            reverse("club-events-detail", args=(self.club1.code, id))
+            reverse(
+                "club-eventgroup-events-detail",
+                args=(self.club1.code, group_code, event_id),
+            )
         )
         self.assertIn(resp.status_code, [200, 204], resp.content)
+        self.assertEqual(
+            Event.objects.filter(group__name="Interest Meeting").count(), 1
+        )
 
     def test_recurring_event_create(self):
         self.client.login(username=self.user4.username, password="test")
@@ -780,14 +870,50 @@ class ClubTestCase(TestCase):
         end_time = start_time + datetime.timedelta(hours=2)
         end_date = start_time + datetime.timedelta(days=15)
 
-        # add recurring event
+        # add recurring event through event group route
         resp = self.client.post(
-            reverse("club-events-list", args=(self.club1.code,)),
+            reverse("club-eventgroups-list", args=(self.club1.code,)),
             {
                 "name": "Interest Recurring Meeting",
                 "description": "Interest Meeting on every Friday!",
                 "location": "JMHH G06",
-                "type": Event.RECRUITMENT,
+                "type": EventGroup.RECRUITMENT,
+                "events": [
+                    {
+                        "start_time": start_time.isoformat(),
+                        "end_time": end_time.isoformat(),
+                        "is_recurring": True,
+                        "offset": 7,
+                        "end_date": end_date.isoformat(),
+                    }
+                ],
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(resp.data["name"], "Interest Recurring Meeting")
+
+        # ensure event exists
+        events = Event.objects.filter(group__name="Interest Recurring Meeting")
+        self.assertEqual(events.count(), 3)
+        recurring = events.first().parent_recurring_event
+        for event in events:
+            self.assertEqual(event.creator, self.user4)
+            self.assertEqual(event.parent_recurring_event, recurring)
+
+        # add recurring event through event route
+        EventGroup.objects.create(
+            code="test-eventgroup",
+            club=self.club1,
+            name="Another Recurring Event",
+            type=EventGroup.RECRUITMENT,
+        )
+        resp = self.client.post(
+            reverse(
+                "club-eventgroup-events-list", args=(self.club1.code, "test-eventgroup")
+            ),
+            {
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
                 "is_recurring": True,
@@ -797,11 +923,7 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        for event in resp.data:
-            self.assertEqual(event["name"], "Interest Recurring Meeting")
-
-        # ensure event exists
-        events = Event.objects.filter(name="Interest Recurring Meeting")
+        events = Event.objects.filter(group__name="Another Recurring Event")
         self.assertEqual(events.count(), 3)
         recurring = events.first().parent_recurring_event
         for event in events:
@@ -2767,10 +2889,10 @@ class ClubTestCase(TestCase):
             self.assertTrue(data[perm], perm)
 
     def test_zoom_add_meeting(self):
-        # setup fair event
-        self.event1.type = Event.FAIR
-        self.event1.url = None
-        self.event1.save()
+        # setup fair event group
+        self.event_group1.type = EventGroup.FAIR
+        self.event_group1.url = None
+        self.event_group1.save()
 
         # try creating meeting as officer of club
         Membership.objects.create(
@@ -2793,8 +2915,8 @@ class ClubTestCase(TestCase):
             )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         self.assertTrue(resp.data["success"], resp.content)
-        self.event1.refresh_from_db()
-        self.assertEqual(self.event1.url, output_url)
+        self.event_group1.refresh_from_db()
+        self.assertEqual(self.event_group1.url, output_url)
 
     def test_zoom_general_meeting_info(self):
         """
@@ -2810,12 +2932,13 @@ class ClubTestCase(TestCase):
             registration_end_time=now - datetime.timedelta(weeks=1),
         )
         ClubFairRegistration.objects.create(
-            registrant=self.user1, club=self.event1.club, fair=fair
+            registrant=self.user1, club=self.event1.group.club, fair=fair
         )
 
-        self.event1.type = Event.FAIR
+        self.event1.group.type = EventGroup.FAIR
         self.event1.start_time = start_time
         self.event1.end_time = end_time
+        self.event1.group.save()
         self.event1.save()
 
         ZoomMeetingVisit.objects.bulk_create(
@@ -2852,9 +2975,9 @@ class ClubTestCase(TestCase):
         Test manually adding a meeting link without the Zoom page, but having their
         account linked. This should go through.
         """
-        self.event1.type = Event.FAIR
-        self.event1.url = None
-        self.event1.save()
+        self.event_group1.type = EventGroup.FAIR
+        self.event_group1.url = None
+        self.event_group1.save()
 
         Membership.objects.create(
             person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
@@ -2863,13 +2986,16 @@ class ClubTestCase(TestCase):
         self.assertFalse(self.user4.is_superuser)
 
         resp = self.client.patch(
-            reverse("club-events-detail", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-eventgroups-detail",
+                args=(self.club1.code, self.event_group1.code),
+            ),
             {"url": "https://upenn.zoom.us/j/123456789"},
             content_type="application/json",
         )
-        self.event1.refresh_from_db()
+        self.event_group1.refresh_from_db()
         self.assertIn("url", resp.data, resp.content)
-        self.assertTrue(self.event1.url, resp.content)
+        self.assertTrue(self.event_group1.url, resp.content)
 
     def test_club_approval_response_templates(self):
         """

@@ -160,7 +160,7 @@ class ImportCalendarTestCase(TestCase):
 
         # ensure event exists with right values
         self.assertIsNotNone(desired_group)
-        self.assertIsNotNone(desired_group.events.first())
+        self.assertIsNotNone(desired_event)
         self.assertEqual(desired_group.name, "A test event")
         self.assertEqual(desired_group.description, "A test description")
 

@@ -3018,8 +3018,8 @@ class EventViewSet(viewsets.ModelViewSet):
         ]
         Ticket.objects.bulk_create(tickets)
 
-        cache.delete(f"clubs:{event.club.id}-authed")
-        cache.delete(f"clubs:{event.club.id}-anon")
+        cache.delete(f"clubs:{event.group.club.id}-authed")
+        cache.delete(f"clubs:{event.group.club.id}-anon")
 
         return Response({"detail": "Successfully created tickets"})
 
@@ -5168,8 +5168,9 @@ class MeetingZoomAPIView(APIView):
 
         extra_details = {}
         for event in events:
-            if event.url is not None and "zoom.us" in event.url:
-                match = re.search(r"(\d+)", urlparse(event.url).path)
+            url = event.group.url
+            if url is not None and "zoom.us" in url:
+                match = re.search(r"(\d+)", urlparse(url).path)
                 if match is not None:
                     zoom_id = int(match[1])
                     if zoom_id in meetings:
@@ -5200,7 +5201,7 @@ class MeetingZoomAPIView(APIView):
 
         if (
             not request.user.has_perm("clubs.manage_club")
-            and not event.club.membership_set.filter(
+            and not event.group.club.membership_set.filter(
                 person=request.user, role__lte=Membership.ROLE_OFFICER
             ).exists()
         ):
@@ -5211,16 +5212,16 @@ class MeetingZoomAPIView(APIView):
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
-
-        if event.url:
-            match = re.search(r"(\d+)", urlparse(event.url).path)
-            if "zoom.us" in event.url and match is not None:
+        url = event.group.url
+        if url:
+            match = re.search(r"(\d+)", urlparse(url).path)
+            if "zoom.us" in url and match is not None:
                 zoom_id = int(match[1])
                 zoom_api_call(
                     request.user, "DELETE", f"https://api.zoom.us/v2/meetings/{zoom_id}"
                 )
 
-            event.url = None
+            url = None
             event.save()
             return Response(
                 {
