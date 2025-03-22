@@ -3302,7 +3302,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        reply_emails = event.club.get_officer_emails()
+        reply_emails = event.group.club.get_officer_emails()
 
         send_mail_helper(
             name="blast",
