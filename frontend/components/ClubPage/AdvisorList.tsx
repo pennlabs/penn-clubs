@@ -13,7 +13,7 @@ type AdvisorCardProps = {
   info: Advisor
 }
 
-const AdvisorCard = ({ info }: AdvisorCardProps): ReactElement => {
+const AdvisorCard = ({ info }: AdvisorCardProps): ReactElement<any> => {
   return (
     <StyledCard $bordered>
       <div className="columns">
@@ -51,7 +51,7 @@ const AdvisorCard = ({ info }: AdvisorCardProps): ReactElement => {
   )
 }
 
-const AdvisorList = ({ club }: Props): ReactElement => {
+const AdvisorList = ({ club }: Props): ReactElement<any> => {
   return (
     <>
       {club.advisor_set.map((advisor, i) => (

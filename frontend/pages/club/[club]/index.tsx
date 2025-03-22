@@ -103,7 +103,7 @@ const ClubPage = ({
   club: initialClub,
   questions,
   userInfo,
-}: ClubPageProps): ReactElement => {
+}: ClubPageProps): ReactElement<any> => {
   const [club, setClub] = useState<Club>(initialClub)
   const [questionSortBy, setQuestionSortBy] = useState<string>('id')
   const scrollToRef = (ref) =>

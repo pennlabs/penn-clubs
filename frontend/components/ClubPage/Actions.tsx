@@ -125,7 +125,7 @@ export const RequestMembershipButton = ({
 }: {
   club: Club
   updateRequests: (code: string) => Promise<void>
-}): ReactElement => {
+}): ReactElement<any> => {
   const authCheck = useContext(AuthCheckContext)
   const [showModal, setShowModal] = useState<boolean>(false)
   const [isSubmitDisabled, setSubmitDisabled] = useState<boolean>(false)
@@ -261,7 +261,7 @@ const Actions = ({
   style,
   updateRequests,
   className,
-}: ActionsProps): ReactElement => {
+}: ActionsProps): ReactElement<any> => {
   const { code, favorite_count: favoriteCount } = club
 
   // inClub is set to true if the user is in the club, otherwise false
@@ -349,7 +349,7 @@ type followUpActionProps = {
 export const QuestionFollowUpAction = ({
   code,
   question,
-}: followUpActionProps): ReactElement => {
+}: followUpActionProps): ReactElement<any> => {
   const [liked, setLiked] = useState<boolean>(question.user_liked)
   const [likesCount, setLikesCount] = useState<number>(question.likes)
 

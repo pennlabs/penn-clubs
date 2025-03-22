@@ -83,8 +83,8 @@ const SmallEvent = styled.div`
 type CheckListProps = {
   items: {
     value: boolean | null
-    label: string | ReactElement
-    details?: string | ReactElement
+    label: string | ReactElement<any>
+    details?: string | ReactElement<any>
   }[]
 }
 
@@ -106,7 +106,7 @@ const AccessibleColorList = styled.ul`
   }
 `
 
-const CheckList = ({ items }: CheckListProps): ReactElement => {
+const CheckList = ({ items }: CheckListProps): ReactElement<any> => {
   return (
     <AccessibleColorList>
       {items.map(({ value, label, details }, i) => (
@@ -200,7 +200,7 @@ const loadEvents = (data?: any): Promise<ClubEvent[]> => {
 /**
  * A fake live statistics widget with some fake numbers.
  */
-const LiveStatsDemo = (): ReactElement => {
+const LiveStatsDemo = (): ReactElement<any> => {
   const [attending, setAttending] = useState<number>(15)
   const [attended, setAttended] = useState<number>(43)
   const times = useRef<number>(0)
@@ -228,7 +228,7 @@ const ZoomPage = ({
   zoomSettings: initialZoomSettings,
   userMeetings: initialUserMeetings,
   fairs,
-}: ZoomPageProps): ReactElement => {
+}: ZoomPageProps): ReactElement<any> => {
   const [nextUrl, setNextUrl] = useState<string>('/')
   const [zoomSettings, setZoomSettings] =
     useState<ZoomSettings>(initialZoomSettings)

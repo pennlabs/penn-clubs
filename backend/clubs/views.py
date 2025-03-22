@@ -112,6 +112,7 @@ from clubs.models import (
     OwnershipRequest,
     QuestionAnswer,
     RecurringEvent,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -189,6 +190,7 @@ from clubs.serializers import (
     NoteSerializer,
     OwnershipRequestSerializer,
     QuestionAnswerSerializer,
+    RegistrationQueueSettingsSerializer,
     ReportClubSerializer,
     ReportSerializer,
     SchoolSerializer,
@@ -2268,6 +2270,99 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         return Response(fields)
 
+    @action(detail=False, methods=["post"])
+    def email_blast(self, request, *args, **kwargs):
+        """
+        Send email blast to targeted (active) club members.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            content:
+                                type: string
+                                description: The content of the email blast to send
+                            target:
+                                type: string
+                                description: Must be one of leaders, officers, or all
+                        required:
+                            - content
+                            - target
+        responses:
+            "200":
+                description: Email blast was sent successfully
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: A message indicating how many
+                                        recipients received the blast
+            "400":
+                description: Content or target field was empty or missing
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating content
+                                        or target was not provided correctly
+        ---
+        """
+        if "target" not in request.data:
+            return Response(
+                {"detail": "Target must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target = request.data.get("target").lower().strip()
+        roles = {
+            "leaders": Membership.ROLE_OWNER,
+            "officers": Membership.ROLE_OFFICER,
+            "all": Membership.ROLE_MEMBER,
+        }
+
+        if target not in roles:
+            return Response(
+                {"detail": "Target must be one of: leaders, officers, all"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        content = request.data.get("content", "").strip()
+        if not content:
+            return Response(
+                {"detail": "Content must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target_role = roles[target]
+
+        emails = list(
+            Membership.objects.filter(role__lte=target_role, active=True)
+            .values_list("person__email", flat=True)
+            .distinct()
+        )
+
+        send_mail_helper(
+            name="blast",
+            subject=f"Update from {settings.BRANDING_SITE_NAME}",
+            emails=emails,
+            context={
+                "sender": settings.BRANDING_SITE_NAME,
+                "content": content,
+                "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
+            },
+            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
+        )
+
+        return Response({"detail": (f"Blast sent to {len(emails)} recipients")})
+
     def get_serializer_class(self):
         """
         Return a serializer class that is appropriate for the action being performed.
@@ -3207,15 +3302,18 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        reply_emails = event.club.get_officer_emails()
+
         send_mail_helper(
             name="blast",
             subject=f"Update on {event.group.name} from {event.group.club.name}",
             emails=emails,
             context={
                 "sender": event.group.club.name,
-                "content": request.data.get("content"),
+                "content": content,
                 "reply_emails": event.group.club.get_officer_emails(),
             },
+            reply_to=reply_emails,
         )
 
         return Response(
@@ -8346,3 +8444,89 @@ def email_preview(request):
             "variables": json.dumps(initial_context, indent=4),
         },
     )
+
+
+class RegistrationQueueSettingsView(APIView):
+    """
+    View to get and update registration queue settings.
+    Only superusers can update settings.
+    """
+
+    permission_classes = [IsSuperuser]
+
+    def get(self, request):
+        """
+        Return the current queue settings.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reapproval_queue_open:
+                                    type: boolean
+                                new_approval_queue_open:
+                                    type: boolean
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+        ---
+        """
+        queue_setting = RegistrationQueueSettings.get()
+        serializer = RegistrationQueueSettingsSerializer(queue_setting)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        """
+        Update the queue settings.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            reapproval_queue_open:
+                                type: boolean
+                            new_approval_queue_open:
+                                type: boolean
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reapproval_queue_open:
+                                    type: boolean
+                                new_approval_queue_open:
+                                    type: boolean
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+        ---
+        """
+        queue_setting = RegistrationQueueSettings.get()
+        serializer = RegistrationQueueSettingsSerializer(
+            queue_setting, data=request.data, partial=True
+        )
+
+        if serializer.is_valid():
+            queue_setting = serializer.save(updated_by=request.user)
+            return Response(RegistrationQueueSettingsSerializer(queue_setting).data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

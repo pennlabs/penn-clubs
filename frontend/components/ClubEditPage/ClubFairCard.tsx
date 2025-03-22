@@ -27,7 +27,7 @@ const DynamicQuestions = ({
   questions,
 }: {
   questions: DynamicQuestion[]
-}): ReactElement => {
+}): ReactElement<any> => {
   return (
     <>
       {questions.map((question) => (
@@ -45,7 +45,7 @@ const ClubFairCard = ({
   club,
   fairs: initialFairs,
   memberships: initialMemberships,
-}: ClubFairCardProps): ReactElement => {
+}: ClubFairCardProps): ReactElement<any> => {
   const [fairs, setFairs] = useState<ClubFair[]>(initialFairs ?? [])
   const [fairStatuses, setFairStatuses] = useState<number[]>(club?.fairs ?? [])
   const [isLoading, setLoading] = useState<boolean>(false)

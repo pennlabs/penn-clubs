@@ -29,7 +29,7 @@ const Subtitle = styled.div`
   font-weight: bold;
 `
 
-const SyncModal = (): ReactElement | null => {
+const SyncModal = (): ReactElement<any> | null => {
   const [subscriptions, setSubscriptions] = useState<{ club: Club }[] | null>(
     null,
   )

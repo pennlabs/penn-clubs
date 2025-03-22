@@ -27,7 +27,7 @@ const ModalContainer = styled.div`
 
 const SubmissionModal = (props: {
   submission: ApplicationSubmission | null
-}): ReactElement => {
+}): ReactElement<any> => {
   const { submission } = props
   const initialValues = {}
   const wordCounts = {}
@@ -111,7 +111,7 @@ function SubmissionsPage({
   initialSubmissions,
 }: {
   initialSubmissions: Array<ApplicationSubmission> | { detail: string }
-}): ReactElement {
+}): ReactElement<any> {
   if ('detail' in initialSubmissions) {
     return <Text>{initialSubmissions.detail}</Text>
   }

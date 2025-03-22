@@ -97,7 +97,7 @@ export const Col = ({
   background,
   flex,
   ...other
-}: React.PropsWithChildren<Props & ColWrapperProps>): ReactElement => (
+}: React.PropsWithChildren<Props & ColWrapperProps>): ReactElement<any> => (
   <ColWrapper flex={flex} {...other}>
     <ColContainer flex={flex} margin={margin} background={background}>
       {children}

@@ -6,6 +6,6 @@ type FairInfoType = {
     organization: string
     contact: string
     time: string
-    additionalInformation?: () => ReactElement | null
+    additionalInformation?: () => ReactElement<any> | null
   }
 }

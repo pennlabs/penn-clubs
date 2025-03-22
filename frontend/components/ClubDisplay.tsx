@@ -47,7 +47,7 @@ const ClubDisplay = ({
   displayClubs,
   display,
   onScroll = () => undefined,
-}: ClubDisplayProps): ReactElement | null => {
+}: ClubDisplayProps): ReactElement<any> | null => {
   const onWindowScroll = (): void => {
     const { innerHeight = 0, scrollY = 0 } = window
     const {

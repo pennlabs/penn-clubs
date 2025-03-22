@@ -35,7 +35,7 @@ type Props = {
   applications: ClubApplication[]
 }
 
-const ApplyPage = ({ club, applications }: Props): ReactElement => {
+const ApplyPage = ({ club, applications }: Props): ReactElement<any> => {
   const router = useRouter()
   const [updatedIsRequest, setUpdatedIsRequest] = useState<boolean>(
     club.is_request,

@@ -73,7 +73,7 @@ class ClubTableRow extends React.Component<ClubTableRowProps> {
     return subtitle
   }
 
-  render(): ReactElement {
+  render(): ReactElement<any> {
     const { club } = this.props
     const { name, tags, code } = club
 

@@ -12,7 +12,7 @@ import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
-  notify?: (message: ReactElement | string, type?: string) => void
+  notify?: (message: ReactElement<any> | string, type?: string) => void
   onDelete?: () => void
 }
 
@@ -20,7 +20,7 @@ const DeleteClubCard = ({
   club,
   notify = () => undefined,
   onDelete = () => undefined,
-}: Props): ReactElement => {
+}: Props): ReactElement<any> => {
   const canDelete = apiCheckPermission([
     'clubs.delete_club',
     `clubs.delete_club:${club.code}`,

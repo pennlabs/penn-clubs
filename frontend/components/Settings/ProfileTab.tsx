@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { MEDIUM_GRAY } from '../../constants/colors'
 import { BODY_FONT } from '../../constants/styles'
 import { UserInfo } from '../../types'
-import { LOGOUT_URL } from '../../utils'
+import { getCurrentOrigin, LOGOUT_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
 import { Contact, Icon, ProfilePic, SmallText } from '../common'
 import ProfileForm from './ProfileForm'
@@ -38,7 +38,11 @@ type ProfileTabProps = {
   defaults: UserInfo
 }
 
-const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement => {
+const isDevelopment = () => {
+  return process.env.NODE_ENV !== 'production'
+}
+
+const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement<any> => {
   const [profile, setProfile] = useState(defaults)
 
   const { name, username, email, image_url } = profile
@@ -76,7 +80,7 @@ const ProfileTab = ({ defaults }: ProfileTabProps): ReactElement => {
       <div>
         <LogoutLink
           className="button"
-          href={`${LOGOUT_URL}?next=/`}
+          href={`${LOGOUT_URL}?next=${isDevelopment() ? getCurrentOrigin() : '/'}`}
           onClick={() => logEvent('logout', 'click')}
         >
           <LogoutIcon name="log-out" alt="logout" />

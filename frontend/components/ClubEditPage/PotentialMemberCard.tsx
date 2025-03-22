@@ -9,7 +9,7 @@ import BaseCard from './BaseCard'
 
 type PotentialMemberCard = {
   club: Club
-  header?: ReactElement
+  header?: ReactElement<any>
   source?: 'subscription' | 'membershiprequests'
   actions?: {
     name: string
@@ -41,7 +41,7 @@ export default function PotentialMemberCard({
   club,
   source = 'subscription',
   actions,
-}: PotentialMemberCard): ReactElement {
+}: PotentialMemberCard): ReactElement<any> {
   const [students, setStudents] = useState<Student[] | null>(null)
 
   const reloadList = () => {

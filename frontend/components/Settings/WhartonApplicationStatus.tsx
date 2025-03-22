@@ -221,7 +221,7 @@ function StatusCard({
 
 const WhartonApplicationStatus = ({
   statuses: initialStatuses,
-}: Props): ReactElement => {
+}: Props): ReactElement<any> => {
   const [statuses, _] = useState<
     ApplicationStatus[] | { detail: string } | null
   >(initialStatuses ?? null)

@@ -52,7 +52,7 @@ const buttonStyles = {
 
 const DisplayButtons = ({
   switchDisplay,
-}: DisplayButtonsProps): ReactElement => (
+}: DisplayButtonsProps): ReactElement<any> => (
   <DisplayButtonsTag>
     <button
       onClick={() => switchDisplay('cards')}

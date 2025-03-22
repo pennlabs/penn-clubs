@@ -27,7 +27,9 @@ const GroupLabel = styled.h4`
 const ReportBox = ({
   children,
   title,
-}: React.PropsWithChildren<{ title: ReactElement | string }>): ReactElement => {
+}: React.PropsWithChildren<{
+  title: ReactElement<any> | string
+}>): ReactElement<any> => {
   return (
     <div className="box">
       <h3 className="title is-4">{title}</h3>
@@ -76,13 +78,13 @@ const ReportForm = ({
   initial,
   badges,
   tags,
-}: Props): ReactElement => {
+}: Props): ReactElement<any> => {
   const generateCheckboxGroup = (
     groupName: string,
     fields: [string, string][],
     setFieldValue: (field: string, value: string[]) => void,
     initialValues: string[] = [],
-  ): ReactElement => {
+  ): ReactElement<any> => {
     const fieldsInGroup = fields.map((field) => field[1])
 
     return (

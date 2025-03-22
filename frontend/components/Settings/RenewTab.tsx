@@ -17,7 +17,7 @@ type ClubTabProps = {
   userInfo: UserInfo
 }
 
-const RenewTab = ({ className }: ClubTabProps): ReactElement => {
+const RenewTab = ({ className }: ClubTabProps): ReactElement<any> => {
   const [memberships, setMemberships] = useState<UserMembership[] | null>(null)
 
   const reloadMemberships = () => {

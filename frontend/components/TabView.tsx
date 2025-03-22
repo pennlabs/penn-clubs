@@ -74,12 +74,12 @@ export const BaseTabView = ({
   tabs,
   tabClassName = '',
   background,
-}: BaseProps): ReactElement => {
+}: BaseProps): ReactElement<any> => {
   if (tab == null || tab.length <= 0) {
     tab = tabs[0].name
   }
 
-  const getTabContent = (): ReactElement => {
+  const getTabContent = (): ReactElement<any> => {
     const tabContent = tabs.find((a) => a.name === tab)?.content ?? (
       <>Invalid tab selected.</>
     )
@@ -133,7 +133,7 @@ export const BaseTabView = ({
  */
 export const BrowserTabView = (
   props: Props & { tab?: string | null; route: string },
-): ReactElement => {
+): ReactElement<any> => {
   const router = useRouter()
   const [currentTab, setCurrentTab] = useState<string | null>(props.tab ?? null)
 
@@ -163,7 +163,7 @@ export const BrowserTabView = (
 /**
  * A tab view that uses browser hashes and navigation to set the state of the current tab.
  */
-const HashTabView = (props: Props): ReactElement => {
+const HashTabView = (props: Props): ReactElement<any> => {
   const [currentTab, setCurrentTab] = useState<string>(props.tabs[0].name)
 
   // the server side rendering does not have a window object

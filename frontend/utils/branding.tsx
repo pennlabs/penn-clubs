@@ -108,8 +108,8 @@ const sites = {
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
     CLUB_EMPTY_STATE: (
       <>
-        Looking for university resources? Check out{' '}
-        <a href="https://hub.provost.upenn.edu/">Hub@Penn</a>!
+        View all clubs, including those inactive or pending approval, in our{' '}
+        <a href="/directory">directory</a>!
       </>
     ),
 
@@ -251,6 +251,7 @@ const sites = {
   },
 }
 
+export const LOGIN_REQUIRED_ALL = true
 export const TICKETING_PAYMENT_ENABLED = true
 export const REAPPROVAL_QUEUE_ENABLED = true
 export const NEW_APPROVAL_QUEUE_ENABLED = true

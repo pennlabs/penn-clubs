@@ -75,7 +75,20 @@ export function useSetting(key: string): string | number | boolean | null {
   return value
 }
 
+export function getCurrentOrigin(): string {
+  return window.location.hostname + ':' + window.location.port
+}
+
 export function getCurrentRelativePath(): string {
+  // if in development, use the local path
+  if (isDevelopment()) {
+    return (
+      getCurrentOrigin() +
+      window.location.pathname +
+      window.location.search +
+      window.location.hash
+    )
+  }
   return (
     window.location.pathname + window.location.search + window.location.hash
   )
@@ -325,7 +338,7 @@ export function titleize(str: string): string {
  */
 export function formatResponse(
   err: { [key: string]: string } | string,
-): ReactElement {
+): ReactElement<any> {
   if (typeof err === 'string') {
     return <>{err}</>
   }

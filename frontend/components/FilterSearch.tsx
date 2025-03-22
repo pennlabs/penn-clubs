@@ -63,7 +63,7 @@ const SearchIcon = styled(Icon)`
 
 export type FuseTag = {
   value: number | string
-  label: string | ReactElement
+  label: string | ReactElement<any>
   text?: string
   count?: number
   color?: string
@@ -91,7 +91,7 @@ const Search = ({
   recommendedTags,
   updateTag,
   clearTags,
-}: SearchProps): ReactElement => {
+}: SearchProps): ReactElement<any> => {
   // Custom styles for the react-select
   const styles: StylesConfig<FuseTag, true> = {
     control: ({ background, ...base }, { isFocused }) => {
@@ -229,7 +229,7 @@ const Filter = ({
   updateTag,
   clearTags,
   selected,
-}: FilterProps): ReactElement => {
+}: FilterProps): ReactElement<any> => {
   const filter = new Set()
   selected.forEach(({ value }) => filter.add(value))
 

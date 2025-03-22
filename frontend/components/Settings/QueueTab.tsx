@@ -2,10 +2,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { CLUB_ROUTE } from '../../constants'
-import { Club, Template } from '../../types'
+import { Club, RegistrationQueueSettings, Template } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -31,7 +32,7 @@ const QueueTableModal = ({
   bulkAction,
   isApproving,
   templates,
-}: QueueTableModalProps): ReactElement => {
+}: QueueTableModalProps): ReactElement<any> => {
   const [comment, setComment] = useState<string>('')
   const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
 
@@ -114,7 +115,10 @@ type QueueTableProps = {
 }
 /* TODO: refactor with Table component when render and search
 functionality are disconnected */
-const QueueTable = ({ clubs, templates }: QueueTableProps): ReactElement => {
+const QueueTable = ({
+  clubs,
+  templates,
+}: QueueTableProps): ReactElement<any> => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
@@ -151,8 +155,8 @@ const QueueTable = ({ clubs, templates }: QueueTableProps): ReactElement => {
         isApproving={approve}
         templates={templates}
       />
-      <QueueTableHeader>
-        <QueueTableHeaderText>
+      <QueueSectionHeader>
+        <div>
           <SmallTitle>Pending Clubs</SmallTitle>
           <div className="mt-3 mb-3">
             As an administrator of {SITE_NAME}, you can approve and reject{' '}
@@ -160,8 +164,8 @@ const QueueTable = ({ clubs, templates }: QueueTableProps): ReactElement => {
             list of {OBJECT_NAME_PLURAL} pending your approval. Click on the{' '}
             {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
           </div>
-        </QueueTableHeaderText>
-        <div className="buttons">
+        </div>
+        <QueueSettingsButtonStack direction="row">
           <button
             className="button is-success"
             disabled={!selectedCodes.length || loading}
@@ -182,8 +186,8 @@ const QueueTable = ({ clubs, templates }: QueueTableProps): ReactElement => {
           >
             <Icon name="x" /> Reject
           </button>
-        </div>
-      </QueueTableHeader>
+        </QueueSettingsButtonStack>
+      </QueueSectionHeader>
       {(() => {
         if (clubs === null)
           return <div className="has-text-info">Loading table...</div>
@@ -243,14 +247,12 @@ const ClubLink = ({ code, name }: Club) => (
     {name}
   </Link>
 )
-const QueueTableHeader = styled.div`
+const QueueSectionHeader = styled.div`
   margin-top: 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-`
-const QueueTableHeaderText = styled.div`
-  flex-basis: 75%;
+  gap: 1rem;
 `
 
 const MultiProgressBar = styled.div`
@@ -276,13 +278,63 @@ const SmallTitle = styled.div`
   }
 `
 
-const QueueTab = (): ReactElement => {
+const QueueSettingsButtonStack = styled.div<{ direction: 'column' | 'row' }>`
+  display: flex;
+  flex-direction: ${({ direction }) => direction};
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 0.5rem;
+`
+
+const QueueSettingsButton = ({
+  open,
+  for: queueType,
+  setOpen: setQueueOpen,
+}: {
+  open: boolean
+  for: 'reapproval_queue_open' | 'new_approval_queue_open'
+  setOpen: (open: boolean) => void
+}): ReactElement<any> => {
+  const onClick = () => {
+    doApiRequest('/settings/queue/', {
+      method: 'PATCH',
+      body: {
+        [queueType]: !open,
+      },
+    }).then((resp) => {
+      if (resp.ok) {
+        setQueueOpen(!open)
+      } else {
+        toast.error('Failed to update queue settings.')
+      }
+    })
+  }
+  const name =
+    queueType === 'reapproval_queue_open' ? 'Reapprovals' : 'New Approvals'
+  if (open) {
+    return (
+      <button className="button is-small is-danger is-block" onClick={onClick}>
+        Close {name}
+      </button>
+    )
+  } else {
+    return (
+      <button className="button is-small is-success is-block" onClick={onClick}>
+        Open {name}
+      </button>
+    )
+  }
+}
+
+const QueueTab = (): ReactElement<any> => {
   const [pendingClubs, setPendingClubs] = useState<Club[] | null>(null)
   const [approvedClubs, setApprovedClubs] = useState<Club[] | null>(null)
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)
   const [inactiveClubs, setInactiveClubs] = useState<Club[] | null>(null)
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
+  const [registrationQueueSettings, setRegistrationQueueSettings] =
+    useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
 
   useEffect(() => {
@@ -310,6 +362,10 @@ const QueueTab = (): ReactElement => {
       doApiRequest('/templates/?format=json')
         .then((resp) => resp.json())
         .then(setTemplates)
+
+      doApiRequest('/settings/queue/?format=json')
+        .then((resp) => resp.json())
+        .then(setRegistrationQueueSettings)
     }
   }, [])
 
@@ -335,11 +391,15 @@ const QueueTab = (): ReactElement => {
     approvedClubs.concat(rejectedClubs, inactiveClubs)
   return (
     <>
-      <SmallTitle>Overview</SmallTitle>
-      <div className="mb-3">
-        From the progress bar below, you can see the current approval status of
-        all {OBJECT_NAME_PLURAL} across {SITE_NAME}.
-      </div>
+      <QueueSectionHeader>
+        <div>
+          <SmallTitle>Overview</SmallTitle>
+          <div className="mb-3">
+            From the progress bar below, you can see the current approval status
+            of all {OBJECT_NAME_PLURAL} across {SITE_NAME}.{' '}
+          </div>
+        </div>
+      </QueueSectionHeader>
       <MultiProgressBar className="has-background-light mb-3 is-clearfix">
         {totalClubsCount > 0 && (
           <>
@@ -376,6 +436,69 @@ const QueueTab = (): ReactElement => {
           {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
         </li>
       </ul>
+      {registrationQueueSettings && (
+        <>
+          <QueueSectionHeader>
+            <div>
+              <SmallTitle>Status</SmallTitle>
+              <div className="mb-3">
+                The approval queue is currently
+                <b
+                  className={
+                    registrationQueueSettings.reapproval_queue_open
+                      ? 'has-text-success'
+                      : 'has-text-danger'
+                  }
+                >
+                  {registrationQueueSettings.reapproval_queue_open
+                    ? ' open'
+                    : ' closed'}
+                </b>{' '}
+                for reapproval requests and
+                <b
+                  className={
+                    registrationQueueSettings.new_approval_queue_open
+                      ? 'has-text-success'
+                      : 'has-text-danger'
+                  }
+                >
+                  {registrationQueueSettings.new_approval_queue_open
+                    ? ' open'
+                    : ' closed'}
+                </b>{' '}
+                for new requests.
+                <span
+                  title={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
+                >
+                  <Icon name="clock" className="ml-1" />
+                </span>
+              </div>
+            </div>
+          </QueueSectionHeader>
+          <QueueSettingsButtonStack direction="row">
+            <QueueSettingsButton
+              open={registrationQueueSettings.reapproval_queue_open}
+              for="reapproval_queue_open"
+              setOpen={(open) =>
+                setRegistrationQueueSettings({
+                  ...registrationQueueSettings,
+                  reapproval_queue_open: open,
+                })
+              }
+            />
+            <QueueSettingsButton
+              open={registrationQueueSettings.new_approval_queue_open}
+              for="new_approval_queue_open"
+              setOpen={(open) =>
+                setRegistrationQueueSettings({
+                  ...registrationQueueSettings,
+                  new_approval_queue_open: open,
+                })
+              }
+            />
+          </QueueSettingsButtonStack>
+        </>
+      )}
       <QueueTable clubs={pendingClubs} templates={templates} />
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">

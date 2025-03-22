@@ -37,7 +37,7 @@ const Wrapper = styled.div`
   }
 `
 
-const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
+const Event = ({ entry }: { entry: ClubEvent }): ReactElement<any> => {
   const [show, setShow] = useState(false)
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)
@@ -72,7 +72,7 @@ const Event = ({ entry }: { entry: ClubEvent }): ReactElement => {
     </>
   )
 }
-const Events = ({ data }: EventsProps): ReactElement | null => {
+const Events = ({ data }: EventsProps): ReactElement<any> | null => {
   if (!data || !data.length) {
     return null
   }
