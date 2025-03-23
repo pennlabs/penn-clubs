@@ -48,6 +48,7 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -1311,8 +1312,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         request = self.context.get("request", None)
         perms = request and request.user.has_perm("clubs.approve_club")
 
+        queue_settings = RegistrationQueueSettings.get()
         if not perms and (
-            not settings.REAPPROVAL_QUEUE_OPEN or not settings.NEW_APPROVAL_QUEUE_OPEN
+            not queue_settings.reapproval_queue_open
+            or not queue_settings.new_approval_queue_open
         ):
             raise serializers.ValidationError(
                 "The approval queue is not currently open."
@@ -1550,7 +1553,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if request and request.user.has_perm("clubs.approve_club"):
             needs_reapproval = False
 
-        if needs_reapproval and not settings.REAPPROVAL_QUEUE_OPEN:
+        queue_settings = RegistrationQueueSettings.get()
+        if needs_reapproval and not queue_settings.reapproval_queue_open:
             raise serializers.ValidationError(
                 "The approval queue is not currently open."
             )
@@ -1618,7 +1622,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # and target major with specific program names
         if (
             self.context["request"].data.get("target_years", None) is not None
-            and self.context["request"].data.get("target_years") is not []
+            and self.context["request"].data.get("target_years") != []
         ):
             target_years = self.context["request"].data["target_years"]
             # Iterate over all Year objects, if a given year's ID does not appear
@@ -1643,7 +1647,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         if (
             self.context["request"].data.get("target_schools", None) is not None
-            and self.context["request"].data.get("target_schools") is not []
+            and self.context["request"].data.get("target_schools") != []
         ):
             target_schools = self.context["request"].data["target_schools"]
             # Iterate over all School objects, if a given schools's ID does not appear
@@ -1668,7 +1672,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         if (
             self.context["request"].data.get("target_majors", None) is not None
-            and self.context["request"].data.get("target_majors") is not []
+            and self.context["request"].data.get("target_majors") != []
         ):
             target_majors = self.context["request"].data["target_majors"]
             # Iterate over all Major objects, if a given major's ID does not appear
@@ -1693,7 +1697,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         if (
             self.context["request"].data.get("student_types", None) is not None
-            and self.context["request"].data.get("student_types") is not []
+            and self.context["request"].data.get("student_types") != []
         ):
             target_student_types = self.context["request"].data["student_types"]
             # Iterate over all Student Type objects, if a given student type's ID
@@ -3099,6 +3103,21 @@ class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
         model = ClubApprovalResponseTemplate
         fields = ("id", "author", "title", "content", "created_at", "updated_at")
 
+class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
+    updated_by = serializers.SerializerMethodField("get_updated_by")
+
+    class Meta:
+        model = RegistrationQueueSettings
+        fields = [
+            "reapproval_queue_open",
+            "new_approval_queue_open",
+            "updated_at",
+            "updated_by",
+        ]
+        read_only_fields = ["updated_at", "updated_by"]
+
+    def get_updated_by(self, obj):
+        return obj.updated_by.get_full_name() if obj.updated_by else "N/A"
 
 class CheckoutMultipleChoiceSerializer(serializers.ModelSerializer):
     class Meta:

@@ -40,6 +40,7 @@ from clubs.views import (
     OwnershipRequestManagementViewSet,
     OwnershipRequestViewSet,
     QuestionAnswerViewSet,
+    RegistrationQueueSettingsView,
     ReportViewSet,
     SchoolViewSet,
     ScriptExecutionView,
@@ -196,6 +197,11 @@ urlpatterns = [
         name="wharton-applications-status",
     ),
     path(r"health/", HealthView.as_view(), name="health"),
+    path(
+        "settings/queue/",
+        RegistrationQueueSettingsView.as_view(),
+        name="queue-settings",
+    ),
 ]
 
 urlpatterns += router.urls
