@@ -8208,7 +8208,8 @@ def email_preview(request):
             "variables": json.dumps(initial_context, indent=4),
         },
     )
-     
+
+
 class RegistrationQueueSettingsView(APIView):
     """
     View to get and update registration queue settings.
@@ -8293,7 +8294,8 @@ class RegistrationQueueSettingsView(APIView):
             return Response(RegistrationQueueSettingsSerializer(queue_setting).data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-      
+
+
 class CheckoutQuestionViewSet(viewsets.ModelViewSet):
     """
     create: Create a question for an event.

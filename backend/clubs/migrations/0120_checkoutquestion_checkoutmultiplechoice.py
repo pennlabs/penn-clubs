@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("clubs", "0118_ownershiprequest"),
+        ("clubs", "0119_registrationqueuesettings"),
     ]
 
     operations = [

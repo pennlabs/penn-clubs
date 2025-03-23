@@ -3103,6 +3103,7 @@ class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
         model = ClubApprovalResponseTemplate
         fields = ("id", "author", "title", "content", "created_at", "updated_at")
 
+
 class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
     updated_by = serializers.SerializerMethodField("get_updated_by")
 
@@ -3118,6 +3119,7 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
 
     def get_updated_by(self, obj):
         return obj.updated_by.get_full_name() if obj.updated_by else "N/A"
+
 
 class CheckoutMultipleChoiceSerializer(serializers.ModelSerializer):
     class Meta:
