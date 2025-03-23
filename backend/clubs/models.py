@@ -1814,8 +1814,9 @@ class Cart(models.Model):
     Represents an instance of a ticket cart for a user and event
     """
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event = models.ForeignKey(Event, related_name="carts", on_delete=models.CASCADE)
-    session_key = models.CharField(max_length=40, unique=True)
+    session_key = models.CharField(max_length=40)
     owner = models.ForeignKey(
         get_user_model(),
         related_name="carts",
@@ -1825,11 +1826,6 @@ class Cart(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # Capture context from Cybersource should be 8297 chars
-    checkout_context = models.CharField(max_length=8297, blank=True, null=True)
-
-    class Meta:
-        unique_together = (("event", "session_key"),)
 
 
 class TicketClass(models.Model):
