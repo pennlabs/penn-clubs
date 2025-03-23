@@ -2,6 +2,7 @@ import datetime
 import io
 import json
 import os
+import random
 from collections import Counter
 from unittest.mock import MagicMock, patch
 
@@ -22,6 +23,7 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    CheckoutQuestion,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -2936,6 +2938,178 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 403)
+
+    def test_checkout_questions_create_list_precedence(self):
+        """
+        Test the checkout questions feature
+        """
+
+        self.client.login(username=self.user1.username, password="test")
+
+        questions = [
+            {
+                "prompt": "First question made",
+                "type": CheckoutQuestion.FREE_RESPONSE,
+                "optional": True,
+            },
+            {
+                "prompt": "Second question made",
+                "type": CheckoutQuestion.FREE_RESPONSE,
+                "optional": False,
+            },
+            {
+                "prompt": "Third question made",
+                "type": CheckoutQuestion.MULTIPLE_CHOICE,
+                "optional": True,
+                "multiple_choice": [
+                    {"value": "Option 1"},
+                    {"value": "Option 2"},
+                    {"value": "Option 3"},
+                ],
+            },
+            {
+                "prompt": "Fourth question made",
+                "type": CheckoutQuestion.MULTIPLE_CHOICE,
+                "optional": False,
+                "multiple_choice": [
+                    {"value": "Option A"},
+                    {"value": "Option B"},
+                    {"value": "Option C"},
+                ],
+            },
+        ]
+        resp = self.client.post(
+            reverse(
+                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+            ),
+            questions[0],
+            content_type="application/json",
+        )
+        self.assertEqual(
+            resp.status_code, 403, resp.content
+        )  # Non-officers cannot create questions
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+
+        for question in questions:
+            resp = self.client.post(
+                reverse(
+                    "event-checkout-questions-list",
+                    args=(self.club1.code, self.event1.id),
+                ),
+                question,
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, 201, resp.content)
+
+        resp = self.client.get(
+            reverse(
+                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), len(questions), resp.content)
+
+        for question in questions:
+            self.assertIn(
+                question["prompt"], [q["prompt"] for q in resp.json()], resp.content
+            )
+            if question.get("multiple_choice"):
+                self.assertSetEqual(
+                    set([mc["value"] for mc in question["multiple_choice"]]),
+                    set(
+                        [
+                            mc["value"]
+                            for mc in [
+                                q["multiple_choice"]
+                                for q in resp.json()
+                                if q["prompt"] == question["prompt"]
+                            ][0]
+                        ]
+                    ),
+                    resp.content,
+                )
+        # Test precedence
+        shuffledquestions = resp.json()
+        random.seed(0)
+        random.shuffle(shuffledquestions)
+        question_ids = [id for id in [q["id"] for q in shuffledquestions]]
+        resp = self.client.post(
+            reverse(
+                "event-checkout-questions-precedence",
+                args=(self.club1.code, self.event1.id),
+            ),
+            {"precedence": question_ids},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        resp = self.client.get(
+            reverse(
+                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), len(questions), resp.content)
+        for index, question in enumerate(shuffledquestions):
+            self.assertEqual(
+                index,
+                [q["precedence"] for q in resp.json() if q["id"] == question["id"]][0],
+                resp.content,
+            )
+
+    def test_checkout_questions_update_delete(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Create a question
+        question = CheckoutQuestion.objects.create(
+            prompt="What is your favorite animal?",
+            question_type=CheckoutQuestion.FREE_RESPONSE,
+            optional=False,
+            event=self.event1,
+        )
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+
+        # List questions
+        resp = self.client.get(
+            reverse(
+                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(len(resp.json()), 1, resp.content)
+
+        # Update a question
+        resp = self.client.patch(
+            reverse(
+                "event-checkout-questions-detail",
+                args=[self.club1.code, self.event1.id, question.id],
+            ),
+            {"prompt": "What is your favorite food?"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Verify update
+        question.refresh_from_db()
+        self.assertEqual(question.prompt, "What is your favorite food?")
+
+        # Delete the question
+        resp = self.client.delete(
+            reverse(
+                "event-checkout-questions-detail",
+                args=[self.club1.code, self.event1.id, question.id],
+            )
+        )
+        self.assertEqual(resp.status_code, 204)
+
+        # Verify the question has been deleted
+        self.assertIsNone(CheckoutQuestion.objects.filter(id=question.id).first())
 
 
 class HealthTestCase(TestCase):
