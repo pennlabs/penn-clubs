@@ -565,16 +565,17 @@ class Club(models.Model):
             )
         return False
 
-    def send_renewal_email(self, request=None):
+    def send_renewal_email(self, request=None, queue_open_date=None):
         """
         Send an email notifying all club officers about renewing their approval with the
-        Office of Student Affairs and registering for the SAC fair.
+        Office of Student Affairs.
         """
         domain = get_domain(request)
 
         context = {
             "name": self.name,
             "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
+            "queue_open_date": queue_open_date,
         }
 
         emails = self.get_officer_emails()
@@ -582,35 +583,7 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="renew",
-                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(
-                    self.name
-                ),
-                emails=emails,
-                context=context,
-                reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
-            )
-
-    def send_renewal_reminder_email(self, request=None):
-        """
-        Send a reminder email to clubs about renewing their approval
-        with the approval authority and registering for activities fairs.
-        """
-        domain = get_domain(request)
-
-        context = {
-            "name": self.name,
-            "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
-            "year": timezone.now().year,
-        }
-
-        emails = self.get_officer_emails()
-
-        if emails:
-            send_mail_helper(
-                name="renewal_reminder",
-                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(
-                    self.name
-                ),
+                subject="[ACTION REQUIRED] Renew {}".format(self.name),
                 emails=emails,
                 context=context,
                 reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],

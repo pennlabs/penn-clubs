@@ -7,24 +7,22 @@ url:
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <h2>Renew <b>{{ name }}</b> on Penn Clubs & SAC Fair Signup</h2>
+    <h2>Renew <b>{{ name }}</b> on Penn Clubs</h2>
     <p style="font-size: 1.2em">
     	Dear <b>{{ name }}</b> officers,
     </p>
     <p style="font-size: 1.2em">
-        We have opened the student group registration process for the current academic year. To be
-        considered an active student group on campus, the University requires all student organizations
-        to be registered with the Office of Student Affairs. <b>This year, OSA has migrated the Student
-        Groups platform from the previous system, G.O. Penn, to Penn Labs' platform, Penn Clubs.</b>
-        All official registry of student groups will now be handled through Penn Clubs.
-    </p>
-
-    <p style="font-size: 1.2em">
-        Additionally, the Student Activities Council (SAC) is partnering with Penn Clubs to host a 
-        virtual multiday Activities Fair from <b>Sep 1 – 3</b>. More details on the Fair will be shared at a
-        later date by SAC. To participate in the Fair, you must be a student-run club at the 
-        University of Pennsylvania. <b>Registration for the SAC fair is included in this years' renewal process.</b>
-        The deadline to sign up for the SAC Fair is <b>August 24th</b>. 
+        {% if queue_open_date %}
+            We will be opening the re-approval queue on {{ queue_open_date }}. To be
+            considered an active student group on campus, the University requires all student organizations
+            to be registered with the Office of Student Affairs. 
+            <b>All official registry of student groups is handled through Penn Clubs. </b>
+        {% else %}
+            We have opened the student group registration process for the current academic year. To be
+            considered an active student group on campus, the University requires all student organizations
+            to be registered with the Office of Student Affairs. 
+            <b>All official registry of student groups is handled through Penn Clubs. </b>
+        {% endif %}
     </p>
 
     <p style="font-size: 1.2em">
@@ -43,10 +41,9 @@ url:
         <b>IMPORTANT NOTE:</b> Since this information is being distributed through various listservs and methods, please communicate 
         with your entire executive board before signing up for the fair. <b>ONLY ONE</b> officer of the club 
         should be designated to register the group. 
-        
     </p>
     
-    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Renew Club & Signup for SAC Fair</a>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Renew Club</a>
     <p style="font-size: 1.2em">
         If you have any questions, feel free to respond to this email.
     </p>

@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from clubs.models import Club
+from clubs.models import Club, RegistrationQueueSettings
 
 
 class Command(BaseCommand):
@@ -26,14 +26,22 @@ class Command(BaseCommand):
             help="If this parameter is specified, then only trigger renewal for the "
             "comma separated list of club codes specified by this argument.",
         )
+        parser.add_argument(
+            "--queue-open-date",
+            dest="queue_open_date",
+            type=str,
+            help="If this parameter is specified, then the approval queue is not "
+            "currently open and clubs will be notified of the specified open date "
+            "in plain text (e.g. put the string 'August 24, 2025').",
+        )
 
         parser.add_argument(
             "action",
             default="all",
-            choices=["deactivate", "emails", "all", "remind"],
+            choices=["deactivate", "emails", "all"],
             type=str,
             help="Specify the actions that you want to take, "
-            "either only deactivating the clubs, only sending the reminder emails, "
+            "either only deactivating the clubs, only sending the notification emails, "
             "or performing both actions.",
         )
 
@@ -42,7 +50,11 @@ class Command(BaseCommand):
 
         deactivate_clubs = action in {"deactivate", "all"}
         send_emails = action in {"emails", "all"}
-        send_remind_emails = action in {"remind"}
+
+        # if queue open date is specified but queue is already open, error
+        queue_settings = RegistrationQueueSettings.get()
+        if kwargs["queue_open_date"] and queue_settings.reapproval_queue_open:
+            raise CommandError("The re-approval queue is already open!")
 
         # warn if we're resetting all clubs and force flag is not specified
         if not kwargs["force"] and not kwargs["club"]:
@@ -103,22 +115,6 @@ class Command(BaseCommand):
         # send out renewal emails to all clubs
         if send_emails:
             for club in clubs:
-                club.send_renewal_email()
+                club.send_renewal_email(queue_open_date=kwargs["queue_open_date"])
 
             self.stdout.write(f"All {clubs.count()} emails sent out!")
-
-        # send out reminder emails to all clubs
-        if send_remind_emails:
-            pending_clubs = clubs.filter(active=False)
-            for club in pending_clubs:
-                club.send_renewal_reminder_email()
-
-            self.stdout.write(f"All {pending_clubs.count()} reminder emails sent out!")
-
-            rejected_clubs = clubs.filter(approved=False)
-            for club in rejected_clubs:
-                club.send_approval_email()
-
-            self.stdout.write(
-                f"All {rejected_clubs.count()} rejection emails sent out!"
-            )
