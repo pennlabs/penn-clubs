@@ -29,6 +29,8 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    CheckoutMultipleChoice,
+    CheckoutQuestion,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -3124,3 +3126,53 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
 
     def get_updated_by(self, obj):
         return obj.updated_by.get_full_name() if obj.updated_by else "N/A"
+
+
+class CheckoutMultipleChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CheckoutMultipleChoice
+        fields = ("value",)
+
+
+class CheckoutQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer):
+    multiple_choice = CheckoutMultipleChoiceSerializer(
+        many=True, required=False, read_only=True
+    )
+
+    def create(self, validated_data):
+        # remove club from request we do not use it
+        validated_data.pop("club")
+
+        event_id = self.context["view"].kwargs.get("event_id")
+        validated_data["event"] = Event.objects.filter(pk=event_id).first()
+
+        return super().create(validated_data)
+
+    def save(self):
+        question_obj = super().save()
+        # manually create multiple choice answers as Django does not
+        # support nested serializers out of the box
+        request = self.context["request"].data
+        if "multiple_choice" in request:
+            multiple_choice = request["multiple_choice"]
+            CheckoutMultipleChoice.objects.filter(question=question_obj).delete()
+            for choice in multiple_choice:
+                CheckoutMultipleChoice.objects.create(
+                    value=choice["value"],
+                    question=question_obj,
+                )
+
+        return question_obj
+
+    class Meta:
+        model = CheckoutQuestion
+        fields = (
+            "id",
+            "question_type",
+            "prompt",
+            "word_limit",
+            "multiple_choice",
+            "question_type",
+            "precedence",
+            "optional",
+        )
