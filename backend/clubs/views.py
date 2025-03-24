@@ -9,7 +9,6 @@ import os
 import re
 import secrets
 import string
-from functools import wraps
 from typing import Tuple
 from urllib.parse import urlparse
 
@@ -161,6 +160,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    CartSerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
@@ -210,19 +210,6 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
-
-
-def update_holds(func):
-    """
-    Decorator to update ticket holds
-    """
-
-    @wraps(func)
-    def wrap(self, request, *args, **kwargs):
-        Ticket.objects.update_holds()
-        return func(self, request, *args, **kwargs)
-
-    return wrap
 
 
 def file_upload_endpoint_helper(request, code):
@@ -2394,9 +2381,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     buyers:
     Get information about the buyers of an event's ticket
 
-    remove_from_cart:
-    Remove a ticket for this event from cart
-
     add_to_cart:
     Add a ticket for this event to cart
 
@@ -2433,7 +2417,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def cart(self, request, *args, **kwargs):
         """
-        Get the current cart for this event and validate quantities.
+        Get the current cart for this event and display a summary (no validation).
         ---
         requestBody:
             content: {}
@@ -2487,109 +2471,76 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
+        cart_id = request.query_params.get("cart_id")
 
-        cart, _ = Cart.objects.get_or_create(
-            event=event,
-            session_key=request.session.session_key,
-            defaults={"owner": request.user if request.user.is_authenticated else None},
-        )
-
-        items = []
-        sold_out = []
-
-        for item in cart.items.select_related("ticket_class").all():
-            ticket_class = item.ticket_class
-
-            # Check if current quantity exceeds available tickets
-            if item.quantity > ticket_class.remaining:
-                sold_out.append(
-                    {
-                        "ticket_class": {
-                            "id": ticket_class.id,
-                            "name": ticket_class.name,
-                        },
-                        "quantity": item.quantity - ticket_class.remaining,
-                    }
-                )
-                # Update cart item quantity if some tickets are still available
-                if ticket_class.remaining > 0:
-                    item.quantity = ticket_class.remaining
-                    item.save()
-                else:
-                    item.delete()
-                    continue
-
-            items.append(
-                {
-                    "ticket_class": {
-                        "id": ticket_class.id,
-                        "name": ticket_class.name,
-                        "price": float(ticket_class.price),
-                        "remaining": ticket_class.remaining,
-                        "group_discount": float(ticket_class.group_discount)
-                        if ticket_class.group_discount
-                        else 0,
-                        "group_size": ticket_class.group_size,
-                    },
-                    "quantity": item.quantity,
-                    "total_price": float(item.total_price()),
-                }
+        if not cart_id:
+            return Response(
+                {"detail": "cart_id query parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return Response(
-            {
-                "items": items,
-                "sold_out": sold_out,
-                "total": float(sum(item["total_price"] for item in items)),
-            }
-        )
+        cart = Cart.objects.filter(id=cart_id, event=event)
+
+        if not cart_id:
+            return Response(
+                {"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if (
+            request.user.is_authenticated and request.user != cart.owner
+        ) or cart.sesson_key != request.session.session_key:
+            return Response(
+                {"detail": "You do not have permission to access this cart."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return Response(CartSerializer(cart).data)
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
     def add_to_cart(self, request, *args, **kwargs):
         """
-            Add tickets to cart
-            ---
-            requestBody:
+        Add tickets to cart
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        ticket_class_id:
+                                            type: integer
+                                        quantity:
+                                            type: integer
+        responses:
+            "200":
                 content:
                     application/json:
                         schema:
                             type: object
                             properties:
-                                quantities:
-                                    type: array
-                                    items:
-                                        type: object
-                                        properties:
-                                            ticket_class_id:
-                                                type: integer
-                                            quantity:
-                                                type: integer
-            responses:
-                "200":
-                    content:
-                        application/json:
-                            schema:
-                               type: object
-                               properties:
-                                    detail:
-                                        type: string
-                                    success:
-                                        type: boolean
-            "403":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
                                 detail:
                                     type: string
                                 success:
                                     type: boolean
+        "403":
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            detail:
+                                type: string
+                            success:
+                                type: boolean
         ---
         """
         event = self.get_object()
-        cart, _ = Cart.objects.get_or_create(
+        cart = Cart.objects.create(
             event=event,
             session_key=request.session.session_key,
             defaults={"owner": request.user if request.user.is_authenticated else None},
@@ -2617,9 +2568,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             )
 
         num_requested = sum(item["quantity"] for item in quantities)
-        num_carted = sum(item.quantity for item in cart.items.all())
 
-        if num_requested + num_carted > event.ticket_order_limit:
+        if num_requested > event.ticket_order_limit:
             return Response(
                 {
                     "detail": f"Order exceeds the maximum ticket limit of "
@@ -2652,22 +2602,191 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 )
 
             # Add or update cart item
-            cart_item, created = CartItem.objects.get_or_create(
+            CartItem.objects.create(
                 cart=cart,
                 ticket_class=ticket_class,
                 defaults={"quantity": quantity},
             )
-            if not created:
-                cart_item.quantity += quantity
-                cart_item.save()
 
         return Response({"detail": "Successfully added to cart", "success": True})
 
-    @action(detail=True, methods=["post"])
+    # TODO: integrate this with Cybersource Secure Acceptance
+    @action(detail=False, methods=["post"])
     @transaction.atomic
-    def remove_from_cart(self, request, *args, **kwargs):
+    def initiate_checkout(self, request, *args, **kwargs):
         """
-        Remove tickets from cart
+        Checkout all tickets in cart and create a Cybersource capture context
+
+        NOTE: this does NOT buy tickets, it simply initiates a checkout process
+        which includes a 10-minute ticket hold
+
+        Once the user has entered their payment details and submitted the form
+        the request will be routed to complete_checkout
+
+        403 implies a stale cart.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+                                sold_free_tickets:
+                                    type: boolean
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+                                sold_free_tickets:
+                                    type: boolean
+        ---
+        """
+        cart = get_object_or_404(Cart, owner=self.request.user)
+
+        # Cart must have at least one ticket
+        if not cart.tickets.exists():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "No tickets selected for checkout.",
+                    "sold_free_tickets": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # skip_locked is important here because if any of the tickets in cart
+        # are locked, we shouldn't block.
+        tickets = cart.tickets.select_for_update(skip_locked=True).filter(
+            Q(holder__isnull=True) | Q(holder=self.request.user),
+            owner__isnull=True,
+            buyable=True,
+        )
+
+        # Assert that the filter succeeded in freezing all the tickets for checkout
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": (
+                        "Cart is stale or empty, invoke /api/tickets/cart to refresh"
+                    ),
+                    "sold_free_tickets": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        cart_total = self._calculate_cart_total(cart)
+
+        # If all tickets are free, we can skip the payment process
+        if not cart_total:
+            order_info = {
+                "amountDetails": {"totalAmount": "0.00"},
+                "billTo": {
+                    "firstName": self.request.user.first_name,
+                    "lastName": self.request.user.last_name,
+                    "phoneNumber": None,
+                    "email": self.request.user.email,
+                },
+            }
+
+            # Place hold on tickets for 10 mins
+            self._place_hold_on_tickets(self.request.user, tickets)
+            # Skip payment process and give tickets to user/buyer
+            self._give_tickets(self.request.user, order_info, cart, None)
+
+            return Response(
+                {
+                    "success": True,
+                    "detail": "Free tickets sold.",
+                    "sold_free_tickets": True,
+                }
+            )
+
+        capture_context_request = {
+            "_target_origins": [settings.CYBERSOURCE_TARGET_ORIGIN],
+            "_client_version": settings.CYBERSOURCE_CLIENT_VERSION,
+            "_allowed_card_networks": [
+                "VISA",
+                "MASTERCARD",
+                "AMEX",
+                "DISCOVER",
+            ],
+            "_allowed_payment_types": ["PANENTRY", "SRC"],
+            "_country": "US",
+            "_locale": "en_US",
+            "_capture_mandate": {
+                "_billing_type": "FULL",
+                "_request_email": True,
+                "_request_phone": True,
+                "_request_shipping": True,
+                "_show_accepted_network_icons": True,
+            },
+            "_order_information": {
+                "_amount_details": {
+                    "_total_amount": f"{cart_total:.2f}",
+                    "_currency": "USD",
+                }
+            },
+        }
+
+        try:
+            context, http_status, _ = UnifiedCheckoutCaptureContextApi(
+                settings.CYBERSOURCE_CONFIG
+            ).generate_unified_checkout_capture_context_with_http_info(
+                json.dumps(capture_context_request)
+            )
+            if not context or http_status >= 400:
+                raise ApiException(
+                    reason=f"Received {context} with HTTP status {http_status}",
+                )
+
+            # Tie generated capture context to user cart
+            if cart.checkout_context != context:
+                cart.checkout_context = context
+                cart.save()
+
+            # Place hold on tickets for 10 mins
+            self._place_hold_on_tickets(self.request.user, tickets)
+
+            return Response(
+                {
+                    "success": True,
+                    "detail": context,
+                    "sold_free_tickets": False,
+                }
+            )
+
+        except ApiException as e:
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Unable to generate capture context: {e}",
+                    "sold_free_tickets": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    # TODO: integrate this with Cybersource Secure Acceptance
+    @action(detail=False, methods=["post"])
+    @transaction.atomic
+    def complete_checkout(self, request, *args, **kwargs):
+        """
+        Complete the checkout after the user has entered their payment details
+        and obtained a transient token on the frontend.
+
+        403 implies a stale cart.
         ---
         requestBody:
             content:
@@ -2675,15 +2794,8 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
-                            quantities:
-                                type: array
-                                items:
-                                    type: object
-                                    properties:
-                                        ticket_class_id:
-                                            type: integer
-                                        quantity:
-                                            type: integer
+                            transient_token:
+                                type: string
         responses:
             "200":
                 content:
@@ -2697,53 +2809,102 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: boolean
         ---
         """
-        event = self.get_object()
-        quantities = request.data.get("quantities")
-        if not quantities:
-            return Response(
-                {
-                    "detail": "No quantities specified",
-                    "success": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not all(isinstance(item, dict) for item in quantities):
-            return Response(
-                {
-                    "detail": "Quantities must be a list of dictionaries",
-                    "success": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        tt = request.data.get("transient_token")
         cart = get_object_or_404(
-            Cart,
-            event=event,
-            session_key=request.session.session_key,
-            owner=request.user if request.user.is_authenticated else None,
+            Cart.objects.prefetch_related("tickets"), owner=self.request.user
         )
 
-        for item in quantities:
-            ticket_class = get_object_or_404(
-                TicketClass, id=item["ticket_class_id"], event=event
+        cc = cart.checkout_context
+        if cc is None:
+            return Response(
+                {"success": False, "detail": "Associated capture context not found"},
+                status=status.HTTP_500_BAD_REQUEST,
             )
-            quantity = item["quantity"]
 
-            if quantity <= 0:
-                return Response(
-                    {"detail": "Quantity must be positive", "success": False},
-                    status=status.HTTP_400_BAD_REQUEST,
+        ok, message = validate_transient_token(cc, tt)
+        if not ok:
+            # Cleanup state since the purchase failed
+            cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
+            return Response(
+                {"success": False, "detail": message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # Guard against holds expiring before the capture context
+        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            _, http_status, transaction_data = TransientTokenDataApi(
+                settings.CYBERSOURCE_CONFIG
+            ).get_transaction_for_transient_token(tt)
+
+            if not transaction_data or http_status >= 400:
+                raise ApiException(
+                    reason=f"Received {transaction_data} with HTTP status {http_status}"
                 )
+            transaction_data = json.loads(transaction_data)
+        except ApiException as e:
+            # Cleanup state since the purchase failed
+            cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
 
-            cart_item = cart.items.filter(ticket_class=ticket_class).first()
-            if cart_item:
-                if cart_item.quantity <= quantity:
-                    cart_item.delete()
-                else:
-                    cart_item.quantity -= quantity
-                    cart_item.save()
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Transaction failed: {e}",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
-        return Response({"detail": "Successfully removed from cart", "success": True})
+        create_payment_request = {"tokenInformation": {"transientTokenJwt": tt}}
+
+        try:
+            payment_response, http_status, _ = PaymentsApi(
+                settings.CYBERSOURCE_CONFIG
+            ).create_payment(json.dumps(create_payment_request))
+
+            if payment_response.status != "AUTHORIZED":
+                raise ApiException(reason="Payment response status is not authorized")
+            reconciliation_id = payment_response.reconciliation_id
+
+            if not payment_response or http_status >= 400:
+                raise ApiException(
+                    reason=f"Received {payment_response} with HTTP status {http_status}"
+                )
+        except ApiException as e:
+            # Cleanup state since the purchase failed
+            cart.tickets.update(holder=None, owner=None)
+            cart.checkout_context = None
+            cart.save()
+
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Transaction failed: {e}",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        order_info = transaction_data["orderInformation"]
+        self._give_tickets(self.request.user, order_info, cart, reconciliation_id)
+
+        return Response(
+            {
+                "success": True,
+                "detail": "Payment successful.",
+            }
+        )
 
     @action(detail=True, methods=["get"])
     def buyers(self, request, *args, **kwargs):
@@ -3031,7 +3192,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
-    @update_holds
     def issue_tickets(self, request, *args, **kwargs):
         """
         Issue tickets that have already been created to users in bulk.
@@ -3173,7 +3333,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         TicketTransactionRecord.objects.bulk_create(transaction_records)
         Ticket.objects.bulk_update(tickets, ["owner", "holder", "transaction_record"])
-        Ticket.objects.update_holds()
 
         for ticket in tickets:
             ticket.send_confirmation_email()
@@ -5353,302 +5512,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.save()
         return Response(TicketSerializer(ticket).data)
 
-    @action(detail=False, methods=["post"])
-    @update_holds
-    @transaction.atomic
-    def initiate_checkout(self, request, *args, **kwargs):
-        """
-        Checkout all tickets in cart and create a Cybersource capture context
-
-        NOTE: this does NOT buy tickets, it simply initiates a checkout process
-        which includes a 10-minute ticket hold
-
-        Once the user has entered their payment details and submitted the form
-        the request will be routed to complete_checkout
-
-        403 implies a stale cart.
-        ---
-        requestBody: {}
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-                                success:
-                                    type: boolean
-                                sold_free_tickets:
-                                    type: boolean
-            "403":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-                                success:
-                                    type: boolean
-                                sold_free_tickets:
-                                    type: boolean
-        ---
-        """
-        cart = get_object_or_404(Cart, owner=self.request.user)
-
-        # Cart must have at least one ticket
-        if not cart.tickets.exists():
-            return Response(
-                {
-                    "success": False,
-                    "detail": "No tickets selected for checkout.",
-                    "sold_free_tickets": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # skip_locked is important here because if any of the tickets in cart
-        # are locked, we shouldn't block.
-        tickets = cart.tickets.select_for_update(skip_locked=True).filter(
-            Q(holder__isnull=True) | Q(holder=self.request.user),
-            owner__isnull=True,
-            buyable=True,
-        )
-
-        # Assert that the filter succeeded in freezing all the tickets for checkout
-        if tickets.count() != cart.tickets.count():
-            return Response(
-                {
-                    "success": False,
-                    "detail": (
-                        "Cart is stale or empty, invoke /api/tickets/cart to refresh"
-                    ),
-                    "sold_free_tickets": False,
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        cart_total = self._calculate_cart_total(cart)
-
-        # If all tickets are free, we can skip the payment process
-        if not cart_total:
-            order_info = {
-                "amountDetails": {"totalAmount": "0.00"},
-                "billTo": {
-                    "firstName": self.request.user.first_name,
-                    "lastName": self.request.user.last_name,
-                    "phoneNumber": None,
-                    "email": self.request.user.email,
-                },
-            }
-
-            # Place hold on tickets for 10 mins
-            self._place_hold_on_tickets(self.request.user, tickets)
-            # Skip payment process and give tickets to user/buyer
-            self._give_tickets(self.request.user, order_info, cart, None)
-
-            return Response(
-                {
-                    "success": True,
-                    "detail": "Free tickets sold.",
-                    "sold_free_tickets": True,
-                }
-            )
-
-        capture_context_request = {
-            "_target_origins": [settings.CYBERSOURCE_TARGET_ORIGIN],
-            "_client_version": settings.CYBERSOURCE_CLIENT_VERSION,
-            "_allowed_card_networks": [
-                "VISA",
-                "MASTERCARD",
-                "AMEX",
-                "DISCOVER",
-            ],
-            "_allowed_payment_types": ["PANENTRY", "SRC"],
-            "_country": "US",
-            "_locale": "en_US",
-            "_capture_mandate": {
-                "_billing_type": "FULL",
-                "_request_email": True,
-                "_request_phone": True,
-                "_request_shipping": True,
-                "_show_accepted_network_icons": True,
-            },
-            "_order_information": {
-                "_amount_details": {
-                    "_total_amount": f"{cart_total:.2f}",
-                    "_currency": "USD",
-                }
-            },
-        }
-
-        try:
-            context, http_status, _ = UnifiedCheckoutCaptureContextApi(
-                settings.CYBERSOURCE_CONFIG
-            ).generate_unified_checkout_capture_context_with_http_info(
-                json.dumps(capture_context_request)
-            )
-            if not context or http_status >= 400:
-                raise ApiException(
-                    reason=f"Received {context} with HTTP status {http_status}",
-                )
-
-            # Tie generated capture context to user cart
-            if cart.checkout_context != context:
-                cart.checkout_context = context
-                cart.save()
-
-            # Place hold on tickets for 10 mins
-            self._place_hold_on_tickets(self.request.user, tickets)
-
-            return Response(
-                {
-                    "success": True,
-                    "detail": context,
-                    "sold_free_tickets": False,
-                }
-            )
-
-        except ApiException as e:
-            return Response(
-                {
-                    "success": False,
-                    "detail": f"Unable to generate capture context: {e}",
-                    "sold_free_tickets": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-    @action(detail=False, methods=["post"])
-    @update_holds
-    @transaction.atomic
-    def complete_checkout(self, request, *args, **kwargs):
-        """
-        Complete the checkout after the user has entered their payment details
-        and obtained a transient token on the frontend.
-
-        403 implies a stale cart.
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            transient_token:
-                                type: string
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-                                success:
-                                    type: boolean
-        ---
-        """
-        tt = request.data.get("transient_token")
-        cart = get_object_or_404(
-            Cart.objects.prefetch_related("tickets"), owner=self.request.user
-        )
-
-        cc = cart.checkout_context
-        if cc is None:
-            return Response(
-                {"success": False, "detail": "Associated capture context not found"},
-                status=status.HTTP_500_BAD_REQUEST,
-            )
-
-        ok, message = validate_transient_token(cc, tt)
-        if not ok:
-            # Cleanup state since the purchase failed
-            cart.tickets.update(holder=None, owner=None)
-            cart.checkout_context = None
-            cart.save()
-            return Response(
-                {"success": False, "detail": message},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        # Guard against holds expiring before the capture context
-        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
-        if tickets.count() != cart.tickets.count():
-            return Response(
-                {
-                    "success": False,
-                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        try:
-            _, http_status, transaction_data = TransientTokenDataApi(
-                settings.CYBERSOURCE_CONFIG
-            ).get_transaction_for_transient_token(tt)
-
-            if not transaction_data or http_status >= 400:
-                raise ApiException(
-                    reason=f"Received {transaction_data} with HTTP status {http_status}"
-                )
-            transaction_data = json.loads(transaction_data)
-        except ApiException as e:
-            # Cleanup state since the purchase failed
-            cart.tickets.update(holder=None, owner=None)
-            cart.checkout_context = None
-            cart.save()
-
-            return Response(
-                {
-                    "success": False,
-                    "detail": f"Transaction failed: {e}",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        create_payment_request = {"tokenInformation": {"transientTokenJwt": tt}}
-
-        try:
-            payment_response, http_status, _ = PaymentsApi(
-                settings.CYBERSOURCE_CONFIG
-            ).create_payment(json.dumps(create_payment_request))
-
-            if payment_response.status != "AUTHORIZED":
-                raise ApiException(reason="Payment response status is not authorized")
-            reconciliation_id = payment_response.reconciliation_id
-
-            if not payment_response or http_status >= 400:
-                raise ApiException(
-                    reason=f"Received {payment_response} with HTTP status {http_status}"
-                )
-        except ApiException as e:
-            # Cleanup state since the purchase failed
-            cart.tickets.update(holder=None, owner=None)
-            cart.checkout_context = None
-            cart.save()
-
-            return Response(
-                {
-                    "success": False,
-                    "detail": f"Transaction failed: {e}",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        order_info = transaction_data["orderInformation"]
-        self._give_tickets(self.request.user, order_info, cart, reconciliation_id)
-
-        return Response(
-            {
-                "success": True,
-                "detail": "Payment successful.",
-            }
-        )
-
     @action(detail=True, methods=["get"])
     def qr(self, request, *args, **kwargs):
         """
@@ -5779,7 +5642,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         tickets.update(owner=user, holder=None, transaction_record=transaction_record)
 
         cart.tickets.clear()
-        Ticket.objects.update_holds()
         cart.checkout_context = None
         cart.save()
 
