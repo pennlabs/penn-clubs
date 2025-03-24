@@ -11,7 +11,6 @@ from clubs.views import (
     AssetViewSet,
     BadgeClubViewSet,
     BadgeViewSet,
-    CartViewSet,
     ClubApplicationViewSet,
     ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
@@ -20,7 +19,6 @@ from clubs.views import (
     ClubViewSet,
     ClubVisitViewSet,
     EmailInvitesAPIView,
-    EventTicketManagementViewSet,
     EventViewSet,
     ExternalMemberListViewSet,
     FavoriteCalendarAPIView,
@@ -138,14 +136,6 @@ applications_router.register(
 
 router.register(r"booths", ClubBoothsViewSet, basename="club-booth")
 
-events_router = routers.NestedSimpleRouter(clubs_router, r"events", lookup="event")
-events_router.register(r"cart", CartViewSet, basename="event-cart")
-events_router.register(
-    r"tickets", EventTicketManagementViewSet, basename="event-tickets"
-)
-
-router.register(r"tickets", TicketViewSet, basename="tickets")
-
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
@@ -194,4 +184,3 @@ urlpatterns += router.urls
 urlpatterns += clubs_router.urls
 urlpatterns += badges_router.urls
 urlpatterns += applications_router.urls
-urlpatterns += events_router.urls

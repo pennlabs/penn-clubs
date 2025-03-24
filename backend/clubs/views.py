@@ -161,7 +161,6 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
-    CartSerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
@@ -2545,6 +2544,207 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             }
         )
 
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def add_to_cart(self, request, *args, **kwargs):
+        """
+            Add tickets to cart
+            ---
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                quantities:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            ticket_class_id:
+                                                type: integer
+                                            quantity:
+                                                type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                               type: object
+                               properties:
+                                    detail:
+                                        type: string
+                                    success:
+                                        type: boolean
+            "403":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+        ---
+        """
+        event = self.get_object()
+        cart, _ = Cart.objects.get_or_create(
+            event=event,
+            session_key=request.session.session_key,
+            defaults={"owner": request.user if request.user.is_authenticated else None},
+        )
+
+        # Check if the event has already ended
+        if event.end_time < timezone.now():
+            return Response(
+                {"detail": "This event has already ended", "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Cannot add tickets that haven't dropped yet
+        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+            return Response(
+                {"detail": "Ticket drop time has not yet elapsed", "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        quantities = request.data.get("quantities")
+        if not quantities:
+            return Response(
+                {"detail": "No quantities specified", "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        num_requested = sum(item["quantity"] for item in quantities)
+        num_carted = sum(item.quantity for item in cart.items.all())
+
+        if num_requested + num_carted > event.ticket_order_limit:
+            return Response(
+                {
+                    "detail": f"Order exceeds the maximum ticket limit of "
+                    f"{event.ticket_order_limit}.",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Attempt to add items to cart
+        for item in quantities:
+            ticket_class = get_object_or_404(
+                TicketClass, id=item["ticket_class_id"], event=event, buyable=True
+            )
+            quantity = item["quantity"]
+
+            if quantity <= 0:
+                return Response(
+                    {"detail": "Quantity must be positive", "success": False},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if ticket_class.remaining < quantity:
+                return Response(
+                    {
+                        "detail": f"Not enough tickets of type {type} left!",
+                        "success": False,
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            # Add or update cart item
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                ticket_class=ticket_class,
+                defaults={"quantity": quantity},
+            )
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save()
+
+        return Response({"detail": "Successfully added to cart", "success": True})
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def remove_from_cart(self, request, *args, **kwargs):
+        """
+        Remove tickets from cart
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            quantities:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        ticket_class_id:
+                                            type: integer
+                                        quantity:
+                                            type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                           type: object
+                           properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+        ---
+        """
+        event = self.get_object()
+        quantities = request.data.get("quantities")
+        if not quantities:
+            return Response(
+                {
+                    "detail": "No quantities specified",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not all(isinstance(item, dict) for item in quantities):
+            return Response(
+                {
+                    "detail": "Quantities must be a list of dictionaries",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cart = get_object_or_404(
+            Cart,
+            event=event,
+            session_key=request.session.session_key,
+            owner=request.user if request.user.is_authenticated else None,
+        )
+
+        for item in quantities:
+            ticket_class = get_object_or_404(
+                TicketClass, id=item["ticket_class_id"], event=event
+            )
+            quantity = item["quantity"]
+
+            if quantity <= 0:
+                return Response(
+                    {"detail": "Quantity must be positive", "success": False},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            cart_item = cart.items.filter(ticket_class=ticket_class).first()
+            if cart_item:
+                if cart_item.quantity <= quantity:
+                    cart_item.delete()
+                else:
+                    cart_item.quantity -= quantity
+                    cart_item.save()
+
+        return Response({"detail": "Successfully removed from cart", "success": True})
+
     @action(detail=True, methods=["get"])
     def buyers(self, request, *args, **kwargs):
         """
@@ -2831,6 +3031,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
+    @update_holds
     def issue_tickets(self, request, *args, **kwargs):
         """
         Issue tickets that have already been created to users in bulk.
@@ -5090,144 +5291,32 @@ class UserUpdateAPIView(generics.RetrieveUpdateAPIView):
         return user
 
 
-class CartViewSet(viewsets.ModelViewSet):
+class TicketViewSet(viewsets.ModelViewSet):
     """
-    Handles cart operations for a specific event.
+    get:
+    Get a specific ticket owned by a user
+
+    list:
+    List all tickets owned by a user
+
+    partial_update:
+    Update attendance for a ticket
+
+    qr:
+    Get a ticket's QR code
+
+    transfer:
+    Transfer a ticket to another user
     """
 
-    serializer_class = CartSerializer
+    permission_classes = [IsAuthenticated]
+    serializer_class = TicketSerializer
+    http_method_names = ["get", "post", "patch"]
+    lookup_field = "id"
 
-    def get_queryset(self):
-        return Cart.objects.filter(
-            event__id=self.kwargs["event_pk"],
-            session_key=self.request.session.session_key,
-            owner=self.request.user if self.request.user.is_authenticated else None,
-        )
-
-    @action(detail=True, methods=["post"])
-    @transaction.atomic
-    def add(self, request, *args, **kwargs):
+    def partial_update(self, request, *args, **kwargs):
         """
-            Add tickets to cart
-            ---
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                quantities:
-                                    type: array
-                                    items:
-                                        type: object
-                                        properties:
-                                            ticket_class_id:
-                                                type: integer
-                                            quantity:
-                                                type: integer
-            responses:
-                "200":
-                    content:
-                        application/json:
-                            schema:
-                               type: object
-                               properties:
-                                    detail:
-                                        type: string
-                                    success:
-                                        type: boolean
-            "403":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-                                success:
-                                    type: boolean
-        ---
-        """
-        event = self.get_object()
-        cart, _ = Cart.objects.get_or_create(
-            event=event,
-            session_key=request.session.session_key,
-            defaults={"owner": request.user if request.user.is_authenticated else None},
-        )
-
-        # Check if the event has already ended
-        if event.end_time < timezone.now():
-            return Response(
-                {"detail": "This event has already ended", "success": False},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Cannot add tickets that haven't dropped yet
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
-            return Response(
-                {"detail": "Ticket drop time has not yet elapsed", "success": False},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        quantities = request.data.get("quantities")
-        if not quantities:
-            return Response(
-                {"detail": "No quantities specified", "success": False},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        num_requested = sum(item["quantity"] for item in quantities)
-        num_carted = sum(item.quantity for item in cart.items.all())
-
-        if num_requested + num_carted > event.ticket_order_limit:
-            return Response(
-                {
-                    "detail": f"Order exceeds the maximum ticket limit of "
-                    f"{event.ticket_order_limit}.",
-                    "success": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Attempt to add items to cart
-        for item in quantities:
-            ticket_class = get_object_or_404(
-                TicketClass, id=item["ticket_class_id"], event=event, buyable=True
-            )
-            quantity = item["quantity"]
-
-            if quantity <= 0:
-                return Response(
-                    {"detail": "Quantity must be positive", "success": False},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            if ticket_class.remaining < quantity:
-                return Response(
-                    {
-                        "detail": f"Not enough tickets of type {type} left!",
-                        "success": False,
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-            # Add or update cart item
-            cart_item, created = CartItem.objects.get_or_create(
-                cart=cart,
-                ticket_class=ticket_class,
-                defaults={"quantity": quantity},
-            )
-            if not created:
-                cart_item.quantity += quantity
-                cart_item.save()
-
-        return Response({"detail": "Successfully added to cart", "success": True})
-
-    @action(detail=True, methods=["post"])
-    @transaction.atomic
-    def remove(self, request, *args, **kwargs):
-        """
-        Remove tickets from cart
+        Update a ticket's attendance (only accessible by club officers)
         ---
         requestBody:
             content:
@@ -5235,17 +5324,15 @@ class CartViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
-                            quantities:
-                                type: array
-                                items:
-                                    type: object
-                                    properties:
-                                        ticket_class_id:
-                                            type: integer
-                                        quantity:
-                                            type: integer
+                            attended:
+                                type: boolean
         responses:
             "200":
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Ticket'
+            "400":
                 content:
                     application/json:
                         schema:
@@ -5253,59 +5340,21 @@ class CartViewSet(viewsets.ModelViewSet):
                            properties:
                                 detail:
                                     type: string
-                                success:
-                                    type: boolean
         ---
         """
-        event = self.get_object()
-        quantities = request.data.get("quantities")
-        if not quantities:
+        attended = request.data.get("attended")
+        if attended is None or not isinstance(attended, bool):
             return Response(
-                {
-                    "detail": "No quantities specified",
-                    "success": False,
-                },
+                {"detail": "Missing boolean attribute 'attended'."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if not all(isinstance(item, dict) for item in quantities):
-            return Response(
-                {
-                    "detail": "Quantities must be a list of dictionaries",
-                    "success": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        cart = get_object_or_404(
-            Cart,
-            event=event,
-            session_key=request.session.session_key,
-            owner=request.user if request.user.is_authenticated else None,
-        )
-
-        for item in quantities:
-            ticket_class = get_object_or_404(
-                TicketClass, id=item["ticket_class_id"], event=event
-            )
-            quantity = item["quantity"]
-
-            if quantity <= 0:
-                return Response(
-                    {"detail": "Quantity must be positive", "success": False},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            cart_item = cart.items.filter(ticket_class=ticket_class).first()
-            if cart_item:
-                if cart_item.quantity <= quantity:
-                    cart_item.delete()
-                else:
-                    cart_item.quantity -= quantity
-                    cart_item.save()
-
-        return Response({"detail": "Successfully removed from cart", "success": True})
+        ticket = self.get_object()
+        ticket.attended = attended
+        ticket.save()
+        return Response(TicketSerializer(ticket).data)
 
     @action(detail=False, methods=["post"])
+    @update_holds
     @transaction.atomic
     def initiate_checkout(self, request, *args, **kwargs):
         """
@@ -5347,10 +5396,10 @@ class CartViewSet(viewsets.ModelViewSet):
                                     type: boolean
         ---
         """
-        cart = self.get_object()
+        cart = get_object_or_404(Cart, owner=self.request.user)
 
         # Cart must have at least one ticket
-        if not cart.items.exists():
+        if not cart.tickets.exists():
             return Response(
                 {
                     "success": False,
@@ -5358,6 +5407,27 @@ class CartViewSet(viewsets.ModelViewSet):
                     "sold_free_tickets": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # skip_locked is important here because if any of the tickets in cart
+        # are locked, we shouldn't block.
+        tickets = cart.tickets.select_for_update(skip_locked=True).filter(
+            Q(holder__isnull=True) | Q(holder=self.request.user),
+            owner__isnull=True,
+            buyable=True,
+        )
+
+        # Assert that the filter succeeded in freezing all the tickets for checkout
+        if tickets.count() != cart.tickets.count():
+            return Response(
+                {
+                    "success": False,
+                    "detail": (
+                        "Cart is stale or empty, invoke /api/tickets/cart to refresh"
+                    ),
+                    "sold_free_tickets": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         cart_total = self._calculate_cart_total(cart)
@@ -5374,6 +5444,8 @@ class CartViewSet(viewsets.ModelViewSet):
                 },
             }
 
+            # Place hold on tickets for 10 mins
+            self._place_hold_on_tickets(self.request.user, tickets)
             # Skip payment process and give tickets to user/buyer
             self._give_tickets(self.request.user, order_info, cart, None)
 
@@ -5428,6 +5500,9 @@ class CartViewSet(viewsets.ModelViewSet):
                 cart.checkout_context = context
                 cart.save()
 
+            # Place hold on tickets for 10 mins
+            self._place_hold_on_tickets(self.request.user, tickets)
+
             return Response(
                 {
                     "success": True,
@@ -5447,6 +5522,7 @@ class CartViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=False, methods=["post"])
+    @update_holds
     @transaction.atomic
     def complete_checkout(self, request, *args, **kwargs):
         """
@@ -5573,65 +5649,6 @@ class CartViewSet(viewsets.ModelViewSet):
             }
         )
 
-    @staticmethod
-    def _give_tickets(user, order_info, cart, reconciliation_id):
-        """
-        Helper function that gives user/buyer their held tickets
-        and archives the transaction data
-        """
-
-        # At this point, we have validated that the payment was authorized
-        # Give the tickets to the user
-        tickets = cart.tickets.select_for_update().filter(holder=user)
-
-        # Archive transaction data for historical purposes.
-        # We're explicitly using the response data over what's in self.request.user
-        transaction_record = TicketTransactionRecord.objects.create(
-            reconciliation_id=str(reconciliation_id),
-            total_amount=float(order_info["amountDetails"]["totalAmount"]),
-            buyer_first_name=order_info["billTo"]["firstName"],
-            buyer_last_name=order_info["billTo"]["lastName"],
-            # TODO: investigate why phone numbers don't show in test API
-            buyer_phone=order_info["billTo"].get("phoneNumber", None),
-            buyer_email=order_info["billTo"]["email"],
-        )
-        tickets.update(owner=user, holder=None, transaction_record=transaction_record)
-
-        cart.tickets.clear()
-        Ticket.objects.update_holds()
-        cart.checkout_context = None
-        cart.save()
-
-        tickets = Ticket.objects.filter(
-            owner=user, transaction_record=transaction_record
-        )
-        for ticket in tickets:
-            ticket.send_confirmation_email()
-
-
-class TicketViewSet(viewsets.ModelViewSet):
-    """
-    get:
-    Get a specific ticket owned by a user
-
-    list:
-    List all tickets owned by a user
-
-    partial_update:
-    Update attendance for a ticket
-
-    qr:
-    Get a ticket's QR code
-
-    transfer:
-    Transfer a ticket to another user
-    """
-
-    permission_classes = [IsAuthenticated]
-    serializer_class = TicketSerializer
-    http_method_names = ["get", "post", "patch"]
-    lookup_field = "id"
-
     @action(detail=True, methods=["get"])
     def qr(self, request, *args, **kwargs):
         """
@@ -5724,50 +5741,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
-        return Ticket.objects.filter(owner=self.request.user.id)
-
-
-class EventTicketManagementViewSet(viewsets.ModelViewSet):
-    def partial_update(self, request, *args, **kwargs):
-        """
-        Update a ticket's attendance (only accessible by club officers)
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            attended:
-                                type: boolean
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/Ticket'
-            "400":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-        ---
-        """
-        attended = request.data.get("attended")
-        if attended is None or not isinstance(attended, bool):
-            return Response(
-                {"detail": "Missing boolean attribute 'attended'."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        ticket = self.get_object()
-        ticket.attended = attended
-        ticket.save()
-        return Response(TicketSerializer(ticket).data)
-
-    def get_queryset(self):
         officer_clubs = Membership.objects.filter(
             person=self.request.user, role__lte=Membership.ROLE_OFFICER
         ).values_list("club", flat=True)
@@ -5779,6 +5752,50 @@ class EventTicketManagementViewSet(viewsets.ModelViewSet):
             return Ticket.objects.filter(
                 Q(owner=self.request.user.id) | Q(event__club__in=officer_clubs)
             ).select_related("event__club")
+        return Ticket.objects.filter(owner=self.request.user.id)
+
+    @staticmethod
+    def _give_tickets(user, order_info, cart, reconciliation_id):
+        """
+        Helper function that gives user/buyer their held tickets
+        and archives the transaction data
+        """
+
+        # At this point, we have validated that the payment was authorized
+        # Give the tickets to the user
+        tickets = cart.tickets.select_for_update().filter(holder=user)
+
+        # Archive transaction data for historical purposes.
+        # We're explicitly using the response data over what's in self.request.user
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=str(reconciliation_id),
+            total_amount=float(order_info["amountDetails"]["totalAmount"]),
+            buyer_first_name=order_info["billTo"]["firstName"],
+            buyer_last_name=order_info["billTo"]["lastName"],
+            # TODO: investigate why phone numbers don't show in test API
+            buyer_phone=order_info["billTo"].get("phoneNumber", None),
+            buyer_email=order_info["billTo"]["email"],
+        )
+        tickets.update(owner=user, holder=None, transaction_record=transaction_record)
+
+        cart.tickets.clear()
+        Ticket.objects.update_holds()
+        cart.checkout_context = None
+        cart.save()
+
+        tickets = Ticket.objects.filter(
+            owner=user, transaction_record=transaction_record
+        )
+        for ticket in tickets:
+            ticket.send_confirmation_email()
+
+    @staticmethod
+    def _place_hold_on_tickets(user, tickets):
+        """
+        Helper function that places a 10 minute hold on tickets for a user
+        """
+        holding_expiration = timezone.now() + datetime.timedelta(minutes=10)
+        tickets.update(holder=user, holding_expiration=holding_expiration)
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):
