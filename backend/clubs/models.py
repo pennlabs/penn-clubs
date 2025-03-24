@@ -1902,7 +1902,7 @@ def get_discount_code(event, ticket):
     private_key = hashlib.sha256(
         f"{event.id}-{ticket.type}-{settings.SECRET_KEY}".encode()
     ).hexdigest()
-    return private_key
+    return private_key[:8].upper()
 
 
 class Ticket(models.Model):

@@ -143,6 +143,8 @@ const Ticket: React.FC<TicketProps> = ({
       total: ticket.count,
       price: ticket.price,
       buyable: ticket.buyable,
+      group_discount: ticket.group_discount,
+      group_size: ticket.group_size,
       code_discount: ticket.code_discount,
       discount_code: ticket.discount_code,
       available: 0,
@@ -212,6 +214,8 @@ type Ticket = {
   buyable: boolean
   discount_code?: string
   code_discount?: number
+  group_discount?: number
+  group_size?: number
   buyers: Buyer[]
 }
 
@@ -326,6 +330,13 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
               {ticket.buyable ? (
                 <>
                   <Text>Price: ${ticket.price}</Text>
+                  {ticket.group_size &&
+                    Math.abs(ticket.group_discount ?? 0) > 0.00001 && (
+                      <Text>
+                        Group Discount: {ticket.group_discount! * 100}% for
+                        groups of {ticket.group_size} and more
+                      </Text>
+                    )}
                   {ticket.discount_code &&
                     Math.abs(ticket.code_discount ?? 0) > 0.00001 && (
                       <Text>Discount Code: {ticket.discount_code}</Text>

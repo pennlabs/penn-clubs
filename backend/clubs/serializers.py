@@ -1810,12 +1810,19 @@ class TicketSerializer(serializers.ModelSerializer):
         return obj.owner.get_full_name() if obj.owner else "None"
 
     def get_discount_code(self, obj):
-        # only event owners should be able to see discount codes
-        if "request" not in self.context or not self.context["request"].user.has_perm(
-            "clubs.manage_event", obj.event
+        # only event officers should be able to see discount codes
+        if (
+            "request" in self.context
+            and self.context["request"].user.is_authenticated
+            and (
+                membership := Membership.objects.filter(
+                    person=self.context["request"].user, club=obj.event.club
+                ).first()
+            )
         ):
-            return None
-        return obj.discount_code
+            if membership.role <= Membership.ROLE_OFFICER:
+                return obj.discount_code
+        return None
 
     class Meta:
         model = Ticket

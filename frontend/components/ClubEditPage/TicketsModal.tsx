@@ -343,7 +343,7 @@ const TicketsModal = ({
             group_discount: usingGroupPricing
               ? parseFloat(ticket.groupDiscount!) / 100
               : null,
-            group_number: usingGroupPricing
+            group_size: usingGroupPricing
               ? parseFloat(ticket.groupNumber!)
               : null,
             code_discount: ticket.codeDiscount
@@ -366,8 +366,10 @@ const TicketsModal = ({
             router.push(`/tickets/${id}`)
           }, 500)
         } else {
-          notify(<>Error creating tickets: {res.detail}</>, 'error')
-          setSubmitting(false)
+          res.json().then((data) => {
+            notify(<>Error creating tickets: {data.detail}</>, 'error')
+            setSubmitting(false)
+          })
         }
       })
     }

@@ -158,7 +158,7 @@ class TicketEventTestCase(TestCase):
             self.assertEqual(t1["type"], t2["type"])
             self.assertAlmostEqual(t1["price"], float(t2["price"]), 0.02)
             self.assertEqual(t1["count"], t2["count"])
-            self.assertEqual(t1["code_discount"], t2["code_discount"])
+            self.assertEqual(t1.get("code_discount", 0), t2["code_discount"])
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -522,12 +522,27 @@ class TicketEventTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = resp.json()
-        self.assertEqual(data["totals"], self.ticket_totals, data["totals"])
         self.assertEqual(
-            data["available"],
-            # Only premium tickets available
+            [
+                {
+                    "type": t["type"],
+                    "price": float(t["price"]),
+                    "count": t["count"],
+                }
+                for t in data["totals"]
+            ],
+            self.ticket_totals,
+        )
+        self.assertEqual(
+            [
+                {
+                    "type": t["type"],
+                    "price": float(t["price"]),
+                    "count": t["count"],
+                }
+                for t in data["available"]
+            ],
             [t for t in self.ticket_totals if t["type"] == "premium"],
-            data["available"],
         )
 
     def test_get_tickets_buyers(self):

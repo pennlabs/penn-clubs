@@ -2835,9 +2835,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         totals_list = []
         available_list = []
         for ticket_type in tickets.values_list("type", flat=True).distinct():
-            print(ticket_type)
             ticket = tickets.filter(type=ticket_type).first()
-            print(ticket)
             if ticket:
                 # Serialize the ticket and add counts
                 ticket_data = TicketSerializer(
@@ -2854,8 +2852,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     available_entry = ticket_data.copy()
                     available_entry["count"] = available_counts.get(ticket_type, 0)
                     available_list.append(available_entry)
-        print(totals_list)
-        print(available_list)
+
         return Response({"totals": totals_list, "available": available_list})
 
     @tickets.mapping.put
@@ -3019,9 +3016,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 event=event,
                 type=item["type"],
                 price=item.get("price", 0),
-                group_discount=item.get("group_discount", 0),
+                group_discount=item.get("group_discount", 0) or 0,  # Field not nullable
                 group_size=item.get("group_size", None),
-                code_discount=item.get("code_discount", 0),
+                code_discount=item.get("code_discount", 0) or 0,
                 transferable=item.get("transferable", True),
                 buyable=item.get("buyable", True),
             )
