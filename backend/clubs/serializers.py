@@ -1804,13 +1804,33 @@ class TicketSerializer(serializers.ModelSerializer):
 
     owner = serializers.SerializerMethodField("get_owner_name")
     event = EventSerializer()
+    discount_code = serializers.SerializerMethodField()
 
     def get_owner_name(self, obj):
         return obj.owner.get_full_name() if obj.owner else "None"
 
+    def get_discount_code(self, obj):
+        # only event owners should be able to see discount codes
+        if "request" not in self.context or not self.context["request"].user.has_perm(
+            "clubs.manage_event", obj.event
+        ):
+            return None
+        return obj.discount_code
+
     class Meta:
         model = Ticket
-        fields = ("id", "event", "type", "owner", "attended", "price")
+        fields = (
+            "id",
+            "event",
+            "type",
+            "owner",
+            "attended",
+            "price",
+            "buyable",
+            "code_discount",
+            "discount_code",
+            "discount_code_applied",
+        )
 
 
 class UserUUIDSerializer(serializers.ModelSerializer):

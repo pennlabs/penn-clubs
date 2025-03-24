@@ -75,6 +75,9 @@ export interface EventTicket {
   type: ClubEventType
   owner: string
   price: string
+  group_size?: number
+  group_discount?: number
+  code_discount?: number
 }
 
 export interface CountedEventTicket extends EventTicket {

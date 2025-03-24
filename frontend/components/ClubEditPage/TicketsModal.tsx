@@ -71,6 +71,7 @@ const TicketItem: React.FC<TicketItemProps> = ({
 }) => {
   const [ticket, setTicket] = useState(propTicket)
   const [openGroupDiscount, setOpenGroupDiscount] = useState(false)
+  const [openCodeDiscount, setOpenCodeDiscount] = useState(false)
 
   const resetGroupDiscount = () => {
     setTicket({
@@ -84,6 +85,18 @@ const TicketItem: React.FC<TicketItemProps> = ({
       groupNumber: null,
     })
     setOpenGroupDiscount(!openGroupDiscount)
+  }
+
+  const resetCodeDiscount = () => {
+    setTicket({
+      ...ticket,
+      codeDiscount: null,
+    })
+    onChange?.({
+      ...ticket,
+      codeDiscount: null,
+    })
+    setOpenCodeDiscount(!openCodeDiscount)
   }
 
   return (
@@ -156,58 +169,108 @@ const TicketItem: React.FC<TicketItemProps> = ({
         >
           <button
             className="button is-info is-small mr-2"
-            onClick={() => setTicket({ ...ticket, buyable: !ticket.buyable })}
+            onClick={() => {
+              if (ticket.buyable) {
+                resetGroupDiscount()
+                resetCodeDiscount()
+                setOpenGroupDiscount(false)
+                setOpenCodeDiscount(false)
+              }
+              setTicket({ ...ticket, buyable: !ticket.buyable })
+              onChange?.({ ...ticket, buyable: !ticket.buyable })
+            }}
           >
             {ticket.buyable ? 'Disable Buying' : 'Enable Buying'}
           </button>
-          {openGroupDiscount ? (
+          {ticket.buyable && (
             <>
-              <div style={{ maxWidth: '75px' }}>
-                <Input
-                  type="number"
-                  className="input is-small"
-                  value={ticket.groupDiscount ?? ''}
-                  placeholder="100"
-                  onChange={(e) => {
-                    const groupDiscount = e.target.value
-                    setTicket({ ...ticket, groupDiscount })
-                    onChange?.({ ...ticket, groupDiscount })
-                  }}
-                />
-              </div>
-              <Text style={{ padding: '0 12px' }}>% Discount for</Text>
-              <div>
-                <Input
-                  type="number"
-                  className="input is-small"
-                  value={ticket.groupNumber ?? ''}
-                  placeholder="Group Number"
-                  onChange={(e) => {
-                    const groupNumber = e.target.value
-                    setTicket({ ...ticket, groupNumber })
-                    onChange?.({ ...ticket, groupNumber })
-                  }}
-                />
-              </div>
               <button
-                className="button is-info is-small"
+                className="button is-info is-small mr-2"
                 onClick={resetGroupDiscount}
               >
-                Delete Discount
+                {openGroupDiscount
+                  ? 'Remove Group Discount'
+                  : 'Add Group Discount'}
               </button>
             </>
-          ) : (
+          )}
+          {ticket.buyable && (
             <>
               <button
                 className="button is-info is-small"
-                onClick={resetGroupDiscount}
+                onClick={resetCodeDiscount}
               >
-                Add Group Discount
+                {openCodeDiscount
+                  ? 'Remove Code Discount'
+                  : 'Add Code Discount'}
               </button>
             </>
           )}
         </div>
       </div>
+      {openGroupDiscount && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            paddingTop: '12px',
+            gap: '6px',
+          }}
+        >
+          <div style={{ maxWidth: '75px' }}>
+            <Input
+              type="number"
+              className="input is-small"
+              value={ticket.groupDiscount ?? ''}
+              placeholder="100"
+              onChange={(e) => {
+                const groupDiscount = e.target.value
+                setTicket({ ...ticket, groupDiscount })
+                onChange?.({ ...ticket, groupDiscount })
+              }}
+            />
+          </div>
+          <Text>% Group Discount for</Text>
+          <div>
+            <Input
+              type="number"
+              className="input is-small"
+              value={ticket.groupNumber ?? ''}
+              placeholder="Min Group Size"
+              onChange={(e) => {
+                const groupNumber = e.target.value
+                setTicket({ ...ticket, groupNumber })
+                onChange?.({ ...ticket, groupNumber })
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {openCodeDiscount && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            paddingTop: '12px',
+            gap: '6px',
+          }}
+        >
+          <div style={{ maxWidth: '75px' }}>
+            <Input
+              type="number"
+              className="input is-small"
+              value={ticket.codeDiscount ?? ''}
+              placeholder="100"
+              onChange={(e) => {
+                const codeDiscount = e.target.value
+                setTicket({ ...ticket, codeDiscount })
+                onChange?.({ ...ticket, codeDiscount })
+              }}
+            />
+          </div>
+          <Text>% Promo Code Discount</Text>
+        </div>
+      )}
     </div>
   )
 }
@@ -218,6 +281,7 @@ type Ticket = {
   price: string | null // Free if null
   groupDiscount: string | null // If null, no group discount
   groupNumber: string | null // If null, no group discount
+  codeDiscount: string | null // If null, no code discount
   buyable: boolean
 }
 
@@ -245,6 +309,7 @@ const TicketsModal = ({
       price: '0.00',
       groupDiscount: null,
       groupNumber: null,
+      codeDiscount: null,
       buyable: true,
     },
   ])
@@ -259,6 +324,7 @@ const TicketsModal = ({
         price: '0.00',
         groupDiscount: null,
         groupNumber: null,
+        codeDiscount: null,
         buyable: true,
       },
     ])
@@ -274,11 +340,14 @@ const TicketsModal = ({
             type: ticket.name,
             count: parseInt(ticket.count ?? '0'),
             price: parseFloat(ticket.price ?? '0'),
-            groupDiscount: usingGroupPricing
-              ? parseFloat(ticket.groupDiscount!)
+            group_discount: usingGroupPricing
+              ? parseFloat(ticket.groupDiscount!) / 100
               : null,
-            groupNumber: usingGroupPricing
+            group_number: usingGroupPricing
               ? parseFloat(ticket.groupNumber!)
+              : null,
+            code_discount: ticket.codeDiscount
+              ? parseFloat(ticket.codeDiscount!) / 100
               : null,
             buyable: ticket.buyable,
           }
@@ -297,7 +366,7 @@ const TicketsModal = ({
             router.push(`/tickets/${id}`)
           }, 500)
         } else {
-          notify(<>Error creating tickets</>, 'error')
+          notify(<>Error creating tickets: {res.detail}</>, 'error')
           setSubmitting(false)
         }
       })
@@ -326,10 +395,7 @@ const TicketsModal = ({
       />
       <ModalBody>
         <Title>{name}</Title>
-        <Text>
-          Create new tickets for this event. For our beta, only free tickets
-          will be supported for now: stay tuned for payments integration!
-        </Text>
+        <Text>Create new tickets for this event.</Text>
         <Line />
         <SectionContainer>
           <h1>Tickets</h1>
