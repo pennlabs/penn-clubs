@@ -1066,6 +1066,35 @@ class TicketTestCase(TestCase):
         total = TicketViewSet._calculate_cart_total(cart)
         self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
 
+    def test_calculate_cart_total_with_code_discount(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        tickets_to_add = {
+            "quantities": [
+                {
+                    "type": "normal",
+                    "count": 3,
+                    "discount_code": self.tickets1_discount_code,
+                },
+            ]
+        }
+
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        cart = Cart.objects.get(owner=self.user1)
+        self.assertEqual(cart.tickets.count(), 3)
+
+        from clubs.views import TicketViewSet
+
+        total = TicketViewSet._calculate_cart_total(cart)
+
+        self.assertEqual(total, 22.5)  # 3 * 15 * 0.5 = 22.5
+
     def test_get_cart_replacement_required(self):
         self.client.login(username=self.user1.username, password="test")
 
