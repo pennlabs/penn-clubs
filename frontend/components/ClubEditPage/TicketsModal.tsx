@@ -159,54 +159,41 @@ const TicketItem: React.FC<TicketItemProps> = ({
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'end',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
+        <button
+          className="button is-info is-small"
+          onClick={() => {
+            if (ticket.buyable) {
+              resetGroupDiscount()
+              resetCodeDiscount()
+              setOpenGroupDiscount(false)
+              setOpenCodeDiscount(false)
+            }
+            setTicket({ ...ticket, buyable: !ticket.buyable })
+            onChange?.({ ...ticket, buyable: !ticket.buyable })
           }}
         >
+          {ticket.buyable ? 'Disable Buying' : 'Enable Buying'}
+        </button>
+        {ticket.buyable && (
           <button
-            className="button is-info is-small mr-2"
-            onClick={() => {
-              if (ticket.buyable) {
-                resetGroupDiscount()
-                resetCodeDiscount()
-                setOpenGroupDiscount(false)
-                setOpenCodeDiscount(false)
-              }
-              setTicket({ ...ticket, buyable: !ticket.buyable })
-              onChange?.({ ...ticket, buyable: !ticket.buyable })
-            }}
+            className="button is-info is-small"
+            onClick={resetGroupDiscount}
           >
-            {ticket.buyable ? 'Disable Buying' : 'Enable Buying'}
+            {openGroupDiscount ? 'Remove Group Discount' : 'Add Group Discount'}
           </button>
-          {ticket.buyable && (
-            <>
-              <button
-                className="button is-info is-small mr-2"
-                onClick={resetGroupDiscount}
-              >
-                {openGroupDiscount
-                  ? 'Remove Group Discount'
-                  : 'Add Group Discount'}
-              </button>
-            </>
-          )}
-          {ticket.buyable && (
-            <>
-              <button
-                className="button is-info is-small"
-                onClick={resetCodeDiscount}
-              >
-                {openCodeDiscount
-                  ? 'Remove Code Discount'
-                  : 'Add Code Discount'}
-              </button>
-            </>
-          )}
-        </div>
+        )}
+        {ticket.buyable && (
+          <button
+            className="button is-info is-small"
+            onClick={resetCodeDiscount}
+          >
+            {openCodeDiscount ? 'Remove Code Discount' : 'Add Code Discount'}
+          </button>
+        )}
       </div>
       {openGroupDiscount && (
         <div

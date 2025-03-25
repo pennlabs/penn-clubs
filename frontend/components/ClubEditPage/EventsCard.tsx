@@ -513,6 +513,7 @@ export default function EventsCard({
         onChange={(obj) => {
           setDeviceContents(obj)
         }}
+        scrollable
       />
       <Line />
       <CreateTickets event={event} club={club} ref={ticketDroptimeRef} />
