@@ -531,10 +531,8 @@ class Command(BaseCommand):
             },
         )
         if created:
-            event.code = f"{event.group.code}-{event.id}"
             contents = get_image(event_image_url)
             event.group.image.save("image.png", ContentFile(contents))
-            event.save(update_fields=["code"])
 
         # create a global event for testing
         glovbal_event_group, _ = EventGroup.objects.get_or_create(
@@ -546,7 +544,7 @@ class Command(BaseCommand):
             "does not belong to any club.",
         )
 
-        global_event, created = Event.objects.get_or_create(
+        Event.objects.get_or_create(
             group=glovbal_event_group,
             defaults={
                 "creator": ben,
@@ -556,10 +554,6 @@ class Command(BaseCommand):
                 + datetime.timedelta(hours=1),
             },
         )
-
-        if created:
-            global_event.code = f"{global_event.group.code}-{global_event.id}"
-            global_event.save(update_fields=["code"])
 
         # create a club fair one month from now
         fair, _ = ClubFair.objects.update_or_create(
@@ -755,10 +749,8 @@ class Command(BaseCommand):
                 )
 
                 if created:
-                    event.code = f"{event.group.code}-{event.id}"
                     contents = get_image(event_image_url)
                     event.group.image.save("image.png", ContentFile(contents))
-                    event.save(update_fields=["code"])
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)

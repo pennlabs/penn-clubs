@@ -537,7 +537,6 @@ class RankTestCase(TestCase):
             description="This is a test event!",
         )
         Event.objects.create(
-            code="test-event-1-1",
             start_time=now,
             end_time=now + datetime.timedelta(hours=2),
         )
