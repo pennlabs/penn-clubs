@@ -117,7 +117,7 @@ jobs:
 
   deploy:
     name: "Deploy"
-    uses: pennlabs/shared-actions/.github/workflows/deployment.yaml@v0.1.8
+    uses: pennlabs/shared-actions/.github/workflows/deployment.yaml@v0.1.9
 
     with:
       githubRef: ${{ github.ref }}
