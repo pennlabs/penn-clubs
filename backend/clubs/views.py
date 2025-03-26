@@ -2651,7 +2651,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 valid_discount_code = tickets.first().discount_code
                 if discount_code != valid_discount_code:
                     return Response(
-                        {"detail": "Invalid discount code", "success": False},
+                        {
+                            "detail": f"Invalid discount code for {type}",
+                            "success": False,
+                        },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
                 tickets.update(discount_code_applied=True)
@@ -2795,6 +2798,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: integer
                                             price:
                                                 type: number
+                                            code_discount:
+                                                type: number
+                                            group_discount:
+                                                type: number
+                                            group_size:
+                                                type: number
+                                                required: false
                                 available:
                                     type: array
                                     items:
@@ -2805,6 +2815,12 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             count:
                                                 type: integer
                                             price:
+                                                type: number
+                                            code_discount:
+                                                type: number
+                                            group_discount:
+                                                type: number
+                                            group_size:
                                                 type: number
         ---
         """

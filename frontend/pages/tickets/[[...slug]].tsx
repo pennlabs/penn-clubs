@@ -7,7 +7,7 @@ import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { doApiRequest } from 'utils'
+import { doApiRequest, isZeroish } from 'utils'
 
 import { BaseLayout } from '~/components/BaseLayout'
 import AuthPrompt from '~/components/common/AuthPrompt'
@@ -331,19 +331,20 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
                 <>
                   <Text>Price: ${ticket.price}</Text>
                   {ticket.group_size &&
-                    Math.abs(ticket.group_discount ?? 0) > 0.00001 && (
+                    ticket.group_discount &&
+                    !isZeroish(ticket.group_discount!) && (
                       <Text>
                         Group Discount: {ticket.group_discount! * 100}% for
                         groups of {ticket.group_size} and more
                       </Text>
                     )}
                   {ticket.discount_code &&
-                    Math.abs(ticket.code_discount ?? 0) > 0.00001 && (
+                    !isZeroish(ticket.code_discount!) && (
                       <Text>Discount Code: {ticket.discount_code}</Text>
                     )}
                   {ticket.code_discount &&
-                    Math.abs(ticket.code_discount ?? 0) > 0.00001 && (
-                      <Text>Code Discount: {ticket.code_discount * 100}%</Text>
+                    !isZeroish(ticket.code_discount!) && (
+                      <Text>Code Discount: {ticket.code_discount! * 100}%</Text>
                     )}
                 </>
               ) : (

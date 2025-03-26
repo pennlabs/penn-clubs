@@ -1835,6 +1835,8 @@ class TicketSerializer(serializers.ModelSerializer):
             "price",
             "buyable",
             "code_discount",
+            "group_discount",
+            "group_size",
             "discount_code",
             "discount_code_applied",
         )
