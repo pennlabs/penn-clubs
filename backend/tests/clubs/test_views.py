@@ -2176,15 +2176,35 @@ class ClubTestCase(TestCase):
             club.refresh_from_db()
             self.assertTrue(club.approved)
 
+        # ensure that explicit reapproval requests without sensitive fields are
+        # still not allowed
+        club.approved = False
+        club.save(update_fields=["approved"])
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": None},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400], resp.content)
+        club.approved = True
+        club.save(update_fields=["approved"])
+
+        # ensure that non-reapproval requests are still allowed
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"address": "1234 Walnut St."},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        # Re-open reapproval queue
+        queue_settings.reapproval_queue_open = True
+        queue_settings.save()
+
         # store result of approval history query
         resp = self.client.get(reverse("clubs-history", args=(club.code,)))
         self.assertIn(resp.status_code, [200], resp.content)
         previous_history = json.loads(resp.content.decode("utf-8"))
         self.assertTrue(previous_history[0]["approved"])
-
-        # Re-open reapproval queue
-        queue_settings.reapproval_queue_open = True
-        queue_settings.save()
 
         for field in {"name"}:
             # edit sensitive field

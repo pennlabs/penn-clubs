@@ -1545,6 +1545,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 ] == getattr(self.instance, field, None):
                     needs_reapproval = True
                     break
+        # vacuously needs re-approval if approval now set to None
+        # relevant for closing queue to re-approval requests without content
+        if (
+            "approved" in self.validated_data
+            and self.validated_data["approved"] is None
+        ):
+            needs_reapproval = True
 
         # if the editing user has approval permissions, skip the approval process
         request = self.context.get("request", None)
