@@ -37,7 +37,7 @@ jobs:
           cd frontend
           bun lint
     container:
-      image: node:22.11.0
+      image: oven/bun:1.2.6-slim
 
   build-backend:
     name: Build backend
