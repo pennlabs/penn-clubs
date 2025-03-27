@@ -20,16 +20,24 @@ jobs:
 
   frontend-check:
     name: "Frontend Check"
-    uses: pennlabs/shared-actions/.github/workflows/react.yaml@v0.1.5
-    secrets: inherit
-    with:
-      path: frontend
-      imageName: pennlabs/penn-clubs-frontend # inputs are required for build purposes but are not used for check
-      githubRef: ${{ github.ref }}
-      gitSha: ${{ github.sha }}
-      nodeVersion: 20.11.1
-      skipReactPublish: true
-      skipCodecov: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: v0-${{ hashFiles('frontend/bun.lock') }}
+      - name: Install Dependencies
+        run: |-
+          cd frontend
+          bun install --frozen-lockfile
+      - name: Lint
+        run: |-
+          cd frontend
+          bun lint
+    container:
+      image: node:22.11.0
 
   build-backend:
     name: Build backend
