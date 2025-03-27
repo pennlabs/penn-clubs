@@ -23,11 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: "**/node_modules"
-          key: v0-${{ hashFiles('frontend/bun.lock') }}
       - name: Install Dependencies
         run: |-
           cd frontend
