@@ -102,7 +102,7 @@ const ConstitutionDirectory = ({ clubs }: Props): ReactElement => {
                                   {file.name}
                                 </a>
                               ) : (
-                                file.name ?? 'Hidden'
+                                (file.name ?? 'Hidden')
                               ),
                             ),
                             ', ',
