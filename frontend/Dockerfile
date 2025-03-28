@@ -1,4 +1,4 @@
-FROM oven/bun:1.2.2-slim
+FROM oven/bun:1.2.6-slim
 
 LABEL maintainer="Penn Labs"
 
