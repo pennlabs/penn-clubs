@@ -18,26 +18,30 @@ jobs:
           key: v0-${{ hashFiles('./uv.lock') }}
       - name: Install Dependencies
         run: |-
-          cd .
+          cd backend
           uv sync --frozen
       - name: Lint
         run: |-
-          cd .
+          cd backend
           uv run ruff check .
       - name: Format
         run: |-
-          cd .
+          cd backend
           uv run ruff format .
       - name: Test (run in parallel)
         run: |-
-          cd .
+          cd backend
           uv run coverage run --concurrency=multiprocessing manage.py test --settings=pennclubs.settings.ci --parallel
           uv run coverage combine
       - name: Upload Code Coverage
-        run: |-
-          ROOT=$(pwd)
-          cd .
-          uv run codecov --root $ROOT --flags backend
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: backend
+          fail_ci_if_error: true
+          files: coverage.xml
+          name: codecov-umbrella
+          verbose: true
     container:
       image: ghcr.io/astral-sh/uv:0.6.10-python3.13-bookworm
     env:
