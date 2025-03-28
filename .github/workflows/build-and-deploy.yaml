@@ -33,6 +33,7 @@ jobs:
           cd backend
           uv run coverage run --concurrency=multiprocessing manage.py test --settings=pennclubs.settings.ci --parallel
           uv run coverage combine
+          uv run coverage xml
       - name: Upload Code Coverage
         uses: codecov/codecov-action@v4
         with:
