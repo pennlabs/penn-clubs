@@ -416,7 +416,7 @@ class Club(models.Model):
                         # save event to add to group
                         ev.save()
                         # add event to group, and ensure length limits are met
-                        # don't create with name as name similar names with different
+                        # don't create with name as similar names with different
                         # punctuations result in the same slug
                         event_group, _ = EventGroup.objects.get_or_create(
                             code=slugify(event.name)[:255],
@@ -424,7 +424,7 @@ class Club(models.Model):
                         )
                         # now add name if none
                         if event_group.name == "":
-                            event_group.name = event.name.strip()[:255]
+                            event_group.name = event.name.strip()
 
                         ev.group = event_group
 
@@ -481,13 +481,15 @@ class Club(models.Model):
                             ev.ics_uuid = event_uuid
 
                         # ensure length limits are met
+                        if event_group.name:
+                            event_group.name = event_group.name[:255]
                         if event_group.url:
                             event_group.url = event_group.url[:2048]
                         if ev.location:
                             ev.location = ev.location[:255]
 
                         event_group.save()
-                        ev.save(update_fields=["group"])
+                        ev.save()
 
                         modified_events.append(ev)
                         break
@@ -955,7 +957,6 @@ class EventGroup(models.Model):
     image_small = models.ImageField(
         upload_to=get_event_small_file_name, null=True, blank=True
     )
-    url = models.URLField(max_length=2048, null=True, blank=True)
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
