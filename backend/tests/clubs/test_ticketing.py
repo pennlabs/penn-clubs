@@ -845,33 +845,36 @@ class MockPaymentResponse:
 @contextmanager
 def mock_cybersource_apis():
     """Mock cybersource APIs and validate_transient_token"""
-    with patch(
-        ".".join(
-            [
-                "CyberSource",
-                "UnifiedCheckoutCaptureContextApi",
-                "generate_unified_checkout_capture_context_with_http_info",
-            ]
-        )
-    ) as fake_cap_context, patch(
-        ".".join(
-            [
-                "CyberSource",
-                "TransientTokenDataApi",
-                "get_transaction_for_transient_token",
-            ]
-        )
-    ) as fake_get_transaction, patch(
-        ".".join(
-            [
-                "CyberSource",
-                "PaymentsApi",
-                "create_payment",
-            ]
-        )
-    ) as fake_create_payment, patch(
-        "clubs.views.validate_transient_token"
-    ) as fake_validate_tt:
+    with (
+        patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context,
+        patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "TransientTokenDataApi",
+                    "get_transaction_for_transient_token",
+                ]
+            )
+        ) as fake_get_transaction,
+        patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "PaymentsApi",
+                    "create_payment",
+                ]
+            )
+        ) as fake_create_payment,
+        patch("clubs.views.validate_transient_token") as fake_validate_tt,
+    ):
         fake_validate_tt.return_value = (True, "")
         fake_cap_context.return_value = "abcde", 200, None
         fake_get_transaction.return_value = (
@@ -1481,7 +1484,7 @@ class TicketTestCase(TestCase):
         ) as fake_cap_context:
             fake_cap_context.return_value = "abcde", 200, None
             resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertEquals(resp.status_code, 400, resp.content)
+            self.assertEqual(resp.status_code, 400, resp.content)
 
         # Tickets are not held
         held_tickets = Ticket.objects.filter(holder=self.user1)

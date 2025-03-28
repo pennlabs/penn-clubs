@@ -7,16 +7,49 @@ on: push
 
 jobs:
   backend-check:
-    name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@v0.1.5
-    secrets: inherit
-    with:
-      projectName: pennclubs
-      path: backend
-      pythonVersion: 3.11-bookworm
-      flake: false
-      black: false
-      ruff: true
+    name: Backend Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: |-
+          cd backend
+          uv sync --frozen
+      - name: Lint
+        run: |-
+          cd backend
+          uv run ruff check .
+      - name: Format
+        run: |-
+          cd backend
+          uv run ruff format .
+      - name: Test (run in parallel)
+        run: |-
+          cd backend
+          uv run coverage run --concurrency=multiprocessing manage.py test --settings=pennclubs.settings.ci --parallel
+          uv run coverage combine
+          uv run coverage xml
+      - name: Upload Code Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: backend
+          fail_ci_if_error: true
+          files: coverage.xml
+          name: codecov-umbrella
+          verbose: true
+    container:
+      image: ghcr.io/astral-sh/uv:0.6.10-python3.13-bookworm
+    env:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: postgres
+        options: "--health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5"
 
   frontend-check:
     name: "Frontend Check"

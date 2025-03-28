@@ -2078,8 +2078,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"""clubs:{club.id}-{"authed" if self.request.user.is_authenticated
-                                            else "anon"}"""
+        key = f"""clubs:{club.id}-{
+            "authed" if self.request.user.is_authenticated else "anon"
+        }"""
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -6765,7 +6766,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         clone.application_end_time = now + datetime.timedelta(days=30)
         clone.result_release_time = now + datetime.timedelta(days=40)
         clone.external_url = (
-            f"https://pennclubs.com/club/{clone.club.code}/" f"application/{clone.pk}"
+            f"https://pennclubs.com/club/{clone.club.code}/application/{clone.pk}"
         )
         clone.save()
         return Response([])
@@ -6905,7 +6906,7 @@ class WhartonCyclesView(viewsets.ModelViewSet):
 
         # Some apps need to be created - use the default Wharton Template
         prompt_one = (
-            "Tell us about a time you took " "initiative or demonstrated leadership"
+            "Tell us about a time you took initiative or demonstrated leadership"
         )
         prompt_two = "Tell us about a time you faced a challenge and how you solved it"
         prompt_three = "Tell us about a time you collaborated well in a team"
