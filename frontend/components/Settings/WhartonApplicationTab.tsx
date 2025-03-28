@@ -65,7 +65,7 @@ const WhartonApplicationTab = ({
       const wordCount = application.questions.reduce(
         (acc, question) =>
           acc + question.question_type === ApplicationQuestionType.FreeResponse
-            ? (question.word_limit ?? 0)
+            ? question.word_limit ?? 0
             : 0,
         0,
       )
