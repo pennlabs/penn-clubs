@@ -3377,7 +3377,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if "group" not in event_data:
             event_data["group"] = self.kwargs.get("eventgroup_code")
 
-        # get eventgropup type
+        # get eventgroup type
         try:
             type = EventGroup.objects.get(code=event_data["group"]).type
         except EventGroup.DoesNotExist:
@@ -3496,49 +3496,25 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = EventGroup.objects.all()
-        user = self.request.user
-        club_code = self.kwargs.get("club_code")
+        is_club_specific = self.kwargs.get("club_code") is not None
 
-        if club_code:
-            # for club specific queries, restrict if the user is not and officer/admin
-            qs = qs.filter(club__code=club_code)
-            # Check if the user is an officer or admin
-            if not user.is_authenticated or (
-                not user.has_perm("clubs.manage_club")
-                and not Membership.objects.filter(
-                    person=user,
-                    club__code=club_code,
-                    role__lte=Membership.ROLE_OFFICER,
-                ).exists()
-            ):
-                qs = qs.filter(
-                    Q(club__approved=True)
-                    | Q(type=EventGroup.FAIR)
-                    | Q(club__ghost=True),
-                    club__archived=False,
-                )
+        if is_club_specific:
+            qs = qs.filter(club__code=self.kwargs["club_code"])
+            qs = qs.filter(
+                Q(club__approved=True) | Q(type=EventGroup.FAIR) | Q(club__ghost=True),
+                club__archived=False,
+            )
         else:
-            # for other queries, restrict if user isn't authenticated or doesn't have
-            # manage_club perms
-            if not (user.is_authenticated and user.has_perm("clubs.manage_club")):
-                officer_clubs = (
-                    Membership.objects.filter(
-                        person=user, role__lte=Membership.ROLE_OFFICER
-                    ).values_list("club", flat=True)
-                    if user.is_authenticated
-                    else []
-                )
-                qs = qs.filter(
-                    Q(club__approved=True)
-                    | Q(club__id__in=list(officer_clubs))
-                    | Q(type=EventGroup.FAIR)
-                    | Q(club__ghost=True)
-                    | Q(club__isnull=True),
-                    Q(club__isnull=True) | Q(club__archived=False),
-                )
+            qs = qs.filter(
+                Q(club__approved=True)
+                | Q(type=EventGroup.FAIR)
+                | Q(club__ghost=True)
+                | Q(club__isnull=True),
+                Q(club__isnull=True) | Q(club__archived=False),
+            )
 
         return (
-            qs.select_related("creator")
+            qs.select_related("club", "creator")
             .prefetch_related(
                 Prefetch(
                     "club__badges",
@@ -3607,8 +3583,10 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
+        Create a new event group with associated events.
+
         Has the option to create a recurring event by specifying an offset and an
-        end date. Additionaly, do not let non-superusers create event groups with the
+        end date. Additionally, do not let non-superusers create event groups with the
         `FAIR` type through the API. Furthermore, when creating an event group, at least
         one event must be provided.
         ---
@@ -3616,28 +3594,49 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
             content:
                 application/json:
                     schema:
-                        allOf:
-                            - $ref: "#/components/schemas/EventWrite"
-                            - type: object
-                              properties:
-                                is_recurring:
-                                    type: boolean
-                                    description: >
-                                        If this value is set, then make
-                                        recurring events instead of a single event.
-                                offset:
-                                    type: number
-                                    description: >
-                                        The offset between recurring events, in days.
-                                        Only specify this if the event is recurring.
-                                end_date:
-                                    type: string
-                                    format: date-time
-                                    description: >
-                                        The date when all items in the recurring event
-                                        series should end. Only specify this if the
-                                        event is recurring.
-
+                        type: object
+                        properties:
+                            name:
+                                type: string
+                                description: Name of the event group
+                            type:
+                                type: integer
+                                description: Type of event group
+                            events:
+                                type: array
+                                description: Events to add to this group
+                                items:
+                                    type: object
+                                    properties:
+                                        start_time:
+                                            type: string
+                                            format: date-time
+                                        end_time:
+                                            type: string
+                                            format: date-time
+                                        is_recurring:
+                                            type: boolean
+                                            description: >
+                                                If this value is set, then make
+                                                recurring events instead of a single
+                                                event.
+                                        offset:
+                                            type: number
+                                            description: >
+                                                The offset between recurring events, in
+                                                days.
+                                                Only specify this if the event is
+                                                recurring.
+                                        end_date:
+                                            type: string
+                                            format: date-time
+                                            description: >
+                                                The date when all items in the recurring
+                                                event series should end. Only specify
+                                                this if the event is recurring.
+                        required:
+                            - name
+                            - events
         ---
         """
         # get eventgroup type
@@ -3658,6 +3657,8 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
             )
 
         # serialize and validate event group
+        if "code" not in request.data and "name" in request.data:
+            request.data["code"] = slugify(request.data["name"])
         event_group_serializer = EventGroupWriteSerializer(
             data=request.data, context={"request": request, "view": self}
         )
@@ -3669,23 +3670,20 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
         # create event
         with transaction.atomic():
             event_group = event_group_serializer.save()
-
             for event in events_data:
-                event_data = event.copy()
                 # set group code for each event
-                event_data["group"] = event_group.code
-
-                is_recurring = event_data.pop("is_recurring", None)
+                if "group" not in event:
+                    event["group"] = event_group.code
+                is_recurring = event.pop("is_recurring", None)
 
                 # handle recurring events
                 if is_recurring is not None:
                     create_recurring_event_helper(
-                        event_data, {"request": request, "view": self}
+                        event, {"request": request, "view": self}
                     )
 
                 else:
                     # create non-recurring events
-                    event["group"] = event_group.code
                     event_serializer = EventWriteSerializer(
                         data=event, context={"request": request, "view": self}
                     )
@@ -3695,7 +3693,6 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
                         return Response(
                             event_serializer.errors, status=status.HTTP_400_BAD_REQUEST
                         )
-                    Event.objects.filter(group=event_group).update(group=event_group)
 
         return Response(
             EventGroupSerializer(
@@ -3858,7 +3855,6 @@ class EventGroupViewSet(ClubEventGroupViewSet):
                 events__end_time__gte=fair.start_time,
             )
 
-        # TODO: test if ditinct() is necessary
         events = qs.values_list(
             "events__start_time",
             "events__end_time",
@@ -3913,7 +3909,8 @@ class EventGroupViewSet(ClubEventGroupViewSet):
     @action(detail=False, methods=["get"])
     def owned(self, request, *args, **kwargs):
         """
-        Return all `EventGroup`s that the user has officer permissions over.
+        Return all `EventGroup`s that the user has officer permissions over that have at
+        least one event in the future.
         """
         if not request.user.is_authenticated:
             return Response([])
@@ -3942,7 +3939,6 @@ class EventGroupViewSet(ClubEventGroupViewSet):
             )
         )
 
-        # TODO: would BaseEventGroupSerializer be better? based on the frontend needs
         return Response(
             EventGroupSerializer(
                 event_groups, many=True, context={"future_events": True}
