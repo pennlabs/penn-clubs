@@ -12,6 +12,7 @@ class Command(BaseCommand):
         "There should be no issues with repeatedly running this script. "
     )
     web_execute = True
+    dry_run = False  # Initialize for usage as standalone utility
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -95,43 +96,61 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"Would have deleted {len(dups)} duplicate entries!")
 
-    def sync_badges(self):
+    def sync_badge(self, badge: Badge):
         """
-        Synchronizes badges based on parent child relationships.
-        Tends to favor adding objects to fix relationships instead of removing them.
+        Synchronizes a badge with its parent child relationships.
+        If a club has one of them (badge, parent), add the other.
         """
-        # add badges to parent child relationships
-        count = 0
-        for badge in Badge.objects.all():
-            if badge.org is not None:
-                self._visited = set()
-                count += self.recursively_add_badge(badge.org, badge)
-        self.stdout.write(
-            self.style.SUCCESS(f"Modified {count} club badge relationships.")
-        )
+        if badge.org is None:
+            return 0, 0
+
+        # add badge to parent child relationships
+        badge_add_count = 0
+        parent_child_add_count = 0
+        self._visited = set()
+        badge_add_count += self.recursively_add_badge(badge.org, badge)
 
         # if badge exist on child, link it to the parent directly
         # unless it is already indirectly linked
-        count = 0
-        for badge in Badge.objects.all():
-            if badge.org is not None:
-                for club in badge.club_set.all():
-                    if club.pk == badge.org.pk:
-                        continue
+        for club in badge.club_set.all():
+            if club.pk == badge.org.pk:
+                continue
 
-                    parent_club_codes = self.get_parent_club_codes(club)
-                    if badge.org.code not in parent_club_codes:
-                        if not self.dry_run:
-                            self.stdout.write(
-                                f"Adding {badge.org.name} as parent for {club.name}."
-                            )
-                            club.parent_orgs.add(badge.org)
-                        else:
-                            self.stdout.write(
-                                f"Would have added {badge.org.name} "
-                                f"as a parent for {club.name}."
-                            )
-                        count += 1
+            parent_club_codes = self.get_parent_club_codes(club)
+            if badge.org.code not in parent_club_codes:
+                if not self.dry_run:
+                    self.stdout.write(
+                        f"Adding {badge.org.name} as parent for {club.name}."
+                    )
+                    club.parent_orgs.add(badge.org)
+                else:
+                    self.stdout.write(
+                        f"Would have added {badge.org.name} "
+                        f"as a parent for {club.name}."
+                    )
+                parent_child_add_count += 1
+        return badge_add_count, parent_child_add_count
+
+    def sync_badges(self):
+        """
+        Synchronizes badges based on parent child relationships.
+        Uses parent child relationships as source of truth.
+        """
+        # remove badges with orgs from all clubs
+        for club in Club.objects.all():
+            club.badges = club.badges.filter(org__isnull=False)
+            club.save()
+
+        badge_add_count = 0
+        parent_child_add_count = 0
+        for badge in Badge.objects.all():
+            b_count, pc_count = self.sync_badge(badge)
+            badge_add_count += b_count
+            parent_child_add_count += pc_count
+
         self.stdout.write(
-            self.style.SUCCESS(f"Modified {count} parent child relationships.")
+            self.style.SUCCESS(
+                f"Modified {badge_add_count} club badge relationships."
+                f"Modified {parent_child_add_count} parent child relationships."
+            )
         )

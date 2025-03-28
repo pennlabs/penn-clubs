@@ -1489,7 +1489,11 @@ class Badge(models.Model):
 
     # The organization that this badge represents (If this is the "SAC Funded" badge,
     # then this would link to SAC)
-    org = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
+    # TODO: Editability can be loosened if correspondance betweent parent_orgs, badges
+    # of clubs with the badge is maintained when modifying this field
+    org = models.ForeignKey(
+        Club, on_delete=models.CASCADE, blank=True, null=True, editable=False
+    )
 
     # The fair that this badge is related to
     fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE, blank=True, null=True)
