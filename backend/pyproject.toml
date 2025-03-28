@@ -1,3 +1,72 @@
+[project]
+name = "pennclubs"
+version = "0.1.0"
+description = "Penn Clubs"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dj-database-url",
+    "djangorestframework",
+    "sentry-sdk",
+    "django>=5",
+    "django-labs-accounts",
+    "drf-nested-routers",
+    "bs4",
+    "bleach==4.1.0",
+    "django-cors-headers",
+    "uritemplate",
+    "pyyaml",
+    "django-storages",
+    "pillow",
+    "boto3",
+    "django-phonenumber-field",
+    "phonenumbers",
+    "qrcode",
+    "python-dateutil",
+    "psycopg2",
+    "django-simple-history",
+    "channels[daphne]",
+    "django-runtime-options",
+    "social-auth-app-django",
+    "django-redis",
+    "channels-redis",
+    "uwsgi",
+    "uvloop",
+    "uvicorn[standard]",
+    "gunicorn",
+    "httptools",
+    "ics",
+    "urlextract",
+    "jsonref",
+    "unittest-xml-reporting",
+    "tblib",
+    "pre-commit",
+    "django-clone",
+    "click==8.0.4",
+    "jinja2",
+    "pandas",
+    "drf-excel",
+    "numpy",
+    "inflection",
+    "cybersource-rest-client-python",
+    "pyjwt",
+    "freezegun",
+    "pyasyncore>=1.0.4",
+    "standard-smtpd>=3.13.0",
+    "pip>=25.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "unittest-xml-reporting>=3.0.2",
+    "django-debug-toolbar",
+    "django-extensions",
+    "ruff",
+    "coverage",
+]
+
+[tool.uv.sources]
+
 [tool.ruff]
 exclude = [".venv", "migrations"]
 line-length = 88

@@ -6,17 +6,50 @@ name: Build and Deploy Clubs
 on: push
 
 jobs:
-  backend-check:
-    name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@v0.1.5
-    secrets: inherit
-    with:
-      projectName: pennclubs
-      path: backend
-      pythonVersion: 3.11-bookworm
-      flake: false
-      black: false
-      ruff: true
+  django-check:
+    name: Django Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: v0-${{ hashFiles('./uv.lock') }}
+      - name: Install Dependencies
+        run: |-
+          cd .
+          uv sync --frozen
+      - name: Lint
+        run: |-
+          cd .
+          uv run ruff check .
+      - name: Format
+        run: |-
+          cd .
+          uv run ruff format .
+      - name: Test (run in parallel)
+        run: |-
+          cd .
+          uv run coverage run --concurrency=multiprocessing manage.py test --settings=pennclubs.settings.ci --parallel
+          uv run coverage combine
+      - name: Upload Code Coverage
+        run: |-
+          ROOT=$(pwd)
+          cd .
+          uv run codecov --root $ROOT --flags backend
+    container:
+      image: ghcr.io/astral-sh/uv:0.6.10-python3.13-bookworm
+    env:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: postgres
+        options: "--health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5"
 
   frontend-check:
     name: "Frontend Check"

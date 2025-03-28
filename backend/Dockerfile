@@ -1,21 +1,18 @@
-FROM pennlabs/django-base:b269ea1613686b1ac6370154debbb741b012de1a-3.11
+FROM ghcr.io/astral-sh/uv:0.6.10-python3.13-bookworm
 
 LABEL maintainer="Penn Labs"
 
-# Copy project dependencies
-COPY Pipfile* /app/
-
-# Install project dependencies
-RUN pipenv install --system
-
 # Copy project files
 COPY . /app/
+COPY ./scripts/asgi-run /usr/local/bin/
+
+WORKDIR /app
+RUN uv sync --frozen
 
 ENV DJANGO_SETTINGS_MODULE pennclubs.settings.production
 ENV SECRET_KEY 'temporary key just to build the docker image'
-
-# Copy custom asgi-run
-COPY ./scripts/asgi-run /usr/local/bin/
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Collect static files
-RUN python3 /app/manage.py collectstatic --noinput
+RUN uv run /app/manage.py collectstatic --noinput
+CMD ["/usr/local/bin/asgi-run"]

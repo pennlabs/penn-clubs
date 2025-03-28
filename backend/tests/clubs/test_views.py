@@ -661,7 +661,7 @@ class ClubTestCase(TestCase):
         # add 4 clubs to user 1's favorite set
         Favorite.objects.bulk_create(
             [
-                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i+1}"))
+                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i + 1}"))
                 for i in range(4)
             ]
         )
@@ -669,7 +669,9 @@ class ClubTestCase(TestCase):
         # add 2, different clubs to user 2's favorite set
         Favorite.objects.bulk_create(
             [
-                Favorite(person=self.user2, club=Club.objects.get(code=f"club-{i+4+1}"))
+                Favorite(
+                    person=self.user2, club=Club.objects.get(code=f"club-{i + 4 + 1}")
+                )
                 for i in range(2)
             ]
         )
@@ -710,7 +712,7 @@ class ClubTestCase(TestCase):
 
         cal = Calendar(resp.content.decode("utf8"))
         actual = [ev.name for ev in cal.events]
-        expected = [f"Club #{k+1} - Test Event for #{k+1}" for k in range(4)]
+        expected = [f"Club #{k + 1} - Test Event for #{k + 1}" for k in range(4)]
         self.assertEqual(actual.sort(), expected.sort())
 
     def test_retrieve_ics_url(self):
