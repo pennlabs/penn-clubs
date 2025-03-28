@@ -11,11 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: v0-${{ hashFiles('./uv.lock') }}
       - name: Install Dependencies
         run: |-
           cd backend
