@@ -595,10 +595,10 @@ class RenewalTestCase(TestCase):
                 "but did not exist!"
             )
 
-        # send out reminder emails
+        # send out only emails
         current_email_count = len(mail.outbox)
 
-        call_command("deactivate", "remind", "--force")
+        call_command("deactivate", "emails", "--force")
 
         self.assertGreater(len(mail.outbox), current_email_count)
 
