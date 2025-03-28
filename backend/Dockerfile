@@ -3,7 +3,7 @@ FROM ghcr.io/astral-sh/uv:0.6.10-python3.13-bookworm
 LABEL maintainer="Penn Labs"
 
 # Copy project files
-COPY . /app/
+ADD . /app/
 COPY ./scripts/asgi-run /usr/local/bin/
 
 WORKDIR /app
