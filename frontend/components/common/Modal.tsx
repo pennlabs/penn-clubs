@@ -34,18 +34,12 @@ const ModalCard = styled.div<{ $width?: string }>`
   overflow: auto;
   width: ${({ $width }) => $width ?? '35%'};
 
-  ${({ $width }) =>
-    !$width
-      ? `  
   ${mediaMaxWidth(MD)} {
-    width: 50%;
+    width: ${({ $width }) => ($width ? 'max(60%, ' + $width + ')' : '50%')};
   }
-
   ${mediaMaxWidth(SM)} {
-    width: 90%;
+    width: ${({ $width }) => ($width ? 'max(90%, ' + $width + ')' : '90%')};
   }
-  `
-      : ''}
 `
 
 export const ModalContentWrapper = styled.div<{ $marginBottom?: boolean }>`

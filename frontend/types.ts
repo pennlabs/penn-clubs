@@ -75,6 +75,10 @@ export interface EventTicket {
   type: ClubEventType
   owner: string
   price: string
+  group_size?: number
+  group_discount?: number
+  code_discount?: number
+  discount_code_applied?: boolean
 }
 
 export interface CountedEventTicket extends EventTicket {
@@ -423,9 +427,9 @@ export type TicketEntry = {
   price: number
 }
 
-export type TicketAvailability = {
-  totals: TicketEntry[]
-  available: TicketEntry[]
+export type Availability<T> = {
+  totals: T[]
+  available: T[]
 }
 
 export type Template = {

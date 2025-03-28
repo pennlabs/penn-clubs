@@ -31,8 +31,8 @@ import {
   PHONE,
   WHITE,
 } from '~/constants'
-import { Club, ClubEvent, TicketAvailability } from '~/types'
-import { doApiRequest, EMPTY_DESCRIPTION } from '~/utils'
+import { Availability, Club, ClubEvent } from '~/types'
+import { doApiRequest, EMPTY_DESCRIPTION, isZeroish } from '~/utils'
 import { APPROVAL_AUTHORITY } from '~/utils/branding'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
@@ -70,7 +70,7 @@ export const getServerSideProps = (async (ctx) => {
       (resp) => resp.json() as Promise<Club>,
     ),
     doApiRequest(`/clubs/${event.club}/events/${id}/tickets/`, data).then(
-      (resp) => resp.json() as Promise<TicketAvailability>,
+      (resp) => resp.json() as Promise<Availability<Ticket>>,
     ),
   ])
   return {
@@ -162,6 +162,10 @@ type Ticket = {
   max: string
   available: string
   count: number | null
+  group_discount: number | null
+  group_size: number | null
+  code_discount: number | null
+  discount_code: string | null
 }
 
 type TicketItemProps = {
@@ -170,6 +174,10 @@ type TicketItemProps = {
   price: string
   max: string
   onCountChange: (newCount: number) => void
+  onDiscountCodeChange: (code: string) => void
+  group_discount: number | null
+  group_size: number | null
+  code_discount: number | null
 }
 
 const GetTicketItem: React.FC<TicketItemProps> = ({
@@ -177,9 +185,15 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
   name,
   price,
   max,
+  group_discount,
+  group_size,
+  code_discount,
   onCountChange,
+  onDiscountCodeChange,
 }) => {
   const [count, setCount] = useState(ticket.count)
+  const [showDiscounts, setShowDiscounts] = useState(false)
+  const [discountCode, setDiscountCode] = useState('')
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Round to nearest integer and clamp to min/max
     const value = Math.max(
@@ -189,6 +203,15 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
     setCount(value)
     onCountChange(value)
   }
+
+  const handleDiscountCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    setDiscountCode(code)
+    onDiscountCodeChange(code)
+  }
+
+  const hasGroupDiscount = group_discount !== null && !isZeroish(group_discount)
+  const hasCodeDiscount = code_discount !== null && !isZeroish(code_discount)
 
   return (
     <div
@@ -208,9 +231,19 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
           padding: '0px 16px',
         }}
       >
-        <p style={{ fontSize: '18px' }}>
-          {name} - ${price}
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
+          <p style={{ fontSize: '18px' }}>
+            {name} - ${price}
+          </p>
+          {(hasGroupDiscount || hasCodeDiscount) && (
+            <button
+              className="button is-small ml-2"
+              onClick={() => setShowDiscounts(!showDiscounts)}
+            >
+              {showDiscounts ? 'Hide Discounts' : 'Show Discounts'}
+            </button>
+          )}
+        </div>
         <Input
           type="number"
           pattern="[0-9]*"
@@ -224,6 +257,32 @@ const GetTicketItem: React.FC<TicketItemProps> = ({
           style={{ flex: '0 0 auto', maxWidth: '64px' }}
         />
       </div>
+      {showDiscounts && (
+        <div style={{ padding: '0px 16px' }}>
+          {hasGroupDiscount && (
+            <div>
+              <p>
+                Group Discount: {group_discount * 100}% for groups of{' '}
+                {group_size} and more.
+              </p>
+            </div>
+          )}
+          {hasCodeDiscount && (
+            <div>
+              <p>Code Discount: {code_discount * 100}%</p>
+              <Input
+                type="text"
+                className="input"
+                placeholder="Enter discount code"
+                value={discountCode}
+                onChange={handleDiscountCodeChange}
+                style={{ marginTop: '8px', textTransform: 'uppercase' }}
+                pattern="[A-Z0-9]*"
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -247,10 +306,23 @@ const EventPage: React.FC<EventPageProps> = ({
         available:
           tickets.available.find((t) => t.type === cur.type)?.count ?? 0,
         price: cur.price,
+        group_discount: cur.group_discount,
+        code_discount: cur.code_discount,
+        group_size: cur.group_size,
       },
     }),
     {},
-  ) as Record<string, { total: number; available: number; price: number }>
+  ) as Record<
+    string,
+    {
+      total: number
+      available: number
+      price: number
+      group_discount: number | null
+      code_discount: number | null
+      group_size: number | null
+    }
+  >
 
   const [order, setOrder] = useState<Ticket[]>(
     Object.entries(ticketMap).map(([type, counts]) => ({
@@ -259,6 +331,10 @@ const EventPage: React.FC<EventPageProps> = ({
       max: counts.total.toString(),
       available: counts.available.toString(),
       count: 0,
+      group_discount: counts.group_discount,
+      code_discount: counts.code_discount,
+      group_size: counts.group_size,
+      discount_code: null,
     })),
   )
 
@@ -292,9 +368,17 @@ const EventPage: React.FC<EventPageProps> = ({
             max={ticket.available}
             name={ticket.type}
             price={ticket.price}
+            group_discount={ticket.group_discount}
+            group_size={ticket.group_size}
+            code_discount={ticket.code_discount}
             onCountChange={(count: number | null) => {
               const ticks = [...order]
               ticks[index].count = count
+              setOrder(ticks)
+            }}
+            onDiscountCodeChange={(code: string) => {
+              const ticks = [...order]
+              ticks[index].discount_code = code
               setOrder(ticks)
             }}
           />
@@ -306,7 +390,11 @@ const EventPage: React.FC<EventPageProps> = ({
             // Select type and count properties
             const orderToSend = order
               .filter((ticket) => ticket.count != null && ticket.count !== 0)
-              .map(({ type, count }) => ({ type, count }))
+              .map(({ type, count, discount_code }) => ({
+                type,
+                count,
+                discount_code,
+              }))
             doApiRequest(
               `/clubs/${event.club}/events/${event.id}/add_to_cart/`,
               {

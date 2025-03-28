@@ -41,7 +41,9 @@ const BackgroundTabs = styled.div`
 const Div = styled.div`
   padding: 1rem 0;
 `
-const Tabs = styled.div``
+const Tabs = styled.div`
+  width: 100%;
+`
 
 type Tab = {
   name: string

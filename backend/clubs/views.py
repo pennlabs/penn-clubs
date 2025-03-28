@@ -46,7 +46,6 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
-    Max,
     Prefetch,
     Q,
     TextField,
@@ -2540,6 +2539,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: string
                                         count:
                                             type: integer
+                                        discount_code:
+                                            type: string
+                                            required: false
         responses:
             "200":
                 content:
@@ -2621,6 +2623,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         for item in quantities:
             type = item["type"]
             count = item["count"]
+            discount_code = item.get("discount_code", None)
 
             # Count unowned/unheld tickets of requested type
             # We don't need a lock since we aren't changing the holder or owner
@@ -2644,6 +2647,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     },
                     status=status.HTTP_403_FORBIDDEN,
                 )
+
+            if discount_code:
+                valid_discount_code = tickets.first().discount_code
+                if discount_code != valid_discount_code:
+                    return Response(
+                        {
+                            "detail": f"Invalid discount code for {type}",
+                            "success": False,
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                tickets.update(discount_code_applied=True)
             cart.tickets.add(*tickets[:count])
 
         cart.save()
@@ -2784,6 +2799,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: integer
                                             price:
                                                 type: number
+                                            code_discount:
+                                                type: number
+                                            group_discount:
+                                                type: number
+                                            group_size:
+                                                type: number
+                                                required: false
                                 available:
                                     type: array
                                     items:
@@ -2795,26 +2817,60 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: integer
                                             price:
                                                 type: number
+                                            code_discount:
+                                                type: number
+                                            group_discount:
+                                                type: number
+                                            group_size:
+                                                type: number
         ---
         """
         event = self.get_object()
         tickets = Ticket.objects.filter(event=event)
+        # if for purchasing purposes, non-buyable tickets are unavailable
+        # otherwise, all non-owned/held tickets are available
+        for_purchasing = self.request.query_params.get("for_purchasing", "true")
 
         # Take price of first ticket of given type for now
-        totals = (
-            tickets.values("type")
-            .annotate(price=Max("price"))
-            .annotate(count=Count("type"))
-            .order_by("type")
+        total_counts = {
+            t["type"]: t["count"]
+            for t in tickets.values("type").annotate(count=Count("type"))
+        }
+
+        available_tickets = tickets.filter(
+            owner__isnull=True,
+            holder__isnull=True,
         )
-        available = (
-            tickets.filter(owner__isnull=True, holder__isnull=True, buyable=True)
-            .values("type")
-            .annotate(price=Max("price"))
-            .annotate(count=Count("type"))
-            .order_by("type")
-        )
-        return Response({"totals": list(totals), "available": list(available)})
+        if for_purchasing == "true":
+            available_tickets = available_tickets.filter(buyable=True)
+        available_counts = {
+            t["type"]: t["count"]
+            for t in available_tickets.values("type").annotate(count=Count("type"))
+        }
+
+        # Get one representative ticket for each type and serialize it
+        totals_list = []
+        available_list = []
+        for ticket_type in tickets.values_list("type", flat=True).distinct():
+            ticket = tickets.filter(type=ticket_type).first()
+            if ticket:
+                # Serialize the ticket and add counts
+                ticket_data = TicketSerializer(
+                    ticket, context={"request": request}
+                ).data
+
+                # Add to totals
+                totals_entry = ticket_data.copy()
+                totals_entry["count"] = total_counts.get(ticket_type, 0)
+                totals_list.append(totals_entry)
+
+                # Add to available if there are any available tickets
+                if ticket_type in available_counts:
+                    available_entry = ticket_data.copy()
+                    available_entry["count"] = available_counts.get(ticket_type, 0)
+                    available_list.append(available_entry)
+
+        return Response({"totals": totals_list, "available": available_list})
 
     @tickets.mapping.put
     @transaction.atomic
@@ -2843,6 +2899,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: number
                                             required: false
                                         group_discount:
+                                            type: number
+                                            format: float
+                                            required: false
+                                        code_discount:
                                             type: number
                                             format: float
                                             required: false
@@ -2930,14 +2990,25 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 )
 
             # Group discounts must be between 0 and 1
-            if item.get("group_discount", 0) < 0 or item.get("group_discount", 0) > 1:
+            if item.get("group_discount", 0) is not None and (
+                item.get("group_discount", 0) < 0 or item.get("group_discount", 0) > 1
+            ):
                 return Response(
                     {"detail": "Group discount must be between 0 and 1"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            # Code discounts must be between 0 and 1
+            if item.get("code_discount", 0) is not None and (
+                item.get("code_discount", 0) < 0 or item.get("code_discount", 0) > 1
+            ):
+                return Response(
+                    {"detail": "Code discount must be between 0 and 1"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # Min group sizes must be greater than 1
-            if item.get("group_size", 2) <= 1:
+            if item.get("group_size", 2) is not None and item.get("group_size", 2) <= 1:
                 return Response(
                     {"detail": "Min group size must be greater than 1"},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -2962,8 +3033,9 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 event=event,
                 type=item["type"],
                 price=item.get("price", 0),
-                group_discount=item.get("group_discount", 0),
+                group_discount=item.get("group_discount", 0) or 0,  # Field not nullable
                 group_size=item.get("group_size", None),
+                code_discount=item.get("code_discount", 0) or 0,
                 transferable=item.get("transferable", True),
                 buyable=item.get("buyable", True),
             )
@@ -5548,6 +5620,14 @@ class TicketViewSet(viewsets.ModelViewSet):
                 if ticket.group_size
                 and ticket_type_counts[ticket.type] >= ticket.group_size
                 else ticket.price
+            )
+            * (
+                1
+                - (
+                    ticket.code_discount
+                    if ticket.code_discount and ticket.discount_code_applied
+                    else 0
+                )
             )
             for ticket in cart.tickets.all()
         )

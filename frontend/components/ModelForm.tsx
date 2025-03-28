@@ -86,6 +86,7 @@ type ModelFormProps = {
   confirmDeletion?: boolean
   actions?: (object: ModelObject) => ReactElement<any>
   draggable?: boolean
+  scrollable?: boolean
 }
 
 /**
@@ -126,6 +127,7 @@ type ModelTableProps = {
   actions?: (object: ModelObject) => ReactElement<any>
   draggable?: boolean
   onDragEnd?: (result: any) => void | null | undefined
+  scrollable?: boolean
 }
 
 /**
@@ -146,6 +148,7 @@ export const ModelTable = ({
   actions,
   draggable = false,
   onDragEnd,
+  scrollable = false,
 }: ModelTableProps): ReactElement<any> => {
   const columns = useMemo(
     () =>
@@ -225,6 +228,7 @@ export const ModelTable = ({
         filterOptions={filterOptions || []}
         draggable={draggable}
         onDragEnd={onDragEnd}
+        scrollable={scrollable}
       />
     </>
   )
@@ -275,6 +279,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
     onChange: parentComponentChange,
     onEditPressed = () => undefined,
     draggable = false,
+    scrollable = false,
   } = props
 
   /**
@@ -483,6 +488,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
           actions={actions}
           draggable={draggable}
           onDragEnd={onDragEnd}
+          scrollable={scrollable}
         />
         {(allowCreation || currentlyEditing !== null) && (
           <>
