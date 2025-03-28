@@ -6,8 +6,8 @@ name: Build and Deploy Clubs
 on: push
 
 jobs:
-  django-check:
-    name: Django Check
+  backend-check:
+    name: Backend Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
