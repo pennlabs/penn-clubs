@@ -1,5 +1,4 @@
 import React from 'react'
-import { components } from 'react-select'
 import CreatableSelect from 'react-select/creatable'
 
 import { CLUBS_RED } from '~/constants'
@@ -52,7 +51,7 @@ const CSVTagInput: React.FC<CSVTagInputProps> = ({
       components={
         invalidTags
           ? {
-              MultiValueContainer: (props) => {
+              MultiValue: ({ children, ...props }) => {
                 const isInvalid = invalidTags.includes(props.data.value)
                 return (
                   <div
@@ -62,7 +61,7 @@ const CSVTagInput: React.FC<CSVTagInputProps> = ({
                       color: isInvalid ? CLUBS_RED : 'inherit',
                     }}
                   >
-                    <components.MultiValueContainer {...props} />
+                    {children}
                   </div>
                 )
               },

@@ -101,9 +101,9 @@ const Details = ({ club }: DetailsProps): ReactElement => {
             {applicationRequired ===
             ClubApplicationRequired.ApplicationAndInterview
               ? 'Application & Interview'
-              : (CLUB_APPLICATIONS.find(
+              : CLUB_APPLICATIONS.find(
                   ({ value }) => value === applicationRequired,
-                )?.label ?? 'Unknown')}
+                )?.label ?? 'Unknown'}
           </>
         )}
         {isClubFieldShown('accepting_members') && (
