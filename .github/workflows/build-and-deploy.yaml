@@ -8,7 +8,7 @@ on: push
 jobs:
   backend-check:
     name: "Backend Check"
-    uses: pennlabs/shared-actions/.github/workflows/django.yaml@507f4cf1cc88259fc8625fb3a35bd3f18fc91cd5
+    uses: pennlabs/shared-actions/.github/workflows/django.yaml@v0.1.5
     secrets: inherit
     with:
       projectName: pennclubs
@@ -17,6 +17,22 @@ jobs:
       flake: false
       black: false
       ruff: true
+
+  frontend-check:
+    name: "Frontend Check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: |-
+          cd frontend
+          bun install --frozen-lockfile
+      - name: Lint
+        run: |-
+          cd frontend
+          bun lint
+    container:
+      image: oven/bun:1.2.6-slim
 
   build-backend:
     name: Build backend
@@ -72,6 +88,7 @@ jobs:
         with:
           name: build-frontend
           path: /tmp/image.tar
+    needs: frontend-check
 
   publish:
     name: Publish Images
@@ -103,7 +120,7 @@ jobs:
 
   deploy:
     name: "Deploy"
-    uses: pennlabs/shared-actions/.github/workflows/deployment.yaml@v0.1
+    uses: pennlabs/shared-actions/.github/workflows/deployment.yaml@v0.1.9
 
     with:
       githubRef: ${{ github.ref }}
