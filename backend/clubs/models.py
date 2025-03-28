@@ -410,11 +410,13 @@ class Club(models.Model):
                     if ev:
                         ev.start_time = event.begin.datetime
                         ev.end_time = event.end.datetime
-                        ev.location = event.location
                         ev.is_ics_event = True
 
                         # save event to add to group
                         ev.save()
+
+                        ev.location = event.location
+
                         # add event to group, and ensure length limits are met
                         # don't create with name as similar names with different
                         # punctuations result in the same slug
