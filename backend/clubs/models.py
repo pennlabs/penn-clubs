@@ -486,6 +486,8 @@ class Club(models.Model):
                             event_group.url = event_group.url[:2048]
                         if ev.location:
                             ev.location = ev.location[:255]
+                        if event_group.name:
+                            event_group.name = event_group.name[:255]
 
                         event_group.save()
                         ev.save(update_fields=["group"])
