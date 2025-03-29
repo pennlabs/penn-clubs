@@ -691,7 +691,7 @@ class ClubTestCase(TestCase):
         # add 4 clubs to user 1's favorite set
         Favorite.objects.bulk_create(
             [
-                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i+1}"))
+                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i + 1}"))
                 for i in range(4)
             ]
         )
@@ -699,7 +699,9 @@ class ClubTestCase(TestCase):
         # add 2, different clubs to user 2's favorite set
         Favorite.objects.bulk_create(
             [
-                Favorite(person=self.user2, club=Club.objects.get(code=f"club-{i+4+1}"))
+                Favorite(
+                    person=self.user2, club=Club.objects.get(code=f"club-{i + 4 + 1}")
+                )
                 for i in range(2)
             ]
         )
@@ -752,7 +754,7 @@ class ClubTestCase(TestCase):
 
         cal = Calendar(resp.content.decode("utf8"))
         actual = [ev.name for ev in cal.events]
-        expected = [f"Club #{k+1} - Test Event for #{k+1}" for k in range(4)]
+        expected = [f"Club #{k + 1} - Test Event for #{k + 1}" for k in range(4)]
         self.assertEqual(actual.sort(), expected.sort())
 
     def test_retrieve_ics_url(self):
@@ -2297,6 +2299,30 @@ class ClubTestCase(TestCase):
             # ensure club is marked as approved (request didn't go through)
             club.refresh_from_db()
             self.assertTrue(club.approved)
+
+        # ensure that explicit reapproval requests without sensitive fields are
+        # still not allowed
+        club.approved = False
+        club.save(update_fields=["approved"])
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": None},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400], resp.content)
+        club.approved = True
+        club.save(update_fields=["approved"])
+
+        # ensure that non-reapproval requests are still allowed
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"address": "1234 Walnut St."},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        # Re-open reapproval queue
+        queue_settings.reapproval_queue_open = True
+        queue_settings.save()
 
         # store result of approval history query
         resp = self.client.get(reverse("clubs-history", args=(club.code,)))

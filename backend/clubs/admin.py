@@ -104,8 +104,7 @@ def do_merge_clubs(modeladmin, request, queryset):
     if queryset.count() > 5:
         modeladmin.message_user(
             request,
-            "You have selected more than 5 clubs, "
-            "you probably do not want to do this.",
+            "You have selected more than 5 clubs, you probably do not want to do this.",
             level=messages.ERROR,
         )
         return
