@@ -411,7 +411,7 @@ class Club(models.Model):
                     if ev:
                         ev.start_time = event.begin.datetime
                         ev.end_time = event.end.datetime
-                        ev.location = event.location[:255]
+                        ev.location = event.location[:255] if event.location else None
                         ev.is_ics_event = True
 
                         # save event to add to group
