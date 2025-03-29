@@ -411,7 +411,7 @@ class Club(models.Model):
                     if ev:
                         ev.start_time = event.begin.datetime
                         ev.end_time = event.end.datetime
-                        ev.location = event.location
+                        ev.location = event.location[:255]
                         ev.is_ics_event = True
 
                         # save event to add to group
@@ -1004,7 +1004,7 @@ class Event(models.Model):
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    location = models.CharField(max_length=510, null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
     parent_recurring_event = models.ForeignKey(
