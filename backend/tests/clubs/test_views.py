@@ -2312,7 +2312,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [400], resp.content)
         club.approved = True
         club.save(update_fields=["approved"])
-        
+
         # ensure that non-reapproval requests are still allowed
         resp = self.client.patch(
             reverse("clubs-detail", args=(club.code,)),
