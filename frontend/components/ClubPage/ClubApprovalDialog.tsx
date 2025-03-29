@@ -1,7 +1,6 @@
-import { EmotionJSX } from '@emotion/react/types/jsx-namespace'
 import moment from 'moment-timezone'
 import { useRouter } from 'next/router'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import Select from 'react-select'
 
 import { CLUB_SETTINGS_ROUTE } from '~/constants/routes'
@@ -30,7 +29,7 @@ type Props = {
 
 type ConfirmParams = {
   func: () => void
-  message: ReactElement | string
+  message: ReactElement<any> | string
 }
 
 type HistoricItem = {
@@ -44,7 +43,8 @@ type HistoricItem = {
 const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
   const [active, setActive] = useState<boolean>(false)
   const [reason, setReason] = useState<string | null>(null)
-  const getReason = (item: HistoricItem): EmotionJSX.Element | string => {
+
+  const getReason = (item: HistoricItem): ReactNode => {
     return item.approved_comment ? (
       item.approved_comment.length > 100 ? (
         <span
@@ -117,7 +117,7 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
                 </TextQuote>
               ) : (
                 <TextQuote className="py-0">
-                  <b>Submitted for re-approval</b> on{' '}
+                  <b>Submitted for approval</b> on{' '}
                   {moment(item.history_date)
                     .tz('America/New_York')
                     .format('LLL')}
@@ -131,7 +131,7 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
   )
 }
 
-const ClubApprovalDialog = ({ club }: Props): ReactElement | null => {
+const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
   const router = useRouter()
   const year = getCurrentSchoolYear()
   const [history, setHistory] = useState<HistoricItem[]>([])

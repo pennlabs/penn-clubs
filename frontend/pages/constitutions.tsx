@@ -31,7 +31,7 @@ type Props = {
   }[]
 }
 
-const ConstitutionDirectory = ({ clubs }: Props): ReactElement => {
+const ConstitutionDirectory = ({ clubs }: Props): ReactElement<any> => {
   return (
     <>
       <Container fullHeight background={SNOW}>
@@ -102,7 +102,7 @@ const ConstitutionDirectory = ({ clubs }: Props): ReactElement => {
                                   {file.name}
                                 </a>
                               ) : (
-                                file.name ?? 'Hidden'
+                                (file.name ?? 'Hidden')
                               ),
                             ),
                             ', ',

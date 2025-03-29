@@ -38,7 +38,7 @@ export default function withSentry<T>(
   return class SentryComponent extends React.Component<T> {
     render() {
       try {
-        return <WrappedComponent {...this.props} />
+        return <WrappedComponent {...(this.props as any)} />
       } catch (ex) {
         logException(ex)
       }

@@ -141,7 +141,7 @@ function withFading<T>(
   invert: boolean,
   max: number,
 ): React.ComponentType<T> {
-  return (props): ReactElement => {
+  return (props: any): ReactElement<any> => {
     const [opacity, setOpacity] = useState<number>(invert ? 1 : 0)
 
     useEffect(() => {
@@ -166,7 +166,10 @@ function withFading<T>(
 const FadingLogoBackground = withFading(LogoBackground, true, 0.6)
 const isHub = SITE_ID === 'fyh'
 
-const Header = ({ authenticated, userInfo }: HeaderProps): ReactElement => {
+const Header = ({
+  authenticated,
+  userInfo,
+}: HeaderProps): ReactElement<any> => {
   const [show, setShow] = useState(false)
   const router = useRouter()
 

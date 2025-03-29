@@ -48,7 +48,7 @@ class DocumentationTestCase(TestCase):
                 ("ClubViewSet", "directory"),
                 ("ClubViewSet", "notes_about"),
                 ("ClubViewSet", "subscription"),
-                ("EventViewSet", "owned"),
+                ("EventGroupViewSet", "owned"),
             ]
         )
 

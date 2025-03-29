@@ -28,7 +28,7 @@ type Row = {
   wordCount: number
 }
 
-const BoolIndicator = ({ value }: { value: boolean }): ReactElement => {
+const BoolIndicator = ({ value }: { value: boolean }): ReactElement<any> => {
   return (
     <span className={value ? 'has-text-success' : 'has-text-danger'}>
       <Icon name={value ? 'check' : 'x'} />
@@ -38,7 +38,7 @@ const BoolIndicator = ({ value }: { value: boolean }): ReactElement => {
 
 const WhartonApplicationTab = ({
   applications: initialApplications,
-}: Props): ReactElement => {
+}: Props): ReactElement<any> => {
   const WHARTON_APPLICATION_MAX_WORDS = 500
   const [applications, setApplications] = useState<
     Application[] | { detail: string } | null
@@ -65,7 +65,7 @@ const WhartonApplicationTab = ({
       const wordCount = application.questions.reduce(
         (acc, question) =>
           acc + question.question_type === ApplicationQuestionType.FreeResponse
-            ? question.word_limit ?? 0
+            ? (question.word_limit ?? 0)
             : 0,
         0,
       )

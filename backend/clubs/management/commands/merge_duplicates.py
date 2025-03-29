@@ -4,7 +4,7 @@ from django.db.models import Count, Q
 
 from clubs.models import (
     Club,
-    Event,
+    EventGroup,
     Favorite,
     Membership,
     MembershipInvite,
@@ -201,7 +201,7 @@ def merge_clubs(one, two):
                 fav.save()
 
     # Take all events
-    Event.objects.filter(club=secondary).update(club=primary)
+    EventGroup.objects.filter(club=secondary).update(club=primary)
 
     secondary.delete()
     primary.save()
