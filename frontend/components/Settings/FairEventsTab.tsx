@@ -45,7 +45,7 @@ const FairEventsTab = ({
   )
   const [selectedFair, setSelectedFair] = useState<number | null>(
     fairs != null && !('detail' in fairs) && fairs.length > 0
-      ? (initialSelection ?? fairs[0].id)
+      ? initialSelection ?? fairs[0].id
       : null,
   )
   const [fairEvents, setFairEvents] = useState<
