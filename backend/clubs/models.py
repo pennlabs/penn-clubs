@@ -941,8 +941,6 @@ class Event(models.Model):
     parent_recurring_event = models.ForeignKey(
         RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
     )
-    ticket_order_limit = models.IntegerField(default=10)
-    ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -969,6 +967,10 @@ class Event(models.Model):
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 400)
+
+    @property
+    def has_tickets(self):
+        return self.tickets.exists()
 
     def __str__(self):
         return self.name
@@ -1860,6 +1862,24 @@ class Cart(models.Model):
     )
     # Capture context from Cybersource should be 8297 chars
     checkout_context = models.CharField(max_length=8297, blank=True, null=True)
+
+
+class TicketSettings(models.Model):
+    """
+    Configuration settings for events that have tickets.
+    Only created when an event has associated tickets created.
+    """
+
+    event = models.OneToOneField(
+        Event, on_delete=models.CASCADE, related_name="ticket_settings"
+    )
+    order_limit = models.IntegerField(default=10, null=True, blank=True)
+    drop_time = models.DateTimeField(null=True, blank=True)
+    fee_charged_to_buyer = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Ticket settings for {self.event.name}"
 
 
 class TicketQuerySet(models.query.QuerySet):

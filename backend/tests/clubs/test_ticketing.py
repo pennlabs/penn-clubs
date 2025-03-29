@@ -20,6 +20,7 @@ from clubs.models import (
     Event,
     Membership,
     Ticket,
+    TicketSettings,
     TicketTransactionRecord,
     TicketTransferRecord,
 )
@@ -73,6 +74,9 @@ def commonSetUp(self):
         name="Unapproved Event",
         start_time=timezone.now() + timezone.timedelta(days=2),
         end_time=timezone.now() + timezone.timedelta(days=3),
+    
+      self.ticket_settings = TicketSettings.objects.create(
+        event=self.event1,
     )
 
     self.ticket_totals = [
@@ -257,14 +261,14 @@ class TicketEventTestCase(TestCase):
             format="json",
         )
 
-        self.event1.refresh_from_db()
+        self.ticket_settings.refresh_from_db()
 
         # Drop time should be set
-        self.assertIsNotNone(self.event1.ticket_drop_time)
+        self.assertIsNotNone(self.ticket_settings.drop_time)
 
         # Drop time should be 12 hours from initial ticket creation
         expected_drop_time = timezone.now() + timezone.timedelta(hours=12)
-        diff = abs(self.event1.ticket_drop_time - expected_drop_time)
+        diff = abs(self.ticket_settings.drop_time - expected_drop_time)
         self.assertTrue(diff < timezone.timedelta(minutes=5))
 
         # Move Django's internal clock 13 hours forward
@@ -333,6 +337,35 @@ class TicketEventTestCase(TestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, 400, resp.content)
+
+      def test_create_tickets_with_settings(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        drop_time = timezone.now() + timedelta(days=1)
+        args = {
+            "quantities": [
+                {"type": "_normal", "count": 5, "price": 10},
+                {"type": "_premium", "count": 3, "price": 20},
+            ],
+            "order_limit": 2,
+            "drop_time": drop_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "fee_charged_to_buyer": True,
+        }
+        resp = self.client.put(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            args,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.event1.refresh_from_db()
+        self.assertEqual(self.event1.ticket_settings.order_limit, 2)
+        self.assertAlmostEqual(
+            self.event1.ticket_settings.drop_time.timestamp(),
+            drop_time.timestamp(),
+            delta=1.0,  # allow 1 second difference to avoid flaky tests
+        )
+        self.assertTrue(self.event1.ticket_settings.fee_charged_to_buyer)
 
     def test_issue_tickets(self):
         self.client.login(username=self.user1.username, password="test")
@@ -525,6 +558,21 @@ class TicketEventTestCase(TestCase):
             data["available"],
         )
 
+    def test_get_tickets_before_drop_time(self):
+        self.ticket_settings.drop_time = timezone.now() + timedelta(days=1)
+        self.ticket_settings.save()
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = resp.json()
+
+        # Tickets shouldn't be available before the drop time
+        self.assertEqual(data["totals"], [])
+        self.assertEqual(data["available"], [])
+
     def test_get_tickets_buyers(self):
         self.client.login(username=self.user1.username, password="test")
 
@@ -623,6 +671,9 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(cart.tickets.filter(type="premium").count(), 2, cart.tickets)
 
     def test_add_to_cart_order_limit_exceeded(self):
+        self.ticket_settings.order_limit = 10
+        self.ticket_settings.save()
+
         self.client.login(username=self.user1.username, password="test")
 
         tickets_to_add = {
@@ -668,8 +719,8 @@ class TicketEventTestCase(TestCase):
         self.client.login(username=self.user1.username, password="test")
 
         # Set drop time
-        self.event1.ticket_drop_time = timezone.now() + timedelta(hours=12)
-        self.event1.save()
+        self.ticket_settings.drop_time = timezone.now() + timedelta(hours=12)
+        self.ticket_settings.save()
 
         tickets_to_add = {
             "quantities": [
@@ -834,6 +885,109 @@ class TicketEventTestCase(TestCase):
             reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
         )
         self.assertEqual(resp_bought.status_code, 400, resp_bought.content)
+
+    def test_toggle_ticket_sales(self):
+        """Test toggling ticket sales on and off"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Test activating sales
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.data["success"])
+        self.assertTrue(resp.data["active"])
+
+        # Verify ticket settings were updated
+        self.event1.refresh_from_db()
+        self.assertTrue(self.event1.ticket_settings.active)
+
+        # Test deactivating sales
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": False},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.data["success"])
+        self.assertFalse(resp.data["active"])
+
+        # Verify ticket settings were updated
+        self.event1.refresh_from_db()
+        self.assertFalse(self.event1.ticket_settings.active)
+
+    def test_toggle_ticket_sales_no_tickets(self):
+        """Test toggling ticket sales for event without tickets"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Delete all tickets
+        Ticket.objects.filter(event=self.event1).delete()
+
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.data["success"])
+        self.assertIn("does not have any tickets", resp.data["detail"])
+
+    def test_toggle_ticket_sales_before_drop(self):
+        """Test toggling ticket sales before drop time"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Set future drop time
+        self.event1.ticket_settings.drop_time = timezone.now() + timezone.timedelta(
+            days=1
+        )
+        self.event1.ticket_settings.save()
+
+        resp = self.client.post(
+            reverse("club-events-toggle-sales", args=(self.club1.code, self.event1.pk)),
+            {"active": True},
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(resp.data["success"])
+
+    def test_add_to_cart_inactive_sales(self):
+        """Test adding tickets to cart when sales are inactive"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Deactivate ticket sales
+        self.event1.ticket_settings.active = False
+        self.event1.ticket_settings.save()
+
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 1},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertFalse(resp.data["success"])
+        self.assertIn("Ticket sales are not active", resp.data["detail"])
+
+    def test_get_tickets_inactive_sales(self):
+        """Test getting tickets when sales are inactive"""
+        self.client.login(username=self.user1.username, password="test")
+
+        # Deactivate ticket sales
+        self.event1.ticket_settings.active = False
+        self.event1.ticket_settings.save()
+
+        resp = self.client.get(
+            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk))
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["totals"], [])
+        self.assertEqual(resp.data["available"], [])
 
 
 @dataclass
