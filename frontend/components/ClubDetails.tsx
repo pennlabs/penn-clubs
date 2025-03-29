@@ -33,7 +33,7 @@ type DetailsProps = {
   club: Club
 }
 
-const DetailBoolIcon = ({ value, alt }): ReactElement => {
+const DetailBoolIcon = ({ value, alt }): ReactElement<any> => {
   return (
     <Icon
       name={value ? 'check-circle' : 'x-circle'}
@@ -44,7 +44,7 @@ const DetailBoolIcon = ({ value, alt }): ReactElement => {
   )
 }
 
-const Details = ({ club }: DetailsProps): ReactElement => {
+const Details = ({ club }: DetailsProps): ReactElement<any> => {
   const {
     size,
     application_required: applicationRequired,
@@ -101,9 +101,9 @@ const Details = ({ club }: DetailsProps): ReactElement => {
             {applicationRequired ===
             ClubApplicationRequired.ApplicationAndInterview
               ? 'Application & Interview'
-              : CLUB_APPLICATIONS.find(
+              : (CLUB_APPLICATIONS.find(
                   ({ value }) => value === applicationRequired,
-                )?.label ?? 'Unknown'}
+                )?.label ?? 'Unknown')}
           </>
         )}
         {isClubFieldShown('accepting_members') && (
