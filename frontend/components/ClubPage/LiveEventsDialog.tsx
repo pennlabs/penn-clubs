@@ -16,7 +16,8 @@ import { FAIR_NAME, MEMBERSHIP_ROLE_NAMES } from '../../utils/branding'
 export const LiveBanner = styled.div`
   padding: 20px;
   border-radius: 5px;
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       circle at 15% 0,
       rgba(216, 127, 200, 0.5),
       rgba(73, 84, 244, 0.4) 36%
