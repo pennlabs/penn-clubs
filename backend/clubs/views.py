@@ -38,7 +38,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import validate_email
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import (
     Case,
     CharField,
@@ -3503,14 +3503,16 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
         return EventGroupSerializer
 
     def get_queryset(self):
+        """
+        Prefetch related objects and filter based on permissions and query parameters.
+        Includes filtering based on nested event times if query parameters are provided.
+        """
         qs = EventGroup.objects.all()
         user = self.request.user
         club_code = self.kwargs.get("club_code")
 
         if club_code:
-            # for club specific queries, restrict if the user is not and officer/admin
             qs = qs.filter(club__code=club_code)
-            # Check if the user is an officer or admin
             if not user.is_authenticated or (
                 not user.has_perm("clubs.manage_club")
                 and not Membership.objects.filter(
@@ -3526,8 +3528,6 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
                     club__archived=False,
                 )
         else:
-            # for other queries, restrict if user isn't authenticated or doesn't have
-            # manage_club perms
             if not (user.is_authenticated and user.has_perm("clubs.manage_club")):
                 officer_clubs = (
                     Membership.objects.filter(
@@ -3545,19 +3545,46 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
                     Q(club__isnull=True) | Q(club__archived=False),
                 )
 
+        # Filter by nested event times if parameters are present
+        event_start_time_lte = self.request.query_params.get(
+            "event_start_time__lte", None
+        )
+        event_end_time_gte = self.request.query_params.get("event_end_time__gte", None)
+
+        event_time_filter = models.Q()
+        if event_start_time_lte:
+            try:
+                start_time_dt = timezone.datetime.fromisoformat(
+                    event_start_time_lte.replace("Z", "+00:00")
+                )
+                event_time_filter &= models.Q(events__start_time__lte=start_time_dt)
+            except ValueError:
+                pass  # Ignore invalid date format
+        if event_end_time_gte:
+            try:
+                end_time_dt = timezone.datetime.fromisoformat(
+                    event_end_time_gte.replace("Z", "+00:00")
+                )
+                event_time_filter &= models.Q(events__end_time__gte=end_time_dt)
+            except ValueError:
+                pass  # Ignore invalid date format
+
+        if event_time_filter:
+            qs = qs.filter(event_time_filter).distinct()
+
+        # Apply select_related, prefetch_related, annotate, and order_by
+        # Ensure "events" is always prefetched alongside others
+        badge_queryset = (
+            Badge.objects.filter(fair__id=self.request.query_params.get("fair"))
+            if "fair" in self.request.query_params
+            else Badge.objects.filter(visible=True)
+        )
+
         return (
-            qs.select_related("creator")
+            qs.select_related("creator", "club")
             .prefetch_related(
-                Prefetch(
-                    "club__badges",
-                    queryset=(
-                        Badge.objects.filter(
-                            fair__id=self.request.query_params.get("fair")
-                        )
-                        if "fair" in self.request.query_params
-                        else Badge.objects.filter(visible=True)
-                    ),
-                ),
+                Prefetch("club__badges", queryset=badge_queryset),
+                "events",
                 "events__tickets",
             )
             .annotate(earliest_start_time=Min("events__start_time"))
