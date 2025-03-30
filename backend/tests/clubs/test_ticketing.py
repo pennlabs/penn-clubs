@@ -785,7 +785,7 @@ class TicketEventTestCase(TestCase):
             tickets_to_add,
             format="json",
         )
-        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(resp.status_code, 404, resp.content)
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.post(
             reverse(

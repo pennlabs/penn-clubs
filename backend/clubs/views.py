@@ -3365,7 +3365,7 @@ class EventViewSet(viewsets.ModelViewSet):
         if "group" not in event_data:
             event_data["group"] = self.kwargs.get("eventgroup_code")
 
-        # get eventgropup type
+        # get eventgroup type
         try:
             type = EventGroup.objects.get(code=event_data["group"]).type
         except EventGroup.DoesNotExist:
@@ -3432,29 +3432,29 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        club_code = self.kwargs.get("club_code")
         eventgroup_code = self.kwargs.get("eventgroup_code", None)
+        qs = Event.objects
 
-        if eventgroup_code is None:
-            raise DRFValidationError(detail="Event group code must be specified")
+        if eventgroup_code is not None:
+            qs = qs.filter(group__code=eventgroup_code)
 
-        qs = Event.objects.filter(group__code=eventgroup_code)
-        # for club specific queries, restrict if the user is not and officer/admin
-        # Check if the user is an officer or admin
-        if not user.is_authenticated or (
-            not user.has_perm("clubs.manage_club")
-            and not Membership.objects.filter(
+        # Restrict to approved clubs if user is not officer/admin
+        # for specific club
+        officer_memberships = (
+            Membership.objects.filter(
                 person=user,
-                club__code=club_code,
                 role__lte=Membership.ROLE_OFFICER,
-            ).exists()
-        ):
-            qs = qs.filter(
-                Q(group__club__approved=True)
-                | Q(group__type=EventGroup.FAIR)
-                | Q(group__club__ghost=True),
-                group__club__archived=False,
             )
+            if user.is_authenticated
+            else Membership.objects.none()
+        )
+        qs = qs.filter(
+            Q(group__club__approved=True)
+            | Q(group__type=EventGroup.FAIR)
+            | Q(group__club__ghost=True)
+            | Q(group__club__id__in=officer_memberships.values_list("club", flat=True)),
+            group__club__archived=False,
+        )
 
         return (
             qs.select_related("creator", "group", "group__club")
