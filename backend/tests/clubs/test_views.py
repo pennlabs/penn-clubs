@@ -367,25 +367,6 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("clubs-notes-about", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-    def test_event_group_upload(self):
-        """
-        Test uploading an event group image.
-        """
-        self.client.login(username=self.user5.username, password="test")
-
-        # successful image upload
-        resp = self.client.post(
-            reverse(
-                "club-eventgroups-upload",
-                args=(self.club1.code, self.event_group1.code),
-            ),
-            {"image": io.BytesIO(b"")},
-        )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
-
-        # ensure cleanup doesn't throw error
-        self.event1.delete()
-
     def test_user_views(self):
         """
         Test retrieving and updating user settings.
@@ -532,7 +513,6 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse("favorites-detail", args=(self.club1.code,)))
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
-    # TODO: write test eventgroup-list tests
     def test_event_list(self):
         """
         Test listing club events.
@@ -612,7 +592,7 @@ class ClubTestCase(TestCase):
         )
         self.assertFalse(200 <= resp.status_code < 300, resp.data)
 
-        eg2 = EventGroup.objects.create(
+        event_group = EventGroup.objects.create(
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
@@ -621,7 +601,9 @@ class ClubTestCase(TestCase):
 
         # cannot change fair event to non-fair event
         resp = self.client.patch(
-            reverse("club-eventgroups-detail", args=(self.club1.code, eg2.code)),
+            reverse(
+                "club-eventgroups-detail", args=(self.club1.code, event_group.code)
+            ),
             {"type": EventGroup.RECRUITMENT},
             content_type="application/json",
         )
@@ -633,7 +615,7 @@ class ClubTestCase(TestCase):
                 "club-eventgroups-detail",
                 args=(
                     self.club1.code,
-                    eg2.code,
+                    event_group.code,
                 ),
             ),
             {"name": "New name for event"},
@@ -642,8 +624,8 @@ class ClubTestCase(TestCase):
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
 
         # can only change link for non activities fair
-        eg2.type = EventGroup.OTHER
-        eg2.save()
+        event_group.type = EventGroup.OTHER
+        event_group.save()
 
         # test google zoom link parsing
         resp = self.client.patch(
@@ -651,19 +633,19 @@ class ClubTestCase(TestCase):
                 "club-eventgroups-detail",
                 args=(
                     self.club1.code,
-                    eg2.code,
+                    event_group.code,
                 ),
             ),
             {"url": "https://www.google.com/url?q=https://upenn.zoom.us/j/123456789"},
             content_type="application/json",
         )
         self.assertTrue(200 <= resp.status_code < 300, resp.data)
-        eg2.refresh_from_db()
-        self.assertEqual(eg2.url, "https://upenn.zoom.us/j/123456789")
+        event_group.refresh_from_db()
+        self.assertEqual(event_group.url, "https://upenn.zoom.us/j/123456789")
 
         # revert that
-        eg2.type = EventGroup.FAIR
-        eg2.save()
+        event_group.type = EventGroup.FAIR
+        event_group.save()
 
         # ensure we can't delete the event as a normal user
         resp = self.client.delete(
@@ -671,12 +653,34 @@ class ClubTestCase(TestCase):
                 "club-eventgroups-detail",
                 args=(
                     self.club1.code,
-                    eg2.code,
+                    event_group.code,
                 ),
             )
         )
-        self.assertIn(resp.status_code, [400, 401, 403], resp.data)
-        self.assertTrue(EventGroup.objects.filter(pk=eg2.pk).exists())
+        self.assertIn(resp.status_code, [400], resp.data)
+        self.assertTrue(EventGroup.objects.filter(pk=event_group.pk).exists())
+
+        # test cannot update start or end time for fair event
+
+        # create event
+        event = Event.objects.create(
+            group=event_group,
+            start_time=timezone.now(),
+            end_time=timezone.now() + timezone.timedelta(days=1),
+        )
+        resp = self.client.patch(
+            reverse(
+                "club-eventgroup-events-detail",
+                args=(self.club1.code, event_group.code, event.pk),
+            ),
+            {
+                "start_time": timezone.now() + timezone.timedelta(days=1),
+                "end_time": timezone.now() + timezone.timedelta(days=2),
+            },
+            content_type="application/json",
+        )
+        # should fail
+        self.assertIn(resp.status_code, [400], resp.data)
 
     def test_event_favorited_users(self):
         """
@@ -835,7 +839,6 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         event_id = json.loads(resp.content)["id"]
-
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure new event added
@@ -948,6 +951,519 @@ class ClubTestCase(TestCase):
         for event in events:
             self.assertEqual(event.creator, self.user4)
             self.assertEqual(event.parent_recurring_event, recurring)
+
+    def test_event_add_meeting(self):
+        """
+        Test manually adding a meeting link without the Zoom page, but having their
+        account linked. This should go through.
+        """
+        self.event_group1.type = EventGroup.FAIR
+        self.event_group1.url = None
+        self.event_group1.save()
+
+        Membership.objects.create(
+            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user4.username, password="test")
+        self.assertFalse(self.user4.is_superuser)
+
+        resp = self.client.patch(
+            reverse(
+                "club-eventgroups-detail",
+                args=(self.club1.code, self.event_group1.code),
+            ),
+            {"url": "https://upenn.zoom.us/j/123456789"},
+            content_type="application/json",
+        )
+        self.event_group1.refresh_from_db()
+        self.assertIn("url", resp.data, resp.content)
+        self.assertTrue(self.event_group1.url, resp.content)
+
+    def test_event_group_upload(self):
+        """
+        Test uploading an event group image.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # successful image upload
+        resp = self.client.post(
+            reverse(
+                "club-eventgroups-upload",
+                args=(self.club1.code, self.event_group1.code),
+            ),
+            {"image": io.BytesIO(b"")},
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # ensure cleanup doesn't throw error
+        self.event1.delete()
+
+    def test_list_club_event_groups(self):
+        """
+        Test listing event groups for a specific club.
+        """
+        # create a club
+        club = Club.objects.create(
+            code="test-club-2",
+            name="Test Club 2",
+            approved=True,
+        )
+
+        types = [EventGroup.RECRUITMENT, EventGroup.RECRUITMENT, EventGroup.OTHER]
+        # bulk create event groups for the club
+        EventGroup.objects.bulk_create(
+            [
+                EventGroup(
+                    name=f"Event Group {i}",
+                    code=f"event-group-{i}",
+                    club=club,
+                    type=types[i],
+                )
+                for i in range(len(types))
+            ]
+        )
+
+        # add an event to each even groups
+        Event.objects.bulk_create(
+            [
+                Event(
+                    group=event_group,
+                    start_time=timezone.now(),
+                    end_time=timezone.now() + timezone.timedelta(hours=3),
+                )
+                for event_group in EventGroup.objects.filter(club=club)
+            ]
+        )
+
+        resp = self.client.get(reverse("club-eventgroups-list", args=(club.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 3)
+        self.assertEqual(len(resp.data[0]["events"]), 1)  # each has 1 event
+
+    def test_list_global_event_groups(self):
+        """
+        Test listing all event groups.
+        """
+        # create a club
+        club = Club.objects.create(
+            code="test-club-2",
+            name="Test Club 2",
+            approved=True,
+        )
+
+        # create 4 event groups
+        types = [EventGroup.RECRUITMENT, EventGroup.OTHER, EventGroup.OTHER]
+        # bulk create global event groups
+        EventGroup.objects.bulk_create(
+            [
+                EventGroup(
+                    name=f"Event Group {i}",
+                    code=f"event-group-{i}",
+                    type=types[i],
+                )
+                for i in range(2)
+            ]
+        )
+
+        # add club specific eventgroup
+        EventGroup.objects.create(
+            name="Event Group 3",
+            club=club,
+        )
+
+        # list all event groups
+        resp = self.client.get(reverse("eventgroups-list"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 4)  # 3 created + (self.event_group1)
+
+        # list with filter by club
+        resp = self.client.get(
+            reverse("eventgroups-list"),
+            {
+                "club__code": club.code,
+            },
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 1)
+
+    def test_create_and_retrieve_event_group(self):
+        self.client.login(username=self.user5.username, password="test")  # superuser
+        # create eventgroup with two events
+        data = {
+            "name": "New Event Group",
+            "events": [
+                {
+                    "start_time": (
+                        timezone.now() + timezone.timedelta(days=1)
+                    ).isoformat(),
+                    "end_time": (
+                        timezone.now() + timezone.timedelta(days=2)
+                    ).isoformat(),
+                },
+                {
+                    "start_time": (
+                        timezone.now() + timezone.timedelta(days=3)
+                    ).isoformat(),
+                    "end_time": (
+                        timezone.now() + timezone.timedelta(days=4)
+                    ).isoformat(),
+                    "location": "Location",
+                },
+            ],
+        }
+
+        resp = self.client.post(
+            reverse(
+                "eventgroups-list",
+            ),
+            data,
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(EventGroup.objects.filter(name="New Event Group").count(), 1)
+        event_group_code = resp.data["code"]
+
+        # retrieve the event group
+        resp = self.client.get(reverse("eventgroups-detail", args=(event_group_code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(resp.data["name"], "New Event Group")
+        self.assertEqual(len(resp.data["events"]), 2)
+
+        # attempt to create an event group with a non-existent club
+        data = {
+            "name": "Event Group FAIL",
+            "club": "non-existent-club",
+            "events": [
+                {
+                    "start_time": (
+                        timezone.now() + timezone.timedelta(days=1)
+                    ).isoformat(),
+                    "end_time": (
+                        timezone.now() + timezone.timedelta(days=2)
+                    ).isoformat(),
+                },
+            ],
+        }
+        resp = self.client.post(
+            reverse(
+                "eventgroups-list",
+            ),
+            data,
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_create_event_group_without_events(self):
+        self.client.login(username=self.user5.username, password="test")  # superuser
+
+        # create without providing at least one event
+        resp = self.client.post(
+            reverse(
+                "eventgroups-list",
+            ),
+            {"name": "Invalid Event Group", "type": EventGroup.RECRUITMENT},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn("At least one event must be provided", str(resp.content))
+
+    def test_create_fair_event_group_as_superuser(self):
+        self.client.login(username=self.user5.username, password="test")  # superuser
+
+        data = {
+            "name": "Fair Event Group",
+            "type": EventGroup.FAIR,
+            "events": [
+                {
+                    "start_time": (
+                        timezone.now() + timezone.timedelta(days=1)
+                    ).isoformat(),
+                    "end_time": (
+                        timezone.now() + timezone.timedelta(days=2)
+                    ).isoformat(),
+                }
+            ],
+        }
+        resp = self.client.post(
+            reverse(
+                "eventgroups-list",
+            ),
+            data,
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(EventGroup.objects.filter(name="Fair Event Group").count(), 1)
+
+    def test_create_fair_event_group_as_non_superuser(self):
+        self.client.login(
+            username=self.user4.username, password="test"
+        )  # non-superuser
+
+        data = {
+            "name": "Fair Event Group",
+            "type": EventGroup.FAIR,
+            "events": [
+                {
+                    "start_time": (
+                        timezone.now() + timezone.timedelta(days=1)
+                    ).isoformat(),
+                    "end_time": (
+                        timezone.now() + timezone.timedelta(days=2)
+                    ).isoformat(),
+                }
+            ],
+        }
+        resp = self.client.post(
+            reverse(
+                "eventgroups-list",
+            ),
+            data,
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_event_groups_with_duplicate_names(self):
+        """
+        Eventgroups with duplicate names will have same code unless exlicitly provided.
+        Duplicate codes are not allowed.
+        """
+        self.client.login(username=self.user5.username, password="test")  # superuser
+
+        EventGroup.objects.create(
+            name="Duplicate Name",
+            code="duplicate-name",
+            club=self.club1,
+            type=EventGroup.RECRUITMENT,
+        )
+        data = {
+            "name": "Duplicate NAme",
+            "events": [
+                {
+                    "start_time": (
+                        timezone.now() + timezone.timedelta(days=1)
+                    ).isoformat(),
+                    "end_time": (
+                        timezone.now() + timezone.timedelta(days=2)
+                    ).isoformat(),
+                }
+            ],
+        }
+
+        resp = self.client.post(
+            reverse("club-eventgroups-list", args=(self.club1.code,)),
+            data,
+            content_type="application/json",
+        )
+
+        # should fail
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # same name but code differnce from slugified name
+        data = {
+            "name": "Duplicate Name",
+            "code": "not-duplicate-event-group",
+            "events": [
+                {
+                    "start_time": (
+                        timezone.now() + timezone.timedelta(days=1)
+                    ).isoformat(),
+                    "end_time": (
+                        timezone.now() + timezone.timedelta(days=2)
+                    ).isoformat(),
+                }
+            ],
+        }
+
+        resp = self.client.post(
+            reverse("club-eventgroups-list", args=(self.club1.code,)),
+            data,
+            content_type="application/json",
+        )
+        # should succeed
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+    def test_destroy_event_group(self):
+        self.client.login(username=self.user5.username, password="test")  # superuser
+
+        # create event group to be deleted
+        event_group = EventGroup.objects.create(
+            name="Event Group",
+            code="event-group-code",
+            club=self.club1,
+        )
+
+        resp = self.client.delete(
+            reverse("club-eventgroups-detail", args=(self.club1.code, event_group.code))
+        )
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+        self.assertFalse(EventGroup.objects.filter(code=event_group.code).exists())
+
+    def test_destroy_fair_event_group_as_superuser(self):
+        """
+        Test that a superuser can delete a fair event group.
+        """
+        self.client.login(username=self.user5, password="test")  # superuser
+
+        # create fair event group
+        event_group = EventGroup.objects.create(
+            name="Fair Event Group",
+            code="fair-event-group",
+            type=EventGroup.FAIR,
+            club=self.club1,
+        )
+
+        # add events to event group
+        Event.objects.bulk_create(
+            [
+                Event(
+                    group=event_group,
+                    start_time=timezone.now(),
+                    end_time=timezone.now() + timezone.timedelta(hours=3),
+                )
+                for _ in range(3)
+            ]
+        )
+
+        resp = self.client.delete(
+            reverse("club-eventgroups-detail", args=(self.club1.code, event_group.code))
+        )
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+        self.assertFalse(EventGroup.objects.filter(code=event_group.code).exists())
+        self.assertEqual(Event.objects.filter(group=event_group).count(), 0)
+
+    def test_destroy_fair_event_group_as_non_superuser(self):
+        """
+        Test that a non-superuser cannot delete a fair event group.
+        """
+        self.client.login(username=self.user4, password="test")  # non-superuser
+        self.assertFalse(self.user4.is_superuser)
+
+        event_group = EventGroup.objects.create(
+            name="Fair Event Group", code="fair-event-group", type=EventGroup.FAIR
+        )
+
+        resp = self.client.delete(
+            reverse("eventgroups-detail", args=(event_group.code,))
+        )
+        self.assertIn(resp.status_code, [403], resp.content)
+
+    def test_owned_event_groups(self):
+        """
+        Test that we correctly list event groups owned by the user.
+        """
+        self.client.login(username=self.user4.username, password="test")
+
+        club = Club.objects.create(
+            code="test-club-2",
+            name="Test Club 2",
+            approved=True,
+        )
+
+        # make user an officer of the club
+        Membership.objects.create(
+            person=self.user4, club=club, role=Membership.ROLE_OFFICER
+        )
+
+        EventGroup.objects.bulk_create(
+            [
+                EventGroup(
+                    name=f"Event Group {i}",
+                    code=f"event-group-{i}",
+                    club=club,
+                    type=EventGroup.RECRUITMENT,
+                )
+                for i in range(3)
+            ]
+        )
+
+        # add future events to the event groups, except for the last one
+        Event.objects.bulk_create(
+            [
+                Event(
+                    group=EventGroup.objects.get(name=f"Event Group {i}"),
+                    start_time=timezone.now() + timezone.timedelta(days=1),
+                    end_time=timezone.now() + timezone.timedelta(days=3),
+                )
+                for i in range(2)
+            ]
+        )
+
+        event_group2 = EventGroup.objects.get(name="Event Group 2")
+
+        # add event that has already ended
+        Event.objects.create(
+            group=event_group2,
+            start_time=timezone.now() - timezone.timedelta(days=2),
+            end_time=timezone.now() - timezone.timedelta(days=1),
+        )
+
+        resp = self.client.get(
+            reverse("eventgroups-owned"),
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        # event group 2 should not be included, since no future events
+        self.assertEqual(len(resp.data), 2)
+
+        # add future event to event group 2
+        Event.objects.create(
+            group=event_group2,
+            start_time=timezone.now() + timezone.timedelta(days=1),
+            end_time=timezone.now() + timezone.timedelta(days=3),
+        )
+
+        resp = self.client.get(
+            reverse("eventgroups-owned"),
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 3)
+
+        # only future events expected
+        resp = self.client.get(
+            reverse("eventgroups-owned"),
+            args=(self.club1.code,),
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        # last event (event_group2) has 1 future event
+        self.assertEqual(len(resp.data[-1]["events"]), 1)
+
+        # user is now no longer a club officer
+        Membership.objects.filter(person=self.user4).delete()
+        resp = self.client.get(reverse("eventgroups-owned"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(len(resp.data), 0)
+
+    def test_update_event_group(self):
+        """
+        Tests updating basic fields of an event group
+        """
+        self.client.login(username=self.user5.username, password="test")  # superuser
+
+        event_group = EventGroup.objects.create(
+            name="OG Name",
+            club=self.club1,
+            description="OG description",
+            type=EventGroup.OTHER,
+            code="og-name",
+        )
+
+        data = {
+            "name": "Updated Name",
+            "description": "Updated description",
+            "type": EventGroup.SOCIAL,
+        }
+
+        resp = self.client.patch(
+            reverse(
+                "club-eventgroups-detail", args=(self.club1.code, event_group.code)
+            ),
+            data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        # verify update
+        event_group.refresh_from_db()
+        self.assertEqual(event_group.type, EventGroup.SOCIAL)
 
     def test_testimonials(self):
         """
@@ -2993,33 +3509,6 @@ class ClubTestCase(TestCase):
             datetime.timedelta(minutes=2).total_seconds(),
             resp.content,
         )
-
-    def test_event_add_meeting(self):
-        """
-        Test manually adding a meeting link without the Zoom page, but having their
-        account linked. This should go through.
-        """
-        self.event_group1.type = EventGroup.FAIR
-        self.event_group1.url = None
-        self.event_group1.save()
-
-        Membership.objects.create(
-            person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
-        )
-        self.client.login(username=self.user4.username, password="test")
-        self.assertFalse(self.user4.is_superuser)
-
-        resp = self.client.patch(
-            reverse(
-                "club-eventgroups-detail",
-                args=(self.club1.code, self.event_group1.code),
-            ),
-            {"url": "https://upenn.zoom.us/j/123456789"},
-            content_type="application/json",
-        )
-        self.event_group1.refresh_from_db()
-        self.assertIn("url", resp.data, resp.content)
-        self.assertTrue(self.event_group1.url, resp.content)
 
     def test_club_approval_response_templates(self):
         """
