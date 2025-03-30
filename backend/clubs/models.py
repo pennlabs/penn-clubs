@@ -942,8 +942,7 @@ class RecurringEvent(models.Model):
 
 class EventGroup(models.Model):
     """
-    Group events such that events in same mainly differ start/end time.
-    This is to allow for the same event to be displayed for different times and
+    Allow for the same event to be displayed for different times and
     potentially different locations.
     """
 

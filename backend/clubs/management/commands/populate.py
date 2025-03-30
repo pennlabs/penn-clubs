@@ -135,8 +135,8 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</i>""",
     {
         "code": "harvard-rejects",
         "name": "Harvard Rejects Club",
-        "description": """We’re Penn’s largest club with over 20,000 active members!
-We’re always looking for enthusiastic students to join our organization,
+        "description": """We're Penn's largest club with over 20,000 active members!
+We're always looking for enthusiastic students to join our organization,
 so please feel free to reach out to us at upenn.edu/harvard to join!""",
         "image": "https://i.imgur.com/IxgjBmA.png",
         "active": True,
@@ -535,7 +535,7 @@ class Command(BaseCommand):
             event.group.image.save("image.png", ContentFile(contents))
 
         # create a global event for testing
-        glovbal_event_group, _ = EventGroup.objects.get_or_create(
+        global_event_group, _ = EventGroup.objects.get_or_create(
             name="Test Global Event Group",
             code="test-global-event-group",
             club=None,
@@ -545,7 +545,7 @@ class Command(BaseCommand):
         )
 
         Event.objects.get_or_create(
-            group=glovbal_event_group,
+            group=global_event_group,
             defaults={
                 "creator": ben,
                 "start_time": now + datetime.timedelta(days=1),
@@ -775,6 +775,55 @@ class Command(BaseCommand):
                 first_mship.role = Membership.ROLE_OWNER
                 first_mship.save()
             count += 1
+
+        # Create a special multi-instance event group
+        multi_event_club = Club.objects.get(code="pppjo")
+        multi_event_group, _ = EventGroup.objects.get_or_create(
+            name="Multi-Instance Test Event Group",
+            code="multi-instance-test-event-group",
+            club=multi_event_club,
+            creator=ben,
+            description="This group contains multiple event instances for testing.",
+        )
+
+        # Add multiple events to this group
+        multi_event_base = now + datetime.timedelta(days=5)
+        Event.objects.get_or_create(
+            group=multi_event_group,
+            creator=ben,
+            start_time=multi_event_base.replace(hour=10),
+            end_time=multi_event_base.replace(hour=11),
+            location="Virtual Meeting Room A",
+        )
+        Event.objects.get_or_create(
+            group=multi_event_group,
+            creator=ben,
+            start_time=multi_event_base.replace(hour=14),
+            end_time=multi_event_base.replace(hour=15, minute=30),
+            location="Physical Location B",
+        )
+        # Create a ticketed event within the multi-event group
+        ticketed_event_multi, _ = Event.objects.get_or_create(
+            group=multi_event_group,
+            creator=ben,
+            start_time=multi_event_base.replace(hour=19),
+            end_time=multi_event_base.replace(hour=21),
+            location="Ticketed Venue C",
+        )
+
+        # Add tickets to one of the multi-group events
+        Ticket.objects.bulk_create(
+            [
+                Ticket(event=ticketed_event_multi, type="Standard", price=5.00)
+                for _ in range(20)
+            ]
+        )
+        Ticket.objects.bulk_create(
+            [
+                Ticket(event=ticketed_event_multi, type="VIP", price=15.00)
+                for _ in range(10)
+            ]
+        )
 
         # Add tickets
 

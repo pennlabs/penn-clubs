@@ -356,10 +356,11 @@ const CreateContainer = styled.div`
 interface CreateTicketsProps {
   event: ClubEvent
   club: Club
+  groupName?: string
 }
 
 const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
-  ({ event, club }, ticketDroptimeRef) => {
+  ({ event, club, groupName }, ticketDroptimeRef) => {
     const [show, setShow] = useState(false)
 
     const showModal = () => setShow(true)
@@ -375,7 +376,7 @@ const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
         <div className="is-pulled-right">
           <button
             onClick={showModal}
-            disabled={!event.name}
+            disabled={!groupName}
             className="button is-primary"
           >
             Create
@@ -515,7 +516,12 @@ export default function EventsCard({
         }}
       />
       <Line />
-      <CreateTickets event={event} club={club} ref={ticketDroptimeRef} />
+      <CreateTickets
+        event={event}
+        club={club}
+        groupName={deviceContents.name}
+        ref={ticketDroptimeRef}
+      />
       <Line />
       <div ref={eventDetailsRef}>
         <EventPreview event={event} />

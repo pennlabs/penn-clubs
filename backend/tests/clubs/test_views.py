@@ -39,6 +39,7 @@ from clubs.models import (
     School,
     Tag,
     Testimonial,
+    Ticket,
     ZoomMeetingVisit,
 )
 
@@ -3700,6 +3701,91 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
         self.assertEqual(len(mail.outbox), 3)
+
+    def test_event_group_retrieve_multiple_events(self):
+        """
+        Test retrieving an EventGroup includes all associated events in the response.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # Create a new EventGroup
+        group = EventGroup.objects.create(
+            club=self.club1,
+            name="Multi Event Test Group",
+            code="multi-event-test",
+            creator=self.user5,
+        )
+
+        # Create multiple events for this group
+        now = timezone.now()
+        Event.objects.create(
+            group=group,
+            creator=self.user5,
+            start_time=now + datetime.timedelta(hours=1),
+            end_time=now + datetime.timedelta(hours=2),
+            location="Location 1",
+        )
+        Event.objects.create(
+            group=group,
+            creator=self.user5,
+            start_time=now + datetime.timedelta(days=1, hours=1),
+            end_time=now + datetime.timedelta(days=1, hours=2),
+            location="Location 2",
+        )
+        event3 = Event.objects.create(
+            group=group,
+            creator=self.user5,
+            start_time=now + datetime.timedelta(days=2, hours=1),
+            end_time=now + datetime.timedelta(days=2, hours=2),
+            location="Location 3 Ticketed",
+        )
+        # Make the last one ticketed for good measure
+        # (Doesn't affect the retrieval count, but good for realism)
+        Ticket.objects.create(event=event3, type="General", price=5.00)
+
+        # Retrieve the EventGroup details via API
+        # Using the club-specific route first
+        resp_club_route = self.client.get(
+            reverse("club-eventgroups-detail", args=(self.club1.code, group.code))
+        )
+        self.assertEqual(resp_club_route.status_code, 200, resp_club_route.content)
+        data_club_route = resp_club_route.json()
+
+        # Also test the global route
+        resp_global_route = self.client.get(
+            reverse("eventgroups-detail", args=(group.code,))
+        )
+        self.assertEqual(resp_global_route.status_code, 200, resp_global_route.content)
+        data_global_route = resp_global_route.json()
+
+        # Assertions for club-specific route
+        self.assertIn("events", data_club_route)
+        self.assertIsInstance(data_club_route["events"], list)
+        self.assertEqual(
+            len(data_club_route["events"]), 3, "Club route did not return 3 events"
+        )
+        event_ids_club = {ev["id"] for ev in data_club_route["events"]}
+        self.assertEqual(
+            len(event_ids_club), 3, "Club route returned duplicate event IDs"
+        )
+
+        # Assertions for global route
+        self.assertIn("events", data_global_route)
+        self.assertIsInstance(data_global_route["events"], list)
+        self.assertEqual(
+            len(data_global_route["events"]), 3, "Global route did not return 3 events"
+        )
+        event_ids_global = {ev["id"] for ev in data_global_route["events"]}
+        self.assertEqual(
+            len(event_ids_global), 3, "Global route returned duplicate event IDs"
+        )
+
+        # Ensure both routes return the same set of events (optional, but good check)
+        self.assertEqual(
+            event_ids_club,
+            event_ids_global,
+            "Event IDs from club and global routes do not match",
+        )
 
 
 class HealthTestCase(TestCase):

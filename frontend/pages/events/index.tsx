@@ -7,7 +7,7 @@ import styled from 'styled-components'
 import { BaseLayout } from '~/components/BaseLayout'
 import { Metadata, Title } from '~/components/common'
 import EventCard from '~/components/EventPage/EventCard'
-import { Club, ClubEvent } from '~/types'
+import { EventGroup, EventInstanceWithGroup } from '~/types'
 import { doApiRequest } from '~/utils'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
@@ -28,39 +28,59 @@ export const getServerSideProps = (async (ctx) => {
   }
   const dateRange = getDefaultDateRange()
   const params = new URLSearchParams({
+    // Use the event time filters supported by the backend EventGroupViewSet
     // eslint-disable-next-line camelcase
-    start_time__gte: dateRange.start.toISO(),
+    event_start_time__gte: dateRange.start.toISO()!,
     // eslint-disable-next-line camelcase
-    end_time__lte: dateRange.end.toISO(),
+    event_end_time__lte: dateRange.end.toISO()!,
     format: 'json',
   })
-  // TODO: Add caching
-  const [baseProps, clubs, events] = await Promise.all([
+
+  // Fetch EventGroups instead of individual events
+  const [baseProps, eventGroups] = await Promise.all([
     getBaseProps(ctx),
-    doApiRequest('/clubs/directory/?format=json', data).then(
-      (resp) => resp.json() as Promise<Club[]>,
-    ),
-    doApiRequest(`/events/?${params.toString()}`, data).then(
-      (resp) => resp.json() as Promise<ClubEvent[]>,
+    doApiRequest(`/eventgroups/?${params.toString()}`, data).then(
+      (resp) => resp.json() as Promise<EventGroup[]>, // Expecting an array of EventGroup
     ),
   ])
-  const clubMap = new Map(clubs.map((club) => [club.code, club]))
-  const eventsWithClubs = events.map((event) => ({
-    ...event,
-    club: event.club ? (clubMap.get(event.club) ?? null) : null,
-    clubPublic: event.club == null || clubMap.get(event.club) !== undefined,
-  }))
+
+  // Flatten events into EventInstanceWithGroup structure
+  const eventInstances: EventInstanceWithGroup[] = []
+  eventGroups.forEach((group) => {
+    group.events.forEach((event) => {
+      eventInstances.push({
+        event: { ...event, group: group.code }, // Add group code to event object
+        group,
+      })
+    })
+  })
+
+  // Sort events by start time after flattening
+  eventInstances.sort(
+    (a, b) =>
+      DateTime.fromISO(a.event.start_time).toMillis() -
+      DateTime.fromISO(b.event.start_time).toMillis(),
+  )
+
   return {
     props: {
       baseProps,
-      events: eventsWithClubs,
+      // Pass the flattened list of event instances with their groups
+      events: eventInstances,
     },
   }
-}) satisfies GetServerSideProps
+}) satisfies GetServerSideProps<{
+  baseProps: any
+  events: EventInstanceWithGroup[]
+}> // Update prop type
 
+// Ensure the component receives the correct props type
 type EventsPageProps = InferGetServerSidePropsType<typeof getServerSideProps>
 
-const classify = <T, K>(arr: T[], predicate: (item: T) => K): Map<K, T[]> => {
+const classify = <T extends EventInstanceWithGroup, K>(
+  arr: T[],
+  predicate: (item: T) => K,
+): Map<K, T[]> => {
   const map = new Map<K, T[]>()
   for (const item of arr) {
     const key = predicate(item)
@@ -89,11 +109,12 @@ const ListSeparator = styled.hr`
 `
 
 const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
+  // The classification logic needs to access event times via item.event
   const { pastEvents, liveEvents, upcomingEvents } = useMemo(() => {
-    const map = classify(events, (event) => {
+    const map = classify(events, (item) => {
       const now = DateTime.local()
-      const startDate = DateTime.fromISO(event.start_time)
-      const endDate = DateTime.fromISO(event.end_time)
+      const startDate = DateTime.fromISO(item.event.start_time)
+      const endDate = DateTime.fromISO(item.event.end_time)
       if (endDate < now) return 'past'
       if (startDate <= now && now <= endDate) return 'live'
       return 'upcoming'
@@ -105,6 +126,32 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
     }
   }, [events])
 
+  // Helper function to prepare props for EventCard from EventInstanceWithGroup
+  const prepareEventCardProps = (item: EventInstanceWithGroup) => {
+    const { event, group } = item
+    return {
+      // Fields expected by EventCard, mapped from event and group
+      id: event.id,
+      name: group.name, // Use group name
+      description: group.description ?? '', // Use group description
+      start_time: event.start_time,
+      end_time: event.end_time,
+      location: event.location,
+      image_url: group.image_url, // Use group image
+      large_image_url: group.large_image_url,
+      url: group.url, // Use group URL
+      club: group.club, // Club code from group
+      club_name: group.club_name, // Club name from group
+      type: group.type, // Event type from group
+      badges: group.badges ?? [], // Badges from group
+      pinned: group.pinned, // Pinned from group
+      ticketed: event.ticketed,
+      ticket_drop_time: event.ticket_drop_time,
+      is_ics_event: event.is_ics_event,
+      group: event.group, // Pass the group code from the event
+    }
+  }
+
   return (
     <BaseLayout {...baseProps} authRequired>
       <MainWrapper>
@@ -112,15 +159,11 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
         <Title>Live Events</Title>
         <EventsListWrapper>
           {liveEvents.length === 0 && <p>No live events right now.</p>}
-          {liveEvents.map((event) => (
-            <div key={event.id}>
-              <Link href={`/events/${event.id}`}>
-                <EventCard
-                  event={{
-                    ...event,
-                    club: event.club?.code ?? null,
-                  }}
-                />
+          {liveEvents.map((item) => (
+            <div key={item.event.id}>
+              {/* Link now points to the event group code */}
+              <Link href={`/events/${item.group.code}`}>
+                <EventCard event={prepareEventCardProps(item)} />
               </Link>
             </div>
           ))}
@@ -128,15 +171,13 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
         <ListSeparator />
         <Title>Upcoming Events</Title>
         <EventsListWrapper>
-          {upcomingEvents.map((event) => (
-            <div key={event.id}>
-              <Link href={`/events/${event.id}`}>
+          {upcomingEvents.map((item) => (
+            <div key={item.event.id}>
+              {/* Link now points to the event group code */}
+              <Link href={`/events/${item.group.code}`}>
                 <EventCard
-                  event={{
-                    ...event,
-                    club: event.club?.code ?? null,
-                  }}
-                  key={event.id}
+                  event={prepareEventCardProps(item)}
+                  key={item.event.id}
                 />
               </Link>
             </div>

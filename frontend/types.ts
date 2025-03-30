@@ -50,23 +50,31 @@ export enum ClubEventType {
 }
 
 export interface ClubEvent {
-  badges: Badge[]
+  id: number
+  group: string
+  start_time: string
+  end_time: string
+  ticket_drop_time: string | null
+  location: string | null
+  ticketed: boolean
+  is_ics_event: boolean
+}
+
+export interface EventGroup {
+  id: number
+  code: string
+  name: string
+  description: string | null
+  type: ClubEventType
   club: string | null
   club_name: string | null
-  description: string
-  end_time: string
-  id: number
-  image_url: string | null
-  is_ics_event: boolean
-  large_image_url: string | null
-  location: string | null
-  name: string
-  ticketed: boolean
-  ticket_drop_time: string | null
-  pinned: boolean
-  start_time: string
-  type: ClubEventType
   url: string | null
+  image_url: string | null
+  large_image_url: string | null
+  creator: number | null
+  events: ClubEvent[]
+  badges?: Badge[]
+  pinned?: boolean
 }
 
 export interface EventTicket {
@@ -75,6 +83,15 @@ export interface EventTicket {
   type: ClubEventType
   owner: string
   price: string
+  badges: Badge[]
+  beta: boolean
+  code: string
+  description: string
+  email: string
+  enables_subscription: boolean
+  facebook: string
+  fairs: number[]
+  favorite_count: number
 }
 
 export interface CountedEventTicket extends EventTicket {
@@ -173,7 +190,6 @@ export interface Club {
   description: string
   email: string
   enables_subscription: boolean
-  events: ClubEvent[]
   facebook: string
   fairs: number[]
   favorite_count: number
@@ -440,4 +456,9 @@ export type RegistrationQueueSettings = {
   new_approval_queue_open: boolean
   updated_at: string
   updated_by: string
+}
+
+export interface EventInstanceWithGroup {
+  event: ClubEvent
+  group: EventGroup
 }

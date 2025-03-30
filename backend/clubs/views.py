@@ -2576,7 +2576,6 @@ class EventViewSet(viewsets.ModelViewSet):
 
     add_to_cart:
     Add a ticket for this event to cart
-
     """
 
     permission_classes = [EventPermission | IsSuperuser]

@@ -238,7 +238,7 @@ class EventInline(TabularInline):
 
 class EventAdmin(admin.ModelAdmin):
     list_display = ("get_name", "get_club", "get_event_type", "start_time", "end_time")
-    search_fields = ("name", "group__club__name")
+    search_fields = ("group__name", "group__club__name")
     list_filter = ("start_time", "end_time")
 
     @admin.display(description="Club")
