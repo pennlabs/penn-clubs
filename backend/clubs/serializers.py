@@ -392,7 +392,8 @@ class EventWriteSerializer(serializers.ModelSerializer):
     """
 
     group = serializers.SlugRelatedField(
-        queryset=EventGroup.objects.all(), slug_field="code", required=False
+        queryset=EventGroup.objects.all(),
+        slug_field="code",
     )
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
@@ -479,42 +480,6 @@ class BaseEventGroupSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(
         queryset=Club.objects.all(), required=False, slug_field="code"
     )
-
-    def validate_url(self, value):
-        """
-        Ensure that the URL is valid.
-        """
-        # convert none to blank
-        if value is None:
-            value = ""
-
-        # remove surrounding whitespace
-        value = value.strip()
-
-        # throw an error if the url is not valid
-        if value:
-            validate = URLValidator()
-            try:
-                validate(value)
-            except DjangoValidationError:
-                raise serializers.ValidationError(
-                    "The URL you entered does not appear to be valid. "
-                    "Please check your URL and try again."
-                )
-
-        # expand links copied from google calendar
-        if value:
-            parsed = urlparse(value)
-            if parsed.netloc.endswith(".google.com") and parsed.path == "/url":
-                return parse_qs(parsed.query)["q"][0]
-
-        return value
-
-    def validate_description(self, value):
-        """
-        Allow the description to have HTML tags that come from a allowlist.
-        """
-        return clean(bleach.linkify(value))
 
     def get_events(self, obj):
         """
@@ -646,27 +611,58 @@ class EventGroupWriteSerializer(EventGroupSerializer):
         max_length=2048, required=False, allow_blank=True, allow_null=True
     )
 
-    def validate(self, data):
-        # TODO: find out which types don't require a club
-        if "club" not in data and (
-            "type" not in data or "type" in data and data["type"] != EventGroup.FAIR
-        ):
-            club_code = self.context["view"].kwargs["club_code"]
+    def validate_code(self, value):
+        """
+        Ensure that the code is unique and if code not provided, generate one
+        using name.
+        """
+
+        if value in [None, ""]:
+            value = slugify(self.context["view"].kwargs["name"])
+
+        if EventGroup.objects.filter(code=value).exists():
+            raise serializers.ValidationError(
+                f"An event group with this code='{value}' already exists. "
+                "If none was provided, then it was generate using the provided event "
+                "name. Please provide a different code."
+            )
+        return value
+
+    def validate_url(self, value):
+        """
+        Ensure that the URL is valid.
+        """
+        # convert none to blank
+        if value is None:
+            value = ""
+
+        # remove surrounding whitespace
+        value = value.strip()
+
+        # throw an error if the url is not valid
+        if value:
+            validate = URLValidator()
             try:
-                data["club"] = Club.objects.get(code=club_code)
-            except Club.DoesNotExist:
-                raise serializers.ValidationError({"club": "Club not found."})
-        return data
+                validate(value)
+            except DjangoValidationError:
+                raise serializers.ValidationError(
+                    "The URL you entered does not appear to be valid. "
+                    "Please check your URL and try again."
+                )
 
-    def save(self):
-        # if no code given, generate one from the name
-        if (
-            self.validated_data.get("code") is None
-            and self.validated_data.get("name") is not None
-        ):
-            self.validated_data["code"] = slugify(self.validated_data["name"])
+        # expand links copied from google calendar
+        if value:
+            parsed = urlparse(value)
+            if parsed.netloc.endswith(".google.com") and parsed.path == "/url":
+                return parse_qs(parsed.query)["q"][0]
 
-        return super().save()
+        return value
+
+    def validate_description(self, value):
+        """
+        Allow the description to have HTML tags that come from a allowlist.
+        """
+        return clean(bleach.linkify(value))
 
     def update(self, instance, validated_data):
         """
