@@ -504,8 +504,8 @@ const ZoomPage = ({
         <div className="mb-3">
           {events.map((event) => {
             let zoomId: number | null = null
-            if (event.url != null) {
-              const match = event.url.match(/\/\w\/(\w+)\??/)
+            if (event.group.url != null) {
+              const match = event.group.url.match(/\/\w\/(\w+)\??/)
               if (match != null) {
                 zoomId = parseInt(match[1])
               }
@@ -525,14 +525,14 @@ const ZoomPage = ({
 
             return (
               <SmallEvent key={event.id}>
-                <b>{event.name}</b>
+                <b>{event.group.name}</b>
                 <div>
                   <Link
                     legacyBehavior
                     href={CLUB_ROUTE()}
-                    as={CLUB_ROUTE(event.club as string)}
+                    as={CLUB_ROUTE(event.group.club as string)}
                   >
-                    <a>{event.club_name}</a>
+                    <a>{event.group.club_name}</a>
                   </Link>
                   <div>
                     {startTime.format('LLL')} - {endTime.format('LT z')}
@@ -543,9 +543,9 @@ const ZoomPage = ({
                   </div>
                   <div className="mt-3">
                     <b>Current Meeting Link:</b>{' '}
-                    {event.url ? (
-                      <a href={event.url} target="_blank">
-                        {event.url}
+                    {event.group.url ? (
+                      <a href={event.group.url} target="_blank">
+                        {event.group.url}
                       </a>
                     ) : (
                       'None'
@@ -554,11 +554,13 @@ const ZoomPage = ({
                   <CheckList
                     items={[
                       {
-                        value: !!event.url,
+                        value: !!event.group.url,
                         label: 'Has link to a meeting',
                       },
                       {
-                        value: !!(event.url && event.url.includes('zoom.us')),
+                        value: !!(
+                          event.group.url && event.group.url.includes('zoom.us')
+                        ),
                         label: 'Is a Zoom link',
                         details: (
                           <>
@@ -577,15 +579,17 @@ const ZoomPage = ({
                       },
                       {
                         value: !!(
-                          event.url &&
-                          event.url.startsWith('https://upenn.zoom.us/')
+                          event.group.url &&
+                          event.group.url.startsWith('https://upenn.zoom.us/')
                         ),
                         label: 'Is Penn Zoom link',
                         details:
                           'Penn Zoom links remove the 40 minute meeting restriction and allows you to have up to 300 particpants. We strongly recommend that you use the school provided Zoom account for your booth.',
                       },
                       {
-                        value: !!(event.url && event.url.includes('?pwd=')),
+                        value: !!(
+                          event.group.url && event.group.url.includes('?pwd=')
+                        ),
                         label: 'Includes password in zoom link',
                         details:
                           'Including your meeting password in the Zoom link will save students from having to enter it when they connect.',
@@ -657,13 +661,15 @@ const ZoomPage = ({
                       },
                       {
                         value:
-                          event.description.length > 3 &&
-                          event.description !== 'Replace this description!',
+                          event.group.description != null &&
+                          event.group.description.length > 3 &&
+                          event.group.description !==
+                            'Replace this description!',
                         label: 'Has meaningful description',
                         details: `Add some details about your ${OBJECT_NAME_SINGULAR} and information session to the event description. Booths with descriptions will appear above booths without descriptions.`,
                       },
                       {
-                        value: !!event.image_url,
+                        value: !!event.group.image_url,
                         label: 'Has cover photo',
                         details:
                           'Add an eye-catching cover photo to encourage students to visit your booth! Booths with cover photos will appear above booths without cover photos.',
@@ -765,7 +771,7 @@ const ZoomPage = ({
                   <Link
                     legacyBehavior
                     href={CLUB_EDIT_ROUTE() + '#events'}
-                    as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
+                    as={CLUB_EDIT_ROUTE(event.group.club as string) + '#events'}
                   >
                     <a className="button is-small is-secondary" target="_blank">
                       <Icon name="edit" /> Edit Event
@@ -779,20 +785,20 @@ const ZoomPage = ({
                 </p>
                 <Formik
                   initialValues={{
-                    description: event.description,
-                    image: event.image_url,
+                    description: event.group.description,
+                    image: event.group.image_url,
                   }}
                   onSubmit={async (data) => {
                     setLoading(true)
                     const body: { description: string; image?: null } = {
-                      description: data.description,
+                      description: data.description ?? '',
                     }
                     if (typeof data.image !== 'string') {
                       if (data.image != null) {
                         const formData = new FormData()
                         formData.append('file', data.image)
                         await doApiRequest(
-                          `/clubs/${event.club}/events/${event.id}/upload/?format=json`,
+                          `/clubs/${event.group.club}/events/${event.id}/upload/?format=json`,
                           { method: 'POST', body: formData },
                         )
                       } else {
@@ -800,7 +806,7 @@ const ZoomPage = ({
                       }
                     }
                     await doApiRequest(
-                      `/clubs/${event.club}/events/${event.id}/?format=json`,
+                      `/clubs/${event.group.club}/events/${event.id}/?format=json`,
                       {
                         method: 'PATCH',
                         body,
