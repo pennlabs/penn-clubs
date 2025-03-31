@@ -2729,7 +2729,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         cart.save()
         return Response(
-            {"detail": f"Successfully added {count} to cart", "success": True}
+            {"detail": f"Successfully added {count} tickets to cart", "success": True}
         )
 
     @action(detail=True, methods=["post"])
@@ -2798,7 +2798,10 @@ class EventViewSet(viewsets.ModelViewSet):
 
         cart.save()
         return Response(
-            {"detail": f"Successfully removed {count} from cart", "success": True}
+            {
+                "detail": f"Successfully removed {count} tickets from cart",
+                "success": True,
+            }
         )
 
     @action(detail=True, methods=["get"])
@@ -4007,6 +4010,9 @@ class EventGroupViewSet(ClubEventGroupViewSet):
                 event_groups, many=True, context={"future_events": True}
             ).data
         )
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("events")
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
@@ -5972,9 +5978,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         ---
         """
 
-        cart, _ = Cart.objects.prefetch_related("tickets").get_or_create(
-            owner=self.request.user
-        )
+        cart, _ = Cart.objects.prefetch_related(
+            "tickets", "tickets__event", "tickets__event__group"
+        ).get_or_create(owner=self.request.user)
 
         now = timezone.now()
 

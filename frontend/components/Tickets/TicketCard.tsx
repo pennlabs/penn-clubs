@@ -296,9 +296,9 @@ export const TicketCard = ({
             fontWeight: 600,
           }}
         >
-          {ticket.event.name}
+          {ticket.event.group.name}
         </Description>
-        <Description>{ticket.event.club_name}</Description>
+        <Description>{ticket.event.group.club_name}</Description>
         <Description>
           {ticket.type} | {datetimeData.timeRange}
         </Description>

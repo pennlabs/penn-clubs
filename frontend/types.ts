@@ -51,7 +51,7 @@ export enum ClubEventType {
 
 export interface ClubEvent {
   id: number
-  group: string
+  group: EventGroup
   start_time: string
   end_time: string
   ticket_drop_time: string | null
@@ -80,22 +80,15 @@ export interface EventGroup {
 export interface EventTicket {
   id: string
   event: ClubEvent
-  type: ClubEventType
-  owner: string
+  type: string
+  owner: string | null
   price: string
-  badges: Badge[]
-  beta: boolean
-  code: string
-  description: string
-  email: string
-  enables_subscription: boolean
-  facebook: string
-  fairs: number[]
-  favorite_count: number
+  buyable?: boolean
+  count?: number
 }
 
 export interface CountedEventTicket extends EventTicket {
-  count?: number
+  count: number
 }
 
 export enum AdvisorVisibilityType {
@@ -226,6 +219,7 @@ export interface Club {
   testimonials: Testimonial[]
   twitter: string
   website: string
+  event_groups?: EventGroup[]
 }
 
 export interface ClubFair {
@@ -433,13 +427,13 @@ export type ApplicationResponse = {
   question: ApplicationQuestion
 }
 
-export type TicketEntry = {
+export interface TicketEntry {
   type: string
   count: number
   price: number
 }
 
-export type TicketAvailability = {
+export interface TicketAvailability {
   totals: TicketEntry[]
   available: TicketEntry[]
 }

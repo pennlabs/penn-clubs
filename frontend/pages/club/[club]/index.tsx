@@ -174,10 +174,19 @@ const ClubPage = ({
     active: isActive,
     image_url: image,
     how_to_get_involved: involvement,
-    events,
+    event_groups: eventGroups,
     testimonials,
     signature_events: signatureEvents,
   } = club
+  // explode event_groups into EventInstanceWithGroup[]
+  const clubEvents = eventGroups
+    ? eventGroups.flatMap((eventGroup) => {
+        return eventGroup.events.map((event) => ({
+          event,
+          group: eventGroup,
+        }))
+      })
+    : []
   return (
     <WideContainer background={SNOW} fullHeight>
       <ClubMetadata club={club} />
@@ -273,7 +282,7 @@ const ClubPage = ({
               <MemberList club={club} />
             </>
           )}
-          {events.length > 0 && <EventCarousel data={events} />}
+          {clubEvents.length > 0 && <EventCarousel data={clubEvents} />}
         </div>
         <div className="column is-one-third">
           <DesktopActions

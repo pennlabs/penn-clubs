@@ -47,12 +47,14 @@ export const getServerSideProps = (async (ctx) => {
   // Flatten events into EventInstanceWithGroup structure
   const eventInstances: EventInstanceWithGroup[] = []
   eventGroups.forEach((group) => {
-    group.events.forEach((event) => {
-      eventInstances.push({
-        event: { ...event, group: group.code }, // Add group code to event object
-        group,
+    if (group.events.length > 0) {
+      group.events.forEach((event) => {
+        eventInstances.push({
+          event: { ...event },
+          group,
+        })
       })
-    })
+    }
   })
 
   // Sort events by start time after flattening
@@ -109,7 +111,6 @@ const ListSeparator = styled.hr`
 `
 
 const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
-  // The classification logic needs to access event times via item.event
   const { pastEvents, liveEvents, upcomingEvents } = useMemo(() => {
     const map = classify(events, (item) => {
       const now = DateTime.local()
@@ -126,32 +127,6 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
     }
   }, [events])
 
-  // Helper function to prepare props for EventCard from EventInstanceWithGroup
-  const prepareEventCardProps = (item: EventInstanceWithGroup) => {
-    const { event, group } = item
-    return {
-      // Fields expected by EventCard, mapped from event and group
-      id: event.id,
-      name: group.name, // Use group name
-      description: group.description ?? '', // Use group description
-      start_time: event.start_time,
-      end_time: event.end_time,
-      location: event.location,
-      image_url: group.image_url, // Use group image
-      large_image_url: group.large_image_url,
-      url: group.url, // Use group URL
-      club: group.club, // Club code from group
-      club_name: group.club_name, // Club name from group
-      type: group.type, // Event type from group
-      badges: group.badges ?? [], // Badges from group
-      pinned: group.pinned, // Pinned from group
-      ticketed: event.ticketed,
-      ticket_drop_time: event.ticket_drop_time,
-      is_ics_event: event.is_ics_event,
-      group: event.group, // Pass the group code from the event
-    }
-  }
-
   return (
     <BaseLayout {...baseProps} authRequired>
       <MainWrapper>
@@ -161,9 +136,8 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
           {liveEvents.length === 0 && <p>No live events right now.</p>}
           {liveEvents.map((item) => (
             <div key={item.event.id}>
-              {/* Link now points to the event group code */}
               <Link href={`/events/${item.group.code}`}>
-                <EventCard event={prepareEventCardProps(item)} />
+                <EventCard event={item} />
               </Link>
             </div>
           ))}
@@ -173,12 +147,8 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
         <EventsListWrapper>
           {upcomingEvents.map((item) => (
             <div key={item.event.id}>
-              {/* Link now points to the event group code */}
               <Link href={`/events/${item.group.code}`}>
-                <EventCard
-                  event={prepareEventCardProps(item)}
-                  key={item.event.id}
-                />
+                <EventCard event={item} key={item.event.id} />
               </Link>
             </div>
           ))}

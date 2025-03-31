@@ -77,7 +77,7 @@ ALL_TAGS_SELECTED_ERROR_MESSAGE = (
         "question asking if your resource applies to "
         "all undergraduate, graduate, and professional Penn students. "
         "Thanks for doing your part to ensure that Hub@Penn "
-        "quickly and efficiently gets resources to our Penn community. "
+        "quickly and efficiently gets resources to our Penn community. "
     )
     if settings.BRANDING == "fyh"
     else (
@@ -358,17 +358,13 @@ class AdvisorSerializer(
         fields = ("id", "name", "title", "department", "email", "phone", "visibility")
 
 
-class EventSerializer(serializers.ModelSerializer):
+class BaseEventSerializer(serializers.ModelSerializer):
     """
     Within the context of an existing club, return events that are a part of this club.
     """
 
-    ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     pinned = serializers.BooleanField(read_only=True)
-
-    def get_ticketed(self, obj) -> bool:
-        return obj.tickets.count() > 0
 
     class Meta:
         model = Event
@@ -379,10 +375,30 @@ class EventSerializer(serializers.ModelSerializer):
             "ticket_drop_time",
             "location",
             "creator",
-            "ticketed",
             "pinned",
             "is_ics_event",
         ]
+
+
+class EventSerializer(BaseEventSerializer):
+    """
+    Within the context of an existing club, return events that are a part of this club.
+    """
+
+    ticketed = serializers.SerializerMethodField("get_ticketed")
+    group = serializers.SerializerMethodField()
+
+    def get_ticketed(self, obj) -> bool:
+        return obj.tickets.count() > 0
+
+    def get_group(self, obj):
+        if obj.group is None:
+            return None
+        return BaseEventGroupSerializer(obj.group, context=self.context).data
+
+    class Meta:
+        model = Event
+        fields = BaseEventSerializer.Meta.fields + ["ticketed", "group"]
 
 
 class EventWriteSerializer(serializers.ModelSerializer):
@@ -464,83 +480,12 @@ class EventWriteSerializer(serializers.ModelSerializer):
 
 class BaseEventGroupSerializer(serializers.ModelSerializer):
     """
-    base read serializer for event groups.
-    returns minimal information about the event group.
-    """
-
-    events = serializers.SerializerMethodField()
-    creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    url = serializers.CharField(
-        source="get_event_group_url",
-        max_length=2048,
-        required=False,
-        allow_blank=True,
-        allow_null=True,
-    )
-    club = serializers.SlugRelatedField(
-        queryset=Club.objects.all(), required=False, slug_field="code"
-    )
-
-    def get_events(self, obj):
-        """
-        return all events in group or only future events if based on context
-        """
-        # check if future_events have been prefetched
-        if hasattr(obj, "future_events"):
-            events = obj.future_events
-        else:
-            # check if we need to only future events
-            if self.context.get("future_events", False):
-                now = timezone.now()
-                events = obj.events.filter(start_time__gte=now)
-            else:
-                # get all events
-                events = obj.events.all()
-
-        return EventSerializer(events, many=True, context=self.context).data
-
-    def get_event_group_url(self, obj):
-        # if no url, return that
-        if not obj.url:
-            return obj.url
-
-        # if the url is a zoom link, hide url unless authenticated
-        if "request" in self.context and "zoom.us" in urlparse(obj.url).netloc:
-            user = self.context["request"].user
-            if user.is_authenticated:
-                return obj.url
-            return "(Login to view url)"
-
-        return obj.url
-
-    class Meta:
-        model = EventGroup
-        fields = [
-            "id",
-            "code",
-            "name",
-            "description",
-            "type",
-            "club",
-            "url",
-            "creator",
-            "events",
-        ]
-
-
-class EventGroupSerializer(BaseEventGroupSerializer):
-    """
-    Serializer for event groups
-    - includes basic associated club information
-    - handles group level fields
-    - includes basic associated club information
+    Provides the base fields for an event group.
     """
 
     club_name = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField("get_image_url")
     large_image_url = serializers.SerializerMethodField("get_large_image_url")
-    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
-    pinned = serializers.BooleanField(read_only=True)
 
     def get_club_name(self, obj):
         if obj.club is None:
@@ -578,18 +523,52 @@ class EventGroupSerializer(BaseEventGroupSerializer):
 
     class Meta:
         model = EventGroup
-        fields = BaseEventGroupSerializer.Meta.fields + [
+        fields = [
+            "id",
+            "code",
             "club_name",
-            "badges",
-            "pinned",
+            "name",
+            "description",
+            "type",
+            "club",
+            "url",
+            "creator",
             "image_url",
             "large_image_url",
         ]
         read_only_fields = [
-            "code",
             "club_name",
             "image_url",
             "large_image_url",
+        ]
+
+
+class EventGroupSerializer(BaseEventGroupSerializer):
+    """
+    Serializer for event groups
+    - includes basic associated club information
+    - handles group level fields
+    """
+
+    badges = BadgeSerializer(source="club.badges", many=True, read_only=True)
+    pinned = serializers.BooleanField(read_only=True)
+    events = serializers.SerializerMethodField()
+
+    def get_events(self, obj):
+        if obj.events is None:
+            return None
+        # Prevent recursion
+        return BaseEventSerializer(obj.events, many=True, context=self.context).data
+
+    class Meta:
+        model = EventGroup
+        fields = BaseEventGroupSerializer.Meta.fields + [
+            "badges",
+            "pinned",
+            "events",
+        ]
+        read_only_fields = BaseEventGroupSerializer.Meta.read_only_fields + [
+            "code",
             "creator",
         ]
 

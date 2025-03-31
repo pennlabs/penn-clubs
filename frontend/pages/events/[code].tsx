@@ -196,10 +196,13 @@ const EventPage: React.FC<EventGroupPageProps> = ({
         .then((resp) => (resp.ok ? resp.json() : Promise.reject(resp)))
         .then((data: TicketAvailability) => {
           setTicketAvailability(data)
-          const initialOrder = data.totals.reduce((acc, curr) => {
-            acc[curr.type] = 0
-            return acc
-          }, {})
+          const initialOrder = data.totals.reduce(
+            (acc, curr) => {
+              acc[curr.type] = 0
+              return acc
+            },
+            {} as Record<string, number>,
+          )
           setTicketOrder(initialOrder)
         })
         .catch(() => toast.error('Failed to load ticket availability.'))
@@ -226,12 +229,15 @@ const EventPage: React.FC<EventGroupPageProps> = ({
       return
     }
 
-    doApiRequest(`/events/${selectedEvent.id}/add_to_cart/`, {
-      method: 'POST',
-      body: {
-        quantities: orderToSend,
+    doApiRequest(
+      `/eventgroups/${eventGroup.code}/events/${selectedEvent.id}/add_to_cart/`,
+      {
+        method: 'POST',
+        body: {
+          quantities: orderToSend,
+        },
       },
-    })
+    )
       .then((resp) => (resp.ok ? resp.json() : Promise.reject(resp)))
       .then((res) => {
         if (res.success) {
