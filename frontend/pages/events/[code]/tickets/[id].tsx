@@ -22,13 +22,13 @@ import {
   HOVER_GRAY,
   MEDIUM_GRAY,
   WHITE,
-} from '../../constants/colors'
+} from '../../../../constants/colors'
 import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
   mediaMaxWidth,
   SM,
-} from '../../constants/measurements'
+} from '../../../../constants/measurements'
 
 type CardProps = {
   readonly hovering?: boolean
@@ -110,7 +110,7 @@ const Ticket: React.FC<TicketProps> = ({
   event,
   home,
 }): ReactElement<any> => {
-  if (home) {
+  if (home || !event) {
     return (
       <Center>
         Welcome to Ticketing! Please browse events with available tickets{' '}
@@ -160,13 +160,18 @@ const Ticket: React.FC<TicketProps> = ({
         <Metadata title="Events" />
         <Container>
           <BetaTag>
-            <Title>All Tickets for {event.name}</Title>
+            <Title>
+              All Tickets for {event.group.name} at{' '}
+              {new Date(event.start_time).toLocaleString()}
+            </Title>
           </BetaTag>
           {event.ticket_drop_time &&
             new Date(event.ticket_drop_time) > new Date() && (
               <Text>
                 Tickets have not dropped yet. Visit the{' '}
-                <Link href={`/club/${event.club}/edit/events`}>event page</Link>{' '}
+                <Link href={`/club/${event.group.club}/edit/events`}>
+                  event page
+                </Link>{' '}
                 to change the current drop time of{' '}
                 {moment(event.ticket_drop_time)
                   .tz('America/New_York')
@@ -380,18 +385,27 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
 
 const getBaseProps = createBasePropFetcher()
 
+// URL of form /events/[code]/tickets/[id]
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const { query, req } = ctx
   const headers = req ? { cookie: req.headers.cookie } : undefined
-  if (!query || !query.slug) {
+  if (!query || !query.code || !query.id) {
     return { props: { home: true, tickets: {}, event: {}, buyers: {} } }
   }
-  const id = query.slug[0]
   try {
     const [ticketsReq, eventReq, buyersReq] = await Promise.all([
-      doApiRequest(`/events/${id}/tickets/?format=json`, { headers }),
-      doApiRequest(`/events/${id}/?format=json`, { headers }),
-      doApiRequest(`/events/${id}/buyers/?format=json`, { headers }),
+      doApiRequest(
+        `/eventgroups/${query.code}/events/${query.id}/tickets/?format=json`,
+        { headers },
+      ),
+      doApiRequest(
+        `/eventgroups/${query.code}/events/${query.id}/?format=json`,
+        { headers },
+      ),
+      doApiRequest(
+        `/eventgroups/${query.code}/events/${query.id}/buyers/?format=json`,
+        { headers },
+      ),
     ])
 
     const [baseProps, tickets, event, buyers] = await Promise.all([

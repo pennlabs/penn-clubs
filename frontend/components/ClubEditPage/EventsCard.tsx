@@ -6,7 +6,7 @@ import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { LIGHT_GRAY } from '../../constants'
-import { Club, ClubEvent, ClubEventType } from '../../types'
+import { Club, ClubEvent, ClubEventType, EventGroup } from '../../types'
 import { stripTags } from '../../utils'
 import { FAIR_NAME, OBJECT_EVENT_TYPES } from '../../utils/branding'
 import { Device, Icon, Line, Modal, Text } from '../common'
@@ -240,10 +240,6 @@ const DeviceEventPreview = ({ deviceContents, type }) => {
   )
 }
 
-type EventsCardProps = {
-  club: Club
-}
-
 export const EVENT_TYPES = [
   {
     value: ClubEventType.RECRUITMENT,
@@ -275,21 +271,38 @@ export const EVENT_TYPES = [
   },
 ].filter(({ value }) => OBJECT_EVENT_TYPES.has(value))
 
-const eventTableFields = [
+const eventGroupTableFields = [
   {
     name: 'name',
     label: 'Name',
-  },
-  {
-    name: 'start_time',
-    label: 'Start Time',
-    converter: (a: string): ReactElement<any> => <TimeAgo date={a} />,
   },
   {
     name: 'type',
     label: 'Type',
     converter: (a: ClubEventType): string =>
       (EVENT_TYPES.find((v) => v.value === a) || { label: 'Unknown' }).label,
+  },
+  {
+    name: 'events',
+    label: 'Sessions',
+    converter: (events: ClubEvent[]): string => `${events.length} session(s)`,
+  },
+]
+
+const eventTableFields = [
+  {
+    name: 'start_time',
+    label: 'Start Time',
+    converter: (a: string): ReactElement<any> => <TimeAgo date={a} />,
+  },
+  {
+    name: 'end_time',
+    label: 'End Time',
+    converter: (a: string): ReactElement<any> => <TimeAgo date={a} />,
+  },
+  {
+    name: 'location',
+    label: 'Location',
   },
   {
     name: 'is_ics_event',
@@ -319,6 +332,7 @@ const EventPreviewDescriptionContainer = styled.div`
   margin: auto 0;
   width: 40%;
 `
+
 const PreviewContainer = styled.div`
   margin-top: 2rem;
   max-width: 40%;
@@ -326,6 +340,7 @@ const PreviewContainer = styled.div`
   padding-bottom: 1em;
   border-radius: 3px;
 `
+
 const EventPreview = ({ event }: { event: ClubEvent }) => (
   <EventPreviewContainer>
     <EventPreviewDescriptionContainer>
@@ -340,10 +355,8 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
       )}
     </EventPreviewDescriptionContainer>
     <PreviewContainer>
-      <EventModal event={event} />
+      <EventModal event={{ event, group: event.group }} />
     </PreviewContainer>
-    {/* TODO: uncomment device preview when we have mobile integration. */}
-    {/* <Devices contents={event} /> */}
   </EventPreviewContainer>
 )
 
@@ -355,12 +368,13 @@ const CreateContainer = styled.div`
 
 interface CreateTicketsProps {
   event: ClubEvent
+  eventGroup: EventGroup
   club: Club
   groupName?: string
 }
 
 const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
-  ({ event, club, groupName }, ticketDroptimeRef) => {
+  ({ event, eventGroup, club, groupName }, ticketDroptimeRef) => {
     const [show, setShow] = useState(false)
 
     const showModal = () => setShow(true)
@@ -371,6 +385,7 @@ const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
         <div className="is-pulled-left">
           <Text style={{ padding: 0, margin: 0 }}>
             {event.ticketed ? 'Add' : 'Create'} ticket offerings for this event
+            session.
           </Text>
         </div>
         <div className="is-pulled-right">
@@ -392,6 +407,7 @@ const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
             <TicketsModal
               club={club}
               event={event}
+              eventGroup={eventGroup}
               onSuccessfulSubmit={hideModal}
               closeModal={() => {
                 hideModal()
@@ -413,29 +429,41 @@ const CreateTickets = forwardRef<HTMLDivElement, CreateTicketsProps>(
   },
 )
 
+type EventsCardProps = {
+  club: Club
+}
+
 export default function EventsCard({
   club,
 }: EventsCardProps): ReactElement<any> {
-  const [deviceContents, setDeviceContents] = useState<any>({})
+  const [selectedEventGroup, setSelectedEventGroup] =
+    useState<EventGroup | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<ClubEvent | null>(null)
+  const [isEditing, setIsEditing] = useState<boolean>(false)
   const eventDetailsRef = useRef<HTMLDivElement>(null)
   const ticketDroptimeRef = useRef<HTMLDivElement>(null)
 
-  const eventFields = (
+  const eventGroupFields = (
     <>
       <Field
         name="name"
         as={TextField}
         required
-        helpText="Provide a descriptive name for the planned event."
+        helpText="The name of your event."
       />
       <Field
         name="url"
         as={TextField}
         type="url"
-        helpText="Provide a videoconference link to join the event (Zoom, Google Meet, etc)."
+        helpText="The videoconference link for your event."
         label="Meeting Link"
       />
-      <Field name="image" as={FileField} isImage />
+      <Field
+        name="image"
+        as={FileField}
+        isImage
+        helpText="The image for your event."
+      />
       <Field
         name="type"
         as={SelectField}
@@ -444,88 +472,180 @@ export default function EventsCard({
         serialize={({ value }) => value}
         isMulti={false}
         valueDeserialize={(val) => EVENT_TYPES.find((x) => x.value === val)}
+        helpText="The type of event."
       />
+      <Field
+        name="description"
+        placeholder="Type your event description here!"
+        as={RichTextField}
+        helpText="The description of your event."
+      />
+      {!isEditing && (
+        <>
+          <Field
+            name="events[0].start_time"
+            required
+            placeholder="When does your first session start?"
+            as={DateTimeField}
+          />
+          <Field
+            name="events[0].end_time"
+            required
+            placeholder="When does your first session end?"
+            as={DateTimeField}
+          />
+          <div ref={ticketDroptimeRef} className="mb-3">
+            <Field
+              name="events[0].ticket_drop_time"
+              id="ticket_drop_time"
+              placeholder="When should tickets become available?"
+              as={DateTimeField}
+              helpText="Leave blank if this event doesn't require tickets."
+            />
+          </div>
+          <Field
+            name="events[0].location"
+            as={TextField}
+            placeholder="Event Location"
+            helpText="Where will this event take place?"
+          />
+        </>
+      )}
+    </>
+  )
+
+  const eventFields = (
+    <>
       <Field
         name="start_time"
         required
-        placeholder="Provide a start time for the event"
+        placeholder="When does this session start?"
         as={DateTimeField}
       />
       <Field
         name="end_time"
         required
-        placeholder="Provide a end time for the event"
+        placeholder="When does this session end?"
         as={DateTimeField}
       />
       <div ref={ticketDroptimeRef} className="mb-3">
-        {/* TODO: modify field components to support ref props after forwardRef() is depreciated in React 19 */}
         <Field
           name="ticket_drop_time"
           id="ticket_drop_time"
-          placeholder="Provide a time when event tickets will first be available (not changeable after first ticket sold)"
+          placeholder="When should tickets become available?"
           as={DateTimeField}
+          helpText="Leave blank if this session doesn't require tickets."
         />
       </div>
       <Field
-        name="description"
-        placeholder="Type your event description here!"
-        as={RichTextField}
+        name="location"
+        as={TextField}
+        placeholder="Session Location"
+        helpText="Where will this session take place?"
       />
     </>
   )
-
-  const event = {
-    ...deviceContents,
-    club_name: club.name,
-    image_url:
-      (deviceContents.image && deviceContents.image instanceof File
-        ? URL.createObjectURL(deviceContents.image)
-        : false) || deviceContents.image_url,
-  } as ClubEvent
 
   return (
     <BaseCard title="Events">
       <Text>
         {club.approved || club.is_ghost
-          ? 'Manage events for this club. Events that have already passed are hidden by default.'
+          ? 'Manage your club events. Past events are hidden by default.'
           : 'Note: you must be an approved club to create publicly-viewable events.'}
       </Text>
-      <ModelForm
-        actions={(object) => (
-          <Link legacyBehavior href={{ pathname: `/events/${object.id}` }}>
-            <button className="button is-info is-small">
-              <Icon name="eye" /> Page
-            </button>
-          </Link>
-        )}
-        baseUrl={`/clubs/${club.code}/events/`}
-        listParams={`&end_time__gte=${new Date().toISOString()}`}
-        fields={eventFields}
-        fileFields={['image']}
-        tableFields={eventTableFields}
-        noun="Event"
-        currentTitle={(obj) => (obj != null ? obj.name : 'Deleted Event')}
-        onEditPressed={() => {
-          eventDetailsRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        }}
-        onChange={(obj) => {
-          setDeviceContents(obj)
-        }}
-      />
-      <Line />
-      <CreateTickets
-        event={event}
-        club={club}
-        groupName={deviceContents.name}
-        ref={ticketDroptimeRef}
-      />
-      <Line />
-      <div ref={eventDetailsRef}>
-        <EventPreview event={event} />
+
+      <div className="mb-5">
+        <h3 className="title is-4">Your Events</h3>
+        <ModelForm
+          actions={(object) => (
+            <Link legacyBehavior href={{ pathname: `/events/${object.code}` }}>
+              <button className="button is-info is-small">
+                <Icon name="eye" /> View
+              </button>
+            </Link>
+          )}
+          baseUrl={`/clubs/${club.code}/eventgroups/`}
+          keyField="code"
+          listParams={`&end_time__gte=${new Date().toISOString()}`}
+          fields={eventGroupFields}
+          fileFields={['image']}
+          tableFields={eventGroupTableFields}
+          noun="Event"
+          currentTitle={(obj) => (obj != null ? obj.name : 'New Event')}
+          onEditPressed={() => {
+            setIsEditing(true)
+            eventDetailsRef.current?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            })
+          }}
+          onChange={(obj) => {
+            if (obj) {
+              setSelectedEventGroup(obj as EventGroup)
+              setSelectedEvent(null)
+              setIsEditing(true)
+            } else {
+              setIsEditing(false)
+            }
+          }}
+        />
       </div>
+
+      {selectedEventGroup && isEditing && (
+        <div className="mb-5">
+          <h3 className="title is-4">Sessions for {selectedEventGroup.name}</h3>
+          <Text className="mb-3">
+            Add multiple sessions to your event if it occurs at different times
+            or locations.
+          </Text>
+          <ModelForm
+            key={selectedEventGroup.code}
+            baseUrl={`/eventgroups/${selectedEventGroup.code}/events/`}
+            initialData={selectedEventGroup.events || []}
+            keyField="id"
+            fields={eventFields}
+            tableFields={eventTableFields}
+            noun="Session"
+            currentTitle={(obj) => {
+              if (!obj) return 'New Session'
+              const start = moment(obj.start_time).format('lll')
+              const end = moment(obj.end_time).format('lll')
+              return `${start} - ${end}`
+            }}
+            onEditPressed={() => {
+              eventDetailsRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              })
+            }}
+            onChange={(obj) => {
+              if (obj) {
+                setSelectedEvent({
+                  ...obj,
+                  group: selectedEventGroup,
+                } as ClubEvent)
+              }
+            }}
+          />
+        </div>
+      )}
+
+      <Line />
+      {selectedEvent && selectedEventGroup && (
+        <>
+          <CreateTickets
+            event={selectedEvent}
+            eventGroup={selectedEventGroup}
+            club={club}
+            groupName={selectedEventGroup?.name}
+            ref={ticketDroptimeRef}
+          />
+          <Line />
+          <div ref={eventDetailsRef}>
+            <EventPreview event={selectedEvent} />
+          </div>
+        </>
+      )}
     </BaseCard>
   )
 }

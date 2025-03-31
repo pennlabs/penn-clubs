@@ -365,6 +365,10 @@ class BaseEventSerializer(serializers.ModelSerializer):
 
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     pinned = serializers.BooleanField(read_only=True)
+    ticketed = serializers.SerializerMethodField()
+
+    def get_ticketed(self, obj) -> bool:
+        return obj.tickets.count() > 0
 
     class Meta:
         model = Event
@@ -377,6 +381,7 @@ class BaseEventSerializer(serializers.ModelSerializer):
             "creator",
             "pinned",
             "is_ics_event",
+            "ticketed",
         ]
 
 
@@ -385,11 +390,7 @@ class EventSerializer(BaseEventSerializer):
     Within the context of an existing club, return events that are a part of this club.
     """
 
-    ticketed = serializers.SerializerMethodField("get_ticketed")
     group = serializers.SerializerMethodField()
-
-    def get_ticketed(self, obj) -> bool:
-        return obj.tickets.count() > 0
 
     def get_group(self, obj):
         if obj.group is None:
@@ -398,7 +399,7 @@ class EventSerializer(BaseEventSerializer):
 
     class Meta:
         model = Event
-        fields = BaseEventSerializer.Meta.fields + ["ticketed", "group"]
+        fields = BaseEventSerializer.Meta.fields + ["group"]
 
 
 class EventWriteSerializer(serializers.ModelSerializer):
@@ -484,8 +485,8 @@ class BaseEventGroupSerializer(serializers.ModelSerializer):
     """
 
     club_name = serializers.SerializerMethodField()
-    image_url = serializers.SerializerMethodField("get_image_url")
-    large_image_url = serializers.SerializerMethodField("get_large_image_url")
+    image_url = serializers.SerializerMethodField()
+    large_image_url = serializers.SerializerMethodField()
 
     def get_club_name(self, obj):
         if obj.club is None:
@@ -576,7 +577,7 @@ class EventGroupSerializer(BaseEventGroupSerializer):
 class EventGroupWriteSerializer(EventGroupSerializer):
     """
     Write serializer responsible for creating and updating event groups.
-    - generates a code if not provided
+    - code generation is performed in viewset to be action-dependent
     - sets the club based on the view route if not provided
     """
 
@@ -589,23 +590,6 @@ class EventGroupWriteSerializer(EventGroupSerializer):
     url = serializers.CharField(
         max_length=2048, required=False, allow_blank=True, allow_null=True
     )
-
-    def validate_code(self, value):
-        """
-        Ensure that the code is unique and if code not provided, generate one
-        using name.
-        """
-
-        if value in [None, ""]:
-            value = slugify(self.context["view"].kwargs["name"])
-
-        if EventGroup.objects.filter(code=value).exists():
-            raise serializers.ValidationError(
-                f"An event group with this code='{value}' already exists. "
-                "If none was provided, then it was generate using the provided event "
-                "name. Please provide a different code."
-            )
-        return value
 
     def validate_url(self, value):
         """
@@ -661,7 +645,8 @@ class EventGroupWriteSerializer(EventGroupSerializer):
                             "You can use the Zoom setup page to do this for you."
                         }
                     )
-
+        # drop events as not necessary for update
+        validated_data.pop("events", None)
         return super().update(instance, validated_data)
 
     class Meta:
@@ -1334,13 +1319,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         return list(obj.clubfair_set.values_list("id", flat=True))
 
     def get_event_groups(self, obj):
-        now = timezone.now()
-        event_groups = obj.event_groups.prefetch_related(
-            Prefetch(
-                "events",
-                queryset=Event.objects.filter(end_time__gte=now).order_by("start_time"),
-            )
-        )
+        event_groups = obj.event_groups.prefetch_related("events", "events__tickets")
         # filter out groups with no events that have not yet ended
         event_groups = [group for group in event_groups if group.events]
         return EventGroupSerializer(

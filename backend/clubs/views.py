@@ -3418,6 +3418,9 @@ class EventViewSet(viewsets.ModelViewSet):
         if tickets have potentially been sold through the checkout process.
         """
         event = self.get_object()
+        # group should just be a group code
+        if "group" in request.data and not isinstance(request.data["group"], str):
+            request.data["group"] = request.data["group"]["code"]
         if (
             "ticket_drop_time" in request.data
             and (
@@ -3724,6 +3727,28 @@ class ClubEventGroupViewSet(viewsets.ModelViewSet):
 
         if "club" not in request.data and self.kwargs.get("club_code") is not None:
             request.data["club"] = kwargs.get("club_code")
+
+        if "club" in request.data:
+            try:
+                club = Club.objects.get(code=request.data["club"])
+            except Club.DoesNotExist:
+                raise DRFValidationError(
+                    detail="The club you entered does not exist. "
+                    "Please check your club and try again."
+                )
+            request.data["club"] = club.pk
+
+        if request.data["code"] in [None, ""]:
+            request.data["code"] = slugify(
+                self.context["view"].kwargs["name"] + club.name
+            )
+
+        if EventGroup.objects.filter(code=request.data["code"]).exists():
+            raise serializers.ValidationError(
+                f"Event group with this code='{request.data['code']}' already exists."
+                "If none was provided, then it was generate using the provided event "
+                "name: please choose a unique event name."
+            )
 
         event_group_serializer = EventGroupWriteSerializer(
             data=request.data, context={"request": request, "view": self}
