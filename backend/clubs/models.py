@@ -2081,7 +2081,7 @@ class TicketTransferRecord(models.Model):
         send_mail_helper(
             name="ticket_transfer",
             subject=(
-                f"Ticket transfer confirmation for " f"{self.ticket.showing.event.name}"
+                f"Ticket transfer confirmation for {self.ticket.showing.event.name}"
             ),
             emails=[self.sender.email, self.receiver.email],
             context=context,

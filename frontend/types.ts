@@ -50,23 +50,34 @@ export enum ClubEventType {
 }
 
 export interface ClubEvent {
+  showings?: EventShowing[]
   badges: Badge[]
   club: string | null
   club_name: string | null
   description: string
-  end_time: string
   id: number
   image_url: string | null
   is_ics_event: boolean
   large_image_url: string | null
-  location: string | null
   name: string
   ticketed: boolean
-  ticket_drop_time: string | null
   pinned: boolean
-  start_time: string
   type: ClubEventType
   url: string | null
+  earliest_start_time?: string
+  latest_end_time?: string
+  earliest_end_time?: string
+  latest_start_time?: string
+}
+
+export interface EventShowing {
+  id: number
+  event?: ClubEvent
+  start_time: string
+  end_time: string
+  location: string | null
+  ticket_order_limit: number
+  ticket_drop_time?: string | null
 }
 
 export interface EventTicket {

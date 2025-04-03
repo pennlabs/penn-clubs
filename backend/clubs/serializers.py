@@ -474,6 +474,11 @@ class ClubEventSerializer(serializers.ModelSerializer):
     showings = EventShowingSerializer(
         many=True, read_only=True, source="eventshowing_set"
     )
+    # annotated fields in viewset
+    earliest_start_time = serializers.DateTimeField(read_only=True)
+    latest_start_time = serializers.DateTimeField(read_only=True)
+    earliest_end_time = serializers.DateTimeField(read_only=True)
+    latest_end_time = serializers.DateTimeField(read_only=True)
 
     def get_ticketed(self, obj) -> bool:
         return obj.eventshowing_set.filter(tickets__isnull=False).exists()
@@ -583,6 +588,10 @@ class ClubEventSerializer(serializers.ModelSerializer):
             "ticketed",
             "type",
             "url",
+            "earliest_start_time",
+            "latest_start_time",
+            "earliest_end_time",
+            "latest_end_time",
         ]
 
 
