@@ -230,7 +230,34 @@ class EventPermission(permissions.BasePermission):
 
             if not old_type == FAIR_TYPE and new_type == FAIR_TYPE:
                 return False
-        elif view.action in [
+        return True
+
+
+class EventShowingPermission(permissions.BasePermission):
+    """
+    Officers and above can create/update/delete event showings and view ticket buyers.
+    Everyone else can view and list events.
+    """
+
+    def has_permission(self, request, view):
+        if view.action in ["create", "update", "partial_update", "destroy"]:
+            if "club_code" not in view.kwargs:
+                return False
+            if not request.user.is_authenticated:
+                return False
+            if request.user.has_perm("clubs.manage_club"):
+                return True
+            obj = Club.objects.get(code=view.kwargs["club_code"])
+            membership = find_membership_helper(request.user, obj)
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        else:
+            return True
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Check permissions for actions on EventShowing objects.
+        """
+        if view.action in [
             "buyers",
             "create_tickets",
             "issue_tickets",
@@ -238,7 +265,7 @@ class EventPermission(permissions.BasePermission):
         ]:
             if not request.user.is_authenticated:
                 return False
-            membership = find_membership_helper(request.user, obj.club)
+            membership = find_membership_helper(request.user, obj.event.club)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         elif view.action in ["add_to_cart", "remove_from_cart"]:
             return request.user.is_authenticated
