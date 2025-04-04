@@ -49,7 +49,7 @@ export const getServerSideProps = (async (ctx) => {
   const data = {
     headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
   }
-  // Fetch Event data (includes showings)
+
   const [baseProps, event] = await Promise.all([
     getBaseProps(ctx),
     doApiRequest(`/events/${id}/?format=json`, data).then((resp) => {

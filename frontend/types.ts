@@ -72,12 +72,12 @@ export interface ClubEvent {
 
 export interface EventShowing {
   id: number
-  event?: ClubEvent
   start_time: string
   end_time: string
   location: string | null
   ticket_order_limit: number
   ticket_drop_time?: string | null
+  ticketed: boolean
 }
 
 export interface EventTicket {

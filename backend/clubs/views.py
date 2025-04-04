@@ -2620,11 +2620,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             - $ref: "#/components/schemas/EventWrite"
                             - type: object
                               properties:
-                                is_recurring:
-                                    type: boolean
-                                    description: >
-                                        If this value is set, then make
-                                        recurring events instead of a single event.
                                 offset:
                                     type: number
                                     description: >
@@ -2649,62 +2644,65 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 f"please email {settings.FROM_EMAIL} if this is en error."
             )
 
-        # handle recurring events
-        if request.data.get("is_recurring", None) is not None:
-            event_data = request.data.copy()
-            event_data.pop("is_recurring")
-
-            start_time = parse(event_data.pop("start_time"))
-            end_time = parse(event_data.pop("end_time"))
-            location = (
-                event_data.pop("location", None) if "location" in event_data else None
-            )
-            offset = event_data.pop("offset")
-            end_date = parse(event_data.pop("end_date"))
-
-            event_serializer = EventWriteSerializer(
-                data=event_data, context={"request": request, "view": self}
+        if "start_time" not in request.data or "end_time" not in request.data:
+            raise DRFValidationError(detail="start_time and end_time are required")
+        # if a recurring event, offset and end_date required
+        if ("offset" in request.data) != ("end_date" in request.data):
+            raise DRFValidationError(
+                detail="both offset and end_date are required for recurring events"
             )
 
-            if event_serializer.is_valid():
-                event = event_serializer.save()
+        event_data = request.data.copy()
+        start_time = parse(event_data.pop("start_time"))
+        end_time = parse(event_data.pop("end_time"))
+        location = event_data.pop("location", None)
 
-                current_start = start_time
-                current_end = end_time
-                showings = []
+        # offset and end_date default to create a single event
+        offset = event_data.pop("offset", 1)
+        end_date = (
+            parse(event_data.pop("end_date"))
+            if "end_date" in event_data
+            else (start_time + datetime.timedelta(days=offset))
+        )
 
-                while current_start < end_date:
-                    showing_data = {
-                        "start_time": current_start,
-                        "end_time": current_end,
-                        "location": location,
-                        "event": event.id,
-                    }
-                    showing_serializer = EventShowingWriteSerializer(
-                        data=showing_data,
-                        context={"request": request},
-                    )
+        event_serializer = EventWriteSerializer(
+            data=event_data, context={"request": request, "view": self}
+        )
 
-                    if showing_serializer.is_valid(raise_exception=False):
-                        showing = showing_serializer.save()
-                        showings.append(showing)
-                    else:
-                        event.delete()
-                        return Response(
-                            showing_serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
+        if event_serializer.is_valid():
+            event = event_serializer.save()
 
-                    current_start = current_start + datetime.timedelta(days=offset)
-                    current_end = current_end + datetime.timedelta(days=offset)
+            current_start = start_time
+            current_end = end_time
+            showings = []
 
-                return Response(EventSerializer(event).data)
-            else:
-                return Response(
-                    event_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            while current_start < end_date:
+                showing_data = {
+                    "start_time": current_start,
+                    "end_time": current_end,
+                    "location": location,
+                    "event": event.id,
+                }
+                showing_serializer = EventShowingWriteSerializer(
+                    data=showing_data,
+                    context={"request": request},
                 )
 
-        return super().create(request, *args, **kwargs)
+                if showing_serializer.is_valid(raise_exception=False):
+                    showing = showing_serializer.save()
+                    showings.append(showing)
+                else:
+                    event.delete()
+                    # showings deleted via cascade
+                    return Response(
+                        showing_serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                current_start = current_start + datetime.timedelta(days=offset)
+                current_end = current_end + datetime.timedelta(days=offset)
+
+            return Response(EventSerializer(event).data)
 
     def destroy(self, request, *args, **kwargs):
         """

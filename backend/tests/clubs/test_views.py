@@ -779,6 +779,8 @@ class ClubTestCase(TestCase):
                 "description": "Interest Meeting on Friday!",
                 "location": "JMHH G06",
                 "type": Event.RECRUITMENT,
+                "start_time": timezone.now().isoformat(),
+                "end_time": (timezone.now() + timezone.timedelta(hours=1)).isoformat(),
             },
             content_type="application/json",
         )
@@ -835,7 +837,6 @@ class ClubTestCase(TestCase):
                 "type": Event.RECRUITMENT,
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
-                "is_recurring": True,
                 "offset": offset,
                 "end_date": end_date.isoformat(),
             },

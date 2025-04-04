@@ -1893,13 +1893,26 @@ class TicketSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField("get_owner_name")
     showing = EventShowingSerializer()
     event = EventSerializer(source="showing.event")
+    ticketed = serializers.SerializerMethodField("get_ticketed")
 
     def get_owner_name(self, obj):
         return obj.owner.get_full_name() if obj.owner else "None"
 
+    def get_ticketed(self, obj):
+        return obj.showing.ticketed
+
     class Meta:
         model = Ticket
-        fields = ("id", "showing", "event", "type", "owner", "attended", "price")
+        fields = (
+            "id",
+            "showing",
+            "event",
+            "type",
+            "owner",
+            "attended",
+            "price",
+            "ticketed",
+        )
 
 
 class UserUUIDSerializer(serializers.ModelSerializer):
