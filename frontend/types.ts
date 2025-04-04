@@ -71,6 +71,7 @@ export interface ClubEvent {
 }
 
 export interface EventShowing {
+  event?: ClubEvent
   id: number
   start_time: string
   end_time: string
@@ -83,7 +84,8 @@ export interface EventShowing {
 export interface EventTicket {
   id: string
   event: ClubEvent
-  type: ClubEventType
+  showing: EventShowing
+  type: string
   owner: string
   price: string
 }

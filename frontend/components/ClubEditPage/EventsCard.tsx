@@ -526,21 +526,18 @@ export default function EventsCard({
         type="number"
         min="1"
         as={TextField}
-        helpText="Maximum tickets one user can get per order. Defaults to unlimited."
+        helpText="Maximum tickets one user can get per order. Defaults to 10."
       />
     </>
   )
 
-  // Combine formObject (current form state) and selectedEvent for preview
-  // Prioritize formObject values if they exist
   const eventPreviewObject = selectedEvent
     ? {
         // Base with selected event data
         ...(selectedEvent as ClubEvent),
         // Overlay with current form state
         ...formObject,
-        club_name: club.name, // Add club name for preview
-        // Handle image preview: use File object from form if present, else use existing URL
+        club_name: club.name,
         image_url:
           formObject.image && formObject.image instanceof File
             ? URL.createObjectURL(formObject.image as File)
@@ -623,7 +620,7 @@ export default function EventsCard({
             }}
             actions={(showing: EventShowing) => (
               <Link
-                href={`/events/${selectedEvent.id}/tickets/${showing.id}/action=create`}
+                href={`/events/${selectedEvent.id}/tickets/${showing.id}/?action=create`}
                 target="_blank"
               >
                 <button className="button is-small is-primary">
