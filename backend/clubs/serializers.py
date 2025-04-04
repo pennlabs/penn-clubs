@@ -364,6 +364,10 @@ class EventShowingSerializer(serializers.ModelSerializer):
     """
 
     event = serializers.PrimaryKeyRelatedField(read_only=True)
+    ticketed = serializers.SerializerMethodField("get_ticketed")
+
+    def get_ticketed(self, obj):
+        return obj.tickets.exists()
 
     class Meta:
         model = EventShowing
@@ -375,6 +379,7 @@ class EventShowingSerializer(serializers.ModelSerializer):
             "location",
             "ticket_order_limit",
             "ticket_drop_time",
+            "ticketed",
         ]
 
 
@@ -1893,13 +1898,9 @@ class TicketSerializer(serializers.ModelSerializer):
     owner = serializers.SerializerMethodField("get_owner_name")
     showing = EventShowingSerializer()
     event = EventSerializer(source="showing.event")
-    ticketed = serializers.SerializerMethodField("get_ticketed")
 
     def get_owner_name(self, obj):
         return obj.owner.get_full_name() if obj.owner else "None"
-
-    def get_ticketed(self, obj):
-        return obj.showing.ticketed
 
     class Meta:
         model = Ticket
@@ -1911,7 +1912,6 @@ class TicketSerializer(serializers.ModelSerializer):
             "owner",
             "attended",
             "price",
-            "ticketed",
         )
 
 

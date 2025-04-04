@@ -525,7 +525,7 @@ const EventPage: React.FC<EventPageProps> = ({ baseProps, club, event }) => {
                             <i>{showing.location}</i>
                           </Text>
                         )}
-                        {event.ticketed && (
+                        {showing.ticketed && (
                           <Tag
                             style={{
                               backgroundColor: '#eee',
@@ -553,7 +553,7 @@ const EventPage: React.FC<EventPageProps> = ({ baseProps, club, event }) => {
             <Right>
               <img src={image} alt={`${event.name} Event Image`} />
 
-              {event.ticketed && selectedShowing && (
+              {selectedShowing && selectedShowing.ticketed && (
                 <Card>
                   <StrongText>Tickets for Selected Time</StrongText>
                   {isLoadingTickets && <Text>Loading availability...</Text>}
