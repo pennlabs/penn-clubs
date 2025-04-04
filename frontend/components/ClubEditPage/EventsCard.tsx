@@ -2,7 +2,6 @@ import { Field } from 'formik'
 import moment from 'moment'
 import Link from 'next/link'
 import { ReactElement, useRef, useState } from 'react'
-import TimeAgo from 'react-timeago'
 import styled from 'styled-components'
 
 import { LIGHT_GRAY } from '../../constants'
@@ -19,6 +18,7 @@ import {
   TextField,
 } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
+import Toggle from '../Settings/Toggle'
 import BaseCard from './BaseCard'
 
 const EventBox = styled.div<{ type: 'ios' | 'android' }>`
@@ -282,7 +282,9 @@ const eventTableFields = [
   {
     name: 'earliest_start_time',
     label: 'Start Time',
-    converter: (a: string): ReactElement<any> => <TimeAgo date={a} />,
+    converter: (a: string): ReactElement<any> => (
+      <>{moment(a).format('MMM D, h:mma')}</>
+    ),
   },
   {
     name: 'type',
@@ -400,6 +402,7 @@ export default function EventsCard({
   const eventDetailsRef = useRef<HTMLDivElement>(null)
 
   const [isRecurring, setIsRecurring] = useState<boolean>(false)
+  const [showPastEvents, setShowPastEvents] = useState<boolean>(false)
 
   const eventFields = (
     <>
@@ -545,13 +548,34 @@ export default function EventsCard({
       }
     : ({ club_name: club.name, ...formObject } as Partial<ClubEvent>)
 
+  // define earliest time for end time as a couple of days ago
+  const earliestEndTime = moment().subtract(2, 'days').format('YYYY-MM-DD')
+
   return (
     <BaseCard title="Events">
-      <Text>
-        {club.approved || club.is_ghost
-          ? 'Manage events for this club. Events that have already passed are hidden by default.'
-          : 'Note: you must be an approved club to create publicly-viewable events.'}
-      </Text>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+        }}
+      >
+        <Text style={{ marginBottom: 0 }}>
+          {club.approved || club.is_ghost
+            ? 'Manage events for this club. Events that have already passed are hidden by default.'
+            : 'Note: you must be an approved club to create publicly-viewable events.'}
+        </Text>
+        {(club.approved || club.is_ghost) && (
+          <Toggle
+            active={showPastEvents}
+            toggle={(_) => setShowPastEvents(!showPastEvents)}
+            club={club}
+            filterOffText="Current"
+            filterOnText="All (incl. Past)"
+          />
+        )}
+      </div>
       <ModelForm
         actions={(object) => (
           <Link legacyBehavior href={{ pathname: `/events/${object.id}` }}>
@@ -561,6 +585,9 @@ export default function EventsCard({
           </Link>
         )}
         baseUrl={`/clubs/${club.code}/events/`}
+        listParams={
+          showPastEvents ? '' : `&latest_start_time__gte=${earliestEndTime}`
+        }
         keyField="id"
         fields={eventFields}
         fileFields={['image']}
