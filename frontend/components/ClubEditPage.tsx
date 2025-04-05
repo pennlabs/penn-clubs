@@ -12,6 +12,7 @@ import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard, { QRCodeType } from '../components/ClubEditPage/QRCodeCard'
+import TicketsViewCard from '../components/ClubEditPage/TicketsViewCard'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_RENEW_ROUTE,
@@ -299,6 +300,11 @@ const ClubForm = ({
             <EventsCard club={club} />
           </>
         ),
+      },
+      {
+        name: 'tickets',
+        label: 'Tickets',
+        content: <TicketsViewCard club={club} />,
       },
       {
         name: 'recruitment',

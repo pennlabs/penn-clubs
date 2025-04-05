@@ -9,7 +9,7 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from clubs.models import Club, Event, EventShowing
+from clubs.models import Club, Event
 
 
 class Command(BaseCommand):
@@ -30,11 +30,7 @@ class Command(BaseCommand):
                     # prevent duplicates
                     existing = Event.objects.filter(code=event["slug"]).first()
                     if existing:
-                        # Delete related showings first
-                        EventShowing.objects.filter(event=existing).delete()
                         existing.delete()
-
-                    # Create Event object
                     ev = Event()
                     ev.club = Club.objects.filter(code="snf-paideia-program").first()
                     # if SNF Paideia has been deleted, this script should do nothing
@@ -45,9 +41,7 @@ class Command(BaseCommand):
                     ev.name = unescape(event["title"]["rendered"])
                     ev.description = unescape(event["excerpt"])
                     ev.url = event["link"]
-                    ev.save()
 
-                    # Parse event dates
                     event_dates = event["acf"]["event_dates"]
                     # parse their datetime format
                     start_date = event_dates["start_date"]
@@ -58,52 +52,45 @@ class Command(BaseCommand):
                         else event_dates["start_date"]
                     )
 
-                    # Extract start and end times
-                    start_time = None
-                    end_time = None
+                    for type, d in [("s", start_date), ("e", end_date)]:
+                        yyyy, dd, mm = (
+                            int(d[:4]),
+                            int(d[-2:]),
+                            int(d[4:6]),
+                        )
 
-                    # Parse start time
-                    yyyy, dd, mm = (
-                        int(start_date[:4]),
-                        int(start_date[-2:]),
-                        int(start_date[4:6]),
-                    )
-                    _24h = 12 if "pm" in event_dates["start_time"].lower() else 0
-                    hrs, mins = (
-                        (event_dates["start_time"].split()[0].split(":"))
-                        if not event_dates["all_day"]
-                        else (0, 0)
-                    )
-                    start_time = timezone.make_aware(
-                        datetime(yyyy, mm, dd, int(hrs) + _24h, int(mins))
-                    )
+                        if type == "s":
+                            _24h = (
+                                12 if "pm" in event_dates["start_time"].lower() else 0
+                            )
 
-                    # Parse end time
-                    yyyy, dd, mm = (
-                        int(end_date[:4]),
-                        int(end_date[-2:]),
-                        int(end_date[4:6]),
-                    )
-                    _24h = 12 if "pm" in event_dates["end_time"].lower() else 0
-                    hrs, mins = (
-                        (event["acf"]["event_dates"]["end_time"].split()[0].split(":"))
-                        if not event_dates["all_day"]
-                        else (23, 59)
-                    )
-                    end_time = timezone.make_aware(
-                        datetime(yyyy, mm, dd, min(int(hrs) + _24h, 23), int(mins))
-                    )
+                            hrs, mins = (
+                                (event_dates["start_time"].split()[0].split(":"))
+                                if not event_dates["all_day"]
+                                else (0, 0)
+                            )
+                            ev.start_time = timezone.make_aware(
+                                datetime(yyyy, mm, dd, int(hrs) + _24h, int(mins))
+                            )
+                        elif type == "e":
+                            _24h = 12 if "pm" in event_dates["end_time"].lower() else 0
+                            hrs, mins = (
+                                (
+                                    event["acf"]["event_dates"]["end_time"]
+                                    .split()[0]
+                                    .split(":")
+                                )
+                                if not event_dates["all_day"]
+                                else (23, 59)
+                            )
 
-                    # Create EventShowing for this event
-                    showing = EventShowing(
-                        event=ev,
-                        start_time=start_time,
-                        end_time=end_time,
-                        location=event_dates.get("location", ""),
-                    )
-                    showing.save()
-
-                    # Download and save image
+                            ev.end_time = timezone.make_aware(
+                                datetime(
+                                    yyyy, mm, dd, min(int(hrs) + _24h, 23), int(mins)
+                                )
+                            )
+                    ev.save()
+                    # parse image needs to happen after save so instance.id is not None
                     img_tag = event["featured_image"]
                     matcher = re.search(r"src=\"([^\"]*)\"", img_tag)
                     if matcher is not None:

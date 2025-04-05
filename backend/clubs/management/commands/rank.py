@@ -4,10 +4,9 @@ from math import floor
 import bleach
 import numpy as np
 from django.core.management.base import BaseCommand
-from django.db.models import DurationField, ExpressionWrapper, F
 from django.utils import timezone
 
-from clubs.models import Club, ClubFair, EventShowing, Membership
+from clubs.models import Club, ClubFair, Membership
 
 
 class Command(BaseCommand):
@@ -68,7 +67,6 @@ class Command(BaseCommand):
             "membership_set",
             "clubapplication_set",
             "events",
-            "events__eventshowing_set",
             "testimonials",
         ).all()
 
@@ -147,33 +145,17 @@ class Command(BaseCommand):
                 ranking += 25
 
             # points for events
-            # Get all events with showings today
-            today_showings = EventShowing.objects.filter(
-                event__club=club,
-                end_time__gte=now,
-                start_time__lte=now + datetime.timedelta(days=1),
-            )
-
             today_events = club.events.filter(
-                pk__in=today_showings.values_list("event_id", flat=True)
+                end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
             )
 
             if today_events.exists():
-                # Create a list of showings with duration less than 16 hours
-                short_showings = (
-                    today_showings.annotate(
-                        duration=ExpressionWrapper(
-                            F("end_time") - F("start_time"),
-                            output_field=DurationField(),
-                        )
-                    )
-                    .filter(duration__lt=datetime.timedelta(hours=16))
-                    .exists()
-                )
-
-                if short_showings:
+                short_events = [
+                    (e.end_time - e.start_time).seconds / 3600 < 16
+                    for e in today_events
+                ]
+                if any(short_events):
                     ranking += 10
-                    # Check for events with good descriptions and images
                     if all(
                         len(e.description) >= 3
                         and e.description not in {"Replace this description!"}
@@ -182,33 +164,17 @@ class Command(BaseCommand):
                     ):
                         ranking += 10
 
-            # Get all events with showings in the next week
-            close_showings = EventShowing.objects.filter(
-                event__club=club,
-                end_time__gte=now,
-                start_time__lte=now + datetime.timedelta(weeks=1),
-            )
-
             close_events = club.events.filter(
-                pk__in=close_showings.values_list("event_id", flat=True)
+                end_time__gte=now, start_time__lte=now + datetime.timedelta(weeks=1)
             )
 
             if close_events.exists():
-                # Create a list of showings with duration less than 16 hours
-                short_showings = (
-                    close_showings.annotate(
-                        duration=ExpressionWrapper(
-                            F("end_time") - F("start_time"),
-                            output_field=DurationField(),
-                        )
-                    )
-                    .filter(duration__lt=datetime.timedelta(hours=16))
-                    .exists()
-                )
-
-                if short_showings:
+                short_events = [
+                    (e.end_time - e.start_time).seconds / 3600 < 16
+                    for e in close_events
+                ]
+                if any(short_events):
                     ranking += 5
-                    # Check for events with good descriptions and images
                     if all(
                         len(e.description) > 3
                         and e.description not in {"Replace this description!"}

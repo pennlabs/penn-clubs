@@ -14,13 +14,11 @@ from clubs.views import (
     ClubApplicationViewSet,
     ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
-    ClubEventShowingViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
     EmailInvitesAPIView,
-    EventShowingViewSet,
     EventViewSet,
     ExternalMemberListViewSet,
     FavoriteCalendarAPIView,
@@ -106,9 +104,6 @@ router.register(
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 router.register(r"templates", ClubApprovalResponseTemplateViewSet, basename="templates")
 
-events_router = routers.NestedSimpleRouter(router, r"events", lookup="event")
-events_router.register(r"showings", EventShowingViewSet, basename="event-showings")
-
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
 clubs_router.register(r"events", ClubEventViewSet, basename="club-events")
@@ -132,11 +127,6 @@ clubs_router.register(
     r"applications", ClubApplicationViewSet, basename="club-applications"
 )
 clubs_router.register(r"adminnotes", AdminNoteViewSet, basename="adminnotes")
-
-club_events_router = routers.NestedSimpleRouter(clubs_router, r"events", lookup="event")
-club_events_router.register(
-    r"showings", ClubEventShowingViewSet, basename="club-events-showings"
-)
 
 badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
 badges_router.register(r"clubs", BadgeClubViewSet, basename="badge-clubs")
@@ -212,5 +202,3 @@ urlpatterns += router.urls
 urlpatterns += clubs_router.urls
 urlpatterns += badges_router.urls
 urlpatterns += applications_router.urls
-urlpatterns += events_router.urls
-urlpatterns += club_events_router.urls

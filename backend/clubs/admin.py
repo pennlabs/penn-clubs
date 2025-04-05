@@ -31,7 +31,6 @@ from clubs.models import (
     ClubFairRegistration,
     ClubVisit,
     Event,
-    EventShowing,
     Favorite,
     Major,
     Membership,
@@ -42,6 +41,7 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RecurringEvent,
     RegistrationQueueSettings,
     Report,
     School,
@@ -230,9 +230,9 @@ class ClubFairAdmin(admin.ModelAdmin):
 
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("name", "club", "type")
+    list_display = ("name", "club", "type", "start_time", "end_time")
     search_fields = ("name", "club__name")
-    list_filter = ("type",)
+    list_filter = ("start_time", "end_time")
 
     def club(self, obj):
         return obj.club.name
@@ -477,6 +477,7 @@ admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(OwnershipRequest, OwnershipRequestAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
+admin.site.register(RecurringEvent)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(TargetMajor)
@@ -498,4 +499,3 @@ admin.site.register(Cart)
 admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
 admin.site.register(RegistrationQueueSettings)
-admin.site.register(EventShowing)

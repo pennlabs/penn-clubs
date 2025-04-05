@@ -448,7 +448,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
         changeObjects(resp)
         if (onUpdate) onUpdate(resp)
       })
-  }, [props.listParams])
+  }, [])
 
   if (!objects) {
     return <Loading />

@@ -251,23 +251,20 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
     }
     flipPendingEdit(true)
     if (newCount && newCount > ticket.count) {
-      reqPromise = doApiRequest(
-        `/events/${ticket.event.id}/showings/${ticket.showing.id}/add_to_cart/`,
-        {
-          method: 'POST',
-          body: {
-            quantities: [
-              {
-                type: ticket.type,
-                count: newCount - ticket.count,
-              },
-            ],
-          },
+      reqPromise = doApiRequest(`/events/${ticket.event.id}/add_to_cart/`, {
+        method: 'POST',
+        body: {
+          quantities: [
+            {
+              type: ticket.type,
+              count: newCount - ticket.count,
+            },
+          ],
         },
-      )
+      })
     } else {
       reqPromise = doApiRequest(
-        `/events/${ticket.event.id}/showings/${ticket.showing.id}/remove_from_cart/`,
+        `/events/${ticket.event.id}/remove_from_cart/`,
         {
           method: 'POST',
           body: {
@@ -351,6 +348,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
       </div>
     )
   }
+
   return (
     <>
       <div>

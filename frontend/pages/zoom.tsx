@@ -511,199 +511,231 @@ const ZoomPage = ({
               }
             }
 
-            if (!event.showings) {
-              return null
-            }
+            const matchingMeeting = userMeetings.find(({ id }) => id === zoomId)
+            const startTime = moment(event.start_time).tz('America/New_York')
+            const endTime = moment(event.end_time).tz('America/New_York')
+            const eventDuration = moment
+              .duration(endTime.diff(startTime))
+              .asMinutes()
 
-            return event.showings.map((showing) => {
-              const matchingMeeting = userMeetings.find(
-                ({ id }) => id === zoomId,
-              )
-              const startTime = moment(showing.start_time).tz(
-                'America/New_York',
-              )
-              const endTime = moment(showing.end_time).tz('America/New_York')
-              const eventDuration = moment
-                .duration(endTime.diff(startTime))
-                .asMinutes()
+            const matchingTime =
+              matchingMeeting != null
+                ? moment(matchingMeeting.start_time)
+                : null
 
-              const matchingTime =
-                matchingMeeting != null
-                  ? moment(matchingMeeting.start_time)
-                  : null
-
-              return (
-                <SmallEvent key={event.id}>
-                  <b>{event.name}</b>
+            return (
+              <SmallEvent key={event.id}>
+                <b>{event.name}</b>
+                <div>
+                  <Link
+                    legacyBehavior
+                    href={CLUB_ROUTE()}
+                    as={CLUB_ROUTE(event.club as string)}
+                  >
+                    <a>{event.club_name}</a>
+                  </Link>
                   <div>
-                    <Link
-                      legacyBehavior
-                      href={CLUB_ROUTE()}
-                      as={CLUB_ROUTE(event.club as string)}
-                    >
-                      <a>{event.club_name}</a>
-                    </Link>
-                    <div>
-                      {startTime.format('LLL')} - {endTime.format('LT z')}
-                    </div>
-                    <div className="has-text-grey">
-                      {moment.duration(endTime.diff(startTime)).asHours()} Hour
-                      Block
-                    </div>
-                    <div className="mt-3">
-                      <b>Current Meeting Link:</b>{' '}
-                      {event.url ? (
-                        <a href={event.url} target="_blank">
-                          {event.url}
-                        </a>
-                      ) : (
-                        'None'
-                      )}
-                    </div>
-                    <CheckList
-                      items={[
-                        {
-                          value: !!event.url,
-                          label: 'Has link to a meeting',
-                        },
-                        {
-                          value: !!(event.url && event.url.includes('zoom.us')),
-                          label: 'Is a Zoom link',
-                          details: (
-                            <>
-                              Zoom is a proven and trusted platform for
-                              videoconferencing and has a contract with the{' '}
-                              {SCHOOL_NAME} to provide premium accounts.{' '}
-                              <b>
-                                We strongly recommend that you use this service
-                                for your virtual fair booth.
-                              </b>{' '}
-                              By using a Penn Zoom link, we will also be able to
-                              provide students with additional information, such
-                              as how many people are currently in the meeting.
-                            </>
-                          ),
-                        },
-                        {
-                          value: !!(
-                            event.url &&
-                            event.url.startsWith('https://upenn.zoom.us/')
-                          ),
-                          label: 'Is Penn Zoom link',
-                          details:
-                            'Penn Zoom links remove the 40 minute meeting restriction and allows you to have up to 300 particpants. We strongly recommend that you use the school provided Zoom account for your booth.',
-                        },
-                        {
-                          value: !!(event.url && event.url.includes('?pwd=')),
-                          label: 'Includes password in zoom link',
-                          details:
-                            'Including your meeting password in the Zoom link will save students from having to enter it when they connect.',
-                        },
-                        {
-                          value: matchingMeeting != null ? true : null,
-                          label: 'You own the Zoom meeting',
-                          details: `If you own the Zoom meeting, we can perform additional checks on the meeting to ensure you have set everything up correctly. ${
-                            matchingMeeting != null
-                              ? 'We have detected that you own this meeting.'
-                              : 'We have detected that you do not own this meeting.'
-                          }`,
-                        },
-                        {
-                          value:
-                            matchingMeeting != null
-                              ? matchingMeeting.duration >= eventDuration
-                              : null,
-                          label: 'Meeting duration matches fair duration',
-                          details:
-                            matchingMeeting != null
-                              ? `Your meeting is ${matchingMeeting.duration} minute(s) and the virtual fair event is for ${eventDuration} minute(s).`
-                              : 'You must own the Zoom meeting to see this information about it.',
-                        },
-                        {
-                          value:
-                            matchingMeeting != null && matchingTime != null
-                              ? moment
-                                  .duration(
-                                    Math.abs(matchingTime.diff(startTime)),
-                                  )
-                                  .asSeconds() <= 60
-                              : null,
-                          label: 'Meeting time matches fair start time',
-                          details:
-                            matchingMeeting != null && matchingTime != null
-                              ? `Your meeting is scheduled for ${matchingTime.format(
-                                  'LLL',
-                                )} and your assigned fair slot is ${startTime.format(
-                                  'LLL',
-                                )}`
-                              : 'You must own the Zoom meeting to see this information about it.',
-                        },
-                        {
-                          value:
-                            matchingMeeting != null
-                              ? !matchingMeeting.extra_details?.settings
-                                  ?.waiting_room
-                              : null,
-                          label: 'Meeting room disabled',
-                          details:
-                            'Having the meeting room disabled will make it easier for prospective members to join your meeting.',
-                        },
-                        {
-                          value:
-                            matchingMeeting?.extra_details?.settings
-                              ?.mute_upon_entry,
-                          label: 'Mute upon entry enabled',
-                          details:
-                            'You should mute newcomers by default to prevent any disruptions to your pitch.',
-                        },
-                        {
-                          value:
-                            matchingMeeting?.extra_details?.settings
-                              ?.meeting_authentication,
-                          label: 'Meeting authentication enabled',
-                          details:
-                            'You should enable meeting authentication so that only Penn students can join your meeting.',
-                        },
-                        {
-                          value:
-                            event.description.length > 3 &&
-                            event.description !== 'Replace this description!',
-                          label: 'Has meaningful description',
-                          details: `Add some details about your ${OBJECT_NAME_SINGULAR} and information session to the event description. Booths with descriptions will appear above booths without descriptions.`,
-                        },
-                        {
-                          value: !!event.image_url,
-                          label: 'Has cover photo',
-                          details:
-                            'Add an eye-catching cover photo to encourage students to visit your booth! Booths with cover photos will appear above booths without cover photos.',
-                        },
-                      ]}
-                    />
+                    {startTime.format('LLL')} - {endTime.format('LT z')}
                   </div>
-                  <p className="mt-3">
-                    Click on{' '}
-                    <b>{zoomId != null ? 'Fix Meeting' : 'Add Meeting'}</b> for
-                    us to{' '}
-                    {zoomId == null
-                      ? 'create your Zoom meeting link for you'
-                      : 'attempt to fix issues with your meeting'}
-                    . Use the form below if you want to edit the cover photo and
-                    description for your virtual {FAIR_NAME} fair booth.
-                  </p>
-                  <p className="mt-3">
-                    Clicking the button below will also attempt to add all
-                    {OBJECT_NAME_SINGULAR} officers who have linked their Zoom
-                    accounts to {SITE_NAME} as co-hosts of the meeting.
-                  </p>
-                  <div className="mt-3 buttons">
+                  <div className="has-text-grey">
+                    {moment.duration(endTime.diff(startTime)).asHours()} Hour
+                    Block
+                  </div>
+                  <div className="mt-3">
+                    <b>Current Meeting Link:</b>{' '}
+                    {event.url ? (
+                      <a href={event.url} target="_blank">
+                        {event.url}
+                      </a>
+                    ) : (
+                      'None'
+                    )}
+                  </div>
+                  <CheckList
+                    items={[
+                      {
+                        value: !!event.url,
+                        label: 'Has link to a meeting',
+                      },
+                      {
+                        value: !!(event.url && event.url.includes('zoom.us')),
+                        label: 'Is a Zoom link',
+                        details: (
+                          <>
+                            Zoom is a proven and trusted platform for
+                            videoconferencing and has a contract with the{' '}
+                            {SCHOOL_NAME} to provide premium accounts.{' '}
+                            <b>
+                              We strongly recommend that you use this service
+                              for your virtual fair booth.
+                            </b>{' '}
+                            By using a Penn Zoom link, we will also be able to
+                            provide students with additional information, such
+                            as how many people are currently in the meeting.
+                          </>
+                        ),
+                      },
+                      {
+                        value: !!(
+                          event.url &&
+                          event.url.startsWith('https://upenn.zoom.us/')
+                        ),
+                        label: 'Is Penn Zoom link',
+                        details:
+                          'Penn Zoom links remove the 40 minute meeting restriction and allows you to have up to 300 particpants. We strongly recommend that you use the school provided Zoom account for your booth.',
+                      },
+                      {
+                        value: !!(event.url && event.url.includes('?pwd=')),
+                        label: 'Includes password in zoom link',
+                        details:
+                          'Including your meeting password in the Zoom link will save students from having to enter it when they connect.',
+                      },
+                      {
+                        value: matchingMeeting != null ? true : null,
+                        label: 'You own the Zoom meeting',
+                        details: `If you own the Zoom meeting, we can perform additional checks on the meeting to ensure you have set everything up correctly. ${
+                          matchingMeeting != null
+                            ? 'We have detected that you own this meeting.'
+                            : 'We have detected that you do not own this meeting.'
+                        }`,
+                      },
+                      {
+                        value:
+                          matchingMeeting != null
+                            ? matchingMeeting.duration >= eventDuration
+                            : null,
+                        label: 'Meeting duration matches fair duration',
+                        details:
+                          matchingMeeting != null
+                            ? `Your meeting is ${matchingMeeting.duration} minute(s) and the virtual fair event is for ${eventDuration} minute(s).`
+                            : 'You must own the Zoom meeting to see this information about it.',
+                      },
+                      {
+                        value:
+                          matchingMeeting != null && matchingTime != null
+                            ? moment
+                                .duration(
+                                  Math.abs(matchingTime.diff(startTime)),
+                                )
+                                .asSeconds() <= 60
+                            : null,
+                        label: 'Meeting time matches fair start time',
+                        details:
+                          matchingMeeting != null && matchingTime != null
+                            ? `Your meeting is scheduled for ${matchingTime.format(
+                                'LLL',
+                              )} and your assigned fair slot is ${startTime.format(
+                                'LLL',
+                              )}`
+                            : 'You must own the Zoom meeting to see this information about it.',
+                      },
+                      {
+                        value:
+                          matchingMeeting != null
+                            ? !matchingMeeting.extra_details?.settings
+                                ?.waiting_room
+                            : null,
+                        label: 'Meeting room disabled',
+                        details:
+                          'Having the meeting room disabled will make it easier for prospective members to join your meeting.',
+                      },
+                      {
+                        value:
+                          matchingMeeting?.extra_details?.settings
+                            ?.mute_upon_entry,
+                        label: 'Mute upon entry enabled',
+                        details:
+                          'You should mute newcomers by default to prevent any disruptions to your pitch.',
+                      },
+                      {
+                        value:
+                          matchingMeeting?.extra_details?.settings
+                            ?.meeting_authentication,
+                        label: 'Meeting authentication enabled',
+                        details:
+                          'You should enable meeting authentication so that only Penn students can join your meeting.',
+                      },
+                      {
+                        value:
+                          event.description.length > 3 &&
+                          event.description !== 'Replace this description!',
+                        label: 'Has meaningful description',
+                        details: `Add some details about your ${OBJECT_NAME_SINGULAR} and information session to the event description. Booths with descriptions will appear above booths without descriptions.`,
+                      },
+                      {
+                        value: !!event.image_url,
+                        label: 'Has cover photo',
+                        details:
+                          'Add an eye-catching cover photo to encourage students to visit your booth! Booths with cover photos will appear above booths without cover photos.',
+                      },
+                    ]}
+                  />
+                </div>
+                <p className="mt-3">
+                  Click on{' '}
+                  <b>{zoomId != null ? 'Fix Meeting' : 'Add Meeting'}</b> for us
+                  to{' '}
+                  {zoomId == null
+                    ? 'create your Zoom meeting link for you'
+                    : 'attempt to fix issues with your meeting'}
+                  . Use the form below if you want to edit the cover photo and
+                  description for your virtual {FAIR_NAME} fair booth.
+                </p>
+                <p className="mt-3">
+                  Clicking the button below will also attempt to add all
+                  {OBJECT_NAME_SINGULAR} officers who have linked their Zoom
+                  accounts to {SITE_NAME} as co-hosts of the meeting.
+                </p>
+                <div className="mt-3 buttons">
+                  <button
+                    className="button is-small is-success"
+                    disabled={isLoading || !zoomSettings.success}
+                    onClick={() => {
+                      setLoading(true)
+                      doApiRequest(
+                        `/settings/zoom/meetings/?format=json&event=${event.id}`,
+                        { method: 'POST' },
+                      )
+                        .then((resp) => resp.json())
+                        .then((resp) => {
+                          toast[resp.success ? 'success' : 'error'](resp.detail)
+                          loadEvents().then(setEvents)
+                          loadMeetings(undefined, true)
+                            .then(setUserMeetings)
+                            .then(() => {
+                              setLoading(false)
+                            })
+                        })
+                        .catch(() => {
+                          toast.error(
+                            <>
+                              An error occured while trying to add your meeting.
+                              Please contact <Contact /> for assistance.
+                            </>,
+                          )
+                          setLoading(false)
+                        })
+                    }}
+                  >
+                    {zoomId ? (
+                      <>
+                        <Icon name="settings" /> Fix Meeting
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="plus" /> Add Meeting
+                      </>
+                    )}
+                  </button>
+                  {zoomId && (
                     <button
-                      className="button is-small is-success"
+                      className="button is-small is-danger"
                       disabled={isLoading || !zoomSettings.success}
                       onClick={() => {
                         setLoading(true)
                         doApiRequest(
                           `/settings/zoom/meetings/?format=json&event=${event.id}`,
-                          { method: 'POST' },
+                          { method: 'DELETE' },
                         )
                           .then((resp) => resp.json())
                           .then((resp) => {
@@ -713,14 +745,12 @@ const ZoomPage = ({
                             loadEvents().then(setEvents)
                             loadMeetings(undefined, true)
                               .then(setUserMeetings)
-                              .then(() => {
-                                setLoading(false)
-                              })
+                              .then(() => setLoading(false))
                           })
                           .catch(() => {
                             toast.error(
                               <>
-                                An error occured while trying to add your
+                                An error occured while trying to delete your
                                 meeting. Please contact <Contact /> for
                                 assistance.
                               </>,
@@ -729,131 +759,85 @@ const ZoomPage = ({
                           })
                       }}
                     >
-                      {zoomId ? (
-                        <>
-                          <Icon name="settings" /> Fix Meeting
-                        </>
-                      ) : (
-                        <>
-                          <Icon name="plus" /> Add Meeting
-                        </>
-                      )}
+                      <Icon name="trash" /> Remove Meeting
                     </button>
-                    {zoomId && (
-                      <button
-                        className="button is-small is-danger"
-                        disabled={isLoading || !zoomSettings.success}
-                        onClick={() => {
-                          setLoading(true)
-                          doApiRequest(
-                            `/settings/zoom/meetings/?format=json&event=${event.id}`,
-                            { method: 'DELETE' },
-                          )
-                            .then((resp) => resp.json())
-                            .then((resp) => {
-                              toast[resp.success ? 'success' : 'error'](
-                                resp.detail,
-                              )
-                              loadEvents().then(setEvents)
-                              loadMeetings(undefined, true)
-                                .then(setUserMeetings)
-                                .then(() => setLoading(false))
-                            })
-                            .catch(() => {
-                              toast.error(
-                                <>
-                                  An error occured while trying to delete your
-                                  meeting. Please contact <Contact /> for
-                                  assistance.
-                                </>,
-                              )
-                              setLoading(false)
-                            })
-                        }}
-                      >
-                        <Icon name="trash" /> Remove Meeting
-                      </button>
-                    )}
-                    <Link
-                      legacyBehavior
-                      href={CLUB_EDIT_ROUTE() + '#events'}
-                      as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
-                    >
-                      <a
-                        className="button is-small is-secondary"
-                        target="_blank"
-                      >
-                        <Icon name="edit" /> Edit Event
-                      </a>
-                    </Link>
-                  </div>
-                  <hr />
-                  <p className="mt-3">
-                    You can use the form below to quickly edit the description
-                    and cover photo fields for your event.
-                  </p>
-                  <Formik
-                    initialValues={{
-                      description: event.description,
-                      image: event.image_url,
-                    }}
-                    onSubmit={async (data) => {
-                      setLoading(true)
-                      const body: { description: string; image?: null } = {
-                        description: data.description,
-                      }
-                      if (typeof data.image !== 'string') {
-                        if (data.image != null) {
-                          const formData = new FormData()
-                          formData.append('file', data.image)
-                          await doApiRequest(
-                            `/clubs/${event.club}/events/${event.id}/upload/?format=json`,
-                            { method: 'POST', body: formData },
-                          )
-                        } else {
-                          body.image = null
-                        }
-                      }
-                      await doApiRequest(
-                        `/clubs/${event.club}/events/${event.id}/?format=json`,
-                        {
-                          method: 'PATCH',
-                          body,
-                        },
-                      )
-                      loadEvents().then(setEvents)
-                      setLoading(false)
-                      toast.success(
-                        'The description and cover photo for this event has been saved!',
-                      )
-                    }}
-                    enableReinitialize
+                  )}
+                  <Link
+                    legacyBehavior
+                    href={CLUB_EDIT_ROUTE() + '#events'}
+                    as={CLUB_EDIT_ROUTE(event.club as string) + '#events'}
                   >
-                    <Form>
-                      <Field
-                        as={FileField}
-                        name="image"
-                        label="Cover Photo"
-                        helpText="The cover photo for your fair event. We recommend a 16:9 image, preferrably 1920 x 1080."
-                        isImage
-                      />
-                      <Field
-                        as={RichTextField}
-                        name="description"
-                        helpText="A meaningful description about the information session. Can include next steps and application links."
-                      />
-                      <button
-                        type="submit"
-                        className="button is-success"
-                        disabled={isLoading}
-                      >
-                        <Icon name="edit" /> Save Details
-                      </button>
-                    </Form>
-                  </Formik>
-                </SmallEvent>
-              )
-            })
+                    <a className="button is-small is-secondary" target="_blank">
+                      <Icon name="edit" /> Edit Event
+                    </a>
+                  </Link>
+                </div>
+                <hr />
+                <p className="mt-3">
+                  You can use the form below to quickly edit the description and
+                  cover photo fields for your event.
+                </p>
+                <Formik
+                  initialValues={{
+                    description: event.description,
+                    image: event.image_url,
+                  }}
+                  onSubmit={async (data) => {
+                    setLoading(true)
+                    const body: { description: string; image?: null } = {
+                      description: data.description,
+                    }
+                    if (typeof data.image !== 'string') {
+                      if (data.image != null) {
+                        const formData = new FormData()
+                        formData.append('file', data.image)
+                        await doApiRequest(
+                          `/clubs/${event.club}/events/${event.id}/upload/?format=json`,
+                          { method: 'POST', body: formData },
+                        )
+                      } else {
+                        body.image = null
+                      }
+                    }
+                    await doApiRequest(
+                      `/clubs/${event.club}/events/${event.id}/?format=json`,
+                      {
+                        method: 'PATCH',
+                        body,
+                      },
+                    )
+                    loadEvents().then(setEvents)
+                    setLoading(false)
+                    toast.success(
+                      'The description and cover photo for this event has been saved!',
+                    )
+                  }}
+                  enableReinitialize
+                >
+                  <Form>
+                    <Field
+                      as={FileField}
+                      name="image"
+                      label="Cover Photo"
+                      helpText="The cover photo for your fair event. We recommend a 16:9 image, preferrably 1920 x 1080."
+                      isImage
+                    />
+                    <Field
+                      as={RichTextField}
+                      name="description"
+                      helpText="A meaningful description about the information session. Can include next steps and application links."
+                    />
+                    <button
+                      type="submit"
+                      className="button is-success"
+                      disabled={isLoading}
+                    >
+                      <Icon name="edit" /> Save Details
+                    </button>
+                  </Form>
+                </Formik>
+              </SmallEvent>
+            )
           })}
         </div>
         <h3>

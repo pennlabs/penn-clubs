@@ -30,7 +30,6 @@ from clubs.models import (
     ClubApplication,
     ClubFair,
     Event,
-    EventShowing,
     Favorite,
     Membership,
     MembershipInvite,
@@ -128,11 +127,7 @@ class ImportCalendarTestCase(TestCase):
 
         call_command("import_calendar_events")
 
-        event_count = self.club1.events.count()
-        self.assertGreaterEqual(event_count, 25)
-
-        showing_count = EventShowing.objects.filter(event__club=self.club1).count()
-        self.assertEqual(showing_count, event_count)
+        self.assertGreaterEqual(self.club1.events.count(), 25)
 
     def test_import_nonstandard_ics(self):
         """
@@ -149,9 +144,6 @@ class ImportCalendarTestCase(TestCase):
         self.assertIsNotNone(ev)
         self.assertEqual(ev.name, "Just a Test")
 
-        showing = EventShowing.objects.filter(event=ev).first()
-        self.assertIsNotNone(showing)
-
     def test_import_calendar_events(self):
         """
         Test importing a standard ICS file generated from the ICS python library.
@@ -164,7 +156,6 @@ class ImportCalendarTestCase(TestCase):
             m.assert_called_with(self.club1.ics_import_url)
 
         desired = self.club1.events.first()
-        showing = EventShowing.objects.filter(event=desired).first()
 
         # ensure event exists with right values
         self.assertIsNotNone(desired)
@@ -174,10 +165,10 @@ class ImportCalendarTestCase(TestCase):
         # ensure difference between calendar date and imported date is
         # less than one second
         self.assertLessEqual(
-            abs(showing.start_time - now), datetime.timedelta(seconds=1)
+            abs(desired.start_time - now), datetime.timedelta(seconds=1)
         )
         self.assertLessEqual(
-            showing.end_time - (now + datetime.timedelta(minutes=60)),
+            desired.end_time - (now + datetime.timedelta(minutes=60)),
             datetime.timedelta(seconds=1),
         )
 

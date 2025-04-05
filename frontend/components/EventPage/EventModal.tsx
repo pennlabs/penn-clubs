@@ -159,15 +159,15 @@ export const LiveStats = ({
 
 const EventModal = (props: {
   event: ClubEvent
-  start_time: string
-  end_time: string
   onLinkClicked?: () => void
 }): ReactElement<any> => {
-  const { event, start_time, end_time, onLinkClicked } = props
+  const { event, onLinkClicked } = props
   const {
     large_image_url,
     image_url,
     club_name,
+    start_time,
+    end_time,
     ticketed,
     name,
     url,
