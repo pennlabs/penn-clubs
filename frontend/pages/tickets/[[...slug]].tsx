@@ -7,7 +7,7 @@ import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
-import { doApiRequest } from 'utils'
+import { doApiRequest, isZeroish } from 'utils'
 
 import { BaseLayout } from '~/components/BaseLayout'
 import AuthPrompt from '~/components/common/AuthPrompt'
@@ -112,10 +112,13 @@ const Ticket: React.FC<TicketProps> = ({
 }): ReactElement<any> => {
   if (home) {
     return (
-      <Center>
-        Welcome to Ticketing! Please browse events with available tickets{' '}
-        <a href="/events">here</a>.
-      </Center>
+      <BaseLayout {...baseProps}>
+        <Metadata title="Events" />
+        <Center>
+          Welcome to Ticketing! Please browse events with available tickets{' '}
+          <a href="/events">here</a>.
+        </Center>
+      </BaseLayout>
     )
   } else if (!tickets || !tickets.totals || !tickets.available) {
     return <Center>No tickets found with given user permissions.</Center>
@@ -139,6 +142,11 @@ const Ticket: React.FC<TicketProps> = ({
       type: ticket.type,
       total: ticket.count,
       price: ticket.price,
+      buyable: ticket.buyable,
+      group_discount: ticket.group_discount,
+      group_size: ticket.group_size,
+      code_discount: ticket.code_discount,
+      discount_code: ticket.discount_code,
       available: 0,
       buyers: [],
     }
@@ -203,6 +211,11 @@ type Ticket = {
   total: number
   price: number
   available: number
+  buyable: boolean
+  discount_code?: string
+  code_discount?: number
+  group_discount?: number
+  group_size?: number
   buyers: Buyer[]
 }
 
@@ -313,6 +326,35 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
               </Formik>
             </Card>
             <Card>
+              <Subtitle>Purchasing Information</Subtitle>
+              {ticket.buyable ? (
+                <>
+                  <Text>Price: ${ticket.price}</Text>
+                  {ticket.group_size &&
+                    ticket.group_discount &&
+                    !isZeroish(ticket.group_discount!) && (
+                      <Text>
+                        Group Discount: {ticket.group_discount! * 100}% for
+                        groups of {ticket.group_size} and more
+                      </Text>
+                    )}
+                  {ticket.discount_code &&
+                    !isZeroish(ticket.code_discount!) && (
+                      <Text>Discount Code: {ticket.discount_code}</Text>
+                    )}
+                  {ticket.code_discount &&
+                    !isZeroish(ticket.code_discount!) && (
+                      <Text>Code Discount: {ticket.code_discount! * 100}%</Text>
+                    )}
+                </>
+              ) : (
+                <Text>
+                  This ticket was set to be non-buyable. Please use the issue
+                  tickets button above to issue tickets to PennKey holders.
+                </Text>
+              )}
+            </Card>
+            <Card>
               <Text
                 onClick={() => {
                   setViewBuyers(!viewBuyers)
@@ -389,7 +431,9 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const id = query.slug[0]
   try {
     const [ticketsReq, eventReq, buyersReq] = await Promise.all([
-      doApiRequest(`/events/${id}/tickets/?format=json`, { headers }),
+      doApiRequest(`/events/${id}/tickets/?for_purchasing=false&format=json`, {
+        headers,
+      }),
       doApiRequest(`/events/${id}/?format=json`, { headers }),
       doApiRequest(`/events/${id}/buyers/?format=json`, { headers }),
     ])

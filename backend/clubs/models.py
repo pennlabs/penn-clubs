@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import os
 import re
 import uuid
@@ -1896,6 +1897,14 @@ class TicketTransactionRecord(models.Model):
     buyer_email = models.EmailField(blank=True, null=True)
 
 
+def get_discount_code(event, ticket):
+    # get private key as hash of event id, ticket class, and secret
+    private_key = hashlib.sha256(
+        f"{event.id}-{ticket.type}-{settings.SECRET_KEY}".encode()
+    ).hexdigest()
+    return private_key[:8].upper()
+
+
 class Ticket(models.Model):
     """
     Represents an instance of a ticket for an event
@@ -1930,6 +1939,13 @@ class Ticket(models.Model):
         blank=True,
     )
     group_size = models.PositiveIntegerField(null=True, blank=True)
+    code_discount = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0,
+        blank=True,
+    )
+    discount_code_applied = models.BooleanField(default=False)
     transferable = models.BooleanField(default=True)
     attended = models.BooleanField(default=False)
     # TODO: change to enum between All, Club, None
@@ -1992,6 +2008,10 @@ class Ticket(models.Model):
                     "mimetype": "image/png",
                 },
             )
+
+    @property
+    def discount_code(self):
+        return get_discount_code(self.event, self)
 
 
 class TicketTransferRecord(models.Model):

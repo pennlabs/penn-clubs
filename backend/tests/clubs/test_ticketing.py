@@ -22,6 +22,7 @@ from clubs.models import (
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
+    get_discount_code,
 )
 
 
@@ -81,9 +82,12 @@ def commonSetUp(self):
     ]
 
     self.tickets1 = [
-        Ticket.objects.create(type="normal", event=self.event1, price=15.0)
+        Ticket.objects.create(
+            type="normal", event=self.event1, price=15.0, code_discount=0.5
+        )
         for _ in range(20)
     ]
+    self.tickets1_discount_code = get_discount_code(self.event1, self.tickets1[0])
     self.tickets2 = [
         Ticket.objects.create(type="premium", event=self.event1, price=30.0)
         for _ in range(10)
@@ -134,7 +138,7 @@ class TicketEventTestCase(TestCase):
 
         qts = {
             "quantities": [
-                {"type": "_normal", "count": 20, "price": 10},
+                {"type": "_normal", "count": 20, "price": 10, "code_discount": 0.5},
                 {"type": "_premium", "count": 10, "price": 20},
             ]
         }
@@ -147,13 +151,14 @@ class TicketEventTestCase(TestCase):
 
         aggregated_tickets = list(
             Ticket.objects.filter(event=self.event1, type__contains="_")
-            .values("type", "price")
+            .values("type", "price", "code_discount")
             .annotate(count=Count("id"))
         )
         for t1, t2 in zip(qts["quantities"], aggregated_tickets):
             self.assertEqual(t1["type"], t2["type"])
             self.assertAlmostEqual(t1["price"], float(t2["price"]), 0.02)
             self.assertEqual(t1["count"], t2["count"])
+            self.assertEqual(t1.get("code_discount", 0), t2["code_discount"])
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -517,12 +522,27 @@ class TicketEventTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = resp.json()
-        self.assertEqual(data["totals"], self.ticket_totals, data["totals"])
         self.assertEqual(
-            data["available"],
-            # Only premium tickets available
+            [
+                {
+                    "type": t["type"],
+                    "price": float(t["price"]),
+                    "count": t["count"],
+                }
+                for t in data["totals"]
+            ],
+            self.ticket_totals,
+        )
+        self.assertEqual(
+            [
+                {
+                    "type": t["type"],
+                    "price": float(t["price"]),
+                    "count": t["count"],
+                }
+                for t in data["available"]
+            ],
             [t for t in self.ticket_totals if t["type"] == "premium"],
-            data["available"],
         )
 
     def test_get_tickets_buyers(self):
@@ -575,6 +595,30 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(cart.tickets.count(), 3, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
         self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
+
+    def test_add_to_cart_code_discount(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 2, "discount_code": "TESTCODE"},
+            ]
+        }
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("Invalid discount code", resp.data["detail"], resp.data)
+        tickets_to_add["quantities"][0]["discount_code"] = self.tickets1_discount_code
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.data["success"], True)
 
     def test_add_to_cart_elapsed_event(self):
         self.client.login(username=self.user1.username, password="test")
@@ -1024,6 +1068,35 @@ class TicketTestCase(TestCase):
 
         total = TicketViewSet._calculate_cart_total(cart)
         self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
+
+    def test_calculate_cart_total_with_code_discount(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        tickets_to_add = {
+            "quantities": [
+                {
+                    "type": "normal",
+                    "count": 3,
+                    "discount_code": self.tickets1_discount_code,
+                },
+            ]
+        }
+
+        resp = self.client.post(
+            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        cart = Cart.objects.get(owner=self.user1)
+        self.assertEqual(cart.tickets.count(), 3)
+
+        from clubs.views import TicketViewSet
+
+        total = TicketViewSet._calculate_cart_total(cart)
+
+        self.assertEqual(total, 22.5)  # 3 * 15 * 0.5 = 22.5
 
     def test_get_cart_replacement_required(self):
         self.client.login(username=self.user1.username, password="test")

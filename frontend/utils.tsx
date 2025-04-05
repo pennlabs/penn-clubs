@@ -428,6 +428,11 @@ export function isSummer(): boolean {
   return [5, 6].includes(new Date().getMonth())
 }
 
+// Returns True if the number is close to zero (meant for numbers stored to 2 decimal places)
+export function isZeroish(num: number): boolean {
+  return Math.abs(num) < 0.001
+}
+
 /**
  * Given a date, return a semester string corresponding to that date.
  * For example, if 1/8/2021 was passed in, the return result should be "Spring 2021".

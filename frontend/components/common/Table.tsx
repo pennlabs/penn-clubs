@@ -78,6 +78,7 @@ type tableProps = {
   initialPage?: number
   setInitialPage?: (page: number) => void
   initialPageSize?: number
+  scrollable?: boolean
 }
 
 const Styles = styled.div`
@@ -116,6 +117,16 @@ const Input = styled.input`
   }
 `
 
+const TableWrapper = styled.div<{ $scrollable: boolean }>`
+  width: 100%;
+  ${({ $scrollable }) =>
+    $scrollable &&
+    `
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  `}
+`
+
 const Table = ({
   columns,
   data,
@@ -129,6 +140,7 @@ const Table = ({
   initialPage = 0,
   setInitialPage,
   initialPageSize = 10,
+  scrollable = false,
 }: tableProps): ReactElement<any> => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
@@ -292,131 +304,135 @@ const Table = ({
         </Toolbar>
       )}
       {tableData.length > 0 ? (
-        <table className="table is-fullwidth" {...getTableProps()}>
-          <thead>
-            {headerGroups.map((headerGroup) => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column) => (
-                  <th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                    {titleize(column.render('Header'))}
-                    <span style={{ marginLeft: '1rem' }}>
-                      {column.isSorted ? (
-                        column.isSortedDesc ? (
-                          <Icon name="chevron-down" />
+        <TableWrapper $scrollable={scrollable}>
+          <table className="table is-fullwidth" {...getTableProps()}>
+            <thead>
+              {headerGroups.map((headerGroup) => (
+                <tr {...headerGroup.getHeaderGroupProps()}>
+                  {headerGroup.headers.map((column) => (
+                    <th
+                      {...column.getHeaderProps(column.getSortByToggleProps())}
+                    >
+                      {titleize(column.render('Header'))}
+                      <span style={{ marginLeft: '1rem' }}>
+                        {column.isSorted ? (
+                          column.isSortedDesc ? (
+                            <Icon name="chevron-down" />
+                          ) : (
+                            <Icon name="chevron-up" />
+                          )
                         ) : (
-                          <Icon name="chevron-up" />
+                          ''
+                        )}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            {draggable ? (
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="droppableTable">
+                  {(provided) => (
+                    <tbody
+                      {...getTableBodyProps()}
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                    >
+                      {page.map((row, index) => {
+                        prepareRow(row)
+                        return focusable != null && focusable ? (
+                          <FocusableTr
+                            key={row.id}
+                            {...row.getRowProps()}
+                            onClick={(e) => {
+                              if (onClick != null) {
+                                onClick(row, e)
+                              }
+                            }}
+                          >
+                            {columns.map((column, i) => {
+                              return (
+                                <td key={i}>
+                                  {column.render
+                                    ? column.render(row.original.id, row.id)
+                                    : row.original[column.name]}
+                                </td>
+                              )
+                            })}
+                          </FocusableTr>
+                        ) : (
+                          <Draggable draggableId={row.id} index={index}>
+                            {(provided) => (
+                              <tr
+                                key={row.id}
+                                {...row.getRowProps()}
+                                style={{}}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                ref={provided.innerRef}
+                              >
+                                {columns.map((column, i) => {
+                                  return (
+                                    <td key={i}>
+                                      {column.render
+                                        ? column.render(row.original.id, row.id)
+                                        : row.original[column.name]}
+                                    </td>
+                                  )
+                                })}
+                              </tr>
+                            )}
+                          </Draggable>
                         )
-                      ) : (
-                        ''
-                      )}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          {draggable ? (
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="droppableTable">
-                {(provided) => (
-                  <tbody
-                    {...getTableBodyProps()}
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                  >
-                    {page.map((row, index) => {
-                      prepareRow(row)
-                      return focusable != null && focusable ? (
-                        <FocusableTr
-                          key={row.id}
-                          {...row.getRowProps()}
-                          onClick={(e) => {
-                            if (onClick != null) {
-                              onClick(row, e)
-                            }
-                          }}
-                        >
-                          {columns.map((column, i) => {
-                            return (
-                              <td key={i}>
-                                {column.render
-                                  ? column.render(row.original.id, row.id)
-                                  : row.original[column.name]}
-                              </td>
-                            )
-                          })}
-                        </FocusableTr>
-                      ) : (
-                        <Draggable draggableId={row.id} index={index}>
-                          {(provided) => (
-                            <tr
-                              key={row.id}
-                              {...row.getRowProps()}
-                              style={{}}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              ref={provided.innerRef}
-                            >
-                              {columns.map((column, i) => {
-                                return (
-                                  <td key={i}>
-                                    {column.render
-                                      ? column.render(row.original.id, row.id)
-                                      : row.original[column.name]}
-                                  </td>
-                                )
-                              })}
-                            </tr>
-                          )}
-                        </Draggable>
-                      )
-                    })}
-                    {provided.placeholder}
-                  </tbody>
-                )}
-              </Droppable>
-            </DragDropContext>
-          ) : (
-            <tbody {...getTableBodyProps()}>
-              {page.map((row, i) => {
-                prepareRow(row)
-                return focusable != null && focusable ? (
-                  <FocusableTr
-                    key={row.id}
-                    {...row.getRowProps()}
-                    onClick={(e) => {
-                      if (onClick != null) {
-                        onClick(row, e)
-                      }
-                    }}
-                  >
-                    {columns.map((column, i) => {
-                      return (
-                        <td key={i}>
-                          {column.render
-                            ? column.render(row.original.id, row.id)
-                            : row.original[column.name]}
-                        </td>
-                      )
-                    })}
-                  </FocusableTr>
-                ) : (
-                  <tr key={row.id} {...row.getRowProps()} style={{}}>
-                    {columns.map((column, i) => {
-                      return (
-                        <td key={i}>
-                          {column.render
-                            ? column.render(row.original.id, row.id)
-                            : row.original[column.name]}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                )
-              })}
-            </tbody>
-          )}
-        </table>
+                      })}
+                      {provided.placeholder}
+                    </tbody>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            ) : (
+              <tbody {...getTableBodyProps()}>
+                {page.map((row, i) => {
+                  prepareRow(row)
+                  return focusable != null && focusable ? (
+                    <FocusableTr
+                      key={row.id}
+                      {...row.getRowProps()}
+                      onClick={(e) => {
+                        if (onClick != null) {
+                          onClick(row, e)
+                        }
+                      }}
+                    >
+                      {columns.map((column, i) => {
+                        return (
+                          <td key={i}>
+                            {column.render
+                              ? column.render(row.original.id, row.id)
+                              : row.original[column.name]}
+                          </td>
+                        )
+                      })}
+                    </FocusableTr>
+                  ) : (
+                    <tr key={row.id} {...row.getRowProps()} style={{}}>
+                      {columns.map((column, i) => {
+                        return (
+                          <td key={i}>
+                            {column.render
+                              ? column.render(row.original.id, row.id)
+                              : row.original[column.name]}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            )}
+          </table>
+        </TableWrapper>
       ) : (
         <h1>No matches were found. Please change your filters.</h1>
       )}

@@ -13,6 +13,39 @@ import { doApiRequest } from '~/utils'
 import { ModalContent } from '../ClubPage/Actions'
 
 const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
+  const ticketsWithDiscounts = tickets.map((ticket) => {
+    const totalPrice = Number(ticket.price) * (ticket.count ?? 1)
+    let discountedPrice = totalPrice
+
+    if (
+      ticket.code_discount &&
+      ticket.code_discount > 0 &&
+      ticket.discount_code_applied
+    ) {
+      discountedPrice *= 1 - ticket.code_discount
+    }
+
+    if (
+      ticket.group_discount &&
+      ticket.group_size &&
+      ticket.count &&
+      ticket.count >= ticket.group_size
+    ) {
+      discountedPrice *= 1 - ticket.group_discount
+    }
+
+    return {
+      ...ticket,
+      originalTotal: totalPrice,
+      discountedTotal: discountedPrice,
+    }
+  })
+
+  // Calculate grand total using discounted prices
+  const grandTotal = ticketsWithDiscounts
+    .reduce((acc, ticket) => acc + ticket.discountedTotal, 0)
+    .toFixed(2)
+
   return (
     <>
       <Subtitle>Summary</Subtitle>
@@ -65,17 +98,40 @@ const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
           >
             Total
           </span>
-          {tickets.map((ticket) => (
-            <>
-              <span key={`count-${ticket.id}`}>{ticket.count} x </span>
-              <span key={`name-${ticket.id}`}>{ticket.event.name}</span>
-              <span key={`type-${ticket.id}`}>({ticket.type})</span>
-              <span key={`price-${ticket.id}`}>${ticket.price}</span>
-              <span key={`cost-${ticket.id}`}>
-                ${(Number(ticket.price) * (ticket.count ?? 1)).toFixed(2)}
-              </span>
-            </>
-          ))}
+          {ticketsWithDiscounts.map((ticket) => {
+            let price_string = ticket.price
+            if (
+              ticket.code_discount &&
+              ticket.code_discount > 0 &&
+              ticket.discount_code_applied
+            ) {
+              price_string += ` - ${ticket.code_discount * 100}% (code)`
+            }
+            if (
+              ticket.group_discount &&
+              ticket.group_size &&
+              ticket.count &&
+              ticket.count >= ticket.group_size
+            ) {
+              price_string += ` - ${ticket.group_discount * 100}% (group)`
+            }
+
+            if (ticket.originalTotal !== ticket.discountedTotal) {
+              price_string += ` = ${ticket.discountedTotal.toFixed(2)}`
+            }
+
+            return (
+              <>
+                <span key={`count-${ticket.id}`}>{ticket.count} x </span>
+                <span key={`name-${ticket.id}`}>{ticket.event.name}</span>
+                <span key={`type-${ticket.id}`}>{ticket.type}</span>
+                <span key={`price-${ticket.id}`}>{price_string}</span>
+                <span key={`cost-${ticket.id}`}>
+                  ${ticket.discountedTotal.toFixed(2)}
+                </span>
+              </>
+            )
+          })}
         </div>
         <hr
           css={css`
@@ -91,13 +147,7 @@ const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
           `}
         >
           <span>Total</span>
-          <span>
-            $
-            {tickets
-              .map((ticket) => Number(ticket.price) * (ticket.count ?? 1))
-              .reduce((acc, curr) => acc + curr, 0)
-              .toFixed(2)}
-          </span>
+          <span>${grandTotal}</span>
         </div>
       </div>
     </>
