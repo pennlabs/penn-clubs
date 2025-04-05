@@ -15,4 +15,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Collect static files
 RUN uv run /app/manage.py collectstatic --noinput
-CMD ["/usr/local/bin/asgi-run"]
+CMD ["/usr/local/bin/wsgi-run"]
