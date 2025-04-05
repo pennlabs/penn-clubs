@@ -203,7 +203,7 @@ class TicketEventTestCase(TestCase):
         )
 
         aggregated_tickets = list(
-            Ticket.objects.filter(event=self.event1, type__contains="_")
+            Ticket.objects.filter(showing=self.event_showing1, type__contains="_")
             .values("type", "price")
             .annotate(count=Count("id"))
         )
