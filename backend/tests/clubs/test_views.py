@@ -28,6 +28,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     Event,
+    EventShowing,
     Favorite,
     Membership,
     MembershipInvite,
@@ -192,9 +193,13 @@ class ClubTestCase(TestCase):
             code="test-event",
             club=self.club1,
             name="Test Event",
+            url="https://zoom.us/j/4880003126",
+        )
+
+        self.event_showing1 = EventShowing.objects.create(
+            event=self.event1,
             start_time=timezone.now() + timezone.timedelta(days=2),
             end_time=timezone.now() + timezone.timedelta(days=3),
-            url="https://zoom.us/j/4880003126",
         )
 
         self.question1 = QuestionAnswer.objects.create(
@@ -531,40 +536,50 @@ class ClubTestCase(TestCase):
 
         e2_start = timezone.now() - timezone.timedelta(days=3)
         e2_end = timezone.now() - timezone.timedelta(days=2)
-        Event.objects.create(
+        ev2 = Event.objects.create(
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
-            start_time=e2_start,
-            end_time=e2_end,
             type=Event.FAIR,
         )
-        Event.objects.create(
+        _ = EventShowing.objects.create(
+            event=ev2,
+            start_time=e2_start,
+            end_time=e2_end,
+        )
+        ev3 = Event.objects.create(
             code="test-event-3",
             club=self.club1,
             name="Present Test Event 3",
-            start_time=timezone.now() - timezone.timedelta(days=3),
-            end_time=timezone.now() + timezone.timedelta(days=2),
             type=Event.FAIR,
         )
+        _ = EventShowing.objects.create(
+            event=ev3,
+            start_time=timezone.now() - timezone.timedelta(days=3),
+            end_time=timezone.now() + timezone.timedelta(days=2),
+        )
+
         self.event1.type = Event.FAIR
         self.event1.save()
 
         # test global event
-        Event.objects.create(
+        global_event = Event.objects.create(
             code="test-event-4",
             club=None,
             name="Test Global Event",
+            type=Event.OTHER,
+        )
+        _ = EventShowing.objects.create(
+            event=global_event,
             start_time=timezone.now() + timezone.timedelta(days=2),
             end_time=timezone.now() + timezone.timedelta(days=3),
-            type=Event.OTHER,
         )
 
         # list events without a club to namespace.
         now = timezone.now()
         resp = self.client.get(
             reverse("events-list"),
-            {"end_time__gte": now},
+            {"latest_end_time__gte": now},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
@@ -574,8 +589,8 @@ class ClubTestCase(TestCase):
         resp = self.client.get(
             reverse("events-list"),
             {
-                "start_time__gte": e2_start.isoformat(),
-                "end_time__lte": e2_end.isoformat(),
+                "earliest_start_time__gte": e2_start.isoformat(),
+                "latest_end_time__lte": e2_end.isoformat(),
             },
             content_type="application/json",
         )
@@ -601,9 +616,13 @@ class ClubTestCase(TestCase):
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
+            type=Event.FAIR,
+        )
+
+        _ = EventShowing.objects.create(
+            event=e2,
             start_time=timezone.now() - timezone.timedelta(days=3),
             end_time=timezone.now() + timezone.timedelta(days=2),
-            type=Event.FAIR,
         )
 
         # cannot change fair event to non-fair event
@@ -679,12 +698,22 @@ class ClubTestCase(TestCase):
         st = timezone.now() + timezone.timedelta(days=2)
         et = timezone.now() + timezone.timedelta(days=3)
         # add one event for every club
-        Event.objects.bulk_create(
+        _ = Event.objects.bulk_create(
             [
                 Event(
                     code=f"{i}",
                     name=f"Test Event for #{i}",
                     club=Club.objects.get(code=f"club-{i}"),
+                )
+                for i in range(1, 7)
+            ]
+        )
+
+        # Add showings for the events
+        EventShowing.objects.bulk_create(
+            [
+                EventShowing(
+                    event=Event.objects.get(code=f"{i}"),
                     start_time=st,
                     end_time=et,
                 )
@@ -693,10 +722,13 @@ class ClubTestCase(TestCase):
         )
 
         # add an event outside the 30-day window
-        Event.objects.create(
+        bad_event = Event.objects.create(
             code="test-event-6",
             name="Test Bad Event for Club 1",
             club=Club.objects.get(code="club-1"),
+        )
+        EventShowing.objects.create(
+            event=bad_event,
             start_time=timezone.now() - timezone.timedelta(days=33),
             end_time=timezone.now() - timezone.timedelta(days=32),
         )
@@ -711,9 +743,11 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         cal = Calendar(resp.content.decode("utf8"))
-        actual = [ev.name for ev in cal.events]
-        expected = [f"Club #{k + 1} - Test Event for #{k + 1}" for k in range(4)]
-        self.assertEqual(actual.sort(), expected.sort())
+        actual = sorted([ev.name for ev in cal.events])
+        expected = sorted(
+            [f"Club #{k + 1} - Test Event for #{k + 1}" for k in range(4)]
+        )
+        self.assertEqual(actual, expected)
 
     def test_retrieve_ics_url(self):
         """
@@ -737,10 +771,6 @@ class ClubTestCase(TestCase):
             person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
         )
 
-        # set event start and end dates
-        start_date = datetime.datetime.now() - datetime.timedelta(days=3)
-        end_date = start_date + datetime.timedelta(hours=2)
-
         # add event
         resp = self.client.post(
             reverse("club-events-list", args=(self.club1.code,)),
@@ -749,8 +779,8 @@ class ClubTestCase(TestCase):
                 "description": "Interest Meeting on Friday!",
                 "location": "JMHH G06",
                 "type": Event.RECRUITMENT,
-                "start_time": start_date.isoformat(),
-                "end_time": end_date.isoformat(),
+                "start_time": timezone.now().isoformat(),
+                "end_time": (timezone.now() + timezone.timedelta(hours=1)).isoformat(),
             },
             content_type="application/json",
         )
@@ -768,8 +798,6 @@ class ClubTestCase(TestCase):
                 "name": "Awesome Interest Meeting",
                 "description": "Interest meeting is actually on Sunday!",
                 "location": "JMHH 256",
-                "start_time": start_date + datetime.timedelta(days=1),
-                "end_time": end_date + datetime.timedelta(days=1),
             },
             content_type="application/json",
         )
@@ -794,9 +822,10 @@ class ClubTestCase(TestCase):
         )
 
         # set event start and end dates
-        start_time = datetime.datetime.now() - datetime.timedelta(days=3)
+        start_time = timezone.now() - datetime.timedelta(days=3)
         end_time = start_time + datetime.timedelta(hours=2)
         end_date = start_time + datetime.timedelta(days=15)
+        offset = 7
 
         # add recurring event
         resp = self.client.post(
@@ -808,23 +837,28 @@ class ClubTestCase(TestCase):
                 "type": Event.RECRUITMENT,
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
-                "is_recurring": True,
-                "offset": 7,
+                "offset": offset,
                 "end_date": end_date.isoformat(),
             },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        for event in resp.data:
-            self.assertEqual(event["name"], "Interest Recurring Meeting")
+        self.assertEqual(resp.data["name"], "Interest Recurring Meeting")
 
         # ensure event exists
         events = Event.objects.filter(name="Interest Recurring Meeting")
-        self.assertEqual(events.count(), 3)
-        recurring = events.first().parent_recurring_event
-        for event in events:
-            self.assertEqual(event.creator, self.user4)
-            self.assertEqual(event.parent_recurring_event, recurring)
+        self.assertEqual(events.count(), 1)
+
+        # ensure recurring event showings exist
+        showings = EventShowing.objects.filter(event=events.first())
+        self.assertEqual(showings.count(), 3)
+
+        for i, showing in enumerate(showings.order_by("start_time")):
+            expected_start_time = start_time + datetime.timedelta(days=offset * i)
+            expected_end_time = end_time + datetime.timedelta(days=offset * i)
+            self.assertEqual(showing.event, events.first())
+            self.assertEqual(showing.start_time, expected_start_time)
+            self.assertEqual(showing.end_time, expected_end_time)
 
     def test_testimonials(self):
         """
@@ -2833,13 +2867,15 @@ class ClubTestCase(TestCase):
         )
 
         self.event1.type = Event.FAIR
-        self.event1.start_time = start_time
-        self.event1.end_time = end_time
         self.event1.save()
+
+        self.event_showing1.start_time = start_time
+        self.event_showing1.end_time = end_time
+        self.event_showing1.save()
 
         ZoomMeetingVisit.objects.bulk_create(
             ZoomMeetingVisit(
-                event=self.event1,
+                event=self.event_showing1,
                 person=[self.user1, self.user2, self.user3, self.user4, self.user5][i],
                 join_time=start_time + datetime.timedelta(hours=1),
                 leave_time=start_time
@@ -3643,3 +3679,242 @@ class RegistrationQueueSettingsTestCase(TestCase):
         data = resp.json()
         self.assertFalse(data["reapproval_queue_open"])
         self.assertFalse(data["new_approval_queue_open"])
+
+
+class EventShowingTestCase(TestCase):
+    """
+    Test the EventShowing API endpoints not related to ticketing.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.user1 = User.objects.create_user(
+            "officer@example.com", "officer@example.com", "password"
+        )
+        cls.user2 = User.objects.create_user(
+            "member@example.com", "member@example.com", "password"
+        )
+        cls.user3 = User.objects.create_user(
+            "random@example.com", "random@example.com", "password"
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+        # Create a test club
+        self.club = Club.objects.create(
+            code="showing-test-club",
+            name="Showing Test Club",
+            approved=True,
+            email="showing@example.com",
+        )
+
+        # Add user1 as an officer and user2 as a member
+        Membership.objects.create(
+            person=self.user1, club=self.club, role=Membership.ROLE_OFFICER
+        )
+        Membership.objects.create(
+            person=self.user2, club=self.club, role=Membership.ROLE_MEMBER
+        )
+
+        # Create a test event
+        self.event = Event.objects.create(
+            code="showing-test-event",
+            club=self.club,
+            name="Showing Test Event",
+            creator=self.user1,
+        )
+
+        # Create a test event showing
+        self.showing = EventShowing.objects.create(
+            event=self.event,
+            start_time=timezone.now() + timezone.timedelta(days=2),
+            end_time=timezone.now() + timezone.timedelta(days=3),
+            location="Test Location",
+        )
+
+    def test_list_showings(self):
+        """
+        Test that anyone can list event showings.
+        """
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
+    def test_retrieve_showing(self):
+        """
+        Test that anyone can retrieve a specific event showing.
+        """
+        response = self.client.get(
+            reverse("event-showings-detail", args=[self.event.id, self.showing.id])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["location"], "Test Location")
+
+    def test_create_showing_permissions(self):
+        """
+        Test permissions for creating event showings.
+        """
+        new_showing_data = {
+            "start_time": (timezone.now() + timezone.timedelta(days=5)).isoformat(),
+            "end_time": (timezone.now() + timezone.timedelta(days=6)).isoformat(),
+            "location": "New Location",
+        }
+
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            new_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            new_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            new_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["location"], "New Location")
+        self.assertEqual(EventShowing.objects.count(), 2)
+
+    def test_update_showing_permissions(self):
+        """
+        Test permissions for updating event showings.
+        """
+        update_data = {"location": "Updated Location"}
+
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            ),
+            update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            ),
+            update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            ),
+            update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["location"], "Updated Location")
+
+        # Verify database was updated
+        self.showing.refresh_from_db()
+        self.assertEqual(self.showing.location, "Updated Location")
+
+    def test_delete_showing_permissions(self):
+        """
+        Test permissions for deleting event showings.
+        """
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.delete(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.delete(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Create a new showing for the officer test
+        new_showing = EventShowing.objects.create(
+            event=self.event,
+            start_time=timezone.now() + timezone.timedelta(days=2),
+            end_time=timezone.now() + timezone.timedelta(days=3),
+            location="Test Location for Delete",
+        )
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.delete(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, new_showing.id],
+            )
+        )
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(EventShowing.objects.filter(id=new_showing.id).count(), 0)
+
+    def test_validation_event_time(self):
+        """
+        Test that start_time must be before end_time.
+        """
+        self.client.login(username=self.user1.username, password="password")
+        invalid_showing_data = {
+            "start_time": (timezone.now() + timezone.timedelta(days=6)).isoformat(),
+            "end_time": (timezone.now() + timezone.timedelta(days=5)).isoformat(),
+            "location": "Invalid Timing",
+        }
+
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            invalid_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(
+            "event start time must be before the end time", str(response.data).lower()
+        )

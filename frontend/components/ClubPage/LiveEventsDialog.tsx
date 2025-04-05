@@ -90,7 +90,7 @@ const LiveEventsDialog = ({
     if (fairName != null) {
       const now = new Date().toISOString()
       doApiRequest(
-        `/events/?format=json&type=${ClubEventType.FAIR}&start_time__lte=${now}&end_time__gte=${now}`,
+        `/events/?format=json&type=${ClubEventType.FAIR}&earliest_start_time__lte=${now}&latest_end_time__gte=${now}`,
       )
         .then((resp) => resp.json())
         .then((data) => setLiveEventCount(data.length))
