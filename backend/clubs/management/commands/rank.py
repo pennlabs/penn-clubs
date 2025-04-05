@@ -66,7 +66,7 @@ class Command(BaseCommand):
             "tags",
             "membership_set",
             "clubapplication_set",
-            "events",
+            "event_groups__events",
             "testimonials",
         ).all()
 
@@ -145,7 +145,7 @@ class Command(BaseCommand):
                 ranking += 25
 
             # points for events
-            today_events = club.events.filter(
+            today_events = club.all_events.filter(
                 end_time__gte=now, start_time__lte=now + datetime.timedelta(days=1)
             )
 
@@ -157,14 +157,14 @@ class Command(BaseCommand):
                 if any(short_events):
                     ranking += 10
                     if all(
-                        len(e.description) >= 3
-                        and e.description not in {"Replace this description!"}
-                        and e.image is not None
+                        len(e.group.description) >= 3
+                        and e.group.description not in {"Replace this description!"}
+                        and e.group.image is not None
                         for e in today_events
                     ):
                         ranking += 10
 
-            close_events = club.events.filter(
+            close_events = club.all_events.filter(
                 end_time__gte=now, start_time__lte=now + datetime.timedelta(weeks=1)
             )
 
@@ -176,9 +176,9 @@ class Command(BaseCommand):
                 if any(short_events):
                     ranking += 5
                     if all(
-                        len(e.description) > 3
-                        and e.description not in {"Replace this description!"}
-                        and e.image is not None
+                        len(e.group.description) > 3
+                        and e.group.description not in {"Replace this description!"}
+                        and e.group.image is not None
                         for e in close_events
                     ):
                         ranking += 5

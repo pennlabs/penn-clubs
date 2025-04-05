@@ -5,7 +5,7 @@ import styled from 'styled-components'
 
 import { TICKETING_PAYMENT_ENABLED } from '~/utils/branding'
 
-import { Icon, Line, Text, Title } from '../../components/common'
+import { Icon, Line, Subtitle, Text, Title } from '../../components/common'
 import {
   ALLBIRDS_GRAY,
   CLUBS_GREY,
@@ -14,9 +14,8 @@ import {
 } from '../../constants/colors'
 import { BORDER_RADIUS } from '../../constants/measurements'
 import { BODY_FONT } from '../../constants/styles'
-import { Club, ClubEvent } from '../../types'
+import { Club, ClubEvent, EventGroup } from '../../types'
 import { doApiRequest } from '../../utils'
-import CoverPhoto from '../EventPage/CoverPhoto'
 
 const ModalContainer = styled.div`
   text-align: left;
@@ -223,17 +222,17 @@ type Ticket = {
 
 const TicketsModal = ({
   event,
+  eventGroup,
   club,
   closeModal,
   onSuccessfulSubmit,
 }: {
   event: ClubEvent
+  eventGroup: EventGroup
   club: Club
   closeModal: () => void
   onSuccessfulSubmit: () => void
 }): ReactElement<any> => {
-  const { large_image_url, image_url, club_name, name, id } = event
-
   const [submitting, setSubmitting] = useState(false)
 
   const router = useRouter()
@@ -283,18 +282,21 @@ const TicketsModal = ({
             buyable: ticket.buyable,
           }
         })
-      doApiRequest(`/events/${id}/tickets/?format=json`, {
-        method: 'PUT',
-        body: {
-          quantities,
+      doApiRequest(
+        `/eventgroups/${eventGroup.code}/events/${event.id}/tickets/?format=json`,
+        {
+          method: 'PUT',
+          body: {
+            quantities,
+          },
         },
-      }).then((res) => {
+      ).then((res) => {
         if (res.ok) {
           notify(<>Tickets Created!</>, 'success')
           setSubmitting(false)
           onSuccessfulSubmit()
           setTimeout(() => {
-            router.push(`/tickets/${id}`)
+            router.push(`/events/${eventGroup.code}/tickets/${event.id}`)
           }, 500)
         } else {
           notify(<>Error creating tickets</>, 'error')
@@ -318,14 +320,9 @@ const TicketsModal = ({
 
   return (
     <ModalContainer>
-      <CoverPhoto
-        image={large_image_url ?? image_url}
-        fallback={
-          <p>{club_name != null ? club_name.toLocaleUpperCase() : 'Event'}</p>
-        }
-      />
       <ModalBody>
-        <Title>{name}</Title>
+        <Title>{event.group.name}</Title>
+        <Subtitle>{event.start_time}</Subtitle>
         <Text>
           Create new tickets for this event. For our beta, only free tickets
           will be supported for now: stay tuned for payments integration!

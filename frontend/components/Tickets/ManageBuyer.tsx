@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { Buyer } from '~/pages/tickets/[[...slug]]'
+import { Buyer } from '~/pages/events/[code]/tickets/[id]'
 
 import { Checkbox } from '../common'
 

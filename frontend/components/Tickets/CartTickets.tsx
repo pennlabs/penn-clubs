@@ -68,7 +68,7 @@ const Summary: React.FC<{ tickets: CountedEventTicket[] }> = ({ tickets }) => {
           {tickets.map((ticket) => (
             <>
               <span key={`count-${ticket.id}`}>{ticket.count} x </span>
-              <span key={`name-${ticket.id}`}>{ticket.event.name}</span>
+              <span key={`name-${ticket.id}`}>{ticket.event.group.name}</span>
               <span key={`type-${ticket.id}`}>({ticket.type})</span>
               <span key={`price-${ticket.id}`}>${ticket.price}</span>
               <span key={`cost-${ticket.id}`}>
@@ -109,6 +109,10 @@ export interface CartTicketsProps {
   soldOut: CountedEventTicket[]
 }
 
+interface CountedEventTicketStatus extends CountedEventTicket {
+  pendingEdit: boolean
+}
+
 /**
  * Combines an array of tickets into a list of unique ticket types with counts
  * @param tickets - Original array of tickets
@@ -125,7 +129,7 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicketStatus[] =>
           count: (acc[`${ticket.event.id}_${ticket.type}`]?.count ?? 0) + 1,
         },
       }),
-      {},
+      {} as Record<string, CountedEventTicketStatus>,
     ),
   )
 
@@ -183,10 +187,6 @@ const useCheckout = (paid: boolean) => {
   }
 }
 
-interface CountedEventTicketStatus extends CountedEventTicket {
-  pendingEdit: boolean
-}
-
 const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   const navigate = useRouter()
   const [removeModal, setRemoveModal] =
@@ -210,19 +210,16 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   useEffect(() => {
     soldOut
       .filter((ticket) => ticket.count !== 0)
-      .forEach(
-        (ticket) => {
-          toast.error(
-            `${ticket.event.name} - ${ticket.type} is no longer available and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
-            {
-              style: { color: WHITE },
-              autoClose: false,
-            },
-          )
-        },
-        [soldOut],
-      )
-  }, [])
+      .forEach((ticket) => {
+        toast.error(
+          `Event ${ticket.event.id} - ${ticket.type} is no longer available and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
+          {
+            style: { color: WHITE },
+            autoClose: false,
+          },
+        )
+      })
+  }, [soldOut])
 
   function handleInitiateCheckout() {
     if (countedTickets.length === 0) {
@@ -251,20 +248,23 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
     }
     flipPendingEdit(true)
     if (newCount && newCount > ticket.count) {
-      reqPromise = doApiRequest(`/events/${ticket.event.id}/add_to_cart/`, {
-        method: 'POST',
-        body: {
-          quantities: [
-            {
-              type: ticket.type,
-              count: newCount - ticket.count,
-            },
-          ],
+      reqPromise = doApiRequest(
+        `/eventgroups/${ticket.event.group.code}/events/${ticket.event.id}/add_to_cart/`,
+        {
+          method: 'POST',
+          body: {
+            quantities: [
+              {
+                type: ticket.type,
+                count: newCount - ticket.count,
+              },
+            ],
+          },
         },
-      })
+      )
     } else {
       reqPromise = doApiRequest(
-        `/events/${ticket.event.id}/remove_from_cart/`,
+        `/eventgroups/${ticket.event.group.code}/events/${ticket.event.id}/remove_from_cart/`,
         {
           method: 'POST',
           body: {
@@ -356,8 +356,8 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
           <ModalContent>
             <Subtitle>Remove Ticket</Subtitle>
             <p>
-              Are you sure you want to remove this ticket for{' '}
-              {removeModal?.event.name}?
+              Are you sure you want to remove this ticket for Event{' '}
+              {removeModal?.event.id}?
             </p>
             <div className="buttons">
               <button

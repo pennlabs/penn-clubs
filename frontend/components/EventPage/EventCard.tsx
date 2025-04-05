@@ -10,7 +10,7 @@ import {
   MEDIUM_GRAY,
   WHITE,
 } from '../../constants/colors'
-import { ClubEvent } from '../../types'
+import { EventInstanceWithGroup } from '../../types'
 import { Card } from '../common/Card'
 import { ClubName, EventLink, EventName } from './common'
 import CoverPhoto from './CoverPhoto'
@@ -40,18 +40,16 @@ const TicketsPill = styled.div`
 const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
 const EventCard = (props: {
-  event: ClubEvent & { clubPublic?: boolean }
+  event: EventInstanceWithGroup
 }): ReactElement<any> => {
+  const { start_time, end_time, ticketed } = props.event.event
+
   const {
     image_url: imageUrl,
     club_name: clubName,
-    clubPublic,
-    start_time,
-    end_time,
-    name,
     url,
-    ticketed,
-  } = props.event
+    name,
+  } = props.event.group
 
   const now = new Date()
   const startDate = new Date(start_time)
@@ -80,7 +78,6 @@ const EventCard = (props: {
       )}
       <ClubName>{clubName}</ClubName>
       <EventName>{name}</EventName>
-      {clubPublic === false && <p>This event is not shown to the public.</p>}
       {ticketed && (
         <TicketsPill
           style={{

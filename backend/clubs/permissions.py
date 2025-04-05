@@ -198,6 +198,17 @@ class EventPermission(permissions.BasePermission):
     Everyone else can view and list events.
     """
 
+    def _get_event_group(self, obj):
+        """
+        helper function to consistently get the EventGroup from object
+        """
+        from clubs.models import Event
+
+        if isinstance(obj, Event):
+            return obj.group
+        # assume obj is an EventGroup
+        return obj
+
     def has_permission(self, request, view):
         if view.action in ["create", "update", "partial_update", "destroy"]:
             if "club_code" not in view.kwargs:
@@ -217,10 +228,14 @@ class EventPermission(permissions.BasePermission):
         Do not allow transitions from and to club fair event.
         """
         # prevent circular import
-        from clubs.models import Event
+        from clubs.models import EventGroup
 
-        FAIR_TYPE = Event.FAIR
+        FAIR_TYPE = EventGroup.FAIR
 
+        # ensure obj is an EventGroup
+        obj = self._get_event_group(obj)
+
+        # get type of group if obj an Event instance
         old_type = obj.type
         new_type = request.data.get("type", old_type)
 

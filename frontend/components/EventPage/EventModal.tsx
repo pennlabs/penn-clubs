@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import { Icon, Text } from '../../components/common'
 import { ZOOM_BLUE } from '../../constants'
 import { MEDIUM_GRAY } from '../../constants/colors'
-import { ClubEvent } from '../../types'
+import { EventInstanceWithGroup } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { ClubName, EventLink, EventName } from './common'
@@ -158,22 +158,23 @@ export const LiveStats = ({
 }
 
 const EventModal = (props: {
-  event: ClubEvent
+  event: EventInstanceWithGroup
   onLinkClicked?: () => void
 }): ReactElement<any> => {
   const { event, onLinkClicked } = props
   const {
-    large_image_url,
-    image_url,
-    club_name,
-    start_time,
-    end_time,
-    ticketed,
+    image_url: imageUrl,
+    large_image_url: largeImageUrl,
     name,
+    club_name: clubName,
     url,
     description,
-    id,
-  } = event
+  } = props.event.group
+  const {
+    start_time: startTime,
+    end_time: endTime,
+    ticketed,
+  } = props.event.event
   const [userCount, setUserCount] = useState<LiveStatsData | null>(null)
   const [tickets, setTickets] = useState<Record<
     string,
@@ -181,21 +182,23 @@ const EventModal = (props: {
   > | null>(null)
   const [userHasTickets, setUserHasTickets] = useState<boolean | null>(null)
   const now = new Date()
-  const startDate = new Date(start_time)
-  const endDate = new Date(end_time)
+  const startDate = new Date(startTime)
+  const endDate = new Date(endTime)
   const isHappening = now >= startDate && now <= endDate
   const isZoomMeeting = url && MEETING_REGEX.test(url)
 
   const refreshLiveData = () => {
     if (isZoomMeeting) {
-      doApiRequest(`/webhook/meeting/?format=json&event=${event.id}`)
+      doApiRequest(`/webhook/meeting/?format=json&event=${event.event.id}`)
         .then((resp) => resp.json())
         .then((resp) => {
           setUserCount(resp)
         })
     }
     if (ticketed) {
-      doApiRequest(`/events/${event.id}/tickets/`)
+      doApiRequest(
+        `/eventgroups/${event.group.id}/events/${event.event.id}/tickets/`,
+      )
         .then((resp) => resp.json())
         .then((resp) => {
           const ticketMap = resp.totals.reduce(
@@ -220,7 +223,7 @@ const EventModal = (props: {
         .then((resp) => resp.json())
         .then((resp) => {
           for (let i = 0; i < resp.length; i++) {
-            if (resp[i].event.id === event.id) {
+            if (resp[i].event.id === event.event.id) {
               setUserHasTickets(true)
               break
             }
@@ -234,26 +237,26 @@ const EventModal = (props: {
   return (
     <ModalContainer>
       <CoverPhoto
-        image={large_image_url ?? image_url}
+        image={largeImageUrl ?? imageUrl}
         fallback={
-          <p>{club_name != null ? club_name.toLocaleUpperCase() : 'Event'}</p>
+          <p>{clubName != null ? clubName.toLocaleUpperCase() : 'Event'}</p>
         }
       />
       <EventDetails>
         {isZoomMeeting && (
-          <LiveEventUpdater id={event.id} onUpdate={refreshLiveData} />
+          <LiveEventUpdater id={event.event.id} onUpdate={refreshLiveData} />
         )}
         <MetaDataGrid>
-          <DateInterval start={new Date(start_time)} end={new Date(end_time)} />
+          <DateInterval start={new Date(startTime)} end={new Date(endTime)} />
           <RightAlign>
             {isHappening ? (
               <HappeningNow urgent={true} />
             ) : (
-              <TimeLeft date={new Date(start_time)} />
+              <TimeLeft date={new Date(startTime)} />
             )}
           </RightAlign>
         </MetaDataGrid>
-        {club_name != null && <ClubName>{club_name}</ClubName>}
+        {clubName != null && <ClubName>{clubName}</ClubName>}
         <EventName>{name}</EventName>
         {url &&
           (MEETING_REGEX.test(url) ? (
@@ -273,7 +276,7 @@ const EventModal = (props: {
             </EventLink>
           ))}{' '}
         {userCount != null && <LiveStats stats={userCount} />}
-        <StyledDescription contents={description} />
+        {description && <StyledDescription contents={description} />}
         {tickets &&
           Object.entries(tickets).map(([type, counts]) => (
             <Text key={type}>
@@ -288,7 +291,10 @@ const EventModal = (props: {
                 Owned Tickets
               </a>
             )}
-            <a className="button is-primary" href={`/events/${id}`}>
+            <a
+              className="button is-primary"
+              href={`/events/${event.group.code}`}
+            >
               Event Page
             </a>
           </div>

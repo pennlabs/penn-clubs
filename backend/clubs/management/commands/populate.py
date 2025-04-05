@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
+from django.utils.text import slugify
 from options.models import Option
 
 from clubs.models import (
@@ -21,6 +22,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     Event,
+    EventGroup,
     Major,
     Membership,
     Profile,
@@ -133,8 +135,8 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</i>""",
     {
         "code": "harvard-rejects",
         "name": "Harvard Rejects Club",
-        "description": """We’re Penn’s largest club with over 20,000 active members!
-We’re always looking for enthusiastic students to join our organization,
+        "description": """We're Penn's largest club with over 20,000 active members!
+We're always looking for enthusiastic students to join our organization,
 so please feel free to reach out to us at upenn.edu/harvard to join!""",
         "image": "https://i.imgur.com/IxgjBmA.png",
         "active": True,
@@ -512,27 +514,40 @@ class Command(BaseCommand):
 
         # Create an event for right now so cypress can test current events
         live_event_club = Club.objects.all()[0]
-        event, created = Event.objects.get_or_create(
+
+        event_group, _ = EventGroup.objects.get_or_create(
+            name=f"Test EventGroup for {live_event_club.name}",
+            code=f"test-event-group-for-club-{slugify(live_event_club)}",
             club=live_event_club,
-            code="test-event-for-club-now",
+            creator=ben,
+            description="This is the description for this event.",
+        )
+        event, created = Event.objects.get_or_create(
+            group=event_group,
             defaults={
                 "creator": ben,
-                "name": f"Test Event now for {live_event_club.name}",
-                "description": "This is the description for this event.",
                 "start_time": now,
                 "end_time": now + datetime.timedelta(hours=1),
             },
         )
+        if created:
+            contents = get_image(event_image_url)
+            event.group.image.save("image.png", ContentFile(contents))
 
         # create a global event for testing
-        Event.objects.get_or_create(
+        global_event_group, _ = EventGroup.objects.get_or_create(
+            name="Test Global Event Group",
+            code="test-global-event-group",
             club=None,
-            code="test-global-event",
+            creator=ben,
+            description="This is the description for this event."
+            "does not belong to any club.",
+        )
+
+        Event.objects.get_or_create(
+            group=global_event_group,
             defaults={
                 "creator": ben,
-                "name": "Test Global Event",
-                "description": "This is a global event that "
-                "does not belong to any club.",
                 "start_time": now + datetime.timedelta(days=1),
                 "end_time": now
                 + datetime.timedelta(days=1)
@@ -586,10 +601,6 @@ class Command(BaseCommand):
             club.badges.add(fair_cat_badge)
 
         fair.create_events()
-
-        if created:
-            contents = get_image(event_image_url)
-            event.image.save("image.png", ContentFile(contents))
 
         # create a club application
         club = Club.objects.get(code="empty-club")
@@ -721,13 +732,17 @@ class Command(BaseCommand):
                         + datetime.timedelta(hours=i + 1)
                     )
 
-                event, created = Event.objects.get_or_create(
+                event_group, _ = EventGroup.objects.get_or_create(
+                    name=f"Test EventGroup for {club.name}",
+                    code=f"test-event-group-for-club-{slugify(club.name)}-{j}",
                     club=club,
-                    code="test-event-for-club-{}-{}".format(club, j),
+                    creator=ben,
+                    description="This is the description for this event.",
+                )
+                event, created = Event.objects.get_or_create(
+                    group=event_group,
                     defaults={
                         "creator": ben,
-                        "name": f"Test Event #{j} for {club.name}",
-                        "description": "This is the description for this event.",
                         "start_time": start_time,
                         "end_time": end_time,
                     },
@@ -735,7 +750,7 @@ class Command(BaseCommand):
 
                 if created:
                     contents = get_image(event_image_url)
-                    event.image.save("image.png", ContentFile(contents))
+                    event.group.image.save("image.png", ContentFile(contents))
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
@@ -761,11 +776,60 @@ class Command(BaseCommand):
                 first_mship.save()
             count += 1
 
+        # Create a special multi-instance event group
+        multi_event_club = Club.objects.get(code="pppjo")
+        multi_event_group, _ = EventGroup.objects.get_or_create(
+            name="Multi-Instance Test Event Group",
+            code="multi-instance-test-event-group",
+            club=multi_event_club,
+            creator=ben,
+            description="This group contains multiple event instances for testing.",
+        )
+
+        # Add multiple events to this group
+        multi_event_base = now + datetime.timedelta(days=5)
+        Event.objects.get_or_create(
+            group=multi_event_group,
+            creator=ben,
+            start_time=multi_event_base.replace(hour=10),
+            end_time=multi_event_base.replace(hour=11),
+            location="Virtual Meeting Room A",
+        )
+        Event.objects.get_or_create(
+            group=multi_event_group,
+            creator=ben,
+            start_time=multi_event_base.replace(hour=14),
+            end_time=multi_event_base.replace(hour=15, minute=30),
+            location="Physical Location B",
+        )
+        # Create a ticketed event within the multi-event group
+        ticketed_event_multi, _ = Event.objects.get_or_create(
+            group=multi_event_group,
+            creator=ben,
+            start_time=multi_event_base.replace(hour=19),
+            end_time=multi_event_base.replace(hour=21),
+            location="Ticketed Venue C",
+        )
+
+        # Add tickets to one of the multi-group events
+        Ticket.objects.bulk_create(
+            [
+                Ticket(event=ticketed_event_multi, type="Standard", price=5.00)
+                for _ in range(20)
+            ]
+        )
+        Ticket.objects.bulk_create(
+            [
+                Ticket(event=ticketed_event_multi, type="VIP", price=15.00)
+                for _ in range(10)
+            ]
+        )
+
         # Add tickets
 
         hr = Club.objects.get(code="harvard-rejects")
 
-        hr_events = Event.objects.filter(club=hr)
+        hr_events = Event.objects.filter(group__club=hr)
 
         for idx, e in enumerate(hr_events[:3]):
             # Switch up person every so often

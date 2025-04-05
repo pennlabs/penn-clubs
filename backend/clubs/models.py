@@ -25,6 +25,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
+from django.utils.text import slugify
 from ics import Calendar
 from jinja2 import Environment, meta
 from model_clone.models import CloneModel
@@ -382,12 +383,12 @@ class Club(models.Model):
         url = self.ics_import_url
         if url:
             calendar = Calendar(requests.get(url).text)
-            event_list = Event.objects.filter(is_ics_event=True, club=self)
+            event_list = Event.objects.filter(is_ics_event=True, group__club=self)
             modified_events = []
             for event in calendar.events:
                 tries = [
                     Event.objects.filter(
-                        club=self,
+                        group__club=self,
                         start_time=event.begin.datetime,
                         end_time=event.end.datetime,
                     ).first(),
@@ -408,30 +409,30 @@ class Club(models.Model):
 
                 for ev in tries:
                     if ev:
-                        ev.club = self
-                        ev.name = event.name.strip()
                         ev.start_time = event.begin.datetime
                         ev.end_time = event.end.datetime
-                        ev.description = clean(event.description.strip())
-                        ev.location = event.location
+                        ev.location = event.location[:255] if event.location else None
                         ev.is_ics_event = True
 
-                        # very simple type detection, only perform on first time
-                        if ev.pk is None:
-                            ev.type = Event.OTHER
-                            for val, lbl in Event.TYPES:
-                                if val in {Event.FAIR}:
-                                    continue
-                                if (
-                                    lbl.lower() in ev.name.lower()
-                                    or lbl.lower() in ev.description.lower()
-                                ):
-                                    ev.type = val
-                                    break
+                        # save event to add to group
+                        ev.save()
+                        # add event to group, and ensure length limits are met
+                        # don't create with name as name similar names with different
+                        # punctuations result in the same slug
+                        event_group, _ = EventGroup.objects.get_or_create(
+                            code=slugify(event.name)[:255],
+                            club=self,
+                        )
+                        # now add name if none
+                        if event_group.name == "":
+                            event_group.name = event.name.strip()[:255]
 
+                        ev.group = event_group
+
+                        event_group.description = clean(event.description.strip())
                         # extract urls from description
-                        if ev.description:
-                            urls = extractor.find_urls(ev.description)
+                        if event_group.description:
+                            urls = extractor.find_urls(event_group.description)
                             urls.sort(
                                 key=lambda url: any(
                                     domain in url
@@ -444,40 +445,53 @@ class Club(models.Model):
                                 reverse=True,
                             )
                             if urls:
-                                ev.url = urls[0]
+                                event_group.url = urls[0]
+
+                        # very simple type detection, only perform on first time
+                        if event_group.pk is None:
+                            event_group.type = EventGroup.OTHER
+                            for val, lbl in EventGroup.TYPES:
+                                if val in {EventGroup.FAIR}:
+                                    continue
+                                if (
+                                    lbl.lower() in event_group.name.lower()
+                                    or lbl.lower() in event_group.description.lower()
+                                ):
+                                    event_group.type = val
+                                    break
 
                         # extract url from url or location
-                        if event.url:
-                            ev.url = event.url
+                        if event_group.url:
+                            event_group.url = event.url
                         elif ev.location:
                             location_urls = extractor.find_urls(ev.location)
                             if location_urls:
-                                ev.url = location_urls[0]
+                                event_group.url = location_urls[0]
 
                         # format url properly with schema
-                        if ev.url:
-                            parsed = urlparse(ev.url)
+                        if event_group.url:
+                            parsed = urlparse(event_group.url)
                             if not parsed.netloc:
                                 parsed = parsed._replace(netloc=parsed.path, path="")
                             if not parsed.scheme:
                                 parsed = parsed._replace(scheme="https")
-                            ev.url = parsed.geturl()
+                            event_group.url = parsed.geturl()
 
                         # add uuid if it exists, otherwise will be autogenerated
                         if event_uuid:
                             ev.ics_uuid = event_uuid
 
-                        # ensure length limits are met before saving
+                        # ensure length limits are met
+                        if event_group.url:
+                            event_group.url = event_group.url[:2048]
                         if ev.location:
                             ev.location = ev.location[:255]
-                        if ev.name:
-                            ev.name = ev.name[:255]
-                        if ev.code:
-                            ev.code = ev.code[:255]
-                        if ev.url:
-                            ev.url = ev.url[:2048]
+                        if event_group.name:
+                            event_group.name = event_group.name[:255]
 
-                        ev.save()
+                        event_group.save()
+                        ev.save(update_fields=["group"])
+
                         modified_events.append(ev)
                         break
 
@@ -508,12 +522,12 @@ class Club(models.Model):
 
         eastern = pytz.timezone("America/New_York")
 
-        events = self.events.filter(
+        events = self.all_events.filter(
             start_time__gte=fair.start_time,
             end_time__lte=fair.end_time,
-            type=Event.FAIR,
+            group__type=EventGroup.FAIR,
         ).order_by("start_time")
-        event = events.first()
+        event = events.select_related("group").first()
         fstr = "%B %d, %Y %I:%M %p"
         events = [
             {
@@ -525,7 +539,7 @@ class Club(models.Model):
 
         prefix = (
             "ACTION REQUIRED"
-            if event is None or not event.url or "zoom.us" not in event.url
+            if event is None or not event.group.url or "zoom.us" not in event.group.url
             else "REMINDER"
         )
 
@@ -695,6 +709,10 @@ class Club(models.Model):
                 reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
             )
 
+    @property
+    def all_events(self):
+        return Event.objects.filter(group__club=self)
+
     class Meta:
         ordering = ["name"]
         permissions = [
@@ -855,17 +873,17 @@ class ClubFair(models.Model):
         events = []
         with transaction.atomic():
             for club in club_query:
-                obj, _ = Event.objects.get_or_create(
+                fair_event_group, _ = EventGroup.objects.get_or_create(
                     code=f"fair-{club.code}-{self.id}-{suffix}",
                     club=club,
-                    type=Event.FAIR,
-                    defaults={
-                        "name": self.name,
-                        "start_time": start_time,
-                        "end_time": end_time,
-                    },
+                    type=EventGroup.FAIR,
                 )
-                events.append(obj)
+                fair_event, _ = Event.objects.get_or_create(
+                    start_time=start_time,
+                    end_time=end_time,
+                    group=fair_event_group,
+                )
+                events.append(fair_event)
         return events
 
     def __str__(self):
@@ -902,11 +920,18 @@ class RecurringEvent(models.Model):
     """
 
     def __str__(self):
-        events = self.event_set.all()
-        if events.exists():
+        events = self.event_set.prefetch_related("group").all()
+        count = events.count()
+
+        # if events exist
+        if count > 0:
             first_event = events.first()
-            last_event = events.last()
-            name = first_event.name
+            if count > 1:
+                last_event = events.last()
+            else:
+                # only one, event so first == last
+                last_event = first_event
+            name = first_event.group.name
             return (
                 f"{name}: "
                 f"{first_event.start_time} - {last_event.end_time} "
@@ -915,34 +940,28 @@ class RecurringEvent(models.Model):
         return "empty recurring event object"
 
 
-class Event(models.Model):
+class EventGroup(models.Model):
     """
-    Represents an event hosted by a club.
-    If the club is null, this is a global event.
+    Allow for the same event to be displayed for different times and
+    potentially different locations.
     """
 
-    code = models.SlugField(max_length=255, db_index=True)
+    code = models.SlugField(max_length=255, db_index=True, unique=True)
     creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=255)
     club = models.ForeignKey(
-        Club, on_delete=models.CASCADE, related_name="events", null=True
+        Club, on_delete=models.CASCADE, related_name="event_groups", null=True
     )
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(max_length=2048, null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(
         upload_to=get_event_small_file_name, null=True, blank=True
     )
+    url = models.URLField(max_length=2048, null=True, blank=True)
     description = models.TextField(blank=True)  # rich html
-    ics_uuid = models.UUIDField(default=uuid.uuid4)
-    is_ics_event = models.BooleanField(default=False, blank=True)
-    parent_recurring_event = models.ForeignKey(
-        RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
-    )
-    ticket_order_limit = models.IntegerField(default=10)
-    ticket_drop_time = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -962,16 +981,47 @@ class Event(models.Model):
     )
 
     type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
-    pinned = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 400)
 
     def __str__(self):
         return self.name
+
+
+class Event(models.Model):
+    """
+    Represents an event hosted by a club.
+    If the club is null, this is a global event.
+    """
+
+    group = models.ForeignKey(
+        EventGroup,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="events",
+    )
+    creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    location = models.CharField(max_length=255, null=True, blank=True)
+    ics_uuid = models.UUIDField(default=uuid.uuid4)
+    is_ics_event = models.BooleanField(default=False, blank=True)
+    parent_recurring_event = models.ForeignKey(
+        RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
+    )
+    ticket_order_limit = models.IntegerField(default=10)
+    ticket_drop_time = models.DateTimeField(null=True, blank=True)
+
+    pinned = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        # TODO: come back to this. Should groups be required?
+        return self.group.name if self.group else "this event has no group"
 
 
 class Favorite(models.Model):
@@ -1971,7 +2021,7 @@ class Ticket(models.Model):
 
         context = {
             "first_name": self.owner.first_name,
-            "name": self.event.name,
+            "name": self.event.group.name,
             "type": self.type,
             "start_time": self.event.start_time,
             "end_time": self.event.end_time,
@@ -1983,7 +2033,7 @@ class Ticket(models.Model):
             send_mail_helper(
                 name="ticket_confirmation",
                 subject=f"Ticket confirmation for {self.owner.get_full_name()}"
-                f" to {self.event.name}",
+                f" to {self.event.group.name}",
                 emails=[self.owner.email],
                 context=context,
                 attachment={
@@ -2026,13 +2076,13 @@ class TicketTransferRecord(models.Model):
             "sender_first_name": self.sender.first_name,
             "receiver_first_name": self.receiver.first_name,
             "receiver_username": self.receiver.username,
-            "event_name": self.ticket.event.name,
+            "event_name": self.ticket.event.group.name,
             "type": self.ticket.type,
         }
 
         send_mail_helper(
             name="ticket_transfer",
-            subject=f"Ticket transfer confirmation for {self.ticket.event.name}",
+            subject=f"Ticket transfer confirmation for {self.ticket.event.group.name}",
             emails=[self.sender.email, self.receiver.email],
             context=context,
         )
@@ -2069,7 +2119,7 @@ def club_delete_cleanup(sender, instance, **kwargs):
         instance.image_small.delete(save=True)
 
 
-@receiver(models.signals.post_delete, sender=Event)
+@receiver(models.signals.post_delete, sender=EventGroup)
 def event_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)

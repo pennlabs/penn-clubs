@@ -31,6 +31,7 @@ from clubs.models import (
     ClubFairRegistration,
     ClubVisit,
     Event,
+    EventGroup,
     Favorite,
     Major,
     Membership,
@@ -229,13 +230,34 @@ class ClubFairAdmin(admin.ModelAdmin):
     list_filter = ("start_time", "end_time")
 
 
+class EventInline(TabularInline):
+    model = Event
+    extra = 1
+    fields = ("start_time", "end_time", "location")
+
+
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("name", "club", "type", "start_time", "end_time")
-    search_fields = ("name", "club__name")
+    list_display = ("get_name", "get_club", "get_event_type", "start_time", "end_time")
+    search_fields = ("group__name", "group__club__name")
     list_filter = ("start_time", "end_time")
 
-    def club(self, obj):
-        return obj.club.name
+    @admin.display(description="Club")
+    def get_club(self, obj):
+        return obj.group.club.name if (obj.group and obj.group.club) else None
+
+    @admin.display(description="Type")
+    def get_event_type(self, obj):
+        return obj.group.type if obj.group else None
+
+    @admin.display(description="Name")
+    def get_name(self, obj):
+        return obj.group.name if obj.group else None
+
+
+class EventGroupAdmin(admin.ModelAdmin):
+    list_display = ("name", "club", "type")
+    search_fields = ("name", "club__name")
+    inlines = [EventInline]
 
 
 class FavoriteAdmin(admin.ModelAdmin):
@@ -466,6 +488,7 @@ admin.site.register(ClubFairRegistration)
 admin.site.register(ClubVisit)
 admin.site.register(Badge, BadgeAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(EventGroup, EventGroupAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(School)
 admin.site.register(SearchQuery)

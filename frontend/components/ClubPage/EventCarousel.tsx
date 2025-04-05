@@ -7,7 +7,7 @@ import styled from 'styled-components'
 import { Navigation, Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
 
-import { ClubEvent } from '../../types'
+import { EventInstanceWithGroup } from '../../types'
 import { Icon, StrongText } from '../common'
 import Modal from '../common/Modal'
 import EventCard from '../EventPage/EventCard'
@@ -32,14 +32,14 @@ const CarouselWrapper = styled.div`
 `
 
 type EventsProps = {
-  data: ClubEvent[]
+  data: EventInstanceWithGroup[]
 }
 
 const EventCarousel = ({ data }: EventsProps) => {
   const [show, setShow] = useState(false)
-  const [modalData, setModalData] = useState<ClubEvent>()
+  const [modalData, setModalData] = useState<EventInstanceWithGroup>()
 
-  const showModal = (entry: ClubEvent) => {
+  const showModal = (entry: EventInstanceWithGroup) => {
     setModalData(entry)
     setShow(true)
   }
