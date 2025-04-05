@@ -142,8 +142,8 @@ export const TicketCard = ({
   const [ticketCount, setTicketCount] = useState(ticket.count)
 
   const datetimeData = formatTime(
-    ticket.event.start_time,
-    ticket.event.end_time,
+    ticket.showing.start_time,
+    ticket.showing.end_time,
   )
 
   return (
