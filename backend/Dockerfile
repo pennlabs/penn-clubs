@@ -4,7 +4,7 @@ LABEL maintainer="Penn Labs"
 
 # Copy project files
 ADD . /app/
-COPY ./scripts/asgi-run /usr/local/bin/
+COPY ./scripts/wsgi-run /usr/local/bin/
 
 WORKDIR /app
 RUN uv sync --frozen
