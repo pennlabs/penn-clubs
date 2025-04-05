@@ -2875,7 +2875,7 @@ class ClubTestCase(TestCase):
 
         ZoomMeetingVisit.objects.bulk_create(
             ZoomMeetingVisit(
-                event=self.event_showing1,
+                event=self.event1,
                 person=[self.user1, self.user2, self.user3, self.user4, self.user5][i],
                 join_time=start_time + datetime.timedelta(hours=1),
                 leave_time=start_time

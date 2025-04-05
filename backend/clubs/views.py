@@ -717,16 +717,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
 
         events = Event.objects.filter(club__in=clubs, type=Event.FAIR)
 
-        # Get all showings for selected events
-        showings = EventShowing.objects.filter(
-            event__in=events,
-            start_time__gte=fair.start_time,
-            end_time__lte=fair.end_time,
-        )
-
         # Calculate metrics per showing
-        showing_metrics = (
-            showings.annotate(
+        metrics = (
+            events.annotate(
                 participant_count=Count(
                     "visits__person",
                     distinct=True,
@@ -750,9 +743,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         )
 
         median_list = collections.defaultdict(list)
-        for showing_id, event_id, duration in showing_metrics.values_list(
-            "id", "event_id", "durations"
-        ).order_by("durations"):
+        for event_id, duration in metrics.values_list("id", "durations").order_by(
+            "durations"
+        ):
             if duration is not None:
                 median_list[event_id].append(duration.total_seconds())
 
@@ -763,8 +756,8 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         event_participant_counts = collections.defaultdict(int)
         event_already_attended = collections.defaultdict(int)
 
-        for event_id, participant_count, attended_count in showing_metrics.values_list(
-            "event_id", "participant_count", "already_attended"
+        for event_id, participant_count, attended_count in metrics.values_list(
+            "id", "participant_count", "already_attended"
         ):
             event_participant_counts[event_id] += participant_count
             event_already_attended[event_id] += attended_count
@@ -772,12 +765,12 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         # Get officers who are currently in any showing of the event
         officer_mapping = collections.defaultdict(list)
         for event_id, username in (
-            showings.filter(
-                event__club__in=clubs,
-                event__club__membership__role__lte=10,
+            events.filter(
+                club__in=clubs,
+                club__membership__role__lte=10,
                 visits__leave_time__isnull=True,
             )
-            .values_list("event_id", "event__club__membership__person__username")
+            .values_list("id", "club__membership__person__username")
             .distinct()
         ):
             officer_mapping[event_id].append(username)
