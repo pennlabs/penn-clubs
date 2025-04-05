@@ -950,14 +950,6 @@ class Event(models.Model):
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
 
-    # These fields have been refactored out to EventShowing. Keep temporarily until DB
-    # can be updated in prod. Set to nullable to be compatible with populate script.
-    start_time = models.DateTimeField(null=True, blank=True)
-    end_time = models.DateTimeField(null=True, blank=True)
-    location = models.CharField(max_length=255, null=True, blank=True)
-    ticket_order_limit = models.IntegerField(default=10, null=True, blank=True)
-    ticket_drop_time = models.DateTimeField(null=True, blank=True)
-
     OTHER = 0
     RECRUITMENT = 1
     GBM = 2
@@ -1935,15 +1927,6 @@ class Ticket(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # The event field has been refactored out to EventShowing. Keep temporarily until DB
-    # can be updated in prod. Set to nullable to be compatible with populate script.
-    event = models.ForeignKey(
-        Event,
-        related_name="tickets",
-        on_delete=models.DO_NOTHING,
-        null=True,
-        blank=True,
-    )
     showing = models.ForeignKey(
         EventShowing,
         related_name="tickets",
