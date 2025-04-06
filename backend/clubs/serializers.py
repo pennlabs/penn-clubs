@@ -15,6 +15,8 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 from rest_framework import serializers, validators
 from simple_history.utils import update_change_reason
+from html_diff import diff
+from bs4 import BeautifulSoup
 
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
@@ -966,6 +968,38 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
     class Meta(ClubMinimalSerializer.Meta):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
 
+class ClubDiffSerializer(serializers.ModelSerializer):
+    diff = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Club
+        fields = ["code"]
+
+    def to_representation(self, instance):
+        fields = ["name", "description", "image"]
+        diff = {}
+        is_same = True
+        for field in fields:
+            diff[field] = {
+                "old": getattr(instance, f"latest_approved_{field}", None),
+                "new": getattr(instance, f"latest_{field}", None),
+            }
+            if diff[field]["old"] != diff[field]["new"]:
+                is_same = False
+
+        latest_approved_description = diff["description"]["old"] or ""
+        latest_description = diff["description"]["new"] or ""
+        diff["description"]["diff"] = description_diff_helper(
+            latest_approved_description, latest_description
+        )
+
+        if is_same:
+            return {
+                instance.code: "No changes that require approval made"
+                + " since last approval"
+            }
+
+        return {instance.code: diff}
 
 class ClubListSerializer(serializers.ModelSerializer):
     """
@@ -1192,6 +1226,73 @@ class StudentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentType
         fields = ("id", "name")
+
+def description_diff_helper(latest_approved_description, latest_description):
+    # Get the diff between old and new HTML
+    html_text = diff(latest_approved_description, latest_description)
+    soup = BeautifulSoup(html_text, "html.parser")
+
+    # remove background-color from all elements
+    for tag in soup.find_all(style=True):
+        tag["style"] = re.sub(
+            r"background-color:\s*[^;]+;?\s*", "", tag["style"]
+        ).strip()
+        if not tag["style"]:  # If the style attribute is now empty, remove it
+            del tag["style"]
+
+    # apply new background color to children of del tags
+    for tag in soup.find_all(["del", "ins"]):
+        bg_color = "#ffbdbd" if tag.name == "del" else "#dafdd5"
+        for child in tag.find_all(True):
+            child["style"] = (
+                child.get("style", "") + f"; background-color: {bg_color};"
+            ).strip("; ")
+
+    # unwrap nested <del> tags inside <ins> and vice versa
+    for del_tag in soup.find_all("del"):
+        for nested_ins in del_tag.find_all("ins"):
+            nested_ins.unwrap()  # Removes the <ins> tag but keeps its content
+    for ins_tag in soup.find_all("ins"):
+        for nested_del in ins_tag.find_all("del"):
+            nested_del.unwrap()  # Removes the <del> tag but keeps its content
+
+    # highlight / style the <del> and <ins> tags
+    for tag in soup.find_all(["del", "ins"]):
+        if tag.name == "del":
+            tag["style"] = (
+                "text-decoration: none; background-color: #ffbdbd; opacity: 0.3;"
+            )
+        elif tag.name == "ins":
+            tag["style"] = (
+                "text-decoration: none; background-color: #dafdd5; opacity: 1;"
+            )
+
+    # Color content with same content but different tag yellow
+    for del_tag in soup.find_all("del"):
+        next_tag = del_tag.find_next_sibling("ins")
+        if next_tag and next_tag.get_text() == del_tag.get_text():
+            del_tag.decompose()
+            next_tag["style"] = re.sub(
+                r"background-color:\s*[^;]+;?\s*", "", next_tag.get("style", "")
+            )
+            next_tag["style"] = (
+                next_tag.get("style", "") + " background-color: #fff2bd;"
+            )
+            for child in next_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+    for ins_tag in soup.find_all("ins"):
+        next_tag = ins_tag.find_next_sibling("del")
+        if next_tag and next_tag.get_text() == ins_tag.get_text():
+            next_tag.decompose()
+            next_tag["style"] = re.sub(
+                r"background-color:\s*[^;]+;?\s*", "", next_tag.get("style", "")
+            )
+            ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
+            for child in next_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+
+    # convert soup back to a string and return
+    return str(soup)
 
 
 def social_validation_helper(value, domain, prefix="", at_prefix=None):
