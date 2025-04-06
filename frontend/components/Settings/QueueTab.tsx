@@ -16,6 +16,22 @@ import {
 import { ModalContent } from '../ClubPage/Actions'
 import { Checkbox, Icon, Modal } from '../common'
 
+type ClubDiff = {
+  description: {
+    old: string
+    new: string
+    diff: string
+  }
+  name: {
+    old: string
+    new: string
+  }
+  image: {
+    old: string
+    new: string
+  }
+}
+
 type QueueTableModalProps = {
   show: boolean
   closeModal: () => void
@@ -198,81 +214,85 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
 }
 
 const retrieveDiffs = async (club) => {
-  const resp = await doApiRequest(`/clubs/${club.code}/club_detail_diff/?format=json`, {
-    method: 'GET'
-  })
+  const resp = await doApiRequest(
+    `/clubs/${club.code}/club_detail_diff/?format=json`,
+    {
+      method: 'GET',
+    },
+  )
   const json = await resp.json()
   return json[club.code]
 }
 
 const ClubLink = ({ code, name }: Club) => (
-  <Link href={CLUB_ROUTE()} as={CLUB_ROUTE(code)} target="_blank" style={{marginRight: "1rem"}}>
+  <Link
+    href={CLUB_ROUTE()}
+    as={CLUB_ROUTE(code)}
+    target="_blank"
+    style={{ marginRight: '1rem' }}
+  >
     {name}
   </Link>
 )
 
-const ClubTags = ({ code, name, }: Club) : ReactElement => {
-  
-  const tagList : string[][] = []
-  
-  const [diffs, setDiffs] = useState(null);
-    
+const ClubTags = ({ code, name }: Club): ReactElement => {
+  const tagList: string[][] = []
+
+  const [diffs, setDiffs] = useState<ClubDiff | null>(null)
+
   const retrieveDiffs = async () => {
-    const resp = await doApiRequest(`/clubs/${code}/club_detail_diff/?format=json`, {
-      method: 'GET'
-    })
+    const resp = await doApiRequest(
+      `/clubs/${code}/club_detail_diff/?format=json`,
+      {
+        method: 'GET',
+      },
+    )
     const json = await resp.json()
     return json[code]
   }
 
   useEffect(() => {
     const fetchDiffs = async () => {
-      const resp = await retrieveDiffs();
-      setDiffs(resp);
-    };
-    fetchDiffs();
-  }, [code]);
+      const resp = await retrieveDiffs()
+      setDiffs(resp)
+    }
+    fetchDiffs()
+  }, [code])
 
-  if (diffs != null) {
-    const oldDescription : String = diffs["description"]["old"] ?? ""
-    const newDescription : String = diffs["description"]["new"] ?? ""
-    const oldTitle : String = diffs["name"]["old"]
-    const newTitle : String = diffs["name"]["new"] ?? ""
-    const oldImage : String = diffs["image"]["old"] ?? ""
-    const newImage : String = diffs["image"]["new"] ?? ""
-  
+  if (diffs !== null) {
+    const oldDescription: string = diffs.description.old ?? ''
+    const newDescription: string = diffs.description.new ?? ''
+    const oldTitle: string = diffs.name.old
+    const newTitle: string = diffs.name.new ?? ''
+    const oldImage: string = diffs.image.old ?? ''
+    const newImage: string = diffs.image.new ?? ''
+
     if (oldTitle == null) {
-      tagList.push(["New Club", "#8467c2"])
-    } 
-    else {
-      if (oldTitle.valueOf() != (newTitle.valueOf())){     
-        tagList.push(["Title", "#4198db"])
+      tagList.push(['New Club', '#8467c2'])
+    } else {
+      if (oldTitle.valueOf() !== newTitle.valueOf()) {
+        tagList.push(['Title', '#4198db'])
       }
-      if (oldDescription.valueOf() != newDescription.valueOf()){
-        tagList.push(["Desc", "#ee4768"])
+      if (oldDescription.valueOf() !== newDescription.valueOf()) {
+        tagList.push(['Desc', '#ee4768'])
       }
-      if (oldImage != newImage){
-        tagList.push(["Image", "#4cc776"])
+      if (oldImage !== newImage) {
+        tagList.push(['Image', '#4cc776'])
       }
     }
   }
-  
+
   return (
     <>
       {tagList.map(([text, color]) => {
-        return (
-          <TableTag style={{backgroundColor: color}}>
-            {text}
-          </TableTag>
-        )
+        return <TableTag style={{ backgroundColor: color }}>{text}</TableTag>
       })}
     </>
   )
 }
 
-
 const TableRow = styled.td`
-  display: flex;  
+  display: flex;
 `
 
 const TableTag = styled.div`

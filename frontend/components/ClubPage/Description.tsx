@@ -1,11 +1,8 @@
-import { ReactElement, useState, useEffect } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import { Club } from '../../types'
-import { 
-  EMPTY_DESCRIPTION,
-  doApiRequest
-} from '../../utils'
+import { doApiRequest, EMPTY_DESCRIPTION } from '../../utils'
 import { StrongText } from '../common'
 
 const Wrapper = styled.div`
@@ -20,18 +17,34 @@ type DescProps = {
   club: Club
 }
 
+type ClubDiff = {
+  description: {
+    old: string
+    new: string
+    diff: string
+  }
+  name: {
+    old: string
+    new: string
+  }
+  image: {
+    old: string
+    new: string
+  }
+}
 
 const Description = ({ club }: DescProps): ReactElement => {
-
-
   const { active, name, tags, badges } = club
 
-  const [diffs, setDiffs] = useState(null);
-  
+  const [diffs, setDiffs] = useState<ClubDiff | null>(null)
+
   const retrieveDiffs = async () => {
-    const resp = await doApiRequest(`/clubs/${club.code}/club_detail_diff/?format=json`, {
-      method: 'GET'
-    })
+    const resp = await doApiRequest(
+      `/clubs/${club.code}/club_detail_diff/?format=json`,
+      {
+        method: 'GET',
+      },
+    )
     const json = await resp.json()
     return json[club.code]
   }
@@ -40,15 +53,15 @@ const Description = ({ club }: DescProps): ReactElement => {
     useEffect(() => {
       const fetchDiffs = async () => {
         if (club.approved == null) {
-          const resp = await retrieveDiffs();
-          setDiffs(resp);
+          const resp = await retrieveDiffs()
+          setDiffs(resp)
         }
-      };
-      fetchDiffs();
-    }, [club.code]);
+      }
+      fetchDiffs()
+    }, [club.code])
 
     if (diffs != null) {
-      let display = diffs["description"]["diff"]
+      const display = diffs.description.diff
       return (
         <Wrapper>
           <div style={{ width: '100%' }}>
@@ -66,19 +79,19 @@ const Description = ({ club }: DescProps): ReactElement => {
   }
 
   return (
-  <Wrapper>
-    <div style={{ width: '100%' }}>
-      <StrongText>Club Mission</StrongText>
-      <div></div>
-      <div
-        className="content"
-        dangerouslySetInnerHTML={{
-          __html: club.description || EMPTY_DESCRIPTION,
-        }}
-      />
-    </div>
-  </Wrapper>
-  );
+    <Wrapper>
+      <div style={{ width: '100%' }}>
+        <StrongText>Club Mission</StrongText>
+        <div></div>
+        <div
+          className="content"
+          dangerouslySetInnerHTML={{
+            __html: club.description || EMPTY_DESCRIPTION,
+          }}
+        />
+      </div>
+    </Wrapper>
+  )
 }
 
-export default Description;
+export default Description
