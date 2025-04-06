@@ -48,7 +48,6 @@ const Description = ({ club }: DescProps): ReactElement => {
     }, [club.code]);
 
     if (diffs != null) {
-      console.log(diffs)
       let display = diffs["description"]["diff"]
       return (
         <Wrapper>
