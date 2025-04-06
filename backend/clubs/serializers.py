@@ -4,6 +4,7 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 import bleach
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -13,10 +14,9 @@ from django.db import models
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from html_diff import diff
 from rest_framework import serializers, validators
 from simple_history.utils import update_change_reason
-from html_diff import diff
-from bs4 import BeautifulSoup
 
 from clubs.mixins import ManyToManySaveMixin
 from clubs.models import (
