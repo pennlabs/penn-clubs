@@ -34,13 +34,9 @@ CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 # Cybersource settings
-CYBERSOURCE_CONFIG = {
-    "authentication_type": "http_signature",
-    "merchantid": "testrest",
-    "merchant_keyid": "08c94330-f618-42a3-b09d-e1e43be5efda",
-    "merchant_secretkey": "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE=",
-    "run_environment": "apitest.cybersource.com",
-}
-CYBERSOURCE_TARGET_ORIGIN = "https://localhost:3001"
+CYBERSOURCE_URL = "https://testsecureacceptance.cybersource.com/pay"
+CYBERSOURCE_PROFILE_ID = "E03ED013-DD02-4DDD-BACB-164104DD0DDC"
+CYBERSOURCE_ACCESS_KEY = "cad16657592e319294169a644c201890"
+CYBERSOURCE_SECRET_KEY = None  # populate this with secret key from dashboard
 
 OSA_KEYS = ["gwashington"]

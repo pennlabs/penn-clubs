@@ -81,13 +81,10 @@ CACHES = {
 }
 
 # Cybersource settings
-CYBERSOURCE_CONFIG = {
-    "authentication_type": "http_signature",
-    "merchantid": os.getenv("MERCHANT_ID"),
-    "merchant_keyid": os.getenv("MERCHANT_KEYID"),
-    "merchant_secretkey": os.getenv("MERCHANT_SECRETKEY"),
-    "run_environment": "api.cybersource.com",
-}
-CYBERSOURCE_TARGET_ORIGIN = "https://pennclubs.com"
+CYBERSOURCE_URL = "https://secureacceptance.cybersource.com/pay"
+CYBERSOURCE_PROFILE_ID = os.getenv("CYBERSOURCE_PROFILE_ID")
+CYBERSOURCE_ACCESS_KEY = os.getenv("CYBERSOURCE_ACCESS_KEY")
+CYBERSOURCE_SECRET_KEY = os.getenv("CYBERSOURCE_SECRET_KEY")
+
 
 OSA_KEYS = os.getenv("OSA_KEYS", "").split(",")
