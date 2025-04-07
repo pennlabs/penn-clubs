@@ -261,7 +261,7 @@ const NotificationModal = (props: {
         {(props) => (
           <Form>
             <StyledHeader style={{ marginBottom: '2px' }}>
-              Send application update
+              Send application updates
             </StyledHeader>
             <Text>
               Send acceptance or rejection emails. This may take a while...
@@ -288,13 +288,14 @@ const NotificationModal = (props: {
               onClick={(e) => {
                 if (e.target.checked) {
                   toast.warning(
-                    'Resending emails will send emails to all applicants, even if they have already been notified.',
+                    'Resending emails will send emails to applicants who have already received update emails. Please proceed with caution.',
                   )
                 }
               }}
               helpText={
-                <strong>
-                  If selected, will resend notifications to all applicants
+                <strong className="has-text-danger">
+                  If selected, will resend notifications to all applicants,
+                  including those who have already been notified.
                 </strong>
               }
             />
@@ -441,9 +442,10 @@ export default function ApplicationsPage({
               return {
                 ...response,
                 committee: response.committee?.name ?? 'General Member',
-                status: APPLICATION_STATUS_TYPES.find(
-                  (status) => status.value === response.status,
-                )?.label,
+                status:
+                  APPLICATION_STATUS_TYPES.find(
+                    (status) => status.value === response.status,
+                  )?.label + (response.notified && ' (notified)'),
                 created_at: moment(response.created_at)
                   .tz('America/New_York')
                   .format('LLL'),
@@ -620,6 +622,11 @@ export default function ApplicationsPage({
                   <button
                     className="button is-link mr-3"
                     onClick={(event) => {
+                      if (selectedSubmissions.length > 0) {
+                        toast.warning(
+                          'This will send emails to all applicants, including those not selected!',
+                        )
+                      }
                       setShowNotifModal(true)
                     }}
                   >
