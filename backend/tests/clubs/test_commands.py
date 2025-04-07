@@ -541,14 +541,18 @@ class RankTestCase(TestCase):
 
         now = timezone.now()
 
-        # add an event
-        Event.objects.create(
+        # add an event and correpsonding showing
+        event = Event.objects.create(
             code="test-event-1",
             name="Test Event 1",
             club=Club.objects.first(),
+            description="This is a test event!",
+        )
+
+        EventShowing.objects.create(
+            event=event,
             start_time=now,
             end_time=now + datetime.timedelta(hours=2),
-            description="This is a test event!",
         )
 
         # run the rank command
