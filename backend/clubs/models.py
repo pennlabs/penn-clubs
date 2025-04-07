@@ -1913,12 +1913,13 @@ class TicketTransactionRecord(models.Model):
     Represents an instance of a transaction record for an ticket, used for bookkeeping
     """
 
-    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
     total_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    buyer_phone = PhoneNumberField(null=True, blank=True)
     buyer_first_name = models.CharField(max_length=100)
     buyer_last_name = models.CharField(max_length=100)
     buyer_email = models.EmailField(blank=True, null=True)
+    transaction_uuid = models.CharField(max_length=100, null=True, blank=True)
+    reference_number = models.CharField(max_length=100, null=True, blank=True)
 
 
 class Ticket(models.Model):
