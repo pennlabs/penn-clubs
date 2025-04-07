@@ -1995,8 +1995,6 @@ class TicketTransferRecord(models.Model):
     ticket = models.ForeignKey(
         Ticket, related_name="transfer_records", on_delete=models.PROTECT
     )
-    sender_email = models.EmailField()
-    receiver_email = models.EmailField()
     sender = models.ForeignKey(
         get_user_model(),
         related_name="sent_transfers",

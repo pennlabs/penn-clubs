@@ -9,6 +9,7 @@ import os
 import re
 import secrets
 import string
+import uuid
 from typing import Tuple
 from urllib.parse import urlparse
 
@@ -39,7 +40,6 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
-    Max,
     Prefetch,
     Q,
     TextField,
@@ -2798,7 +2798,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         Get information about ticket buyers
         ---
-        requestBody: {}
         responses:
             "200":
                 content:
@@ -2817,19 +2816,46 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             owner_id:
                                                 type: integer
-                                            type:
+                                                nullable: true
+                                            email:
+                                                type: string
+                                            ticket_type:
                                                 type: string
                                             attended:
                                                 type: boolean
         ---
         """
-        tickets = Ticket.objects.filter(event=self.get_object()).annotate(
-            fullname=Concat("owner__first_name", Value(" "), "owner__last_name")
+        event = self.get_object()
+
+        # Get all tickets for this event
+        tickets = Ticket.objects.filter(ticket_class__event=event).select_related(
+            "owner", "ticket_class", "transaction_record"
         )
 
-        buyers = tickets.filter(owner__isnull=False).values(
-            "fullname", "id", "owner_id", "type", "attended", "owner__email"
-        )
+        buyers = []
+        for ticket in tickets:
+            # For registered users, use their info
+            if ticket.owner:
+                fullname = f"{ticket.owner.first_name} {ticket.owner.last_name}"
+                owner_id = ticket.owner.id
+            # For guest users, use transaction record info
+            else:
+                fullname = (
+                    f"{ticket.transaction_record.buyer_first_name} "
+                    f"{ticket.transaction_record.buyer_last_name}"
+                )
+                owner_id = None
+
+            buyers.append(
+                {
+                    "fullname": fullname,
+                    "id": str(ticket.id),
+                    "owner_id": owner_id,
+                    "email": ticket.owner_email,
+                    "ticket_type": ticket.ticket_class.name,
+                    "attended": ticket.attended,
+                }
+            )
 
         return Response({"buyers": buyers})
 
@@ -2846,57 +2872,59 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                         schema:
                             type: object
                             properties:
-                                totals:
+                                ticket_types:
                                     type: array
                                     items:
                                         type: object
                                         properties:
-                                            type:
+                                            name:
                                                 type: string
-                                            count:
-                                                type: integer
+                                            description:
+                                                type: string
                                             price:
                                                 type: number
-                                available:
-                                    type: array
-                                    items:
-                                        type: object
-                                        properties:
-                                            type:
-                                                type: string
-                                            count:
+                                            quantity:
                                                 type: integer
-                                            price:
+                                            remaining:
+                                                type: integer
+                                            transferable:
+                                                type: boolean
+                                            group_discount:
                                                 type: number
+                                                nullable: true
+                                            group_size:
+                                                type: integer
+                                                nullable: true
+                                            buyable:
+                                                type: boolean
         ---
         """
         event = self.get_object()
-        tickets = Ticket.objects.filter(event=event)
 
+        # Don't show tickets before drop time
         if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
-            return Response({"totals": [], "available": []})
+            return Response({"ticket_types": []})
 
-        # Take price of first ticket of given type for now
-        totals = (
-            tickets.values("type")
-            .annotate(price=Max("price"))
-            .annotate(count=Count("type"))
-            .order_by("type")
+        # Get all ticket classes for this event
+        ticket_types = TicketClass.objects.filter(event=event).values(
+            "name",
+            "description",
+            "price",
+            "quantity",
+            "remaining",
+            "transferable",
+            "group_discount",
+            "group_size",
+            "buyable",
         )
-        available = (
-            tickets.filter(owner__isnull=True, holder__isnull=True, buyable=True)
-            .values("type")
-            .annotate(price=Max("price"))
-            .annotate(count=Count("type"))
-            .order_by("type")
-        )
-        return Response({"totals": list(totals), "available": list(available)})
+
+        return Response({"ticket_types": list(ticket_types)})
 
     @tickets.mapping.put
     @transaction.atomic
     def create_tickets(self, request, *args, **kwargs):
         """
-        Create ticket offerings for event
+        Create ticket class offerings for event
         ---
         requestBody:
             content:
@@ -2904,31 +2932,35 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     schema:
                         type: object
                         properties:
-                            quantities:
+                            ticket_types:
                                 type: array
                                 items:
                                     type: object
                                     properties:
-                                        type:
+                                        name:
                                             type: string
-                                        count:
-                                            type: integer
+                                        description:
+                                            type: string
+                                            required: false
                                         price:
                                             type: number
+                                        quantity:
+                                            type: integer
+                                        transferable:
+                                            type: boolean
+                                            required: false
                                         group_size:
-                                            type: number
+                                            type: integer
                                             required: false
                                         group_discount:
                                             type: number
                                             format: float
                                             required: false
-                                        transferable:
-                                            type: boolean
                                         buyable:
                                             type: boolean
                                             required: false
                             order_limit:
-                                type: int
+                                type: integer
                                 required: false
                             drop_time:
                                 type: string
@@ -2970,118 +3002,97 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Tickets can't be edited after they've been sold or held
-        if (
-            Ticket.objects.filter(event=event)
-            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
-            .exists()
-        ):
+        # Tickets can't be edited after they've been sold
+        if Ticket.objects.filter(ticket_class__event=event).exists():
             return Response(
-                {
-                    "detail": "Tickets cannot be edited after they have been "
-                    "sold or checked out"
-                },
+                {"detail": "Tickets cannot be edited after they have been sold"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        quantities = request.data.get("quantities", [])
-        if not quantities:
+        ticket_types = request.data.get("ticket_types", [])
+        if not ticket_types:
             return Response(
-                {"detail": "Quantities must be specified"},
+                {"detail": "At least one ticket type must be specified"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        for item in quantities:
-            if not item.get("type") or not item.get("count"):
+        for ticket_type in ticket_types:
+            # Required fields
+            if not ticket_type.get("name") or not ticket_type.get("quantity"):
                 return Response(
-                    {"detail": "Specify type and count to create some tickets."},
+                    {"detail": "Name and quantity are required for each ticket type"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Ticket prices must be non-negative
-            if item.get("price", 0) < 0:
+            # Validate price
+            price = ticket_type.get("price", 0)
+            if price < 0:
                 return Response(
                     {"detail": "Ticket price cannot be negative"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Group discounts must be between 0 and 1
-            if item.get("group_discount", 0) < 0 or item.get("group_discount", 0) > 1:
+            # Validate group discount
+            group_discount = ticket_type.get("group_discount", 0)
+            if group_discount < 0 or group_discount > 1:
                 return Response(
                     {"detail": "Group discount must be between 0 and 1"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Min group sizes must be greater than 1
-            if item.get("group_size", 2) <= 1:
+            # Validate group size
+            group_size = ticket_type.get("group_size", 2)
+            if group_size <= 1:
                 return Response(
-                    {"detail": "Min group size must be greater than 1"},
+                    {"detail": "Group size must be greater than 1"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Tickets must specify both group_discount and group_size or neither
-            if ("group_discount" in item) != ("group_size" in item):
+            # Must specify both group_discount and group_size or neither
+            has_group_discount = "group_discount" in ticket_type
+            has_group_size = "group_size" in ticket_type
+            if has_group_discount != has_group_size:
                 return Response(
                     {
                         "detail": (
-                            "Ticket must specify either both group_discount "
+                            "Ticket type must specify either both group_discount "
                             "and group_size or neither"
                         )
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        # Atomicity ensures idempotency
-        Ticket.objects.filter(event=event).delete()  # Idempotency
-        tickets = [
-            Ticket(
+        # Update event settings
+        if "order_limit" in request.data:
+            event.ticket_order_limit = request.data["order_limit"]
+        if "drop_time" in request.data:
+            event.ticket_drop_time = parse(request.data["drop_time"])
+        event.save()
+
+        # Delete existing ticket classes and create new ones
+        TicketClass.objects.filter(event=event).delete()
+
+        for ticket_type in ticket_types:
+            TicketClass.objects.create(
                 event=event,
-                type=item["type"],
-                price=item.get("price", 0),
-                group_discount=item.get("group_discount", 0),
-                group_size=item.get("group_size", None),
-                transferable=item.get("transferable", True),
-                buyable=item.get("buyable", True),
+                name=ticket_type["name"],
+                description=ticket_type.get("description", ""),
+                price=ticket_type["price"],
+                quantity=ticket_type["quantity"],
+                remaining=ticket_type["quantity"],
+                transferable=ticket_type.get("transferable", True),
+                group_discount=ticket_type.get("group_discount", 0),
+                group_size=ticket_type.get("group_size", None),
+                buyable=ticket_type.get("buyable", True),
             )
-            for item in quantities
-            for _ in range(item["count"])
-        ]
 
-        Ticket.objects.bulk_create(tickets)
-
-        order_limit = request.data.get("order_limit", None)
-        if order_limit is not None:
-            event.ticket_order_limit = order_limit
-            event.save()
-
-        drop_time = request.data.get("drop_time", None)
-        if drop_time is not None:
-            try:
-                drop_time = datetime.datetime.strptime(drop_time, "%Y-%m-%dT%H:%M:%S%z")
-            except ValueError as e:
-                return Response(
-                    {"detail": f"Invalid drop time: {str(e)}"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            if drop_time < timezone.now():
-                return Response(
-                    {"detail": "Specified drop time has already elapsed"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            event.ticket_drop_time = drop_time
-            event.save()
-
-        cache.delete(f"clubs:{event.club.id}-authed")
-        cache.delete(f"clubs:{event.club.id}-anon")
-        return Response({"detail": "Successfully created tickets"})
+        return Response({"detail": "Successfully created ticket types"})
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
     def issue_tickets(self, request, *args, **kwargs):
         """
-        Issue tickets that have already been created to users in bulk.
+        Issue tickets to users in bulk. Respects ticket class inventory limits.
         ---
         requestBody:
             content:
@@ -3096,9 +3107,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     properties:
                                         username:
                                             type: string
+                                            description: Username of the recipient
+                                        email:
+                                            type: string
+                                            description: Email of (guest) recipient
                                         ticket_type:
                                             type: string
-
+                                            description: Ticket class name
+                                        quantity:
+                                            type: integer
         responses:
             "200":
                 content:
@@ -3106,8 +3123,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                         schema:
                             type: object
                             properties:
-                                success:
-                                    type: boolean
                                 detail:
                                     type: string
             "400":
@@ -3118,114 +3133,121 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
-                                errors:
-                                    type: array
-                                    items:
-                                        type: string
+                                    description: Error message
         ---
         """
         event = self.get_object()
+        tickets_to_issue = request.data.get("tickets", [])
 
-        tickets = request.data.get("tickets", [])
-
-        if not tickets:
+        if not tickets_to_issue:
             return Response(
-                {"detail": "tickets must be specified", "errors": []},
+                {"detail": "No tickets specified to issue"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        for item in tickets:
-            if not item.get("username") or not item.get("ticket_type"):
-                return Response(
-                    {
-                        "detail": "Specify username and ticket type to issue tickets",
-                        "errors": [],
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
+        # First validate all requests and check inventory
+        inventory_needed = {}
+        errors = []
+        validated_requests = []
+
+        for ticket_request in tickets_to_issue:
+            # Get or validate recipient
+            username = ticket_request.get("username")
+            email = ticket_request.get("email")
+
+            if username:
+                try:
+                    user = get_user_model().objects.get(username=username)
+                    email = user.email
+                except get_user_model().DoesNotExist:
+                    errors.append(f"User {username} not found")
+                    continue
+            elif not email:
+                errors.append("Either username or email must be provided")
+                continue
+
+            # Get ticket class
+            ticket_type = ticket_request.get("ticket_type")
+            try:
+                ticket_class = TicketClass.objects.select_for_update().get(
+                    event=event, name=ticket_type
+                )
+            except TicketClass.DoesNotExist:
+                errors.append(f"Ticket type '{ticket_type}' not found")
+                continue
+
+            quantity = int(ticket_request.get("quantity", 1))
+
+            # Track total inventory needed per ticket class
+            inventory_needed[ticket_class.id] = (
+                inventory_needed.get(ticket_class.id, 0) + quantity
+            )
+
+            validated_requests.append(
+                {
+                    "user": user if username else None,
+                    "email": email,
+                    "ticket_class": ticket_class,
+                    "quantity": quantity,
+                }
+            )
+
+        # Check if we have enough inventory for all requests
+        for ticket_class_id, needed in inventory_needed.items():
+            ticket_class = TicketClass.objects.get(id=ticket_class_id)
+            if needed > ticket_class.remaining:
+                errors.append(
+                    f"Not enough inventory for '{ticket_class.name}': "
+                    f"requested {needed}, but only {ticket_class.remaining} available"
                 )
 
-        usernames = [item.get("username") for item in tickets]
-        ticket_types = [item.get("ticket_type") for item in tickets]
-
-        # Validate all usernames
-        invalid_usernames = set(usernames) - set(
-            get_user_model()
-            .objects.filter(username__in=usernames)
-            .values_list("username", flat=True)
-        )
-        if invalid_usernames:
+        if errors:
             return Response(
-                {
-                    "detail": "Invalid usernames",
-                    "errors": sorted(list(invalid_usernames)),
-                },
+                {"detail": "Validation failed", "errors": errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validate all ticket types
-        invalid_types = set(ticket_types) - set(
-            Ticket.objects.filter(event=event).values_list("type", flat=True)
+        # Create a single transaction record for all issued tickets
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"ADMIN-ISSUED-{uuid.uuid4().hex[:8]}",
+            total_amount=0,  # Free tickets when issued by admin
+            buyer_first_name="Admin",
+            buyer_last_name="Issued",
+            buyer_email=request.user.email,  # Admin who issued the tickets
         )
-        if invalid_types:
-            return Response(
-                {
-                    "detail": "Invalid ticket classes",
-                    "errors": sorted(list(invalid_types)),
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        tickets = []
-        for ticket_type, num_requested in collections.Counter(ticket_types).items():
-            available_tickets = Ticket.objects.select_for_update(
-                skip_locked=True
-            ).filter(
-                event=event, type=ticket_type, owner__isnull=True, holder__isnull=True
-            )[:num_requested]
+        # Create tickets and update inventory
+        tickets_created = 0
+        for request in validated_requests:
+            ticket_class = request["ticket_class"]
 
-            if available_tickets.count() < num_requested:
-                return Response(
-                    {
-                        "detail": (
-                            f"Not enough tickets available for type: {ticket_type}"
-                        ),
-                        "errors": [],
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
+            # Create tickets
+            tickets = []
+            for _ in range(request["quantity"]):
+                tickets.append(
+                    Ticket(
+                        ticket_class=ticket_class,
+                        transaction_record=transaction_record,
+                        owner=request["user"],
+                        owner_email=request["email"],
+                    )
                 )
+                tickets_created += 1
 
-            tickets.extend(available_tickets)
+            # Bulk create tickets
+            Ticket.objects.bulk_create(tickets)
 
-        # Assign tickets to users
-        transaction_records = []
+            # Update inventory
+            ticket_class.remaining -= request["quantity"]
+            ticket_class.save()
 
-        for username, ticket_type in zip(usernames, ticket_types):
-            user = get_user_model().objects.filter(username=username).first()
-            ticket = next(
-                ticket
-                for ticket in tickets
-                if ticket.type == ticket_type and ticket.owner is None
-            )
-            ticket.owner = user
-            ticket.holder = None
-
-            transaction_record = TicketTransactionRecord(
-                total_amount=0.0,
-                buyer_first_name=user.first_name,
-                buyer_last_name=user.last_name,
-                buyer_email=user.email,
-            )
-            ticket.transaction_record = transaction_record
-            transaction_records.append(transaction_record)
-
-        TicketTransactionRecord.objects.bulk_create(transaction_records)
-        Ticket.objects.bulk_update(tickets, ["owner", "holder", "transaction_record"])
-
-        for ticket in tickets:
-            ticket.send_confirmation_email()
+            # Send confirmation emails
+            for ticket in tickets:
+                ticket.send_confirmation_email()
 
         return Response(
-            {"success": True, "detail": f"Issued {len(tickets)} tickets", "errors": []}
+            {"detail": f"Successfully issued {tickets_created} tickets"},
+            status=status.HTTP_201_CREATED,
         )
 
     @action(detail=True, methods=["post"])
@@ -3282,11 +3304,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         """
         event = self.get_object()
 
-        holder_emails = Ticket.objects.filter(
-            event=event, owner__isnull=False
-        ).values_list("owner__email", flat=True)
+        # Get all unique ticket holder emails - includes both registered and guest users
+        ticket_holder_emails = set(
+            Ticket.objects.filter(ticket_class__event=event).values_list(
+                "owner_email", flat=True
+            )
+        )
+
+        # Get club officer emails
         officer_emails = event.club.get_officer_emails()
-        emails = list(holder_emails) + list(officer_emails)
+
+        # Combine unique emails
+        emails = list(ticket_holder_emails) + list(officer_emails)
 
         content = request.data.get("content", "").strip()
         if not content:
@@ -3309,7 +3338,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 "detail": (
-                    f"Blast sent to {len(holder_emails)} ticket holders "
+                    f"Blast sent to {len(ticket_holder_emails)} ticket holders "
                     f"and {len(officer_emails)} officers"
                 )
             }
@@ -5535,9 +5564,11 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         # checking whether the request's user owns the ticket is handled by the queryset
         ticket = self.get_object()
-        if not ticket.transferable:
+
+        # Check if ticket class allows transfers
+        if not ticket.ticket_class.transferable:
             return Response(
-                {"detail": "The ticket is non-transferable"},
+                {"detail": "This ticket type is non-transferable"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
