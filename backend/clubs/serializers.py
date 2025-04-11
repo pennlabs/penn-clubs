@@ -1228,6 +1228,10 @@ class StudentTypeSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 def description_diff_helper(latest_approved_description, latest_description):
+
+    if (latest_approved_description == latest_description):
+        return latest_description
+    
     # Get the diff between old and new HTML
     html_text = diff(latest_approved_description, latest_description)
     soup = BeautifulSoup(html_text, "html.parser")

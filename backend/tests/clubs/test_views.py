@@ -1645,6 +1645,27 @@ class ClubTestCase(TestCase):
             data["new-club"]["description"]["old"],
             "We are open source, expect us.",
         )
+        # difference will just return current description
+        self.assertEqual(
+            data["new-club"]["description"]["diff"],
+            "We are open source, expect us.",
+        )
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"description": "We are not open, do not expect us."},
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        self.assertEqual(
+            data["new-club"]["description"]["diff"],
+            """We are <ins style="text-decoration: none; background-color: #dafdd5; opacity: 1;">not </ins>open<ins style="text-decoration: none; background-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decoration: none; background-color: #ffbdbd; opacity: 0.3;">source,</del><ins style="text-decoration: none; background-color: #dafdd5; opacity: 1;">do not</ins> expect us."""
+        )
 
         # attempt to get diff of approved club
         new_club.approved = True
