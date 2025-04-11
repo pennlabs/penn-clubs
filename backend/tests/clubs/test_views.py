@@ -1663,12 +1663,12 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(
             data["new-club"]["description"]["diff"],
-            """We are <ins style="text-decoration: none; background-color: #dafdd5;
-            opacity: 1;">not </ins>open<ins style=" text-decoration: none;
-            background-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decoration:
-            none; background-color: #ffbdbd; opacity: 0.3;">source,</del><ins
-            style="text-decoration: none; background-color: #dafdd5; opacity: 1;">
-            do not</ins> expect us.""",
+            """We are <ins style="text-decoration: none; background-color: #dafdd5;"""
+            """ opacity: 1;">not </ins>open<ins style="text-decoration: none; backg"""
+            """round-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decorati"""
+            """on: none; background-color: #ffbdbd; opacity: 0.3;">source,</del><in"""
+            """s style="text-decoration: none; background-color: #dafdd5; opacity: """
+            """1;">do not</ins> expect us.""",
         )
 
         # attempt to get diff of approved club
