@@ -968,6 +968,7 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
     class Meta(ClubMinimalSerializer.Meta):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
 
+
 class ClubDiffSerializer(serializers.ModelSerializer):
     diff = serializers.SerializerMethodField()
 
@@ -1000,6 +1001,7 @@ class ClubDiffSerializer(serializers.ModelSerializer):
             }
 
         return {instance.code: diff}
+
 
 class ClubListSerializer(serializers.ModelSerializer):
     """
@@ -1227,11 +1229,10 @@ class StudentTypeSerializer(serializers.ModelSerializer):
         model = StudentType
         fields = ("id", "name")
 
-def description_diff_helper(latest_approved_description, latest_description):
 
-    if (latest_approved_description == latest_description):
+def description_diff_helper(latest_approved_description, latest_description):
+    if latest_approved_description == latest_description:
         return latest_description
-    
     # Get the diff between old and new HTML
     html_text = diff(latest_approved_description, latest_description)
     soup = BeautifulSoup(html_text, "html.parser")

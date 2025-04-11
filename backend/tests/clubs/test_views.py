@@ -1516,7 +1516,6 @@ class ClubTestCase(TestCase):
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
 
-
     def test_club_detail_diff(self):
         """
         Test that diff returns the correct old and new club for a club in approval queue
@@ -1664,7 +1663,12 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(
             data["new-club"]["description"]["diff"],
-            """We are <ins style="text-decoration: none; background-color: #dafdd5; opacity: 1;">not </ins>open<ins style="text-decoration: none; background-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decoration: none; background-color: #ffbdbd; opacity: 0.3;">source,</del><ins style="text-decoration: none; background-color: #dafdd5; opacity: 1;">do not</ins> expect us."""
+            """We are <ins style="text-decoration: none; background-color: #dafdd5;
+            opacity: 1;">not </ins>open<ins style=" text-decoration: none;
+            background-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decoration:
+            none; background-color: #ffbdbd; opacity: 0.3;">source,</del><ins
+            style="text-decoration: none; background-color: #dafdd5; opacity: 1;">
+            do not</ins> expect us.""",
         )
 
         # attempt to get diff of approved club
