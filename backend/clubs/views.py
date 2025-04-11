@@ -48,8 +48,10 @@ from django.db.models import (
     F,
     Max,
     Min,
+    OuterRef,
     Prefetch,
     Q,
+    Subquery,
     TextField,
     Value,
     When,
@@ -168,6 +170,7 @@ from clubs.serializers import (
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
     ClubConstitutionSerializer,
+    ClubDiffSerializer,
     ClubFairSerializer,
     ClubListSerializer,
     ClubMembershipSerializer,
@@ -2168,6 +2171,107 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             context=context,
             reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         )
+
+    def _get_club_diff_queryset(self):
+        """
+        Returns a queryset of clubs annotated with the latest and latest approved values
+        for specific fields (name, description, image) from their historical records.
+
+        The annotations include:
+        - `latest_<field>`: The most recent value of the field.
+        - `latest_approved_<field>`: The most recent approved value of the field.
+        """
+        latest_version_qs = Club.history.filter(code=OuterRef("code")).order_by(
+            "-history_date"
+        )
+
+        latest_approved_version_qs = Club.history.filter(
+            code=OuterRef("code"), approved=True
+        ).order_by("-history_date")
+
+        qs = Club.objects.annotate(
+            latest_name=Subquery(latest_version_qs.values("name")[:1]),
+            latest_description=Subquery(latest_version_qs.values("description")[:1]),
+            latest_image=Subquery(latest_version_qs.values("image")[:1]),
+            latest_approved_name=Subquery(
+                latest_approved_version_qs.values("name")[:1]
+            ),
+            latest_approved_description=Subquery(
+                latest_approved_version_qs.values("description")[:1]
+            ),
+            latest_approved_image=Subquery(
+                latest_approved_version_qs.values("image")[:1]
+            ),
+            description_difference=Subquery(latest_version_qs.values("name")[:1]),
+        )
+
+        return qs
+
+    @action(detail=True, methods=["GET"])
+    def club_detail_diff(self, request, *args, **kwargs):
+        """
+        Return old and new data for a club that is pending approval.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                club_code:
+                                    type: object
+                                    description: club code
+                                    properties:
+                                        name:
+                                            type: object
+                                            description: Changes in the name field
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old name of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New name of the club
+                                        description:
+                                            type: object
+                                            description: >
+                                                Changes in the club description
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old description of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New description of the club
+                                                diff:
+                                                    type: string
+                                                    description: >
+                                                        Diffed description of the club
+                                        image:
+                                            type: object
+                                            description: >
+                                                Changes in the image of the club
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old image URL of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New image URL of the club
+        ---
+        """
+        club = self.get_object()
+
+        club = self._get_club_diff_queryset().get(pk=club.pk)
+        serializer = ClubDiffSerializer(club)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):

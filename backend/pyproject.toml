@@ -54,6 +54,7 @@ dependencies = [
     "pyasyncore>=1.0.4",
     "standard-smtpd>=3.13.0",
     "pip>=25.0.1",
+    "html-diff>=0.4.1",
 ]
 
 [dependency-groups]
