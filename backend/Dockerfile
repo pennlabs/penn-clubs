@@ -4,6 +4,7 @@ LABEL maintainer="Penn Labs"
 
 # Copy project files
 ADD . /app/
+COPY ./scripts/wsgi-run /usr/local/bin/
 COPY ./scripts/asgi-run /usr/local/bin/
 
 WORKDIR /app
@@ -15,4 +16,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Collect static files
 RUN uv run /app/manage.py collectstatic --noinput
-CMD ["/usr/local/bin/asgi-run"]
+CMD ["/usr/local/bin/wsgi-run"]

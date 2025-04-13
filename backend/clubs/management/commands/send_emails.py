@@ -16,6 +16,7 @@ from clubs.models import (
     Club,
     ClubFair,
     Event,
+    EventShowing,
     Membership,
     MembershipInvite,
     send_mail_helper,
@@ -541,11 +542,19 @@ class Command(BaseCommand):
                 emails = [test_email] if test_email else None
                 emails_disp = emails or "officers"
                 if limit:
-                    if club.events.filter(
-                        ~Q(url="") & ~Q(url__isnull=True),
-                        start_time__gte=now,
-                        type=Event.FAIR,
-                    ).exists():
+                    # Check if club has fair events with valid URLs using showings
+                    # within fair time range
+                    fair_events = (
+                        Event.objects.filter(club=club, type=Event.FAIR)
+                        .exclude(url="")
+                        .exclude(url__isnull=True)
+                    )
+
+                    has_valid_event = EventShowing.objects.filter(
+                        event__in=fair_events, start_time__gte=now
+                    ).exists()
+
+                    if has_valid_event:
                         self.stdout.write(
                             f"Skipping {club.name}, fair event already set up."
                         )
@@ -565,12 +574,25 @@ class Command(BaseCommand):
                     )
             return
         elif action == "urgent_virtual_fair":
-            clubs = fair.participating_clubs.filter(
-                Q(events__url="") | Q(events__url__isnull=True),
-                events__type=Event.FAIR,
-                events__start_time__gte=fair.start_time,
-                events__end_time__lte=fair.end_time,
+            # Find events with null or empty URLs that have showings during the fair
+            events_without_url = Event.objects.filter(
+                Q(url="") | Q(url__isnull=True),
+                type=Event.FAIR,
+                club__in=fair.participating_clubs.all(),
             )
+
+            # Find clubs that have these events with showings during the fair time range
+            showings_during_fair = EventShowing.objects.filter(
+                event__in=events_without_url,
+                start_time__gte=fair.start_time,
+                end_time__lte=fair.end_time,
+            )
+
+            # Get the clubs
+            clubs = Club.objects.filter(
+                events__in=showings_during_fair.values_list("event", flat=True)
+            )
+
             if clubs_allowlist:
                 self.stdout.write(f"Using clubs allowlist: {clubs_allowlist}")
                 clubs = clubs.filter(code__in=clubs_allowlist)
@@ -599,11 +621,23 @@ class Command(BaseCommand):
             # don't continue
             return
         elif action == "post_virtual_fair":
-            clubs = fair.participating_clubs.filter(
-                events__type=Event.FAIR,
-                events__start_time__gte=fair.start_time,
-                events__end_time__lte=fair.end_time,
+            # Find fair events with showings during the fair time range
+            fair_events = Event.objects.filter(
+                type=Event.FAIR, club__in=fair.participating_clubs.all()
             )
+
+            # Find showings for these events during the fair time range
+            showings_during_fair = EventShowing.objects.filter(
+                event__in=fair_events,
+                start_time__gte=fair.start_time,
+                end_time__lte=fair.end_time,
+            )
+
+            # Get clubs with these events/showings
+            clubs = Club.objects.filter(
+                events__in=showings_during_fair.values_list("event", flat=True)
+            )
+
             if clubs_allowlist:
                 clubs = clubs.filter(code__in=clubs_allowlist)
 
