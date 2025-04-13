@@ -109,9 +109,6 @@ router.register(r"templates", ClubApprovalResponseTemplateViewSet, basename="tem
 
 events_router = routers.NestedSimpleRouter(router, r"events", lookup="event")
 events_router.register(r"showings", EventShowingViewSet, basename="event-showings")
-events_router.register(
-    r"checkoutquestions", CheckoutQuestionViewSet, basename="event-checkout-questions"
-)
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
@@ -140,6 +137,11 @@ clubs_router.register(r"adminnotes", AdminNoteViewSet, basename="adminnotes")
 club_events_router = routers.NestedSimpleRouter(clubs_router, r"events", lookup="event")
 club_events_router.register(
     r"showings", ClubEventShowingViewSet, basename="club-events-showings"
+)
+club_events_router.register(
+    r"checkoutquestions",
+    CheckoutQuestionViewSet,
+    basename="club-event-checkout-questions",
 )
 
 badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")

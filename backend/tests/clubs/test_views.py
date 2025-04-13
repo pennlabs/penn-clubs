@@ -3650,7 +3650,8 @@ class ClubTestCase(TestCase):
         ]
         resp = self.client.post(
             reverse(
-                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+                "club-event-checkout-questions-list",
+                args=(self.club1.code, self.event1.id),
             ),
             questions[0],
             content_type="application/json",
@@ -3666,7 +3667,7 @@ class ClubTestCase(TestCase):
         for question in questions:
             resp = self.client.post(
                 reverse(
-                    "event-checkout-questions-list",
+                    "club-event-checkout-questions-list",
                     args=(self.club1.code, self.event1.id),
                 ),
                 question,
@@ -3676,7 +3677,8 @@ class ClubTestCase(TestCase):
 
         resp = self.client.get(
             reverse(
-                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+                "club-event-checkout-questions-list",
+                args=(self.club1.code, self.event1.id),
             )
         )
         self.assertEqual(resp.status_code, 200, resp.content)
@@ -3708,7 +3710,7 @@ class ClubTestCase(TestCase):
         question_ids = [id for id in [q["id"] for q in shuffledquestions]]
         resp = self.client.post(
             reverse(
-                "event-checkout-questions-precedence",
+                "club-event-checkout-questions-precedence",
                 args=(self.club1.code, self.event1.id),
             ),
             {"precedence": question_ids},
@@ -3718,7 +3720,8 @@ class ClubTestCase(TestCase):
 
         resp = self.client.get(
             reverse(
-                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+                "club-event-checkout-questions-list",
+                args=(self.club1.code, self.event1.id),
             )
         )
         self.assertEqual(resp.status_code, 200, resp.content)
@@ -3748,7 +3751,8 @@ class ClubTestCase(TestCase):
         # List questions
         resp = self.client.get(
             reverse(
-                "event-checkout-questions-list", args=(self.club1.code, self.event1.id)
+                "club-event-checkout-questions-list",
+                args=(self.club1.code, self.event1.id),
             )
         )
         self.assertEqual(resp.status_code, 200, resp.content)
@@ -3757,7 +3761,7 @@ class ClubTestCase(TestCase):
         # Update a question
         resp = self.client.patch(
             reverse(
-                "event-checkout-questions-detail",
+                "club-event-checkout-questions-detail",
                 args=[self.club1.code, self.event1.id, question.id],
             ),
             {"prompt": "What is your favorite food?"},
@@ -3772,7 +3776,7 @@ class ClubTestCase(TestCase):
         # Delete the question
         resp = self.client.delete(
             reverse(
-                "event-checkout-questions-detail",
+                "club-event-checkout-questions-detail",
                 args=[self.club1.code, self.event1.id, question.id],
             )
         )
