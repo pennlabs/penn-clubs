@@ -4115,9 +4115,9 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
     """
     list: Return a list of clubs that the logged in user has sent ownership request to.
 
-    create: Sent ownership request to a club.
+    create: Send ownership request to a club.
 
-    destroy: Deleted a ownership request from a club.
+    destroy: Delete a ownership request from a club.
     """
 
     serializer_class = UserOwnershipRequestSerializer
@@ -4127,7 +4127,9 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        If a ownership request object already exists, reuse it.
+        If a withdrawn ownership request object already exists, reuse it.
+
+        If a request has been accepted or denied, we do not recreate it.
         """
         club = request.data.get("club", None)
         club_instance = Club.objects.filter(code=club).first()
@@ -4136,20 +4138,33 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
                 {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        create_defaults = {"club": club_instance, "requester": request.user}
+        request_instance = OwnershipRequest.objects.filter(
+            club__code=club, requester=request.user
+        ).first()
 
-        obj, created = OwnershipRequest.objects.update_or_create(
-            club__code=club,
-            requester=request.user,
-            defaults={"withdrawn": False, "created_at": timezone.now()},
-            create_defaults=create_defaults,
-        )
+        if request_instance is None:
+            request_instance = OwnershipRequest.objects.create(
+                club=club_instance,
+                requester=request.user,
+                status=OwnershipRequest.PENDING,
+            )
+            request_instance.send_request(request)
+        elif request_instance.status == OwnershipRequest.WITHDRAWN:
+            request_instance.status = OwnershipRequest.PENDING
+            request_instance.created_at = timezone.now()
+            request_instance.save()
+        elif request_instance.status == OwnershipRequest.PENDING:
+            return Response(
+                {"detail": "Ownership request to this club has already been sent"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        else:
+            return Response(
+                {"detail": "Request has already been handled"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if created:
-            obj.send_request(request)
-
-        serializer = self.get_serializer(obj, many=False)
-
+        serializer = self.get_serializer(request_instance, many=False)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
@@ -4160,15 +4175,16 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
-        obj.withdrawn = True
-        obj.save(update_fields=["withdrawn"])
+
+        obj.status = OwnershipRequest.WITHDRAWN
+        obj.save(update_fields=["status"])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return OwnershipRequest.objects.filter(
             requester=self.request.user,
-            withdrawn=False,
+            status=OwnershipRequest.PENDING,
             club__archived=False,
         )
 
@@ -4185,7 +4201,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     Accept an ownership request as a club owner.
 
     all:
-    Return a list of ownership requests older than a week. Used by Superusers.
+    Return a list of ownership requests. Used by Superusers.
     """
 
     serializer_class = OwnershipRequestSerializer
@@ -4197,12 +4213,12 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action != "all":
             return OwnershipRequest.objects.filter(
-                club__code=self.kwargs["club_code"], withdrawn=False
+                status=OwnershipRequest.PENDING, club__code=self.kwargs["club_code"]
             )
         else:
-            return OwnershipRequest.objects.filter(withdrawn=False).order_by(
-                "created_at"
-            )
+            return OwnershipRequest.objects.filter(
+                status=OwnershipRequest.PENDING
+            ).order_by("created_at")
 
     @action(detail=True, methods=["post"])
     def accept(self, request, *args, **kwargs):
@@ -4231,8 +4247,15 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
             defaults={"role": Membership.ROLE_OWNER},
         )
 
-        request_object.delete()
+        request_object.status = OwnershipRequest.ACCEPTED
+        request_object.save(update_fields=["status"])
         return Response({"success": True})
+
+    def destroy(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.status = OwnershipRequest.DENIED
+        obj.save(update_fields=["status"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
     def all(self, request, *args, **kwargs):
