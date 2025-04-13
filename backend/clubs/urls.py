@@ -11,6 +11,7 @@ from clubs.views import (
     AssetViewSet,
     BadgeClubViewSet,
     BadgeViewSet,
+    CheckoutQuestionViewSet,
     ClubApplicationViewSet,
     ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
@@ -108,6 +109,9 @@ router.register(r"templates", ClubApprovalResponseTemplateViewSet, basename="tem
 
 events_router = routers.NestedSimpleRouter(router, r"events", lookup="event")
 events_router.register(r"showings", EventShowingViewSet, basename="event-showings")
+events_router.register(
+    r"checkoutquestions", CheckoutQuestionViewSet, basename="event-checkout-questions"
+)
 
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")

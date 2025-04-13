@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("clubs", "0119_registrationqueuesettings"),
+        ("clubs", "0121_remove_event_parent_recurring_event_and_more"),
     ]
 
     operations = [
