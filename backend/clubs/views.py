@@ -136,6 +136,7 @@ from clubs.permissions import (
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    TicketPermission,
     WhartonApplicationPermission,
     find_membership_helper,
 )
@@ -187,6 +188,7 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    TicketClassSerializer,
     TicketSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
@@ -2533,10 +2535,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         """
         event = self.get_object()
+
+        if not request.session.session_key:
+            request.session.create()
+
         cart = Cart.objects.create(
             event=event,
             session_key=request.session.session_key,
-            defaults={"owner": request.user if request.user.is_authenticated else None},
+            owner=request.user if request.user.is_authenticated else None,
         )
 
         # Check if the event has already ended
@@ -2598,200 +2604,16 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             CartItem.objects.create(
                 cart=cart,
                 ticket_class=ticket_class,
-                defaults={"quantity": quantity},
+                quantity=quantity,
             )
 
-        return Response({"detail": "Successfully added to cart", "success": True})
-
-    # TODO: integrate this with Cybersource Secure Acceptance
-    @action(detail=False, methods=["post"])
-    @transaction.atomic
-    def initiate_checkout(self, request, *args, **kwargs):
-        """
-        Initiate the checkout process for items in a user's cart
-
-        403 implies a stale cart.
-
-        For free tickets, if user is not logged in, the request must include:
-        - first_name
-        - last_name
-        - email
-        """
-        cart = get_object_or_404(
-            Cart, owner=request.user if request.user.is_authenticated else None
-        )
-
-        # Cart must have at least one item
-        cart_items = cart.items.select_related("ticket_class").all()
-        if not cart_items.exists():
-            return Response(
-                {"success": False, "detail": "No items selected for checkout"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Calculate total cart price
-        cart_total = sum(item.total_price() for item in cart_items)
-
-        if not request.user.is_authenticated:
-            first_name = request.data.get("first_name")
-            last_name = request.data.get("last_name")
-            email = request.data.get("email")
-
-            if not all([first_name, last_name, email]):
-                return Response(
-                    {
-                        "success": False,
-                        "detail": (
-                            "Guests must provide " "first_name, last_name, and email"
-                        ),
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        else:
-            first_name = request.user.first_name
-            last_name = request.user.last_name
-            email = request.user.email
-
-        if cart_total > 0:
-            # TODO: generate checkout context for secure acceptance
-            context = None
-
-            return Response(
-                {
-                    "success": True,
-                    "detail": "Checkout initiated",
-                    "order": {
-                        "status": "pending_payment",
-                        "payment_required": True,
-                        "total_amount": str(cart_total),
-                        "checkout_context": context,
-                    },
-                }
-            )
-
-        # free tickets
-        order_info = {
-            "amountDetails": {"totalAmount": "0.00"},
-            "billTo": {
-                "firstName": first_name,
-                "lastName": last_name,
-                "phoneNumber": None,
-                "email": email,
-            },
-        }
-
-        try:
-            self._give_tickets(
-                request.user if request.user.is_authenticated else None,
-                order_info,
-                cart,
-                None,
-                cart_items,
-            )
-
-            return Response(
-                {
-                    "success": True,
-                    "detail": "Order processed successfully",
-                    "order": {
-                        "status": "completed",
-                        "payment_required": False,
-                        "total_amount": "0.00",
-                    },
-                }
-            )
-        except ValidationError as e:
-            return Response(
-                {"success": False, "detail": str(e)}, status=status.HTTP_403_FORBIDDEN
-            )
-
-    @action(detail=False, methods=["post"])
-    @transaction.atomic
-    def complete_checkout(self, request, *args, **kwargs):
-        """
-        Complete the checkout after receiving response from CyberSource.
-
-        The decision from CyberSource can be ACCEPT, REVIEW, DECLINE, ERROR, or CANCEL.
-        See CyberSource documentation for details.
-        """
-        decision = request.data.get("decision", "").upper()
-        if not decision:
-            return Response(
-                {
-                    "success": False,
-                    "detail": "No decision provided from payment processor",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        cart = Cart.objects.filter(id=request.data.get("req_transaction_uuid")).first()
-        if not cart:
-            return Response(
-                {"success": False, "detail": "Cart not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        cart_items = cart.items.select_related("ticket_class").all()
-        if not cart_items.exists():
-            return Response(
-                {"success": False, "detail": "No items in cart"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if decision == "ACCEPT":
-            try:
-                order_info = {
-                    "amountDetails": {"totalAmount": request.data.get("req_amount")},
-                    "billTo": {
-                        # TODO: figure out what fields Secure Acceptance returns
-                        "firstName": request.data.get("req_first_name"),
-                        "lastName": request.data.get("req_last_name"),
-                        "phoneNumber": None,
-                        "email": request.data.get("req_email"),
-                    },
-                }
-                reconciliation_id = request.data.get("req_reference_number")
-                self._give_tickets(
-                    request.user, order_info, cart, reconciliation_id, cart_items
-                )
-
-                return Response(
-                    {"success": True, "detail": "Payment successful and tickets issued"}
-                )
-
-            except ValidationError as e:
-                return Response(
-                    {"success": False, "detail": str(e)},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-        elif decision in ["DECLINE", "ERROR", "CANCEL"]:
-            # Clean up any held items
-            cart.items.all().delete()
-            cart.delete()
-
-            detail_messages = {
-                "DECLINE": "Payment was declined by the payment processor",
-                "ERROR": "An error occurred during payment processing",
-                "CANCEL": "Payment was cancelled",
+        return Response(
+            {
+                "detail": "Successfully added to cart",
+                "cart_id": cart.id,
+                "success": True,
             }
-
-            return Response(
-                {
-                    "success": False,
-                    "detail": detail_messages.get(decision, "Payment was unsuccessful"),
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        else:
-            return Response(
-                {
-                    "success": False,
-                    "detail": f"Unexpected payment processor decision: {decision}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        )
 
     @action(detail=True, methods=["get"])
     def buyers(self, request, *args, **kwargs):
@@ -2906,19 +2728,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             return Response({"ticket_types": []})
 
         # Get all ticket classes for this event
-        ticket_types = TicketClass.objects.filter(event=event).values(
-            "name",
-            "description",
-            "price",
-            "quantity",
-            "remaining",
-            "transferable",
-            "group_discount",
-            "group_size",
-            "buyable",
-        )
+        ticket_types = TicketClass.objects.filter(event=event)
+        serializer = TicketClassSerializer(ticket_types, many=True)
 
-        return Response({"ticket_types": list(ticket_types)})
+        return Response({"ticket_types": serializer.data})
 
     @tickets.mapping.put
     @transaction.atomic
@@ -3529,7 +3342,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                         else Badge.objects.filter(visible=True)
                     ),
                 ),
-                "tickets",
+                "ticket_classes__tickets",
             )
             .order_by("start_time")
         )
@@ -5447,10 +5260,16 @@ class TicketViewSet(viewsets.ModelViewSet):
     Get a ticket's QR code
 
     transfer:
-    Transfer a ticket to another user
+    Transfer a ticket to another user (authenticated users only)
+
+    initiate_checkout:
+    Start checkout process
+
+    complete_checkout:
+    Complete checkout process
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [TicketPermission]
     serializer_class = TicketSerializer
     http_method_names = ["get", "post", "patch"]
     lookup_field = "id"
@@ -5514,6 +5333,213 @@ class TicketViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type="image/png")
         qr_image.save(response, "PNG")
         return response
+
+    # TODO: integrate this with Cybersource Secure Acceptance
+    @action(detail=False, methods=["post"])
+    @transaction.atomic
+    def initiate_checkout(self, request, *args, **kwargs):
+        """
+        Initiate the checkout process for items in a user's cart
+
+        For free tickets, if user is not logged in, the request must include:
+        - first_name
+        - last_name
+        - email
+        """
+        cart_id = request.data.get("cart_id")
+        if not cart_id:
+            return Response(
+                {"success": False, "detail": "No cart ID provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get cart and validate ownership
+        cart = get_object_or_404(Cart, id=cart_id)
+
+        # Validate cart ownership - must match either user or session
+        if (request.user.is_authenticated and cart.owner != request.user) or (
+            not request.user.is_authenticated
+            and cart.session_key != request.session.session_key
+        ):
+            return Response(
+                {
+                    "success": False,
+                    "detail": "You do not have permission to access this cart",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Cart must have at least one item
+        cart_items = cart.items.select_related("ticket_class").all()
+        if not cart_items.exists():
+            return Response(
+                {"success": False, "detail": "No items selected for checkout"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Calculate total cart price
+        cart_total = sum(item.total_price() for item in cart_items)
+
+        if not request.user.is_authenticated:
+            first_name = request.data.get("first_name")
+            last_name = request.data.get("last_name")
+            email = request.data.get("email")
+
+            if not all([first_name, last_name, email]):
+                return Response(
+                    {
+                        "success": False,
+                        "detail": (
+                            "Guests must provide " "first_name, last_name, and email"
+                        ),
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            first_name = request.user.first_name
+            last_name = request.user.last_name
+            email = request.user.email
+
+        if cart_total > 0:
+            # TODO: generate checkout context for secure acceptance
+            context = None
+
+            return Response(
+                {
+                    "success": True,
+                    "detail": "Checkout initiated",
+                    "order": {
+                        "status": "pending_payment",
+                        "payment_required": True,
+                        "total_amount": str(cart_total),
+                        "checkout_context": context,
+                    },
+                }
+            )
+
+        # free tickets
+        order_info = {
+            "amountDetails": {"totalAmount": "0.00"},
+            "billTo": {
+                "firstName": first_name,
+                "lastName": last_name,
+                "phoneNumber": None,
+                "email": email,
+            },
+        }
+
+        try:
+            self._give_tickets(
+                request.user if request.user.is_authenticated else None,
+                order_info,
+                cart,
+                None,
+                cart_items,
+            )
+
+            return Response(
+                {
+                    "success": True,
+                    "detail": "Order processed successfully",
+                    "order": {
+                        "status": "completed",
+                        "payment_required": False,
+                        "total_amount": "0.00",
+                    },
+                }
+            )
+        except ValidationError as e:
+            return Response(
+                {"success": False, "detail": str(e)}, status=status.HTTP_403_FORBIDDEN
+            )
+
+    @action(detail=False, methods=["post"])
+    @transaction.atomic
+    def complete_checkout(self, request, *args, **kwargs):
+        """
+        Complete the checkout after receiving response from CyberSource.
+
+        The decision from CyberSource can be ACCEPT, REVIEW, DECLINE, ERROR, or CANCEL.
+        See CyberSource documentation for details.
+        """
+        decision = request.data.get("decision", "").upper()
+        if not decision:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "No decision provided from payment processor",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cart = Cart.objects.filter(id=request.data.get("req_transaction_uuid")).first()
+        if not cart:
+            return Response(
+                {"success": False, "detail": "Cart not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        cart_items = cart.items.select_related("ticket_class").all()
+        if not cart_items.exists():
+            return Response(
+                {"success": False, "detail": "No items in cart"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if decision == "ACCEPT":
+            try:
+                order_info = {
+                    "amountDetails": {"totalAmount": request.data.get("req_amount")},
+                    "billTo": {
+                        # TODO: figure out what fields Secure Acceptance returns
+                        "firstName": request.data.get("req_first_name"),
+                        "lastName": request.data.get("req_last_name"),
+                        "phoneNumber": None,
+                        "email": request.data.get("req_email"),
+                    },
+                }
+                reconciliation_id = request.data.get("req_reference_number")
+                self._give_tickets(
+                    request.user, order_info, cart, reconciliation_id, cart_items
+                )
+
+                return Response(
+                    {"success": True, "detail": "Payment successful and tickets issued"}
+                )
+
+            except ValidationError as e:
+                return Response(
+                    {"success": False, "detail": str(e)},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        elif decision in ["DECLINE", "ERROR", "CANCEL"]:
+            # Clean up any held items
+            cart.items.all().delete()
+            cart.delete()
+
+            detail_messages = {
+                "DECLINE": "Payment was declined by the payment processor",
+                "ERROR": "An error occurred during payment processing",
+                "CANCEL": "Payment was cancelled",
+            }
+
+            return Response(
+                {
+                    "success": False,
+                    "detail": detail_messages.get(decision, "Payment was unsuccessful"),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        else:
+            return Response(
+                {
+                    "success": False,
+                    "detail": f"Unexpected payment processor decision: {decision}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     @action(detail=True, methods=["post"])
     @transaction.atomic

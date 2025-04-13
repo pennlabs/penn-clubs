@@ -235,8 +235,6 @@ class EventPermission(permissions.BasePermission):
                 return False
             membership = find_membership_helper(request.user, obj.club)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
-        elif view.action in ["add_to_cart", "remove_from_cart"]:
-            return request.user.is_authenticated
         return True
 
 
@@ -561,3 +559,36 @@ class NotePermission(permissions.BasePermission):
             return True
         else:
             return request.user.is_authenticated
+
+
+class TicketPermission(permissions.BasePermission):
+    """
+    Permission class for tickets:
+    - Anyone can access qr, initiate_checkout, complete_checkout
+    - Only authenticated users can transfer tickets
+    - Only club officers can update attendance
+    """
+
+    def has_permission(self, request, view):
+        if view.action in ["qr", "initiate_checkout", "complete_checkout"]:
+            return True
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        if view.action == "partial_update":
+            if not request.user.is_authenticated:
+                return False
+            membership = find_membership_helper(
+                request.user, obj.ticket_class.event.club
+            )
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        if view.action == "transfer":
+            return obj.owner == request.user
+        if request.user.is_authenticated:
+            if obj.owner == request.user:
+                return True
+            membership = find_membership_helper(
+                request.user, obj.ticket_class.event.club
+            )
+            return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        return False
