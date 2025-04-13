@@ -990,8 +990,13 @@ class ClubDiffSerializer(serializers.ModelSerializer):
 
         latest_approved_description = diff["description"]["old"] or ""
         latest_description = diff["description"]["new"] or ""
-        diff["description"]["diff"] = description_diff_helper(
+        latest_approved_title = diff["name"]["old"] or ""
+        latest_title = diff["name"]["new"] or ""
+        diff["description"]["diff"] = diff_calculator(
             latest_approved_description, latest_description
+        )
+        diff["name"]["diff"] = diff_calculator(
+            latest_approved_title, latest_title
         )
 
         if is_same:
@@ -1230,7 +1235,7 @@ class StudentTypeSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
-def description_diff_helper(latest_approved_description, latest_description):
+def diff_calculator(latest_approved_description, latest_description):
     if latest_approved_description == latest_description:
         return latest_description
     # Get the diff between old and new HTML

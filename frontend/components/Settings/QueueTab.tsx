@@ -213,17 +213,6 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
   )
 }
 
-const retrieveDiffs = async (club) => {
-  const resp = await doApiRequest(
-    `/clubs/${club.code}/club_detail_diff/?format=json`,
-    {
-      method: 'GET',
-    },
-  )
-  const json = await resp.json()
-  return json[club.code]
-}
-
 const ClubLink = ({ code, name }: Club) => (
   <Link
     href={CLUB_ROUTE()}
@@ -254,7 +243,13 @@ const ClubTags = ({ code, name }: Club): ReactElement => {
   useEffect(() => {
     const fetchDiffs = async () => {
       const resp = await retrieveDiffs()
-      setDiffs(resp)
+      if (
+        resp === 'No changes that require approval made since last approval'
+      ) {
+        setDiffs(null)
+      } else {
+        setDiffs(resp)
+      }
     }
     fetchDiffs()
   }, [code])

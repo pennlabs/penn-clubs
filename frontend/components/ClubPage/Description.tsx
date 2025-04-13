@@ -2,7 +2,11 @@ import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import { Club } from '../../types'
-import { doApiRequest, EMPTY_DESCRIPTION } from '../../utils'
+import {
+  apiCheckPermission,
+  doApiRequest,
+  EMPTY_DESCRIPTION,
+} from '../../utils'
 import { StrongText } from '../common'
 
 const Wrapper = styled.div`
@@ -26,6 +30,7 @@ type ClubDiff = {
   name: {
     old: string
     new: string
+    diff: string
   }
   image: {
     old: string
@@ -34,9 +39,29 @@ type ClubDiff = {
 }
 
 const Description = ({ club }: DescProps): ReactElement => {
-  const { active, name, tags, badges } = club
-
   const [diffs, setDiffs] = useState<ClubDiff | null>(null)
+  const canApprove = apiCheckPermission('clubs.approve_club')
+
+  const NewDescription = () => {
+    return (
+      <Wrapper>
+        <div style={{ width: '100%' }}>
+          <StrongText>Club Mission</StrongText>
+          <div></div>
+          <div
+            className="content"
+            dangerouslySetInnerHTML={{
+              __html: club.description || EMPTY_DESCRIPTION,
+            }}
+          />
+        </div>
+      </Wrapper>
+    )
+  }
+
+  if (!canApprove) {
+    return <NewDescription />
+  }
 
   const retrieveDiffs = async () => {
     const resp = await doApiRequest(
@@ -54,7 +79,13 @@ const Description = ({ club }: DescProps): ReactElement => {
       const fetchDiffs = async () => {
         if (club.approved == null) {
           const resp = await retrieveDiffs()
-          setDiffs(resp)
+          if (
+            resp === 'No changes that require approval made since last approval'
+          ) {
+            setDiffs(null)
+          } else {
+            setDiffs(resp)
+          }
         }
       }
       fetchDiffs()
@@ -78,20 +109,7 @@ const Description = ({ club }: DescProps): ReactElement => {
     }
   }
 
-  return (
-    <Wrapper>
-      <div style={{ width: '100%' }}>
-        <StrongText>Club Mission</StrongText>
-        <div></div>
-        <div
-          className="content"
-          dangerouslySetInnerHTML={{
-            __html: club.description || EMPTY_DESCRIPTION,
-          }}
-        />
-      </div>
-    </Wrapper>
-  )
+  return <NewDescription />
 }
 
 export default Description
