@@ -384,23 +384,29 @@ class Club(models.Model):
             calendar = Calendar(requests.get(url).text)
             event_list = Event.objects.filter(is_ics_event=True, club=self)
             modified_events = []
-            for event in calendar.events:
+            for ics_event in calendar.events:
                 tries = [
                     Event.objects.filter(
                         club=self,
-                        start_time=event.begin.datetime,
-                        end_time=event.end.datetime,
-                    ).first(),
+                        is_ics_event=True,
+                    )
+                    .filter(
+                        eventshowing__start_time=ics_event.begin.datetime,
+                        eventshowing__end_time=ics_event.end.datetime,
+                    )
+                    .first(),
                     Event(),
                 ]
 
                 # try matching using uuid if it is valid
-                if event.uid:
+                if ics_event.uid:
                     try:
-                        event_uuid = uuid.UUID(event.uid[:36])
+                        event_uuid = uuid.UUID(ics_event.uid[:36])
                     except ValueError:
                         # generate uuid from malformed/invalid uuids
-                        event_uuid = uuid.uuid5(ics_import_uuid_namespace, event.uid)
+                        event_uuid = uuid.uuid5(
+                            ics_import_uuid_namespace, ics_event.uid
+                        )
 
                     tries.insert(0, Event.objects.filter(ics_uuid=event_uuid).first())
                 else:
@@ -409,11 +415,8 @@ class Club(models.Model):
                 for ev in tries:
                     if ev:
                         ev.club = self
-                        ev.name = event.name.strip()
-                        ev.start_time = event.begin.datetime
-                        ev.end_time = event.end.datetime
-                        ev.description = clean(event.description.strip())
-                        ev.location = event.location
+                        ev.name = ics_event.name.strip()
+                        ev.description = clean(ics_event.description.strip())
                         ev.is_ics_event = True
 
                         # very simple type detection, only perform on first time
@@ -447,12 +450,8 @@ class Club(models.Model):
                                 ev.url = urls[0]
 
                         # extract url from url or location
-                        if event.url:
-                            ev.url = event.url
-                        elif ev.location:
-                            location_urls = extractor.find_urls(ev.location)
-                            if location_urls:
-                                ev.url = location_urls[0]
+                        if ics_event.url:
+                            ev.url = ics_event.url
 
                         # format url properly with schema
                         if ev.url:
@@ -468,8 +467,6 @@ class Club(models.Model):
                             ev.ics_uuid = event_uuid
 
                         # ensure length limits are met before saving
-                        if ev.location:
-                            ev.location = ev.location[:255]
                         if ev.name:
                             ev.name = ev.name[:255]
                         if ev.code:
@@ -478,6 +475,25 @@ class Club(models.Model):
                             ev.url = ev.url[:2048]
 
                         ev.save()
+
+                        # Update corresponding showing (one per event)
+                        showing, created = EventShowing.objects.get_or_create(
+                            event=ev,
+                            start_time=ics_event.begin.datetime,
+                            end_time=ics_event.end.datetime,
+                            defaults={
+                                "location": ics_event.location[:255]
+                                if ics_event.location
+                                else None,
+                            },
+                        )
+
+                        if not created:
+                            showing.location = (
+                                ics_event.location[:255] if ics_event.location else None
+                            )
+                            showing.save()
+
                         modified_events.append(ev)
                         break
 
@@ -508,24 +524,37 @@ class Club(models.Model):
 
         eastern = pytz.timezone("America/New_York")
 
-        events = self.events.filter(
+        fair_events = Event.objects.filter(
+            club=self,
+            type=Event.FAIR,
+        )
+
+        event_showings = EventShowing.objects.filter(
+            event__in=fair_events,
             start_time__gte=fair.start_time,
             end_time__lte=fair.end_time,
-            type=Event.FAIR,
         ).order_by("start_time")
-        event = events.first()
+
+        first_event_showing = event_showings.first()
+        first_event = first_event_showing.event if first_event_showing else None
+
         fstr = "%B %d, %Y %I:%M %p"
         events = [
             {
-                "time": f"{timezone.localtime(start, eastern).strftime(fstr)} - "
-                f"{timezone.localtime(end, eastern).strftime(fstr)} ET"
+                "time": (
+                    f"{timezone.localtime(showing.start_time, eastern).strftime(fstr)} "
+                    f"- {timezone.localtime(showing.end_time, eastern).strftime(fstr)} "
+                    "ET"
+                )
             }
-            for start, end in events.values_list("start_time", "end_time")
+            for showing in event_showings
         ]
 
         prefix = (
             "ACTION REQUIRED"
-            if event is None or not event.url or "zoom.us" not in event.url
+            if first_event is None
+            or not first_event.url
+            or "zoom.us" not in first_event.url
             else "REMINDER"
         )
 
@@ -855,17 +884,21 @@ class ClubFair(models.Model):
         events = []
         with transaction.atomic():
             for club in club_query:
-                obj, _ = Event.objects.get_or_create(
+                event, _ = Event.objects.get_or_create(
                     code=f"fair-{club.code}-{self.id}-{suffix}",
                     club=club,
                     type=Event.FAIR,
                     defaults={
                         "name": self.name,
-                        "start_time": start_time,
-                        "end_time": end_time,
                     },
                 )
-                events.append(obj)
+
+                showing, _ = EventShowing.objects.get_or_create(
+                    event=event, start_time=start_time, end_time=end_time
+                )
+
+                events.append(event)
+
         return events
 
     def __str__(self):
@@ -896,25 +929,6 @@ class ClubFairRegistration(models.Model):
         return f"{self.club.name} registration for {self.fair.name}"
 
 
-class RecurringEvent(models.Model):
-    """
-    Represents a recurring event hosted by a club.
-    """
-
-    def __str__(self):
-        events = self.event_set.all()
-        if events.exists():
-            first_event = events.first()
-            last_event = events.last()
-            name = first_event.name
-            return (
-                f"{name}: "
-                f"{first_event.start_time} - {last_event.end_time} "
-                f"({events.count()} times)"
-            )
-        return "empty recurring event object"
-
-
 class Event(models.Model):
     """
     Represents an event hosted by a club.
@@ -927,9 +941,6 @@ class Event(models.Model):
     club = models.ForeignKey(
         Club, on_delete=models.CASCADE, related_name="events", null=True
     )
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(max_length=2048, null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(
@@ -938,11 +949,6 @@ class Event(models.Model):
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
-    parent_recurring_event = models.ForeignKey(
-        RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
-    )
-    ticket_order_limit = models.IntegerField(default=10)
-    ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -972,6 +978,25 @@ class Event(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class EventShowing(models.Model):
+    """
+    Represents a showing of an event.
+    """
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    location = models.CharField(max_length=255, null=True, blank=True)
+    ticket_order_limit = models.IntegerField(default=10)
+    ticket_drop_time = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.event.name} showing at {self.start_time}"
 
 
 class Favorite(models.Model):
@@ -1914,8 +1939,12 @@ class Ticket(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    event = models.ForeignKey(
-        Event, related_name="tickets", on_delete=models.DO_NOTHING
+    showing = models.ForeignKey(
+        EventShowing,
+        related_name="tickets",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
     type = models.CharField(max_length=100)
     owner = models.ForeignKey(
@@ -1983,10 +2012,10 @@ class Ticket(models.Model):
 
         context = {
             "first_name": self.owner.first_name,
-            "name": self.event.name,
+            "name": self.showing.event.name,
             "type": self.type,
-            "start_time": self.event.start_time,
-            "end_time": self.event.end_time,
+            "start_time": self.showing.start_time,
+            "end_time": self.showing.end_time,
             "cid": "qr_code",
             "ticket_url": f"https://{settings.DOMAINS[0]}/settings#Tickets",
         }
@@ -1995,7 +2024,7 @@ class Ticket(models.Model):
             send_mail_helper(
                 name="ticket_confirmation",
                 subject=f"Ticket confirmation for {self.owner.get_full_name()}"
-                f" to {self.event.name}",
+                f" to {self.showing.event.name}",
                 emails=[self.owner.email],
                 context=context,
                 attachment={
@@ -2038,13 +2067,15 @@ class TicketTransferRecord(models.Model):
             "sender_first_name": self.sender.first_name,
             "receiver_first_name": self.receiver.first_name,
             "receiver_username": self.receiver.username,
-            "event_name": self.ticket.event.name,
+            "event_name": self.ticket.showing.event.name,
             "type": self.ticket.type,
         }
 
         send_mail_helper(
             name="ticket_transfer",
-            subject=f"Ticket transfer confirmation for {self.ticket.event.name}",
+            subject=(
+                f"Ticket transfer confirmation for {self.ticket.showing.event.name}"
+            ),
             emails=[self.sender.email, self.receiver.email],
             context=context,
         )

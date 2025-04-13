@@ -273,7 +273,7 @@ const ClubPage = ({
               <MemberList club={club} />
             </>
           )}
-          {events.length > 0 && <EventCarousel data={events} />}
+          {events.length > 0 && <EventCarousel events={events} />}
         </div>
         <div className="column is-one-third">
           <DesktopActions

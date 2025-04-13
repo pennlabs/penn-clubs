@@ -21,6 +21,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     Event,
+    EventShowing,
     Major,
     Membership,
     Profile,
@@ -133,8 +134,8 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</i>""",
     {
         "code": "harvard-rejects",
         "name": "Harvard Rejects Club",
-        "description": """We’re Penn’s largest club with over 20,000 active members!
-We’re always looking for enthusiastic students to join our organization,
+        "description": """We're Penn's largest club with over 20,000 active members!
+We're always looking for enthusiastic students to join our organization,
 so please feel free to reach out to us at upenn.edu/harvard to join!""",
         "image": "https://i.imgur.com/IxgjBmA.png",
         "active": True,
@@ -519,13 +520,20 @@ class Command(BaseCommand):
                 "creator": ben,
                 "name": f"Test Event now for {live_event_club.name}",
                 "description": "This is the description for this event.",
+            },
+        )
+
+        # Create a showing for the event
+        EventShowing.objects.get_or_create(
+            event=event,
+            defaults={
                 "start_time": now,
                 "end_time": now + datetime.timedelta(hours=1),
             },
         )
 
         # create a global event for testing
-        Event.objects.get_or_create(
+        global_event, _ = Event.objects.get_or_create(
             club=None,
             code="test-global-event",
             defaults={
@@ -533,6 +541,13 @@ class Command(BaseCommand):
                 "name": "Test Global Event",
                 "description": "This is a global event that "
                 "does not belong to any club.",
+            },
+        )
+
+        # Create a showing for the global event
+        EventShowing.objects.get_or_create(
+            event=global_event,
+            defaults={
                 "start_time": now + datetime.timedelta(days=1),
                 "end_time": now
                 + datetime.timedelta(days=1)
@@ -586,6 +601,29 @@ class Command(BaseCommand):
             club.badges.add(fair_cat_badge)
 
         fair.create_events()
+
+        # Create a special event with multiple showings
+        multi_showing_club = Club.objects.get(code="pppjo")
+        multi_showing_event, _ = Event.objects.get_or_create(
+            club=multi_showing_club,
+            code="multi-showing-event",
+            defaults={
+                "creator": ben,
+                "name": "Multi-Showing Event",
+                "description": "This event has multiple showings.",
+            },
+        )
+
+        # Create multiple showings for the event on consecutive days
+        for i in range(3):
+            EventShowing.objects.get_or_create(
+                event=multi_showing_event,
+                start_time=now + datetime.timedelta(days=i),
+                defaults={
+                    "end_time": now + datetime.timedelta(days=i, hours=2),
+                    "location": f"Location {i + 1}",
+                },
+            )
 
         if created:
             contents = get_image(event_image_url)
@@ -728,6 +766,13 @@ class Command(BaseCommand):
                         "creator": ben,
                         "name": f"Test Event #{j} for {club.name}",
                         "description": "This is the description for this event.",
+                    },
+                )
+
+                # Create a showing for the event
+                EventShowing.objects.get_or_create(
+                    event=event,
+                    defaults={
                         "start_time": start_time,
                         "end_time": end_time,
                     },
@@ -762,34 +807,49 @@ class Command(BaseCommand):
             count += 1
 
         # Add tickets
-
         hr = Club.objects.get(code="harvard-rejects")
 
         hr_events = Event.objects.filter(club=hr)
 
-        for idx, e in enumerate(hr_events[:3]):
+        for idx, event in enumerate(hr_events[:3]):
+            # Get the first showing for this event
+            showing = EventShowing.objects.filter(event=event).first()
+            if not showing:
+                # Create a showing if none exists
+                showing = EventShowing.objects.create(
+                    event=event,
+                    start_time=now + datetime.timedelta(days=idx),
+                    end_time=now + datetime.timedelta(days=idx, hours=2),
+                )
+
             # Switch up person every so often
             person = ben if idx < 2 else user_objs[1]
 
             # Create some unowned tickets
             Ticket.objects.bulk_create(
-                [Ticket(event=e, type="Regular", price=10.10) for _ in range(10)]
+                [
+                    Ticket(showing=showing, type="Regular", price=10.10)
+                    for _ in range(10)
+                ]
             )
 
             Ticket.objects.bulk_create(
-                [Ticket(event=e, type="Premium", price=100.10) for _ in range(5)]
+                [
+                    Ticket(showing=showing, type="Premium", price=100.10)
+                    for _ in range(5)
+                ]
             )
 
             # Create some owned tickets and tickets in cart
             for i in range((idx + 1) * 10):
                 if i % 5:
                     Ticket.objects.create(
-                        event=e, owner=person, type="Regular", price=i
+                        showing=showing, owner=person, type="Regular", price=i
                     )
                 else:
                     c, _ = Cart.objects.get_or_create(owner=person)
                     c.tickets.add(
-                        Ticket.objects.create(event=e, type="Premium", price=i)
+                        Ticket.objects.create(showing=showing, type="Premium", price=i)
                     )
 
         self.stdout.write("Finished populating database!")
