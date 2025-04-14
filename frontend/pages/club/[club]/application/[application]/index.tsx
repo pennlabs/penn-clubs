@@ -6,7 +6,7 @@ import { Field, Form, Formik } from 'formik'
 import moment from 'moment'
 import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
-import { type JSX, ReactElement, useEffect, useState } from 'react'
+import { type JSX, ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
@@ -15,7 +15,6 @@ import {
   ApplicationQuestion,
   ApplicationQuestionType,
   Club,
-  UserInfo,
 } from 'types'
 import { doApiRequest } from 'utils'
 
@@ -39,15 +38,6 @@ export function computeWordCount(input: string): number {
   return input !== undefined
     ? input.split(' ').filter((word) => word !== '').length
     : 0
-}
-
-export function isProfileComplete(userInfo: UserInfo | null): boolean {
-  if (!userInfo) return false
-  const hasGraduationYear = !!userInfo.graduation_year
-  const hasSchool = Array.isArray(userInfo.school) && userInfo.school.length > 0
-  const hasMajor = Array.isArray(userInfo.major) && userInfo.major.length > 0
-  return hasGraduationYear && hasSchool && hasMajor
-  // return hasGraduationYear
 }
 
 export function formatQuestionType(
@@ -128,31 +118,9 @@ const ApplicationPage = ({
   const router = useRouter()
   const [redirected, setRedirected] = useState<boolean>(false)
 
-  // Perform redirection check immediately on component mount
-  useEffect(() => {
-    if (userInfo && !isProfileComplete(userInfo) && !redirected) {
-      setRedirected(true)
-      // Redirect to settings with query parameter
-      router.push({
-        pathname: '/settings',
-        query: { from_application: club.code },
-        hash: 'Profile',
-      })
-    }
-  }, [userInfo, router, redirected, club.code])
-
   // Return null during redirection to prevent flashing of content
-  if (!userInfo || (userInfo && !isProfileComplete(userInfo))) {
-    if (!userInfo) {
-      return <AuthPrompt />
-    }
-    // Return loading state or nothing while redirecting
-    return (
-      <Container paddingTop>
-        <Title>Checking profile...</Title>
-        <p>Please wait while we verify your profile information.</p>
-      </Container>
-    )
+  if (!userInfo) {
+    return <AuthPrompt />
   }
 
   // Second condition will be replaced with perms check or question nullity check once backend is updated
@@ -300,6 +268,17 @@ const ApplicationPage = ({
                   .then((resp) => {
                     if (resp.status === 200) {
                       return resp.json()
+                    } else if (resp.status === 400) {
+                      setSaved(false)
+                      setErrors('User profile is incomplete. Redirecting...')
+                      setRedirected(true)
+                      setTimeout(() => {
+                        router.push({
+                          pathname: '/settings',
+                          query: { from_application: club.code },
+                          hash: 'Profile',
+                        })
+                      }, 1000)
                     } else {
                       setSaved(false)
                       setErrors(
