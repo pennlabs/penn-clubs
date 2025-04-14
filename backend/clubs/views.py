@@ -6619,17 +6619,17 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 invite.send_mail(self.request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
-        skip_msg = ""
+        skip_msg = []
         if skip["already_notified"]:
-            skip_msg += f" {skip['already_notified']} already notified"
+            skip_msg.append(f" {skip['already_notified']} already notified")
         if skip["pending"]:
-            skip_msg += f" {skip['pending']} still marked as pending"
+            skip_msg.append(f" {skip['pending']} still marked as pending")
         if skip["no_reason"]:
-            skip_msg += f" {skip['no_reason']} have no reason provided"
+            skip_msg.append(f" {skip['no_reason']} have no reason provided")
         return Response(
             {
-                "detail": f"{dry_run_msg} emails to {n} people, "
-                f"{skip_msg if skip_msg else ''}",
+                "detail": f"{dry_run_msg} emails to {n} people"
+                f"{(': ' + ', '.join(skip_msg)) if len(skip_msg) > 0 else ''}",
             }
         )
 
