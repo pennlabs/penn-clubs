@@ -40,6 +40,8 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
+    Max,
+    Min,
     Prefetch,
     Q,
     TextField,
@@ -95,14 +97,16 @@ from clubs.models import (
     ClubFairRegistration,
     ClubVisit,
     Event,
+    EventShowing,
     Favorite,
     Major,
     Membership,
     MembershipInvite,
     MembershipRequest,
     Note,
+    OwnershipRequest,
     QuestionAnswer,
-    RecurringEvent,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -128,11 +132,13 @@ from clubs.permissions import (
     ClubSensitiveItemPermission,
     DjangoPermission,
     EventPermission,
+    EventShowingPermission,
     InvitePermission,
     IsSuperuser,
     MemberPermission,
     MembershipRequestPermission,
     NotePermission,
+    OwnershipRequestPermission,
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
@@ -166,6 +172,8 @@ from clubs.serializers import (
     ClubMinimalSerializer,
     ClubSerializer,
     EventSerializer,
+    EventShowingSerializer,
+    EventShowingWriteSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
     FavoriteSerializer,
@@ -178,7 +186,9 @@ from clubs.serializers import (
     MembershipSerializer,
     MinimalUserProfileSerializer,
     NoteSerializer,
+    OwnershipRequestSerializer,
     QuestionAnswerSerializer,
+    RegistrationQueueSettingsSerializer,
     ReportClubSerializer,
     ReportSerializer,
     SchoolSerializer,
@@ -195,6 +205,7 @@ from clubs.serializers import (
     UserMembershipInviteSerializer,
     UserMembershipRequestSerializer,
     UserMembershipSerializer,
+    UserOwnershipRequestSerializer,
     UserProfileSerializer,
     UserSerializer,
     UserSubscribeSerializer,
@@ -502,9 +513,11 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             fields.update(
                 {
                     "type": parse_int,
-                    "start_time": parse_datetime,
-                    "end_time": parse_datetime,
                     "fair": parse_fair,
+                    "earliest_start_time": parse_datetime,
+                    "latest_start_time": parse_datetime,
+                    "earliest_end_time": parse_datetime,
+                    "latest_end_time": parse_datetime,
                 }
             )
 
@@ -660,9 +673,9 @@ class ClubFairViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def live(self, *args, **kwargs):
         """
-        Returns all events, grouped by id, with the number of participants currently
-        in the meeting, the officers or owners in the meeting, and the number of
-        participants who have already attended the meeting.
+        Returns all events, grouped by event id, with the number of participants
+        currently in the meeting, the officers or owners in the meeting, and the
+        number of participants who have already attended the meeting.
         ---
         responses:
             "200":
@@ -687,28 +700,26 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         """
         fair = self.get_object()
         clubs = fair.participating_clubs.all()
-        events = (
-            Event.objects.filter(
-                club__in=clubs,
-                type=Event.FAIR,
-                start_time__gte=fair.start_time,
-                end_time__lte=fair.end_time,
-            )
-            .annotate(
+
+        events = Event.objects.filter(club__in=clubs, type=Event.FAIR)
+
+        # Calculate metrics per showing
+        metrics = (
+            events.annotate(
                 participant_count=Count(
                     "visits__person",
                     distinct=True,
                     filter=Q(visits__leave_time__isnull=True),
-                )
-            )
-            .annotate(
+                ),
                 already_attended=Count(
                     "visits__person",
                     distinct=True,
                     filter=Q(visits__leave_time__isnull=False),
-                )
+                ),
             )
-            .filter(visits__leave_time__isnull=False)
+            .filter(
+                Q(visits__leave_time__isnull=False) | Q(visits__leave_time__isnull=True)
+            )
             .annotate(
                 durations=ExpressionWrapper(
                     F("visits__leave_time") - F("visits__join_time"),
@@ -718,29 +729,48 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         )
 
         median_list = collections.defaultdict(list)
-        for event_id, duration in events.values_list("id", "durations").order_by(
+        for event_id, duration in metrics.values_list("id", "durations").order_by(
             "durations"
         ):
-            median_list[event_id].append(duration.total_seconds())
-        median_list = {k: v[len(v) // 2] if v else 0 for k, v in median_list.items()}
+            if duration is not None:
+                median_list[event_id].append(duration.total_seconds())
 
-        event_list = events.values_list("id", "participant_count", "already_attended")
+        # Calculate metrics per event
+        event_medians = {k: v[len(v) // 2] if v else 0 for k, v in median_list.items()}
+
+        # Aggregate metrics by event
+        event_participant_counts = collections.defaultdict(int)
+        event_already_attended = collections.defaultdict(int)
+
+        for event_id, participant_count, attended_count in metrics.values_list(
+            "id", "participant_count", "already_attended"
+        ):
+            event_participant_counts[event_id] += participant_count
+            event_already_attended[event_id] += attended_count
+
+        # Get officers who are currently in any showing of the event
         officer_mapping = collections.defaultdict(list)
-        for k, v in events.filter(
-            club__in=clubs,
-            club__membership__role__lte=10,
-            visits__leave_time__isnull=True,
-        ).values_list("id", "club__membership__person__username"):
-            officer_mapping[k].append(v)
+        for event_id, username in (
+            events.filter(
+                club__in=clubs,
+                club__membership__role__lte=10,
+                visits__leave_time__isnull=True,
+            )
+            .values_list("id", "club__membership__person__username")
+            .distinct()
+        ):
+            officer_mapping[event_id].append(username)
 
+        # Format the response with event IDs as keys
         formatted = {}
-        for event_id, particpant_count, already_attended in event_list:
+        for event_id in events.values_list("id", flat=True):
             formatted[event_id] = {
-                "participant_count": particpant_count,
-                "already_attended": already_attended,
+                "participant_count": event_participant_counts.get(event_id, 0),
+                "already_attended": event_already_attended.get(event_id, 0),
                 "officers": officer_mapping.get(event_id, []),
-                "median": median_list.get(event_id, 0),
+                "median": event_medians.get(event_id, 0),
             }
+
         return Response(formatted)
 
     @action(detail=True, methods=["post"])
@@ -844,13 +874,15 @@ class ClubFairViewSet(viewsets.ModelViewSet):
 
         # collect events
         events = collections.defaultdict(list)
-        for k, v in Event.objects.filter(
-            club__in=clubs,
-            type=Event.FAIR,
-            start_time__gte=fair.start_time,
-            end_time__lte=fair.end_time,
-        ).values_list("club__code", "url"):
-            events[k].append(v)
+        for club_code, event_url in (
+            Event.objects.filter(club__in=clubs, type=Event.FAIR)
+            .filter(
+                eventshowing__start_time__gte=fair.start_time,
+                eventshowing__end_time__lte=fair.end_time,
+            )
+            .values_list("club__code", "url")
+        ):
+            events[club_code].append(event_url)
 
         # collect badges
         badges = collections.defaultdict(list)
@@ -1700,11 +1732,21 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         if request.method == "DELETE":
             now = timezone.now()
-            num = club.events.filter(is_ics_event=True, start_time__gte=now).delete()[0]
+            event_ids = Event.objects.filter(club=club, is_ics_event=True).values_list(
+                "id", flat=True
+            )
+            event_count, _ = (
+                Event.objects.filter(
+                    id__in=event_ids, eventshowing__start_time__gte=now
+                )
+                .distinct()
+                .delete()
+            )  # showings will be deleted by cascade
+
             return Response(
                 {
                     "success": True,
-                    "message": f"Deleted all {num} imported ICS calendar events!",
+                    "message": f"Deleted {event_count} imported ICS calendar events!",
                 }
             )
 
@@ -1747,7 +1789,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         serializer = ClubMinimalSerializer(
             Club.objects.all()
-            .exclude(Q(approved=False) | Q(archived=True))
+            .exclude((~Q(approved=True) & Q(ghost=False)) | Q(archived=True))
             .order_by(Lower("name")),
             many=True,
         )
@@ -2057,8 +2099,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"""clubs:{club.id}-{"authed" if self.request.user.is_authenticated
-                                            else "anon"}"""
+        key = f"""clubs:{club.id}-{
+            "authed" if self.request.user.is_authenticated else "anon"
+        }"""
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -2171,6 +2214,99 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
         return Response(fields)
+
+    @action(detail=False, methods=["post"])
+    def email_blast(self, request, *args, **kwargs):
+        """
+        Send email blast to targeted (active) club members.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            content:
+                                type: string
+                                description: The content of the email blast to send
+                            target:
+                                type: string
+                                description: Must be one of leaders, officers, or all
+                        required:
+                            - content
+                            - target
+        responses:
+            "200":
+                description: Email blast was sent successfully
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: A message indicating how many
+                                        recipients received the blast
+            "400":
+                description: Content or target field was empty or missing
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: Error message indicating content
+                                        or target was not provided correctly
+        ---
+        """
+        if "target" not in request.data:
+            return Response(
+                {"detail": "Target must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target = request.data.get("target").lower().strip()
+        roles = {
+            "leaders": Membership.ROLE_OWNER,
+            "officers": Membership.ROLE_OFFICER,
+            "all": Membership.ROLE_MEMBER,
+        }
+
+        if target not in roles:
+            return Response(
+                {"detail": "Target must be one of: leaders, officers, all"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        content = request.data.get("content", "").strip()
+        if not content:
+            return Response(
+                {"detail": "Content must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target_role = roles[target]
+
+        emails = list(
+            Membership.objects.filter(role__lte=target_role, active=True)
+            .values_list("person__email", flat=True)
+            .distinct()
+        )
+
+        send_mail_helper(
+            name="blast",
+            subject=f"Update from {settings.BRANDING_SITE_NAME}",
+            emails=emails,
+            context={
+                "sender": settings.BRANDING_SITE_NAME,
+                "content": content,
+                "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
+            },
+            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
+        )
+
+        return Response({"detail": (f"Blast sent to {len(emails)} recipients")})
 
     def get_serializer_class(self):
         """
@@ -2368,27 +2504,20 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     retrieve:
     Return a single event.
 
+    create:
+    Create a new event for this club.
+
+    update:
+    Update all fields in an event.
+
+    partial_update:
+    Update certain fields in an event.
+
     destroy:
     Delete an event.
 
-    tickets:
-    Get or create tickets for particular event
-
-    buyers:
-    Get information about the buyers of an event's ticket
-
-    add_to_cart:
-    Add a ticket for this event to cart
-
-    cart:
-    List all ticket items currently in a user's cart for the event
-
-    initiate_checkout:
-    Start the checkout process by creating a capture context
-
-    complete_checkout:
-    Complete the checkout process after we have obtained an auth on a user's card
-    and checked that there is sufficient inventory
+    upload:
+    Upload a picture for the event.
     """
 
     permission_classes = [EventPermission | IsSuperuser]
@@ -2408,6 +2537,599 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         if self.action in {"create", "update", "partial_update"}:
             return EventWriteSerializer
         return EventSerializer
+
+    @action(detail=True, methods=["post"])
+    def upload(self, request, *args, **kwargs):
+        """
+        Upload a picture for the event.
+        ---
+        requestBody:
+            content:
+                multipart/form-data:
+                    schema:
+                        type: object
+                        properties:
+                            file:
+                                type: object
+                                format: binary
+        responses:
+            "200":
+                description: Returned if the file was successfully uploaded.
+                content: &upload_resp
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                    description: The status of the file upload.
+                                url:
+                                    type: string
+                                    description: >
+                                        The URL of the newly uploaded file.
+                                        Only exists if the file was successfully
+                                        uploaded.
+            "400":
+                description: Returned if there was an error while uploading the file.
+                content: *upload_resp
+        ---
+        """
+        event = Event.objects.get(id=kwargs["id"])
+        self.check_object_permissions(request, event)
+
+        resp = upload_endpoint_helper(request, Event, "image", "image", pk=event.pk)
+
+        # if image uploaded, create thumbnail
+        if status.is_success(resp.status_code):
+            event.create_thumbnail(request)
+
+        return resp
+
+    def create(self, request, *args, **kwargs):
+        """
+        Has the option to create a recurring event by specifying an offset and an
+        end date. Additionaly, do not let non-superusers create events with the
+        `FAIR` type through the API.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        allOf:
+                            - $ref: "#/components/schemas/EventWrite"
+                            - type: object
+                              properties:
+                                offset:
+                                    type: number
+                                    description: >
+                                        The offset between recurring events, in days.
+                                        Only specify this if the event is recurring.
+                                end_date:
+                                    type: string
+                                    format: date-time
+                                    description: >
+                                        The date when all items in the recurring event
+                                        series should end. Only specify this if the
+                                        event is recurring.
+
+        ---
+        """
+        # get event type
+        type = request.data.get("type", 0)
+        if type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="Approved activities fair events have already been created. "
+                "See above for events to edit, and "
+                f"please email {settings.FROM_EMAIL} if this is en error."
+            )
+
+        if "start_time" not in request.data or "end_time" not in request.data:
+            raise DRFValidationError(detail="start_time and end_time are required")
+        # if a recurring event, offset and end_date required
+        if ("offset" in request.data) != ("end_date" in request.data):
+            raise DRFValidationError(
+                detail="both offset and end_date are required for recurring events"
+            )
+
+        event_data = request.data.copy()
+        start_time = parse(event_data.pop("start_time"))
+        end_time = parse(event_data.pop("end_time"))
+        location = event_data.pop("location", None)
+
+        # offset and end_date default to create a single event
+        offset = event_data.pop("offset", 1)
+        end_date = (
+            parse(event_data.pop("end_date"))
+            if "end_date" in event_data
+            else (start_time + datetime.timedelta(days=offset))
+        )
+
+        event_serializer = EventWriteSerializer(
+            data=event_data, context={"request": request, "view": self}
+        )
+
+        if event_serializer.is_valid():
+            event = event_serializer.save()
+
+            current_start = start_time
+            current_end = end_time
+            showings = []
+
+            while current_start < end_date:
+                showing_data = {
+                    "start_time": current_start,
+                    "end_time": current_end,
+                    "location": location,
+                    "event": event.id,
+                }
+                showing_serializer = EventShowingWriteSerializer(
+                    data=showing_data,
+                    context={"request": request},
+                )
+
+                if showing_serializer.is_valid(raise_exception=False):
+                    showing = showing_serializer.save()
+                    showings.append(showing)
+                else:
+                    event.delete()
+                    # showings deleted via cascade
+                    return Response(
+                        showing_serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                current_start = current_start + datetime.timedelta(days=offset)
+                current_end = current_end + datetime.timedelta(days=offset)
+
+            return Response(EventSerializer(event).data)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Do not let non-superusers delete events with the FAIR type through the API.
+        Check if there are bought or held tickets before deletion.
+        """
+        event = self.get_object()
+
+        if event.type == Event.FAIR and not self.request.user.is_superuser:
+            raise DRFValidationError(
+                detail="You cannot delete activities fair events. "
+                f"If you would like to do this, email {settings.FROM_EMAIL}."
+            )
+
+        # Check if any showing has bought or held tickets
+        showings = EventShowing.objects.filter(event=event)
+        if (
+            Ticket.objects.filter(showing__in=showings)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            raise DRFValidationError(
+                detail=(
+                    "This event cannot be deleted because there are tickets "
+                    "that have been bought or are being checked out."
+                )
+            )
+
+        # Deleting event will delete all showings
+        return super().destroy(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = Event.objects.all()
+        is_club_specific = self.kwargs.get("club_code") is not None
+        if is_club_specific:
+            qs = qs.filter(club__code=self.kwargs["club_code"])
+            # Check if the user is an officer or admin
+            if not self.request.user.is_authenticated or (
+                not self.request.user.has_perm("clubs.manage_club")
+                and not Membership.objects.filter(
+                    person=self.request.user,
+                    club__code=self.kwargs["club_code"],
+                    role__lte=Membership.ROLE_OFFICER,
+                ).exists()
+            ):
+                qs = qs.filter(
+                    Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
+                    club__archived=False,
+                )
+        else:
+            if not (
+                self.request.user.is_authenticated
+                and self.request.user.has_perm("clubs.manage_club")
+            ):
+                officer_clubs = (
+                    Membership.objects.filter(
+                        person=self.request.user, role__lte=Membership.ROLE_OFFICER
+                    ).values_list("club", flat=True)
+                    if self.request.user.is_authenticated
+                    else []
+                )
+                qs = qs.filter(
+                    Q(club__approved=True)
+                    | Q(club__id__in=list(officer_clubs))
+                    | Q(type=Event.FAIR)
+                    | Q(club__ghost=True)
+                    | Q(club__isnull=True),
+                    Q(club__isnull=True) | Q(club__archived=False),
+                )
+        # Order events by their earliest showing's start time
+        return (
+            qs.select_related("club", "creator")
+            .prefetch_related(
+                Prefetch(
+                    "eventshowing_set",
+                    queryset=EventShowing.objects.all(),
+                ),
+                Prefetch(
+                    "eventshowing_set__tickets",
+                    queryset=Ticket.objects.select_related("owner", "holder"),
+                ),
+                Prefetch(
+                    "club__badges",
+                    queryset=(
+                        Badge.objects.filter(
+                            fair__id=self.request.query_params.get("fair")
+                        )
+                        if "fair" in self.request.query_params
+                        else Badge.objects.filter(visible=True)
+                    ),
+                ),
+            )
+            .annotate(
+                earliest_start_time=Min("eventshowing__start_time"),
+                latest_start_time=Max("eventshowing__start_time"),
+                earliest_end_time=Min("eventshowing__end_time"),
+                latest_end_time=Max("eventshowing__end_time"),
+            )
+            .order_by("earliest_start_time", "pk")
+        )
+
+
+class EventViewSet(ClubEventViewSet):
+    """
+    list:
+    Return a list of events for the entire site.
+
+    retrieve:
+    Return a single event.
+
+    destroy:
+    Delete an event.
+
+    fair:
+    Get information about a fair listing
+
+    owned:
+    Return all events that the user has officer permissions over.
+    """
+
+    def get_operation_id(self, **kwargs):
+        return f"{kwargs['operId']} (Global)"
+
+    @action(detail=False, methods=["get"])
+    def fair(self, request, *args, **kwargs):
+        """
+        Get the minimal information required for a fair directory listing.
+        Groups by the start date of the event, and then the event category.
+        Each event's club must have an associated fair badge in order to be displayed.
+        ---
+        parameters:
+            - name: date
+              in: query
+              required: false
+              description: >
+                A date in YYYY-MM-DD format.
+                If specified, will preview how this endpoint looked on the specified
+                date.
+              type: string
+            - name: fair
+              in: query
+              required: false
+              description: >
+                A fair id. If specified, will preview how this endpoint will look for
+                that fair. Overrides the date field if both are specified.
+              type: number
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                fair:
+                                    type: object
+                                    $ref: "#/components/schemas/ClubFair"
+                                events:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            start_time:
+                                                type: string
+                                                format: date-time
+                                            end_time:
+                                                type: string
+                                                format: date-time
+                                            events:
+                                                type: array
+                                                items:
+                                                    type: object
+                                                    properties:
+                                                        category:
+                                                            type: string
+                                                        events:
+                                                            type: array
+                                                            items:
+                                                                type: object
+                                                                properties:
+                                                                    name:
+                                                                        type: string
+                                                                    code:
+                                                                        type: string
+        ---
+        """
+        # accept custom date for preview rendering
+        date = request.query_params.get("date")
+        if date in {"null", "undefined"}:
+            date = None
+        if date:
+            date = parse(date)
+
+        # accept custom fair for preview rendering
+        fair = request.query_params.get("fair")
+        if fair in {"null", "undefined"}:
+            fair = None
+        if fair:
+            fair = int(re.sub(r"\D", "", fair))
+
+        # cache the response for this endpoint with short timeout
+        if date is None:
+            key = f"events:fair:directory:{request.user.is_authenticated}:{fair}"
+            cached = cache.get(key)
+            if cached:
+                return Response(cached)
+        else:
+            key = None
+
+        # lookup fair from id
+        if fair:
+            fair = get_object_or_404(ClubFair, id=fair)
+        else:
+            fair = (
+                ClubFair.objects.filter(
+                    end_time__gte=timezone.now() - datetime.timedelta(minutes=30)
+                )
+                .order_by("start_time")
+                .first()
+            )
+        if not date and fair is not None:
+            date = fair.start_time.date()
+
+        now = date or timezone.now()
+        events = Event.objects.filter(
+            type=Event.FAIR, club__badges__purpose="fair", club__badges__fair=fair
+        )
+
+        # Get event showings for these events
+        event_showings = EventShowing.objects.filter(event__in=events)
+
+        # filter event showings based on the fair times or provide a reasonable fallback
+        if fair is None:
+            event_showings = event_showings.filter(
+                start_time__lte=now + datetime.timedelta(days=7),
+                end_time__gte=now - datetime.timedelta(days=1),
+            )
+        else:
+            event_showings = event_showings.filter(
+                start_time__lte=fair.end_time, end_time__gte=fair.start_time
+            )
+
+        event_showings = event_showings.values_list(
+            "start_time",
+            "end_time",
+            "event__club__name",
+            "event__club__code",
+            "event__club__badges__label",
+        ).distinct()
+
+        output = {}
+        for showing in event_showings:
+            # group by start date
+            ts = int(showing[0].replace(second=0, microsecond=0).timestamp())
+            if ts not in output:
+                output[ts] = {
+                    "start_time": showing[0],
+                    "end_time": showing[1],
+                    "events": {},
+                }
+
+            # group by category
+            category = showing[4]
+            if category not in output[ts]["events"]:
+                output[ts]["events"][category] = {
+                    "category": category,
+                    "events": [],
+                }
+
+            output[ts]["events"][category]["events"].append(
+                {"name": showing[2], "code": showing[3]}
+            )
+
+        for item in output.values():
+            item["events"] = list(
+                sorted(item["events"].values(), key=lambda cat: cat["category"])
+            )
+            for category in item["events"]:
+                category["events"] = list(
+                    sorted(category["events"], key=lambda e: e["name"].casefold())
+                )
+
+        output = list(sorted(output.values(), key=lambda cat: cat["start_time"]))
+        final_output = {
+            "events": output,
+            "fair": ClubFairSerializer(instance=fair).data,
+        }
+        if key:
+            cache.set(key, final_output, 60 * 5)
+
+        return Response(final_output)
+
+    @action(detail=False, methods=["get"])
+    def owned(self, request, *args, **kwargs):
+        """
+        Return all events that the user has officer permissions over.
+        """
+        if not request.user.is_authenticated:
+            return Response([])
+
+        now = timezone.now()
+
+        events = self.filter_queryset(self.get_queryset()).filter(
+            club__membership__person=request.user,
+            club__membership__role__lte=Membership.ROLE_OFFICER,
+            eventshowing__start_time__gte=now,
+        )
+
+        return Response(EventSerializer(events, many=True).data)
+
+
+class ClubEventShowingViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of showings for an event.
+
+    retrieve:
+    Return a single showing.
+
+    create:
+    Create a new showing for an event.
+
+    update:
+    Update all fields in a showing.
+
+    partial_update:
+    Update certain fields in a showing.
+
+    destroy:
+    Delete a showing.
+
+    tickets:
+    Get or create tickets for a particular showing.
+
+    create_tickets:
+    Create ticket offerings for showing.
+
+    buyers:
+    Get information about the buyers of a showing's tickets.
+
+    remove_from_cart:
+    Remove a ticket for this showing from cart.
+
+    add_to_cart:
+    Add a ticket for this showing to cart.
+
+    issue_tickets:
+    Issue tickets to users in bulk.
+
+    email_blast:
+    Send an email blast to all users holding tickets.
+    """
+
+    permission_classes = [EventShowingPermission | IsSuperuser]
+    lookup_field = "id"
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.action in {"create", "update", "partial_update"}:
+            return EventShowingWriteSerializer
+        return EventShowingSerializer
+
+    def get_queryset(self):
+        event_id = self.kwargs.get("event_id")
+        is_club_specific = self.kwargs.get("club_code") is not None
+
+        qs = EventShowing.objects.filter(event__id=event_id)
+
+        if is_club_specific:
+            club_code = self.kwargs.get("club_code")
+            qs = qs.filter(event__club__code=club_code)
+
+            # Check if the user is an officer or admin
+            if not self.request.user.is_authenticated or (
+                not self.request.user.has_perm("clubs.manage_club")
+                and not Membership.objects.filter(
+                    person=self.request.user,
+                    club__code=club_code,
+                    role__lte=Membership.ROLE_OFFICER,
+                ).exists()
+            ):
+                qs = qs.filter(
+                    Q(event__club__approved=True)
+                    | Q(event__type=Event.FAIR)
+                    | Q(event__club__ghost=True),
+                    event__club__archived=False,
+                )
+        else:
+            if not (
+                self.request.user.is_authenticated
+                and self.request.user.has_perm("clubs.manage_club")
+            ):
+                officer_clubs = (
+                    Membership.objects.filter(
+                        person=self.request.user, role__lte=Membership.ROLE_OFFICER
+                    ).values_list("club", flat=True)
+                    if self.request.user.is_authenticated
+                    else []
+                )
+                qs = qs.filter(
+                    Q(event__club__approved=True)
+                    | Q(event__club__id__in=list(officer_clubs))
+                    | Q(event__type=Event.FAIR)
+                    | Q(event__club__ghost=True)
+                    | Q(event__club__isnull=True),
+                    Q(event__club__isnull=True) | Q(event__club__archived=False),
+                )
+
+        return qs.select_related("event", "event__club", "event__creator")
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Do not let club admins modify the ticket drop time
+        if tickets have potentially been sold through the checkout process.
+        """
+        showing = self.get_object()
+        if (
+            "ticket_drop_time" in request.data
+            and (
+                showing.ticket_drop_time is None  # case where sales immediately start
+                or showing.ticket_drop_time <= timezone.now()
+            )
+            and Ticket.objects.filter(showing=showing)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            raise DRFValidationError(
+                detail="Ticket drop times cannot be edited "
+                "after tickets have been sold or held."
+            )
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Check if any showing has bought or held tickets
+        """
+        showing = self.get_object()
+        if (
+            Ticket.objects.filter(showing=showing)
+            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            .exists()
+        ):
+            raise DRFValidationError(
+                detail=(
+                    "This showing cannot be deleted because there are tickets "
+                    "that have been bought or are being checked out."
+                )
+            )
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=["get"])
     @transaction.atomic
@@ -2494,7 +3216,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def add_to_cart(self, request, *args, **kwargs):
         """
-        Add tickets to cart
+        Add tickets from this showing to cart
         ---
         requestBody:
             content:
@@ -2511,15 +3233,22 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: integer
                                         quantity:
                                             type: integer
+                                            description: Number of tickets to add
+                        required:
+                            - quantities
         responses:
             "200":
+                description: Tickets successfully added to cart
                 content:
                     application/json:
                         schema:
                             type: object
                             properties:
+                            type: object
+                            properties:
                                 detail:
                                     type: string
+                                    description: Success message
                                 success:
                                     type: boolean
         "403":
@@ -2534,26 +3263,44 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                 type: boolean
         ---
         """
-        event = self.get_object()
+        showing = self.get_object()
 
         if not request.session.session_key:
             request.session.create()
 
+        club = showing.event.club
+
+        # Check if club is approved
+        if not club:
+            return Response(
+                {"detail": "Related club does not exist", "success": False},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        elif not club.approved and not club.ghost:
+            return Response(
+                {
+                    "detail": "This club has not been approved "
+                    "and cannot sell tickets.",
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         cart = Cart.objects.create(
-            event=event,
+            showing=showing,
             session_key=request.session.session_key,
             owner=request.user if request.user.is_authenticated else None,
         )
 
-        # Check if the event has already ended
-        if event.end_time < timezone.now():
+        # Check if the showing has already ended
+        if showing.end_time < timezone.now():
             return Response(
-                {"detail": "This event has already ended", "success": False},
+                {"detail": "This showing has already ended", "success": False},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Cannot add tickets that haven't dropped yet
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+        # Check if tickets have dropped
+        if showing.ticket_drop_time and timezone.now() < showing.ticket_drop_time:
             return Response(
                 {"detail": "Ticket drop time has not yet elapsed", "success": False},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -2568,11 +3315,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         num_requested = sum(item["quantity"] for item in quantities)
 
-        if num_requested > event.ticket_order_limit:
+        if num_requested > showing.ticket_order_limit:
             return Response(
                 {
-                    "detail": f"Order exceeds the maximum ticket limit of "
-                    f"{event.ticket_order_limit}.",
+                    "detail": (
+                        f"Order exceeds the maximum ticket limit of "
+                        f"{showing.ticket_order_limit}."
+                    ),
                     "success": False,
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -2581,7 +3330,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         # Attempt to add items to cart
         for item in quantities:
             ticket_class = get_object_or_404(
-                TicketClass, id=item["ticket_class_id"], event=event, buyable=True
+                TicketClass, id=item["ticket_class_id"], showing=showing, buyable=True
             )
             quantity = item["quantity"]
 
@@ -2622,6 +3371,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         ---
         responses:
             "200":
+                description: List of ticket buyers
                 content:
                     application/json:
                         schema:
@@ -2634,8 +3384,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                         properties:
                                             fullname:
                                                 type: string
+                                                description: Full name of the buyer
                                             id:
-                                                type: string
+                                                type: integer
+                                                description: Ticket ID
                                             owner_id:
                                                 type: integer
                                                 nullable: true
@@ -2643,14 +3395,19 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: string
                                             ticket_type:
                                                 type: string
+                                                description: Ticket type
                                             attended:
                                                 type: boolean
+                                                description: Whether the buyer attended
+                                            owner__email:
+                                                type: string
+                                                description: Email of the buyer
         ---
         """
-        event = self.get_object()
+        showing = self.get_object()
 
         # Get all tickets for this event
-        tickets = Ticket.objects.filter(ticket_class__event=event).select_related(
+        tickets = Ticket.objects.filter(ticket_class__showing=showing).select_related(
             "owner", "ticket_class", "transaction_record"
         )
 
@@ -2684,11 +3441,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def tickets(self, request, *args, **kwargs):
         """
-        Get information about tickets for particular event
+        Get information about tickets for this showing
         ---
-        requestBody: {}
         responses:
             "200":
+                description: Ticket information for this showing
                 content:
                     application/json:
                         schema:
@@ -2696,6 +3453,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 ticket_types:
                                     type: array
+                                    description: Total tickets by type
                                     items:
                                         type: object
                                         properties:
@@ -2721,14 +3479,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                                 type: boolean
         ---
         """
-        event = self.get_object()
+        showing = self.get_object()
 
         # Don't show tickets before drop time
-        if event.ticket_drop_time and timezone.now() < event.ticket_drop_time:
+        if showing.ticket_drop_time and timezone.now() < showing.ticket_drop_time:
             return Response({"ticket_types": []})
 
         # Get all ticket classes for this event
-        ticket_types = TicketClass.objects.filter(event=event)
+        ticket_types = TicketClass.objects.filter(showing=showing)
         serializer = TicketClassSerializer(ticket_types, many=True)
 
         return Response({"ticket_types": serializer.data})
@@ -2806,17 +3564,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     type: string
         ---
         """
-        event = self.get_object()
+        showing = self.get_object()
 
         # Tickets can't be edited after they've dropped
-        if event.ticket_drop_time and timezone.now() > event.ticket_drop_time:
+        if showing.ticket_drop_time and timezone.now() >= showing.ticket_drop_time:
             return Response(
                 {"detail": "Tickets cannot be edited after they have dropped"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         # Tickets can't be edited after they've been sold
-        if Ticket.objects.filter(ticket_class__event=event).exists():
+        if Ticket.objects.filter(ticket_class__showing=showing).exists():
             return Response(
                 {"detail": "Tickets cannot be edited after they have been sold"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -2877,17 +3635,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         # Update event settings
         if "order_limit" in request.data:
-            event.ticket_order_limit = request.data["order_limit"]
+            showing.ticket_order_limit = request.data["order_limit"]
         if "drop_time" in request.data:
-            event.ticket_drop_time = parse(request.data["drop_time"])
-        event.save()
+            showing.ticket_drop_time = parse(request.data["drop_time"])
+        showing.save()
 
         # Delete existing ticket classes and create new ones
-        TicketClass.objects.filter(event=event).delete()
+        TicketClass.objects.filter(showing=showing).delete()
 
         for ticket_type in ticket_types:
             TicketClass.objects.create(
-                event=event,
+                showing=showing,
                 name=ticket_type["name"],
                 description=ticket_type.get("description", ""),
                 price=ticket_type["price"],
@@ -2931,6 +3689,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                             type: integer
         responses:
             "200":
+                description: Tickets successfully issued
                 content:
                     application/json:
                         schema:
@@ -2938,7 +3697,14 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                             properties:
                                 detail:
                                     type: string
+                                    description: Success message
+                                errors:
+                                    type: array
+                                    description: List of errors (empty on success)
+                                    items:
+                                        type: string
             "400":
+                description: Invalid request parameters or insufficient tickets
                 content:
                     application/json:
                         schema:
@@ -2949,7 +3715,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                     description: Error message
         ---
         """
-        event = self.get_object()
+        showing = self.get_object()
         tickets_to_issue = request.data.get("tickets", [])
 
         if not tickets_to_issue:
@@ -2983,7 +3749,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             ticket_type = ticket_request.get("ticket_type")
             try:
                 ticket_class = TicketClass.objects.select_for_update().get(
-                    event=event, name=ticket_type
+                    showing=showing, name=ticket_type
                 )
             except TicketClass.DoesNotExist:
                 errors.append(f"Ticket type '{ticket_type}' not found")
@@ -3115,17 +3881,17 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                                         not found
         ---
         """
-        event = self.get_object()
+        showing = self.get_object()
 
         # Get all unique ticket holder emails - includes both registered and guest users
         ticket_holder_emails = set(
-            Ticket.objects.filter(ticket_class__event=event).values_list(
+            Ticket.objects.filter(ticket_class__showing=showing).values_list(
                 "owner_email", flat=True
             )
         )
 
         # Get club officer emails
-        officer_emails = event.club.get_officer_emails()
+        officer_emails = showing.event.club.get_officer_emails()
 
         # Combine unique emails
         emails = list(ticket_holder_emails) + list(officer_emails)
@@ -3137,15 +3903,18 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        reply_emails = showing.event.club.get_officer_emails()
+
         send_mail_helper(
             name="blast",
-            subject=f"Update on {event.name} from {event.club.name}",
+            subject=f"Update on {showing.event.name} from {showing.event.club.name}",
             emails=emails,
             context={
-                "sender": event.club.name,
-                "content": request.data.get("content"),
-                "reply_emails": event.club.get_officer_emails(),
+                "sender": showing.event.club.name,
+                "content": content,
+                "reply_emails": reply_emails,
             },
+            reply_to=reply_emails,
         )
 
         return Response(
@@ -3157,460 +3926,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             }
         )
 
-    @action(detail=True, methods=["post"])
-    def upload(self, request, *args, **kwargs):
-        """
-        Upload a picture for the event.
-        ---
-        requestBody:
-            content:
-                multipart/form-data:
-                    schema:
-                        type: object
-                        properties:
-                            file:
-                                type: object
-                                format: binary
-        responses:
-            "200":
-                description: Returned if the file was successfully uploaded.
-                content: &upload_resp
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                detail:
-                                    type: string
-                                    description: The status of the file upload.
-                                url:
-                                    type: string
-                                    description: >
-                                        The URL of the newly uploaded file.
-                                        Only exists if the file was successfully
-                                        uploaded.
-            "400":
-                description: Returned if there was an error while uploading the file.
-                content: *upload_resp
-        ---
-        """
-        event = Event.objects.get(id=kwargs["id"])
-        self.check_object_permissions(request, event)
 
-        resp = upload_endpoint_helper(request, Event, "image", "image", pk=event.pk)
-
-        # if image uploaded, create thumbnail
-        if status.is_success(resp.status_code):
-            event.create_thumbnail(request)
-
-        return resp
-
-    def create(self, request, *args, **kwargs):
-        """
-        Has the option to create a recurring event by specifying an offset and an
-        end date. Additionaly, do not let non-superusers create events with the
-        `FAIR` type through the API.
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        allOf:
-                            - $ref: "#/components/schemas/EventWrite"
-                            - type: object
-                              properties:
-                                is_recurring:
-                                    type: boolean
-                                    description: >
-                                        If this value is set, then make
-                                        recurring events instead of a single event.
-                                offset:
-                                    type: number
-                                    description: >
-                                        The offset between recurring events, in days.
-                                        Only specify this if the event is recurring.
-                                end_date:
-                                    type: string
-                                    format: date-time
-                                    description: >
-                                        The date when all items in the recurring event
-                                        series should end. Only specify this if the
-                                        event is recurring.
-
-        ---
-        """
-        # get event type
-        type = request.data.get("type", 0)
-        if type == Event.FAIR and not self.request.user.is_superuser:
-            raise DRFValidationError(
-                detail="Approved activities fair events have already been created. "
-                "See above for events to edit, and "
-                f"please email {settings.FROM_EMAIL} if this is en error."
-            )
-
-        # handle recurring events
-        if request.data.get("is_recurring", None) is not None:
-            parent_recurring_event = RecurringEvent.objects.create()
-            event_data = request.data.copy()
-            start_time = parse(event_data.pop("start_time"))
-            end_time = parse(event_data.pop("end_time"))
-            offset = event_data.pop("offset")
-            end_date = parse(event_data.pop("end_date"))
-            event_data.pop("is_recurring")
-
-            result_data = []
-            while start_time < end_date:
-                event_data["start_time"] = start_time
-                event_data["end_time"] = end_time
-                event_serializer = EventWriteSerializer(
-                    data=event_data, context={"request": request, "view": self}
-                )
-                if event_serializer.is_valid():
-                    ev = event_serializer.save()
-                    ev.parent_recurring_event = parent_recurring_event
-                    result_data.append(ev)
-                else:
-                    return Response(
-                        event_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-                    )
-
-                start_time = start_time + datetime.timedelta(days=offset)
-                end_time = end_time + datetime.timedelta(days=offset)
-
-            Event.objects.filter(pk__in=[e.pk for e in result_data]).update(
-                parent_recurring_event=parent_recurring_event
-            )
-
-            return Response(EventSerializer(result_data, many=True).data)
-
-        return super().create(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Do not let non-superusers delete events with the FAIR type through the API.
-        Check if there are bought or held tickets before deletion.
-        """
-        event = self.get_object()
-
-        if event.type == Event.FAIR and not self.request.user.is_superuser:
-            raise DRFValidationError(
-                detail="You cannot delete activities fair events. "
-                f"If you would like to do this, email {settings.FROM_EMAIL}."
-            )
-
-        if (
-            Ticket.objects.filter(event=event)
-            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
-            .exists()
-        ):
-            raise DRFValidationError(
-                detail=(
-                    "This event cannot be deleted because there are tickets "
-                    "that have been bought or are being checked out."
-                )
-            )
-
-        return super().destroy(request, *args, **kwargs)
-
-    def get_queryset(self):
-        qs = Event.objects.all()
-        is_club_specific = self.kwargs.get("club_code") is not None
-        if is_club_specific:
-            qs = qs.filter(club__code=self.kwargs["club_code"])
-            qs = qs.filter(
-                Q(club__approved=True) | Q(type=Event.FAIR) | Q(club__ghost=True),
-                club__archived=False,
-            )
-        else:
-            qs = qs.filter(
-                Q(club__approved=True)
-                | Q(type=Event.FAIR)
-                | Q(club__ghost=True)
-                | Q(club__isnull=True),
-                Q(club__isnull=True) | Q(club__archived=False),
-            )
-
-        return (
-            qs.select_related("club", "creator")
-            .prefetch_related(
-                Prefetch(
-                    "club__badges",
-                    queryset=(
-                        Badge.objects.filter(
-                            fair__id=self.request.query_params.get("fair")
-                        )
-                        if "fair" in self.request.query_params
-                        else Badge.objects.filter(visible=True)
-                    ),
-                ),
-                "ticket_classes__tickets",
-            )
-            .order_by("start_time")
-        )
-
-    @staticmethod
-    def _give_tickets(user, order_info, cart, reconciliation_id, cart_items):
-        """
-        Helper function that creates tickets for the user based on their cart items
-        and archives the transaction data. Also handles inventory management.
-
-        Args:
-            user: User object or None for anonymous users
-            order_info: Dict containing billing info
-            cart: Cart object
-            reconciliation_id: String ID from payment processor or None for free tickets
-            cart_items: QuerySet of CartItem objects
-
-        Raises ValidationError if tickets are no longer available.
-        """
-        # Lock ticket classes and check inventory
-        ticket_classes = TicketClass.objects.select_for_update().filter(
-            id__in=cart_items.values_list("ticket_class_id", flat=True)
-        )
-
-        # Check ticket availability
-        for item in cart_items:
-            ticket_class = ticket_classes.get(id=item.ticket_class_id)
-            if item.quantity > ticket_class.remaining or not ticket_class.buyable:
-                raise ValidationError(
-                    f"Ticket class '{ticket_class.name}' is no "
-                    "longer available in requested quantity"
-                )
-            # Decrement inventory
-            ticket_class.remaining -= item.quantity
-            ticket_class.save()
-
-        # Create the transaction record
-        transaction_record = TicketTransactionRecord.objects.create(
-            reconciliation_id=str(reconciliation_id) if reconciliation_id else None,
-            total_amount=float(order_info["amountDetails"]["totalAmount"]),
-            buyer_first_name=order_info["billTo"]["firstName"],
-            buyer_last_name=order_info["billTo"]["lastName"],
-            buyer_phone=order_info["billTo"].get("phoneNumber", None),
-            buyer_email=order_info["billTo"]["email"],
-        )
-
-        # Create tickets for each cart item
-        tickets_to_create = []
-        for item in cart_items:
-            for _ in range(item.quantity):
-                tickets_to_create.append(
-                    Ticket(
-                        ticket_class=item.ticket_class,
-                        transaction_record=transaction_record,
-                        owner=user,  # Can be None for anonymous users
-                        owner_email=order_info["billTo"]["email"],
-                    )
-                )
-
-        # Bulk create the tickets
-        tickets = Ticket.objects.bulk_create(tickets_to_create)
-
-        # Clean up the cart
-        cart.items.all().delete()
-        cart.delete()
-
-        # Send confirmation emails
-        for ticket in tickets:
-            ticket.send_confirmation_email()
-
-
-class EventViewSet(ClubEventViewSet):
-    """
-    list:
-    Return a list of events for the entire site.
-
-    retrieve:
-    Return a single event.
-
-    destroy:
-    Delete an event.
-
-    fair:
-    Get information about a fair listing
-
-    owned:
-    Return all events that the user has officer permissions over.
-    """
-
+class EventShowingViewSet(ClubEventShowingViewSet):
     def get_operation_id(self, **kwargs):
         return f"{kwargs['operId']} (Global)"
-
-    @action(detail=False, methods=["get"])
-    def fair(self, request, *args, **kwargs):
-        """
-        Get the minimal information required for a fair directory listing.
-        Groups by the start date of the event, and then the event category.
-        Each event's club must have an associated fair badge in order to be displayed.
-        ---
-        parameters:
-            - name: date
-              in: query
-              required: false
-              description: >
-                A date in YYYY-MM-DD format.
-                If specified, will preview how this endpoint looked on the specified
-                date.
-              type: string
-            - name: fair
-              in: query
-              required: false
-              description: >
-                A fair id. If specified, will preview how this endpoint will look for
-                that fair. Overrides the date field if both are specified.
-              type: number
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                fair:
-                                    type: object
-                                    $ref: "#/components/schemas/ClubFair"
-                                events:
-                                    type: array
-                                    items:
-                                        type: object
-                                        properties:
-                                            start_time:
-                                                type: string
-                                                format: date-time
-                                            end_time:
-                                                type: string
-                                                format: date-time
-                                            events:
-                                                type: array
-                                                items:
-                                                    type: object
-                                                    properties:
-                                                        category:
-                                                            type: string
-                                                        events:
-                                                            type: array
-                                                            items:
-                                                                type: object
-                                                                properties:
-                                                                    name:
-                                                                        type: string
-                                                                    code:
-                                                                        type: string
-        ---
-        """
-        # accept custom date for preview rendering
-        date = request.query_params.get("date")
-        if date in {"null", "undefined"}:
-            date = None
-        if date:
-            date = parse(date)
-
-        # accept custom fair for preview rendering
-        fair = request.query_params.get("fair")
-        if fair in {"null", "undefined"}:
-            fair = None
-        if fair:
-            fair = int(re.sub(r"\D", "", fair))
-
-        # cache the response for this endpoint with short timeout
-        if date is None:
-            key = f"events:fair:directory:{request.user.is_authenticated}:{fair}"
-            cached = cache.get(key)
-            if cached:
-                return Response(cached)
-        else:
-            key = None
-
-        # lookup fair from id
-        if fair:
-            fair = get_object_or_404(ClubFair, id=fair)
-        else:
-            fair = (
-                ClubFair.objects.filter(
-                    end_time__gte=timezone.now() - datetime.timedelta(minutes=30)
-                )
-                .order_by("start_time")
-                .first()
-            )
-        if not date and fair is not None:
-            date = fair.start_time.date()
-
-        now = date or timezone.now()
-        events = Event.objects.filter(
-            type=Event.FAIR, club__badges__purpose="fair", club__badges__fair=fair
-        )
-
-        # filter event range based on the fair times or provide a reasonable fallback
-        if fair is None:
-            events = events.filter(
-                start_time__lte=now + datetime.timedelta(days=7),
-                end_time__gte=now - datetime.timedelta(days=1),
-            )
-        else:
-            events = events.filter(
-                start_time__lte=fair.end_time, end_time__gte=fair.start_time
-            )
-
-        events = events.values_list(
-            "start_time", "end_time", "club__name", "club__code", "club__badges__label"
-        ).distinct()
-        output = {}
-        for event in events:
-            # group by start date
-            ts = int(event[0].replace(second=0, microsecond=0).timestamp())
-            if ts not in output:
-                output[ts] = {
-                    "start_time": event[0],
-                    "end_time": event[1],
-                    "events": {},
-                }
-
-            # group by category
-            category = event[4]
-            if category not in output[ts]["events"]:
-                output[ts]["events"][category] = {
-                    "category": category,
-                    "events": [],
-                }
-
-            output[ts]["events"][category]["events"].append(
-                {"name": event[2], "code": event[3]}
-            )
-        for item in output.values():
-            item["events"] = list(
-                sorted(item["events"].values(), key=lambda cat: cat["category"])
-            )
-            for category in item["events"]:
-                category["events"] = list(
-                    sorted(category["events"], key=lambda e: e["name"].casefold())
-                )
-
-        output = list(sorted(output.values(), key=lambda cat: cat["start_time"]))
-        final_output = {
-            "events": output,
-            "fair": ClubFairSerializer(instance=fair).data,
-        }
-        if key:
-            cache.set(key, final_output, 60 * 5)
-
-        return Response(final_output)
-
-    @action(detail=False, methods=["get"])
-    def owned(self, request, *args, **kwargs):
-        """
-        Return all events that the user has officer permissions over.
-        """
-        if not request.user.is_authenticated:
-            return Response([])
-
-        now = timezone.now()
-
-        events = self.filter_queryset(self.get_queryset()).filter(
-            club__membership__person=request.user,
-            club__membership__role__lte=Membership.ROLE_OFFICER,
-            start_time__gte=now,
-        )
-
-        return Response(EventSerializer(events, many=True).data)
 
 
 class TestimonialViewSet(viewsets.ModelViewSet):
@@ -3961,15 +4280,27 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         If a membership request object already exists, reuse it.
         """
         club = request.data.get("club", None)
-        obj = MembershipRequest.objects.filter(
-            club__code=club, person=request.user
-        ).first()
-        if obj is not None:
-            obj.withdrew = False
-            obj.save(update_fields=["withdrew"])
-            return Response(UserMembershipRequestSerializer(obj).data)
+        club_instance = Club.objects.filter(code=club).first()
+        if club_instance is None:
+            return Response(
+                {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
-        return super().create(request, *args, **kwargs)
+        create_defaults = {"club": club_instance, "requester": request.user}
+
+        obj, created = MembershipRequest.objects.update_or_create(
+            club__code=club,
+            requester=request.user,
+            defaults={"withdrawn": False, "created_at": timezone.now()},
+            create_defaults=create_defaults,
+        )
+
+        if created:
+            obj.send_request(request)
+
+        serializer = self.get_serializer(obj, many=False)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -3979,15 +4310,15 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
-        obj.withdrew = True
-        obj.save(update_fields=["withdrew"])
+        obj.withdrawn = True
+        obj.save(update_fields=["withdrawn"])
 
-        return Response({"success": True})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            person=self.request.user,
-            withdrew=False,
+            requester=self.request.user,
+            withdrawn=False,
             club__archived=False,
         )
 
@@ -4004,11 +4335,11 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     serializer_class = MembershipRequestSerializer
     permission_classes = [MembershipRequestPermission | IsSuperuser]
     http_method_names = ["get", "post", "delete"]
-    lookup_field = "person__username"
+    lookup_field = "requester__username"
 
     def get_queryset(self):
         return MembershipRequest.objects.filter(
-            club__code=self.kwargs["club_code"], withdrew=False
+            club__code=self.kwargs["club_code"], withdrawn=False
         )
 
     @action(detail=True, methods=["post"])
@@ -4032,10 +4363,189 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         request_object = self.get_object()
         Membership.objects.get_or_create(
-            person=request_object.person, club=request_object.club
+            person=request_object.requester, club=request_object.club
         )
         request_object.delete()
         return Response({"success": True})
+
+
+class OwnershipRequestViewSet(viewsets.ModelViewSet):
+    """
+    list: Return a list of clubs that the logged in user has sent ownership request to.
+
+    create: Sent ownership request to a club.
+
+    destroy: Deleted a ownership request from a club.
+    """
+
+    serializer_class = UserOwnershipRequestSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "club__code"
+    http_method_names = ["get", "post", "delete"]
+
+    def create(self, request, *args, **kwargs):
+        """
+        If a ownership request object already exists, reuse it.
+        """
+        club = request.data.get("club", None)
+        club_instance = Club.objects.filter(code=club).first()
+        if club_instance is None:
+            return Response(
+                {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        create_defaults = {"club": club_instance, "requester": request.user}
+
+        obj, created = OwnershipRequest.objects.update_or_create(
+            club__code=club,
+            requester=request.user,
+            defaults={"withdrawn": False, "created_at": timezone.now()},
+            create_defaults=create_defaults,
+        )
+
+        if created:
+            obj.send_request(request)
+
+        serializer = self.get_serializer(obj, many=False)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Don't actually delete the ownership request when it is withdrawn.
+
+        This is to keep track of repeat ownership requests and avoid spamming the club
+        owners with requests.
+        """
+        obj = self.get_object()
+        obj.withdrawn = True
+        obj.save(update_fields=["withdrawn"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def get_queryset(self):
+        return OwnershipRequest.objects.filter(
+            requester=self.request.user,
+            withdrawn=False,
+            club__archived=False,
+        )
+
+
+class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of users who have sent ownership request to the club.
+
+    destroy:
+    Delete a ownership request for a specific user.
+
+    accept:
+    Accept an ownership request as a club owner.
+
+    all:
+    Return a list of ownership requests older than a week. Used by Superusers.
+    """
+
+    serializer_class = OwnershipRequestSerializer
+
+    permission_classes = [OwnershipRequestPermission | IsSuperuser]
+    http_method_names = ["get", "post", "delete"]
+    lookup_field = "requester__username"
+
+    def get_queryset(self):
+        if self.action != "all":
+            return OwnershipRequest.objects.filter(
+                club__code=self.kwargs["club_code"], withdrawn=False
+            )
+        else:
+            return OwnershipRequest.objects.filter(withdrawn=False).order_by(
+                "created_at"
+            )
+
+    @action(detail=True, methods=["post"])
+    def accept(self, request, *args, **kwargs):
+        """
+        Accept an ownership request as a club owner.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                    description: >
+                                        True if this request was properly processed.
+        ---
+        """
+        request_object = self.get_object()
+
+        Membership.objects.update_or_create(
+            person=request_object.requester,
+            club=request_object.club,
+            defaults={"role": Membership.ROLE_OWNER},
+        )
+
+        request_object.delete()
+        return Response({"success": True})
+
+    @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
+    def all(self, request, *args, **kwargs):
+        """
+        View unaddressed ownership requests, sorted by date.
+        ---
+        requestBody: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    club:
+                                        type: string
+                                    created_at:
+                                        type: string
+                                        format: date-time
+                                    email:
+                                        type: string
+                                    graduation_year:
+                                        type: integer
+                                    major:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                name:
+                                                    type: string
+                                    name:
+                                        type: string
+                                    school:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id:
+                                                    type: integer
+                                                name:
+                                                    type: string
+                                                is_graduate:
+                                                    type: boolean
+                                    username:
+                                        type: string
+        ---
+        """
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+
+        return Response(serializer.data)
 
 
 class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
@@ -4210,14 +4720,17 @@ class FavoriteEventsAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         date = datetime.date.today()
+        today = datetime.datetime(date.year, date.month, date.day)
+
         return (
             Event.objects.filter(
                 club__favorite__person=self.request.user.id,
-                start_time__gte=datetime.datetime(date.year, date.month, date.day),
+                eventshowing__start_time__gte=today,
             )
             .select_related("club")
             .prefetch_related("club__badges")
-            .order_by("start_time")
+            .order_by("eventshowing__start_time")
+            .distinct()
         )
 
 
@@ -4323,46 +4836,57 @@ class FavoriteCalendarAPIView(APIView):
 
         # only fetch events newer than the past month
         one_month_ago = timezone.now() - datetime.timedelta(days=30)
-        all_events = Event.objects.filter(start_time__gte=one_month_ago)
+
+        # Get event showings that start after one month ago
+        event_showings = EventShowing.objects.filter(start_time__gte=one_month_ago)
 
         # filter based on user supplied flags
-        q = Q(club__favorite__person__profile__uuid_secret=kwargs["user_secretuuid"])
+        q = Q(
+            event__club__favorite__person__profile__uuid_secret=kwargs[
+                "user_secretuuid"
+            ]
+        )
         if is_global is None:
-            q |= Q(club__isnull=True)
+            q |= Q(event__club__isnull=True)
 
         if is_global:
-            all_events = all_events.filter(club__isnull=True)
+            event_showings = event_showings.filter(event__club__isnull=True)
         elif not is_all:
-            all_events = all_events.filter(q)
+            event_showings = event_showings.filter(q)
 
-        all_events = all_events.distinct().select_related("club")
+        event_showings = event_showings.distinct().select_related(
+            "event", "event__club"
+        )
 
-        for event in all_events:
+        for showing in event_showings:
+            event = showing.event
             e = ICSEvent()
-            e.name = "{} - {}".format(event.club.name, event.name)
-            e.begin = event.start_time
+            e.name = "{} - {}".format(
+                event.club.name if event.club else "Global Event", event.name
+            )
+            e.begin = showing.start_time
 
             # ensure event is at least 15 minutes for display purposes
             e.end = (
-                (event.start_time + datetime.timedelta(minutes=15))
-                if event.start_time >= event.end_time
-                else event.end_time
+                (showing.start_time + datetime.timedelta(minutes=15))
+                if showing.start_time >= showing.end_time
+                else showing.end_time
             )
 
             # put url in location if location does not exist, otherwise put url in body
-            if event.location:
-                e.location = event.location
+            if showing.location:
+                e.location = showing.location
             else:
                 e.location = event.url
             e.url = event.url
             e.description = "{}\n\n{}".format(
-                event.url or "" if not event.location else "",
+                event.url or "" if not showing.location else "",
                 html_to_text(event.description),
             ).strip()
             e.uid = f"{event.ics_uuid}@{settings.DOMAINS[0]}"
             e.created = event.created_at
             e.last_modified = event.updated_at
-            e.categories = [event.club.name]
+            e.categories = [event.club.name] if event.club else ["Global Event"]
 
             calendar.events.add(e)
 
@@ -4920,6 +5444,10 @@ class MeetingZoomAPIView(APIView):
                 "The event you are trying to modify does not exist."
             ) from e
 
+        event_showing = EventShowing.objects.filter(event=event).first()
+        if not event_showing:
+            raise DRFValidationError("This event does not have any scheduled showings.")
+
         eastern = pytz.timezone("America/New_York")
 
         # ensure user can do this
@@ -4963,10 +5491,10 @@ class MeetingZoomAPIView(APIView):
             body = {
                 "topic": f"Virtual Activities Fair - {event.club.name}",
                 "type": 2,
-                "start_time": event.start_time.astimezone(eastern)
+                "start_time": event_showing.start_time.astimezone(eastern)
                 .replace(tzinfo=None, microsecond=0, second=0)
                 .isoformat(),
-                "duration": (event.end_time - event.start_time)
+                "duration": (event_showing.end_time - event_showing.start_time)
                 / datetime.timedelta(minutes=1),
                 "timezone": "America/New_York",
                 "agenda": f"Virtual Activities Fair Booth for {event.club.name}",
@@ -5034,14 +5562,14 @@ class MeetingZoomAPIView(APIView):
             event.save(update_fields=["url"])
 
             start_time = (
-                event.start_time.astimezone(eastern)
+                event_showing.start_time.astimezone(eastern)
                 .replace(tzinfo=None, microsecond=0, second=0)
                 .isoformat()
             )
 
             body = {
                 "start_time": start_time,
-                "duration": (event.end_time - event.start_time)
+                "duration": (event_showing.end_time - event_showing.start_time)
                 / datetime.timedelta(minutes=1),
                 "timezone": "America/New_York",
                 "settings": recommended_settings,
@@ -5390,7 +5918,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                     {
                         "success": False,
                         "detail": (
-                            "Guests must provide " "first_name, last_name, and email"
+                            "Guests must provide first_name, last_name, and email"
                         ),
                     },
                     status=status.HTTP_400_BAD_REQUEST,
@@ -5618,13 +6146,14 @@ class TicketViewSet(viewsets.ModelViewSet):
             person=self.request.user, role__lte=Membership.ROLE_OFFICER
         ).values_list("club", flat=True)
         if self.action == "partial_update":
-            return Ticket.objects.filter(event__club__in=officer_clubs).select_related(
-                "event__club"
-            )
+            return Ticket.objects.filter(
+                showing__event__club__in=officer_clubs
+            ).select_related("showing__event__club")
         elif self.action == "retrieve":
             return Ticket.objects.filter(
-                Q(owner=self.request.user.id) | Q(event__club__in=officer_clubs)
-            ).select_related("event__club")
+                Q(owner=self.request.user.id)
+                | Q(showing__event__club__in=officer_clubs)
+            ).select_related("showing__event__club")
         return Ticket.objects.filter(owner=self.request.user.id)
 
 
@@ -6228,7 +6757,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         clone.application_end_time = now + datetime.timedelta(days=30)
         clone.result_release_time = now + datetime.timedelta(days=40)
         clone.external_url = (
-            f"https://pennclubs.com/club/{clone.club.code}/" f"application/{clone.pk}"
+            f"https://pennclubs.com/club/{clone.club.code}/application/{clone.pk}"
         )
         clone.save()
         return Response([])
@@ -6361,14 +6890,14 @@ class WhartonCyclesView(viewsets.ModelViewSet):
         end = cycle.end_date
         release = cycle.release_date
 
-        # Some apps get deleted
+        # Remove cycle for club applications from non-included clubs
         ClubApplication.objects.filter(application_cycle=cycle).exclude(
             club__code__in=club_codes
-        ).delete()
+        ).update(application_cycle=None)
 
         # Some apps need to be created - use the default Wharton Template
         prompt_one = (
-            "Tell us about a time you took " "initiative or demonstrated leadership"
+            "Tell us about a time you took initiative or demonstrated leadership"
         )
         prompt_two = "Tell us about a time you faced a challenge and how you solved it"
         prompt_three = "Tell us about a time you collaborated well in a team"
@@ -6756,7 +7285,6 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
-    @method_decorator(cache_page(60 * 60 * 2))
     @action(detail=False, methods=["get"])
     def export(self, *args, **kwargs):
         """
@@ -6801,10 +7329,10 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         )
         df = pd.DataFrame(ApplicationSubmissionCSVSerializer(data, many=True).data)
         resp = HttpResponse(
-            content_type="text/csv",
+            content_type="text/csv; charset=utf-8-sig",  # support special chars
             headers={"Content-Disposition": "attachment;filename=submissions.csv"},
         )
-        df.to_csv(index=True, path_or_buf=resp)
+        df.to_csv(index=True, path_or_buf=resp, encoding="utf-8-sig")
         return resp
 
     @action(detail=False, methods=["get"])
@@ -7618,3 +8146,89 @@ def email_preview(request):
             "variables": json.dumps(initial_context, indent=4),
         },
     )
+
+
+class RegistrationQueueSettingsView(APIView):
+    """
+    View to get and update registration queue settings.
+    Only superusers can update settings.
+    """
+
+    permission_classes = [IsSuperuser]
+
+    def get(self, request):
+        """
+        Return the current queue settings.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reapproval_queue_open:
+                                    type: boolean
+                                new_approval_queue_open:
+                                    type: boolean
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+        ---
+        """
+        queue_setting = RegistrationQueueSettings.get()
+        serializer = RegistrationQueueSettingsSerializer(queue_setting)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        """
+        Update the queue settings.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            reapproval_queue_open:
+                                type: boolean
+                            new_approval_queue_open:
+                                type: boolean
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reapproval_queue_open:
+                                    type: boolean
+                                new_approval_queue_open:
+                                    type: boolean
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+        ---
+        """
+        queue_setting = RegistrationQueueSettings.get()
+        serializer = RegistrationQueueSettingsSerializer(
+            queue_setting, data=request.data, partial=True
+        )
+
+        if serializer.is_valid():
+            queue_setting = serializer.save(updated_by=request.user)
+            return Response(RegistrationQueueSettingsSerializer(queue_setting).data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

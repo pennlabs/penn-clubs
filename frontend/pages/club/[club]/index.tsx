@@ -103,7 +103,7 @@ const ClubPage = ({
   club: initialClub,
   questions,
   userInfo,
-}: ClubPageProps): ReactElement => {
+}: ClubPageProps): ReactElement<any> => {
   const [club, setClub] = useState<Club>(initialClub)
   const [questionSortBy, setQuestionSortBy] = useState<string>('id')
   const scrollToRef = (ref) =>
@@ -115,13 +115,13 @@ const ClubPage = ({
     const newClub = { ...club }
     logEvent(!newClub.is_request ? 'request' : 'unrequest', code)
     const req = !newClub.is_request
-      ? doApiRequest('/requests/?format=json', {
+      ? doApiRequest('/requests/membership/?format=json', {
           method: 'POST',
           body: {
             club: code,
           },
         })
-      : doApiRequest(`/requests/${code}/?format=json`, {
+      : doApiRequest(`/requests/membership/${code}/?format=json`, {
           method: 'DELETE',
         })
 
@@ -273,7 +273,7 @@ const ClubPage = ({
               <MemberList club={club} />
             </>
           )}
-          {events.length > 0 && <EventCarousel data={events} />}
+          {events.length > 0 && <EventCarousel events={events} />}
         </div>
         <div className="column is-one-third">
           <DesktopActions

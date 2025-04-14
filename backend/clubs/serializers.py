@@ -38,6 +38,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubVisit,
     Event,
+    EventShowing,
     Favorite,
     Major,
     Membership,
@@ -45,8 +46,10 @@ from clubs.models import (
     MembershipRequest,
     Note,
     NoteTag,
+    OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -77,6 +80,7 @@ ALL_TAGS_SELECTED_ERROR_MESSAGE = (
         "question asking if your resource applies to "
         "all undergraduate, graduate, and professional Penn students. "
         "Thanks for doing your part to ensure that Hub@Penn "
+        "quickly and efficiently gets resources to our Penn community. "
         "quickly and efficiently gets resources to our Penn community. "
     )
     if settings.BRANDING == "fyh"
@@ -358,6 +362,113 @@ class AdvisorSerializer(
         fields = ("id", "name", "title", "department", "email", "phone", "visibility")
 
 
+class EventShowingSerializer(serializers.ModelSerializer):
+    """
+    Serializer for an event showing.
+    """
+
+    event = serializers.PrimaryKeyRelatedField(read_only=True)
+    ticketed = serializers.SerializerMethodField("get_ticketed")
+
+    def get_ticketed(self, obj):
+        return obj.tickets.exists()
+
+    class Meta:
+        model = EventShowing
+        fields = [
+            "id",
+            "event",
+            "start_time",
+            "end_time",
+            "location",
+            "ticket_order_limit",
+            "ticket_drop_time",
+            "ticketed",
+        ]
+
+
+class EventShowingWriteSerializer(EventShowingSerializer):
+    """
+    Serializer for creating or updating an event showing.
+    """
+
+    event = serializers.PrimaryKeyRelatedField(
+        queryset=Event.objects.all(), required=False
+    )
+
+    def validate(self, data):
+        # if URL parameter is set, make sure it matches specified event
+        if (
+            self.context.get("view") is not None
+            and "event_id" in self.context.get("view").kwargs
+        ):
+            event_id = self.context.get("view").kwargs.get("event_id")
+            if not Event.objects.filter(id=event_id).exists():
+                raise serializers.ValidationError(
+                    "Event with the provided ID does not exist."
+                )
+            if "event" not in data and self.instance is None:
+                data["event"] = Event.objects.get(id=event_id)
+            elif "event" in data and self.instance is None:
+                if data["event"].id != event_id:
+                    raise serializers.ValidationError(
+                        "Event ID does not match the URL parameter."
+                    )
+
+        # Validate that set times are valid
+        start_time = data.get(
+            "start_time",
+            self.instance.start_time if self.instance is not None else None,
+        )
+        end_time = data.get(
+            "end_time", self.instance.end_time if self.instance is not None else None
+        )
+        ticket_drop_time = data.get(
+            "ticket_drop_time",
+            self.instance.ticket_drop_time if self.instance is not None else None,
+        )
+        if start_time is not None and end_time is not None and start_time > end_time:
+            raise serializers.ValidationError(
+                "Your event start time must be before the end time!"
+            )
+        if (
+            ticket_drop_time is not None
+            and end_time is not None
+            and ticket_drop_time >= end_time
+        ):
+            raise serializers.ValidationError(
+                "Your ticket drop time must be before the event ends!"
+            )
+
+        return data
+
+    def update(self, instance, validated_data):
+        # ensure user cannot update event if it's already set
+        event = validated_data.get("event", instance.event)
+        if event != instance.event:
+            raise serializers.ValidationError(
+                "You cannot change the event for an existing showing!"
+            )
+
+        # ensure user cannot update start time or end time for a fair event
+        user = self.context["request"].user
+        if not (user.is_authenticated and user.has_perm("clubs.see_fair_status")):
+            if instance and instance.event.type == Event.FAIR:
+                unchanged_fields = {"start_time", "end_time"}
+                for field in unchanged_fields:
+                    if (
+                        field in validated_data
+                        and not getattr(self.instance, field, None)
+                        == validated_data[field]
+                    ):
+                        raise serializers.ValidationError(
+                            "You cannot change the meeting time for a fair event! "
+                            "If you would like to, please contact the fair organizers."
+                        )
+
+        return super().update(instance, validated_data)
+
+
 class ClubEventSerializer(serializers.ModelSerializer):
     """
     Within the context of an existing club, return events that are a part of this club.
@@ -369,6 +480,14 @@ class ClubEventSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField("get_event_url")
     ticketed = serializers.SerializerMethodField("get_ticketed")
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    showings = EventShowingSerializer(
+        many=True, read_only=True, source="eventshowing_set"
+    )
+    # annotated fields in viewset
+    earliest_start_time = serializers.DateTimeField(read_only=True)
+    latest_start_time = serializers.DateTimeField(read_only=True)
+    earliest_end_time = serializers.DateTimeField(read_only=True)
+    latest_end_time = serializers.DateTimeField(read_only=True)
 
     def get_ticketed(self, obj) -> bool:
         return obj.ticket_classes.exists()
@@ -452,39 +571,6 @@ class ClubEventSerializer(serializers.ModelSerializer):
         """
         return clean(bleach.linkify(value))
 
-    def validate(self, data):
-        start_time = data.get(
-            "start_time",
-            self.instance.start_time if self.instance is not None else None,
-        )
-        end_time = data.get(
-            "end_time", self.instance.end_time if self.instance is not None else None
-        )
-        if start_time is not None and end_time is not None and start_time > end_time:
-            raise serializers.ValidationError(
-                "Your event start time must be less than the end time!"
-            )
-        return data
-
-    def update(self, instance, validated_data):
-        # ensure user cannot update start time or end time for a fair event
-        user = self.context["request"].user
-        if not (user.is_authenticated and user.has_perm("clubs.see_fair_status")):
-            if instance and instance.type == Event.FAIR:
-                unchanged_fields = {"start_time", "end_time"}
-                for field in unchanged_fields:
-                    if (
-                        field in validated_data
-                        and not getattr(self.instance, field, None)
-                        == validated_data[field]
-                    ):
-                        raise serializers.ValidationError(
-                            "You cannot change the meeting time for a fair event! "
-                            "If you would like to, please contact the fair organizers."
-                        )
-
-        return super().update(instance, validated_data)
-
     def save(self):
         if "club" not in self.validated_data:
             self.validated_data["club"] = Club.objects.get(
@@ -501,18 +587,20 @@ class ClubEventSerializer(serializers.ModelSerializer):
         fields = [
             "creator",
             "description",
-            "end_time",
             "id",
             "image",
             "image_url",
             "is_ics_event",
             "large_image_url",
-            "location",
             "name",
-            "start_time",
+            "showings",
             "ticketed",
             "type",
             "url",
+            "earliest_start_time",
+            "latest_start_time",
+            "earliest_end_time",
+            "latest_end_time",
         ]
 
 
@@ -639,7 +727,9 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
         obj.save()
 
         # if a membership request exists, delete it
-        MembershipRequest.objects.filter(person=user, club=self.instance.club).delete()
+        MembershipRequest.objects.filter(
+            requester=user, club=self.instance.club
+        ).delete()
 
         return instance
 
@@ -1230,8 +1320,18 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def get_events(self, obj):
         now = timezone.now()
+        events = obj.events.all()
+
+        active_showings = EventShowing.objects.filter(
+            event__in=events, end_time__gte=now
+        ).order_by("start_time")
+
+        active_events = Event.objects.filter(
+            id__in=active_showings.values_list("event", flat=True)
+        ).distinct()
+
         return ClubEventSerializer(
-            obj.events.filter(end_time__gte=now).order_by("start_time"),
+            active_events,
             many=True,
             read_only=True,
             context=self.context,
@@ -1270,7 +1370,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         user = self.context["request"].user
         if not user.is_authenticated:
             return False
-        return obj.membershiprequest_set.filter(person=user, withdrew=False).exists()
+        return obj.membershiprequests.filter(requester=user, withdrawn=False).exists()
 
     def get_target_years(self, obj):
         qset = TargetYear.objects.filter(club=obj).select_related("target_years")
@@ -1300,8 +1400,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         request = self.context.get("request", None)
         perms = request and request.user.has_perm("clubs.approve_club")
 
+        queue_settings = RegistrationQueueSettings.get()
         if not perms and (
-            not settings.REAPPROVAL_QUEUE_OPEN or not settings.NEW_APPROVAL_QUEUE_OPEN
+            not queue_settings.reapproval_queue_open
+            or not queue_settings.new_approval_queue_open
         ):
             raise serializers.ValidationError(
                 "The approval queue is not currently open."
@@ -1533,13 +1635,21 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 ] == getattr(self.instance, field, None):
                     needs_reapproval = True
                     break
+        # vacuously needs re-approval if approval now set to None
+        # relevant for closing queue to re-approval requests without content
+        if (
+            "approved" in self.validated_data
+            and self.validated_data["approved"] is None
+        ):
+            needs_reapproval = True
 
         # if the editing user has approval permissions, skip the approval process
         request = self.context.get("request", None)
         if request and request.user.has_perm("clubs.approve_club"):
             needs_reapproval = False
 
-        if needs_reapproval and not settings.REAPPROVAL_QUEUE_OPEN:
+        queue_settings = RegistrationQueueSettings.get()
+        if needs_reapproval and not queue_settings.reapproval_queue_open:
             raise serializers.ValidationError(
                 "The approval queue is not currently open."
             )
@@ -1607,7 +1717,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # and target major with specific program names
         if (
             self.context["request"].data.get("target_years", None) is not None
-            and self.context["request"].data.get("target_years") is not []
+            and self.context["request"].data.get("target_years") != []
         ):
             target_years = self.context["request"].data["target_years"]
             # Iterate over all Year objects, if a given year's ID does not appear
@@ -1632,7 +1742,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         if (
             self.context["request"].data.get("target_schools", None) is not None
-            and self.context["request"].data.get("target_schools") is not []
+            and self.context["request"].data.get("target_schools") != []
         ):
             target_schools = self.context["request"].data["target_schools"]
             # Iterate over all School objects, if a given schools's ID does not appear
@@ -1657,7 +1767,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         if (
             self.context["request"].data.get("target_majors", None) is not None
-            and self.context["request"].data.get("target_majors") is not []
+            and self.context["request"].data.get("target_majors") != []
         ):
             target_majors = self.context["request"].data["target_majors"]
             # Iterate over all Major objects, if a given major's ID does not appear
@@ -1682,7 +1792,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         if (
             self.context["request"].data.get("student_types", None) is not None
-            and self.context["request"].data.get("student_types") is not []
+            and self.context["request"].data.get("student_types") != []
         ):
             target_student_types = self.context["request"].data["student_types"]
             # Iterate over all Student Type objects, if a given student type's ID
@@ -1790,7 +1900,8 @@ class TicketSerializer(serializers.ModelSerializer):
     """
 
     owner = serializers.SerializerMethodField("get_owner_name")
-    event = EventSerializer()
+    showing = EventShowingSerializer()
+    event = EventSerializer(source="ticket_class.showing.event")
     ticket_type = serializers.CharField(source="ticket_class.name", read_only=True)
     price = serializers.FloatField(source="ticket_class.price", read_only=True)
 
@@ -2046,20 +2157,22 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
     Used by club owners/officers to see who has requested to join the club.
     """
 
-    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     name = serializers.SerializerMethodField("get_full_name")
-    username = serializers.CharField(source="person.username", read_only=True)
-    email = serializers.EmailField(source="person.email", read_only=True)
+    username = serializers.CharField(source="requester.username", read_only=True)
+    email = serializers.EmailField(source="requester.email", read_only=True)
 
-    school = SchoolSerializer(many=True, source="person.profile.school", read_only=True)
-    major = MajorSerializer(many=True, source="person.profile.major", read_only=True)
+    school = SchoolSerializer(
+        many=True, source="requester.profile.school", read_only=True
+    )
+    major = MajorSerializer(many=True, source="requester.profile.major", read_only=True)
     graduation_year = serializers.IntegerField(
-        source="person.profile.graduation_year", read_only=True
+        source="requester.profile.graduation_year", read_only=True
     )
 
     def get_full_name(self, obj):
-        return obj.person.get_full_name()
+        return obj.requester.get_full_name()
 
     class Meta:
         model = MembershipRequest
@@ -2070,15 +2183,10 @@ class MembershipRequestSerializer(serializers.ModelSerializer):
             "graduation_year",
             "major",
             "name",
-            "person",
+            "requester",
             "school",
             "username",
         )
-        validators = [
-            validators.UniqueTogetherValidator(
-                queryset=MembershipRequest.objects.all(), fields=["club", "person"]
-            )
-        ]
 
 
 class UserMembershipRequestSerializer(serializers.ModelSerializer):
@@ -2086,23 +2194,64 @@ class UserMembershipRequestSerializer(serializers.ModelSerializer):
     Used by the UserSerializer to return the clubs that the user has sent request to.
     """
 
-    person = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     club_name = serializers.CharField(source="club.name", read_only=True)
 
-    def create(self, validated_data):
-        """
-        Send an email when a membership request is created.
-        """
-        obj = super().create(validated_data)
-
-        obj.send_request(self.context["request"])
-
-        return obj
-
     class Meta:
         model = MembershipRequest
-        fields = ("club", "club_name", "person")
+        fields = ("club", "club_name", "requester")
+
+
+class OwnershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by club owners to see who has requested to be owner of the club.
+    """
+
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    name = serializers.SerializerMethodField("get_full_name")
+    username = serializers.CharField(source="requester.username", read_only=True)
+    email = serializers.EmailField(source="requester.email", read_only=True)
+
+    school = SchoolSerializer(
+        many=True, source="requester.profile.school", read_only=True
+    )
+    major = MajorSerializer(many=True, source="requester.profile.major", read_only=True)
+    graduation_year = serializers.IntegerField(
+        source="requester.profile.graduation_year", read_only=True
+    )
+
+    def get_full_name(self, obj):
+        return obj.requester.get_full_name()
+
+    class Meta:
+        model = OwnershipRequest
+        fields = (
+            "club",
+            "created_at",
+            "email",
+            "graduation_year",
+            "major",
+            "name",
+            "requester",
+            "school",
+            "username",
+        )
+
+
+class UserOwnershipRequestSerializer(serializers.ModelSerializer):
+    """
+    Used by the users to return the clubs that the user has sent an OwnershipRequest to.
+    """
+
+    requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    club_name = serializers.CharField(source="club.name", read_only=True)
+
+    class Meta:
+        model = OwnershipRequest
+        fields = ("club", "club_name", "requester")
 
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):
@@ -2550,9 +2699,12 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
 
                 if data["word_limit"] + current_limit - instance_limit > 500:
                     raise serializers.ValidationError(
-                        f"The total word limit of questions in committee \
-                        ''{committee['name']} ' should not exceed 500. \
-                        Current: {current_limit}"
+                        f"The cumulative word limit of questions should not "
+                        f"exceed 500 words as required by the Wharton Council. "
+                        f"Committee '{committee['name']}' currently has a cumulative "
+                        f"word limit of {current_limit} words. Please consult the "
+                        f"Wharton Council's guide to club applications if you have any "
+                        f"questions."
                     )
         return value
 
@@ -3149,3 +3301,20 @@ class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubApprovalResponseTemplate
         fields = ("id", "author", "title", "content", "created_at", "updated_at")
+
+
+class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
+    updated_by = serializers.SerializerMethodField("get_updated_by")
+
+    class Meta:
+        model = RegistrationQueueSettings
+        fields = [
+            "reapproval_queue_open",
+            "new_approval_queue_open",
+            "updated_at",
+            "updated_by",
+        ]
+        read_only_fields = ["updated_at", "updated_by"]
+
+    def get_updated_by(self, obj):
+        return obj.updated_by.get_full_name() if obj.updated_by else "N/A"

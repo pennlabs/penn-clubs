@@ -11,7 +11,9 @@ function isBadge(tag): tag is Badge {
   return tag.label !== undefined || tag.color !== undefined
 }
 
-export const TagGroup = ({ tags = [] }: TagGroupProps): ReactElement | null => {
+export const TagGroup = ({
+  tags = [],
+}: TagGroupProps): ReactElement<any> | null => {
   if (!tags || !tags.length) return null
 
   // sometimes there will be duplicate badges, or a badge will end up with the same content as a tag

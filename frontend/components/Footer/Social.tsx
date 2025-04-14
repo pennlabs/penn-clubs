@@ -23,7 +23,7 @@ const Icons = styled.div`
   }
 `
 
-const Social = (): ReactElement => (
+const Social = (): ReactElement<any> => (
   <Icons>
     <a href="https://github.com/pennlabs/" aria-label="GitHub">
       <Icon name="github" alt="github" />

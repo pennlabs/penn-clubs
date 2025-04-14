@@ -34,7 +34,7 @@ type InfoBoxProps = {
   club: Club
 }
 
-const InfoBox = (props: InfoBoxProps): ReactElement | null => {
+const InfoBox = (props: InfoBoxProps): ReactElement<any> | null => {
   const data = [
     {
       field: 'size',

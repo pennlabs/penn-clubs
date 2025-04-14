@@ -15,7 +15,7 @@ type Entity = {
   data: any
 }
 
-const MediaComponent = (props): ReactElement => {
+const MediaComponent = (props): ReactElement<any> => {
   const data = props.contentState
     .getEntity(props.block.getEntityAt(0))
     .getData()
@@ -62,7 +62,7 @@ export const blockRendererFunction = (
   block,
   config,
 ):
-  | { component: (props: any) => ReactElement; editable: boolean }
+  | { component: (props: any) => ReactElement<any>; editable: boolean }
   | undefined => {
   if (block.getType() === 'atomic') {
     const contentState = config.getEditorState().getCurrentContent()
@@ -79,14 +79,14 @@ export const blockRendererFunction = (
 /**
  * A toolbar widget for the editor to embed interactive content, like iframes.
  */
-const EmbedOption = (props: Props): ReactElement => {
+const EmbedOption = (props: Props): ReactElement<any> => {
   const [showModal, setShowModal] = useState<boolean>(false)
 
   const [embedUrl, setEmbedUrl] = useState<string>('')
   const [embedWidth, setEmbedWidth] = useState<string>('100%')
   const [embedHeight, setEmbedHeight] = useState<string>('1200px')
   const [errorMessage, setErrorMessage] = useState<
-    ReactElement | string | null
+    ReactElement<any> | string | null
   >(null)
 
   const embedContent = (embedUrl: string) => {
@@ -202,11 +202,11 @@ const EmbedOption = (props: Props): ReactElement => {
                 Google Drive PDF Files
                 <br />
                 <small>
-                  You can upload a PDF file on Google Drive, share it
-                  publically, and then go to right click &gt; Preview &gt; More
-                  actions (three dots) &gt; Open in a new window. After that,
-                  you can click on More actions (three dots) &gt; Embed item.
-                  Example link format:
+                  You can upload a PDF file on Google Drive, share it and then
+                  go to right click &gt; Preview &gt; More actions actions
+                  (three dots) &gt; Open in a new window. After that, you can
+                  click on More actions (three dots) &gt; Embed item. Example
+                  link format:
                   https://drive.google.com/file/d/1hfN3dWDIE4cTApJ-XPgLx_3eIta_IihV/preview
                 </small>
               </li>

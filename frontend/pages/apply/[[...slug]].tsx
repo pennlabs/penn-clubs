@@ -9,7 +9,7 @@ import ApplicationsPage from '~/components/Applications'
 import SubmissionsPage from '~/components/Submissions'
 import { BrowserTabView } from '~/components/TabView'
 import { APPLY_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
-import { ApplicationSubmission } from '~/types'
+import { Application, ApplicationSubmission } from '~/types'
 
 function ApplyDashboard({
   whartonapplications,
@@ -17,14 +17,14 @@ function ApplyDashboard({
 }: {
   whartonapplications: any
   submissions: Array<ApplicationSubmission>
-}): ReactElement {
+}): ReactElement<any> {
   const router = useRouter()
   const tabs = [
     {
       name: 'applications',
       label: 'Applications',
       content: () => (
-        <ApplicationsPage whartonapplications={whartonapplications} />
+        <ApplicationsPage whartonApplications={whartonapplications} />
       ),
     },
     {
@@ -56,7 +56,7 @@ function ApplyDashboard({
 }
 
 type BulkResp = {
-  whartonapplications: any
+  whartonapplications: Application[]
   submissions: Array<ApplicationSubmission>
 }
 

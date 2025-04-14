@@ -22,7 +22,7 @@ type RenewalRequestProps = {
   club: Club
 }
 
-const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement => {
+const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
   const canRenew =
     apiCheckPermission(`clubs.manage_club:${club.code}`) && !isSummer()
   const textMapping = {

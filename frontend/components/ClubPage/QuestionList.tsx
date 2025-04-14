@@ -37,7 +37,7 @@ const QuestionList = ({
   club: { name, code },
   questions,
   sortBy,
-}: QuestionListProps): ReactElement => {
+}: QuestionListProps): ReactElement<any> => {
   const [formSubmitted, setFormSubmitted] = useState(false)
   const handleSubmit = (data, { setSubmitting, setStatus }) => {
     doApiRequest(`/clubs/${code}/questions/?format=json`, {
@@ -94,8 +94,8 @@ const QuestionList = ({
         <div className="notification is-primary">
           <b>Your question has been submitted!</b>
           <p>
-            It will be posted publically once it has been approved and answered
-            by {OBJECT_NAME_SINGULAR} members.
+            It will be posted publicly once it has been approved and answered by{' '}
+            {OBJECT_NAME_SINGULAR} members.
           </p>
           <p className="mb-3">Thank you for contributing to {SITE_NAME}!</p>
           <button

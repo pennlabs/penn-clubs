@@ -51,7 +51,7 @@ export const Container = ({
   paddingTop = false,
   style,
   children,
-}: ContainerProps): ReactElement => (
+}: ContainerProps): ReactElement<any> => (
   <div style={{ background, paddingTop: paddingTop ? 46 : undefined }}>
     <Wrapper $fullHeight={fullHeight} style={style}>
       {children}
@@ -84,7 +84,7 @@ export const WideContainer = ({
   background = WHITE,
   fullHeight,
   children,
-}: ContainerProps): ReactElement => (
+}: ContainerProps): ReactElement<any> => (
   <div style={{ background }}>
     <WideWrapper $fullHeight={fullHeight}>{children}</WideWrapper>
   </div>

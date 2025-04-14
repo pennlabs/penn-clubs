@@ -15,7 +15,7 @@ type RenewCardProps = {
   club: Club
 }
 
-export default function RenewCard({ club }: RenewCardProps): ReactElement {
+export default function RenewCard({ club }: RenewCardProps): ReactElement<any> {
   const year = getCurrentSchoolYear()
 
   return (

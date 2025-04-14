@@ -17,7 +17,7 @@ const Foot = styled.footer`
   padding: 4rem;
 `
 
-const Footer = (): ReactElement => (
+const Footer = (): ReactElement<any> => (
   <Foot className="footer">
     <SmallText style={{ marginBottom: '0rem' }}>
       Made with{' '}

@@ -18,6 +18,7 @@ from clubs.models import (
     Cart,
     Club,
     Event,
+    EventShowing,
     Membership,
     Ticket,
     TicketTransactionRecord,
@@ -51,10 +52,34 @@ def commonSetUp(self):
         email="example@example.com",
     )
 
+    self.unapproved_club = Club.objects.create(
+        code="unapproved-club",
+        name="Unapproved Club",
+        approved=False,
+        ghost=False,
+        email="example2@example.com",
+    )
+
     self.event1 = Event.objects.create(
         code="test-event",
         club=self.club1,
         name="Test Event",
+    )
+
+    self.event_showing1 = EventShowing.objects.create(
+        event=self.event1,
+        start_time=timezone.now() + timezone.timedelta(days=2),
+        end_time=timezone.now() + timezone.timedelta(days=3),
+    )
+
+    self.unapproved_event = Event.objects.create(
+        code="unapproved-event",
+        club=self.unapproved_club,
+        name="Unapproved Event",
+    )
+
+    self.unapproved_event_showing = EventShowing.objects.create(
+        event=self.unapproved_event,
         start_time=timezone.now() + timezone.timedelta(days=2),
         end_time=timezone.now() + timezone.timedelta(days=3),
     )
@@ -65,12 +90,19 @@ def commonSetUp(self):
     ]
 
     self.tickets1 = [
-        Ticket.objects.create(type="normal", event=self.event1, price=15.0)
+        Ticket.objects.create(type="normal", showing=self.event_showing1, price=15.0)
         for _ in range(20)
     ]
     self.tickets2 = [
-        Ticket.objects.create(type="premium", event=self.event1, price=30.0)
+        Ticket.objects.create(type="premium", showing=self.event_showing1, price=30.0)
         for _ in range(10)
+    ]
+
+    self.unapproved_tickets = [
+        Ticket.objects.create(
+            type="normal", showing=self.unapproved_event_showing, price=15.0
+        )
+        for _ in range(20)
     ]
 
 
@@ -87,6 +119,37 @@ class TicketEventTestCase(TestCase):
 
     def test_create_ticket_offerings(self):
         self.client.login(username=self.user1.username, password="test")
+
+        # Test invalid ticket_drop_time editing
+        resp = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
+            {
+                "ticket_drop_time": (
+                    self.event_showing1.end_time + timezone.timedelta(days=20)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
+        # Test invalid start_time editing
+        resp = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
+            {
+                "start_time": (
+                    self.event_showing1.end_time + timezone.timedelta(days=20)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
         qts = {
             "quantities": [
                 {"type": "_normal", "count": 20, "price": 10},
@@ -95,13 +158,16 @@ class TicketEventTestCase(TestCase):
         }
 
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             qts,
             format="json",
         )
 
         aggregated_tickets = list(
-            Ticket.objects.filter(event=self.event1, type__contains="_")
+            Ticket.objects.filter(showing=self.event_showing1, type__contains="_")
             .values("type", "price")
             .annotate(count=Count("id"))
         )
@@ -115,7 +181,10 @@ class TicketEventTestCase(TestCase):
     def test_create_ticket_offerings_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
 
-        tickets = [Ticket(type="free", event=self.event1, price=0.0) for _ in range(10)]
+        tickets = [
+            Ticket(type="free", showing=self.event_showing1, price=0.0)
+            for _ in range(10)
+        ]
         Ticket.objects.bulk_create(tickets)
 
         qts = {
@@ -125,13 +194,16 @@ class TicketEventTestCase(TestCase):
         }
 
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             qts,
             format="json",
         )
 
         aggregated_tickets = list(
-            Ticket.objects.filter(event=self.event1, type__contains="_")
+            Ticket.objects.filter(showing=self.event_showing1, type__contains="_")
             .values("type", "price")
             .annotate(count=Count("id"))
         )
@@ -153,7 +225,10 @@ class TicketEventTestCase(TestCase):
         }
 
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             qts,
             format="json",
         )
@@ -187,7 +262,10 @@ class TicketEventTestCase(TestCase):
 
         for data in bad_data:
             resp = self.client.put(
-                reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+                reverse(
+                    "club-events-showings-tickets",
+                    args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+                ),
                 data,
                 format="json",
             )
@@ -207,25 +285,31 @@ class TicketEventTestCase(TestCase):
             ),
         }
         _ = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             args,
             format="json",
         )
 
-        self.event1.refresh_from_db()
+        self.event_showing1.refresh_from_db()
 
         # Drop time should be set
-        self.assertIsNotNone(self.event1.ticket_drop_time)
+        self.assertIsNotNone(self.event_showing1.ticket_drop_time)
 
         # Drop time should be 12 hours from initial ticket creation
         expected_drop_time = timezone.now() + timezone.timedelta(hours=12)
-        diff = abs(self.event1.ticket_drop_time - expected_drop_time)
+        diff = abs(self.event_showing1.ticket_drop_time - expected_drop_time)
         self.assertTrue(diff < timezone.timedelta(minutes=5))
 
         # Move Django's internal clock 13 hours forward
         with freezegun.freeze_time(timezone.now() + timezone.timedelta(hours=13)):
             resp = self.client.put(
-                reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+                reverse(
+                    "club-events-showings-tickets",
+                    args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+                ),
                 args,
                 format="json",
             )
@@ -244,7 +328,10 @@ class TicketEventTestCase(TestCase):
             ],
         }
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             args,
             format="json",
         )
@@ -257,7 +344,10 @@ class TicketEventTestCase(TestCase):
 
         # Recreating tickets should fail
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             args,
             format="json",
         )
@@ -271,11 +361,29 @@ class TicketEventTestCase(TestCase):
 
         # Recreating tickets should fail
         resp = self.client.put(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             args,
             format="json",
         )
         self.assertEqual(resp.status_code, 403, resp.content)
+
+        # Changing ticket drop time should fail
+        resp = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
+            {
+                "ticket_drop_time": (
+                    timezone.now() + timezone.timedelta(hours=12)
+                ).strftime("%Y-%m-%dT%H:%M:%S%z")
+            },
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
 
     def test_issue_tickets(self):
         self.client.login(username=self.user1.username, password="test")
@@ -289,7 +397,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-events-showings-issue-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
             args,
             format="json",
@@ -322,7 +431,8 @@ class TicketEventTestCase(TestCase):
 
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-events-showings-issue-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
             args,
             format="json",
@@ -341,7 +451,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-events-showings-issue-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
             args,
             format="json",
@@ -360,7 +471,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-events-showings-issue-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
             args,
             format="json",
@@ -380,7 +492,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-issue-tickets", args=(self.club1.code, self.event1.pk)
+                "club-events-showings-issue-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
             args,
             format="json",
@@ -410,7 +523,10 @@ class TicketEventTestCase(TestCase):
         ticket1.save()
 
         resp = self.client.post(
-            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-email-blast",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             {"content": "Test email blast content"},
             format="json",
         )
@@ -431,7 +547,10 @@ class TicketEventTestCase(TestCase):
     def test_email_blast_empty_content(self):
         self.client.login(username=self.user1.username, password="test")
         resp = self.client.post(
-            reverse("club-events-email-blast", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-email-blast",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             {"content": ""},
             format="json",
         )
@@ -442,7 +561,10 @@ class TicketEventTestCase(TestCase):
         Ticket.objects.all().delete()
 
         resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = resp.json()
@@ -456,7 +578,10 @@ class TicketEventTestCase(TestCase):
             ticket.save()
 
         resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-tickets",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         data = resp.json()
@@ -468,21 +593,6 @@ class TicketEventTestCase(TestCase):
             data["available"],
         )
 
-    def test_get_tickets_before_drop_time(self):
-        self.event1.ticket_drop_time = timezone.now() + timedelta(days=1)
-        self.event1.save()
-
-        self.client.login(username=self.user1.username, password="test")
-        resp = self.client.get(
-            reverse("club-events-tickets", args=(self.club1.code, self.event1.pk)),
-        )
-        self.assertEqual(resp.status_code, 200, resp.content)
-        data = resp.json()
-
-        # Tickets shouldn't be available before the drop time
-        self.assertEqual(data["totals"], [])
-        self.assertEqual(data["available"], [])
-
     def test_get_tickets_buyers(self):
         self.client.login(username=self.user1.username, password="test")
 
@@ -492,7 +602,10 @@ class TicketEventTestCase(TestCase):
             ticket.save()
 
         resp = self.client.get(
-            reverse("club-events-buyers", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-buyers",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
         )
 
         data = resp.json()
@@ -508,7 +621,10 @@ class TicketEventTestCase(TestCase):
             ticket.save()
 
         resp = self.client.get(
-            reverse("club-events-buyers", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-buyers",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
         )
 
         self.assertEqual(resp.status_code, 403, resp)
@@ -523,7 +639,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -538,8 +657,8 @@ class TicketEventTestCase(TestCase):
         self.client.login(username=self.user1.username, password="test")
 
         # Set the event end time to the past
-        self.event1.end_time = timezone.now() - timezone.timedelta(days=1)
-        self.event1.save()
+        self.event_showing1.end_time = timezone.now() - timezone.timedelta(days=1)
+        self.event_showing1.save()
 
         tickets_to_add = {
             "quantities": [
@@ -547,13 +666,16 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
 
         self.assertEqual(resp.status_code, 403, resp.content)
-        self.assertIn("This event has already ended", resp.data["detail"], resp.data)
+        self.assertIn("This showing has already ended", resp.data["detail"], resp.data)
 
     def test_add_to_cart_twice_accumulates(self):
         self.client.login(username=self.user1.username, password="test")
@@ -568,7 +690,8 @@ class TicketEventTestCase(TestCase):
             }
             resp = self.client.post(
                 reverse(
-                    "club-events-add-to-cart", args=(self.club1.code, self.event1.pk)
+                    "club-events-showings-add-to-cart",
+                    args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
                 ),
                 tickets_to_add,
                 format="json",
@@ -590,7 +713,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -613,7 +739,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -626,8 +755,8 @@ class TicketEventTestCase(TestCase):
         self.client.login(username=self.user1.username, password="test")
 
         # Set drop time
-        self.event1.ticket_drop_time = timezone.now() + timedelta(hours=12)
-        self.event1.save()
+        self.event_showing1.ticket_drop_time = timezone.now() + timedelta(hours=12)
+        self.event_showing1.save()
 
         tickets_to_add = {
             "quantities": [
@@ -635,13 +764,72 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
 
         # Tickets should not be added to cart before drop time
         self.assertEqual(resp.status_code, 403, resp.content)
+
+    def test_add_to_cart_unapproved_club(self):
+        self.client.login(username=self.user1.username, password="test")
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 2},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(
+                    self.unapproved_club.code,
+                    self.unapproved_event.pk,
+                    self.unapproved_event_showing.pk,
+                ),
+            ),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(
+                    self.unapproved_club.code,
+                    self.unapproved_event.pk,
+                    self.unapproved_event_showing.pk,
+                ),
+            ),
+            tickets_to_add,
+            format="json",
+        )
+        # Cannot see event
+        self.assertEqual(resp.status_code, 404, resp.content)
+
+    def test_add_to_cart_nonexistent_club(self):
+        tickets_to_add = {
+            "quantities": [
+                {"type": "normal", "count": 2},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(
+                    "Random club name",
+                    self.unapproved_event.pk,
+                    self.event_showing1.pk,
+                ),
+            ),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertEqual(resp.status_code, 404, resp.content)
 
     def test_remove_from_cart(self):
         self.client.login(username=self.user1.username, password="test")
@@ -654,7 +842,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -675,7 +866,8 @@ class TicketEventTestCase(TestCase):
 
         resp = self.client.post(
             reverse(
-                "club-events-remove-from-cart", args=(self.club1.code, self.event1.pk)
+                "club-events-showings-remove-from-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
             tickets_to_remove,
             format="json",
@@ -697,7 +889,10 @@ class TicketEventTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -717,7 +912,8 @@ class TicketEventTestCase(TestCase):
         }
         resp = self.client.post(
             reverse(
-                "club-events-remove-from-cart", args=(self.club1.code, self.event1.pk)
+                "club-events-showings-remove-from-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
             tickets_to_remove,
             format="json",
@@ -735,7 +931,10 @@ class TicketEventTestCase(TestCase):
 
         self.client.login(username=self.user1.username, password="test")
         resp_held = self.client.delete(
-            reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
+            reverse(
+                "club-events-showings-detail",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            )
         )
         self.assertEqual(resp_held.status_code, 400, resp_held.content)
 
@@ -759,33 +958,36 @@ class MockPaymentResponse:
 @contextmanager
 def mock_cybersource_apis():
     """Mock cybersource APIs and validate_transient_token"""
-    with patch(
-        ".".join(
-            [
-                "CyberSource",
-                "UnifiedCheckoutCaptureContextApi",
-                "generate_unified_checkout_capture_context_with_http_info",
-            ]
-        )
-    ) as fake_cap_context, patch(
-        ".".join(
-            [
-                "CyberSource",
-                "TransientTokenDataApi",
-                "get_transaction_for_transient_token",
-            ]
-        )
-    ) as fake_get_transaction, patch(
-        ".".join(
-            [
-                "CyberSource",
-                "PaymentsApi",
-                "create_payment",
-            ]
-        )
-    ) as fake_create_payment, patch(
-        "clubs.views.validate_transient_token"
-    ) as fake_validate_tt:
+    with (
+        patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context,
+        patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "TransientTokenDataApi",
+                    "get_transaction_for_transient_token",
+                ]
+            )
+        ) as fake_get_transaction,
+        patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "PaymentsApi",
+                    "create_payment",
+                ]
+            )
+        ) as fake_create_payment,
+        patch("clubs.views.validate_transient_token") as fake_validate_tt,
+    ):
         fake_validate_tt.return_value = (True, "")
         fake_cap_context.return_value = "abcde", 200, None
         fake_get_transaction.return_value = (
@@ -907,7 +1109,7 @@ class TicketTestCase(TestCase):
         tickets = [
             Ticket.objects.create(
                 type="group",
-                event=self.event1,
+                showing=self.event_showing1,
                 price=10.0,
                 group_size=2,
                 group_discount=0.2,
@@ -993,9 +1195,12 @@ class TicketTestCase(TestCase):
         # 2 normal tickets should be sold out
         expected_sold_out = {
             "type": self.tickets1[0].type,
+            "showing": {
+                "id": self.tickets1[0].showing.id,
+            },
             "event": {
-                "id": self.tickets1[0].event.id,
-                "name": self.tickets1[0].event.name,
+                "id": self.tickets1[0].showing.event.id,
+                "name": self.tickets1[0].showing.event.name,
             },
             "count": 2,
         }
@@ -1018,8 +1223,8 @@ class TicketTestCase(TestCase):
         cart.save()
 
         # Set the event end time to the past
-        self.event1.end_time = timezone.now() - timezone.timedelta(days=1)
-        self.event1.save()
+        self.event_showing1.end_time = timezone.now() - timezone.timedelta(days=1)
+        self.event_showing1.save()
 
         resp = self.client.get(reverse("tickets-cart"), format="json")
         data = resp.json()
@@ -1032,6 +1237,9 @@ class TicketTestCase(TestCase):
 
         expected_sold_out = {
             "type": self.tickets1[0].type,
+            "showing": {
+                "id": self.tickets1[0].showing.id,
+            },
             "event": {
                 "id": self.event1.id,
                 "name": self.event1.name,
@@ -1136,7 +1344,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1172,7 +1383,7 @@ class TicketTestCase(TestCase):
 
     def test_initiate_checkout_free_and_non_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
-        Ticket.objects.create(type="free", event=self.event1, price=0.0)
+        Ticket.objects.create(type="free", showing=self.event_showing1, price=0.0)
 
         # Add a few tickets to cart
         tickets_to_add = {
@@ -1183,7 +1394,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1221,7 +1435,10 @@ class TicketTestCase(TestCase):
     def test_initiate_checkout_only_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
 
-        tickets = [Ticket(type="free", event=self.event1, price=0.0) for _ in range(3)]
+        tickets = [
+            Ticket(type="free", showing=self.event_showing1, price=0.0)
+            for _ in range(3)
+        ]
         Ticket.objects.bulk_create(tickets)
 
         # Add a few free tickets to cart
@@ -1231,7 +1448,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1272,6 +1492,53 @@ class TicketTestCase(TestCase):
         ).exists()
         self.assertTrue(record_exists)
 
+    def test_initiate_checkout_after_ticket_drop_time_edit(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        tickets = [
+            Ticket(type="free", showing=self.event_showing1, price=0.0)
+            for _ in range(3)
+        ]
+        Ticket.objects.bulk_create(tickets)
+
+        # Add a few free tickets to cart
+        tickets_to_add = {
+            "quantities": [
+                {"type": "free", "count": 3},
+            ]
+        }
+        resp = self.client.post(
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
+            tickets_to_add,
+            format="json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Set drop time ahead of current time
+        self.event_showing1.ticket_drop_time = timezone.now() + timezone.timedelta(
+            hours=12
+        )
+        self.event_showing1.save()
+
+        # Initiate checkout
+        with patch(
+            ".".join(
+                [
+                    "CyberSource",
+                    "UnifiedCheckoutCaptureContextApi",
+                    "generate_unified_checkout_capture_context_with_http_info",
+                ]
+            )
+        ) as fake_cap_context:
+            cap_context_data = "abcde"
+            fake_cap_context.return_value = cap_context_data, 200, None
+            resp = self.client.post(reverse("tickets-initiate-checkout"))
+            # Ticket should not be checked out
+            self.assertEqual(resp.status_code, 403, resp.content)
+
     def test_initiate_concurrent_checkouts(self):
         self.client.login(username=self.user1.username, password="test")
 
@@ -1283,7 +1550,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )
@@ -1348,7 +1618,7 @@ class TicketTestCase(TestCase):
         ) as fake_cap_context:
             fake_cap_context.return_value = "abcde", 200, None
             resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertEquals(resp.status_code, 400, resp.content)
+            self.assertEqual(resp.status_code, 400, resp.content)
 
         # Tickets are not held
         held_tickets = Ticket.objects.filter(holder=self.user1)
@@ -1411,7 +1681,10 @@ class TicketTestCase(TestCase):
             ]
         }
         resp = self.client.post(
-            reverse("club-events-add-to-cart", args=(self.club1.code, self.event1.pk)),
+            reverse(
+                "club-events-showings-add-to-cart",
+                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+            ),
             tickets_to_add,
             format="json",
         )

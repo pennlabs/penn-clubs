@@ -39,20 +39,23 @@ const TicketsPill = styled.div`
 
 const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
-const EventCard = (props: { event: ClubEvent }): ReactElement => {
+const EventCard = (props: {
+  event: ClubEvent & { clubPublic?: boolean }
+  start_time: string
+  end_time: string
+}): ReactElement<any> => {
   const {
     image_url: imageUrl,
     club_name: clubName,
-    start_time,
-    end_time,
+    clubPublic,
     name,
     url,
     ticketed,
   } = props.event
 
   const now = new Date()
-  const startDate = new Date(start_time)
-  const endDate = new Date(end_time)
+  const startDate = new Date(props.start_time)
+  const endDate = new Date(props.end_time)
   const isHappening = now >= startDate && now <= endDate
   const hoursBetween =
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
@@ -77,6 +80,7 @@ const EventCard = (props: { event: ClubEvent }): ReactElement => {
       )}
       <ClubName>{clubName}</ClubName>
       <EventName>{name}</EventName>
+      {clubPublic === false && <p>This event is not shown to the public.</p>}
       {ticketed && (
         <TicketsPill
           style={{

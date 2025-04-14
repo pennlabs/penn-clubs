@@ -93,7 +93,7 @@ type RouterState =
 
 const RouteProgressBar = ({
   fireThreshold = 250,
-}: RouteProgressBarProps): ReactPortal | ReactElement => {
+}: RouteProgressBarProps): ReactPortal | ReactElement<any> => {
   const container =
     typeof window !== 'undefined'
       ? document.querySelector("nav[aria-label='main navigation']")

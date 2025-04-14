@@ -16,7 +16,7 @@ type HeaderProps = {
   style?: CSSProperties
 }
 
-const Header = ({ club, style }: HeaderProps): ReactElement => {
+const Header = ({ club, style }: HeaderProps): ReactElement<any> => {
   const { active, name, tags, badges } = club
   return (
     <div style={style}>

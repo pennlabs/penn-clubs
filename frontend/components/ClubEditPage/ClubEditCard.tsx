@@ -130,7 +130,7 @@ type ClubEditCardProps = {
   club: Partial<Club>
   isEdit: boolean
   onSubmit?: (data: {
-    message: ReactElement | string | null
+    message: ReactElement<any> | string | null
     club?: Club
     isEdit?: boolean
   }) => Promise<void>
@@ -140,8 +140,8 @@ const Card = ({
   title,
   children,
 }: React.PropsWithChildren<{
-  title?: string | ReactElement
-}>): ReactElement => {
+  title?: string | ReactElement<any>
+}>): ReactElement<any> => {
   return (
     <div className="card mb-5">
       <div className="card-header">
@@ -163,7 +163,7 @@ const EmailModal = ({
   email,
   setEmail,
   confirmSubmission,
-}: EmailModalProps): ReactElement => {
+}: EmailModalProps): ReactElement<any> => {
   return (
     <Modal
       width={'450px'}
@@ -232,7 +232,7 @@ export default function ClubEditCard({
   club,
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
-}: ClubEditCardProps): ReactElement {
+}: ClubEditCardProps): ReactElement<any> {
   const [showRankModal, setShowRankModal] = useState<boolean>(false)
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
@@ -977,7 +977,7 @@ export default function ClubEditCard({
                 <Card title={name} key={i}>
                   {description}
                   {(fields as any[]).map(
-                    (props: any, i): ReactElement | null => {
+                    (props: any, i): ReactElement<any> | null => {
                       const { hidden, ...other } = props
                       if (hidden) {
                         return null

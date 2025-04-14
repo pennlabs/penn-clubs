@@ -32,7 +32,7 @@ const ClubCards = styled(ClubTabCards)`
 type ClubTabProps = {
   className?: string
   userInfo: UserInfo
-  notify: (msg: ReactElement | string, type?: TypeOptions) => void
+  notify: (msg: ReactElement<any> | string, type?: TypeOptions) => void
 }
 
 export type UserMembership = {
@@ -47,7 +47,7 @@ const ClubTab = ({
   className,
   userInfo,
   notify,
-}: ClubTabProps): ReactElement => {
+}: ClubTabProps): ReactElement<any> => {
   const [memberships, setMemberships] = useState<UserMembership[] | null>(null)
   const [showModal, setShowModal] = useState<Club | null>(null)
 

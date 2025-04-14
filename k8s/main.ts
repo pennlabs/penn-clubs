@@ -83,7 +83,7 @@ export class MyChart extends PennLabsChart {
     })
 
     new CronJob(this, 'osa-perms-updates', {
-      schedule: cronTime.every(5).minutes(),
+      schedule: cronTime.every(1).minutes(),
       image: backendImage,
       secret: clubsSecret,
       cmd: ['python', 'manage.py', 'osa_perms_updates'],
@@ -108,6 +108,13 @@ export class MyChart extends PennLabsChart {
       image: backendImage,
       secret: clubsSecret,
       cmd: ["python", "manage.py", "expire_membership_invites"],
+    });
+
+    new CronJob(this, 'sync', {
+      schedule: cronTime.everyDayAt(12),
+      image: backendImage,
+      secret: clubsSecret,
+      cmd: ["python", "manage.py", "sync"],
     });
 
     new CronJob(this, 'graduate-users', {

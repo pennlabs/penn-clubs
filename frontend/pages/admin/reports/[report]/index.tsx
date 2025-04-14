@@ -13,7 +13,7 @@ type CreateReportPageProps = {
   report: Report
 }
 
-const CreateReportPage = (props: CreateReportPageProps): ReactElement => {
+const CreateReportPage = (props: CreateReportPageProps): ReactElement<any> => {
   return <EditReportPage {...props} />
 }
 

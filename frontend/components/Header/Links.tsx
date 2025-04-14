@@ -84,7 +84,7 @@ const StyledLinkAnchor = styled.a`
   }
 `
 
-const StyledLink = (props): ReactElement => {
+const StyledLink = (props): ReactElement<any> => {
   return (
     <Link href={props.href} legacyBehavior>
       <StyledLinkAnchor {...props} />
@@ -110,7 +110,7 @@ type Props = {
  * Checks authenticated === false to confirm browser has loaded and user is not logged in.
  * Will be undefined if browser has not loaded and true is browser has loaded and user is logged in.
  */
-const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
+const Links = ({ userInfo, authenticated, show }: Props): ReactElement<any> => {
   const router = useRouter()
   return (
     <Menu className="navbar-menu" $show={show}>

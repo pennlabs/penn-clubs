@@ -35,7 +35,7 @@ type Props = {
   applications: ClubApplication[]
 }
 
-const ApplyPage = ({ club, applications }: Props): ReactElement => {
+const ApplyPage = ({ club, applications }: Props): ReactElement<any> => {
   const router = useRouter()
   const [updatedIsRequest, setUpdatedIsRequest] = useState<boolean>(
     club.is_request,
@@ -50,11 +50,11 @@ const ApplyPage = ({ club, applications }: Props): ReactElement => {
       updateRequests={async (code: string) => {
         logEvent('request', code)
         if (updatedIsRequest) {
-          await doApiRequest(`/requests/${club.code}/?format=json`, {
+          await doApiRequest(`/requests/membership/${club.code}/?format=json`, {
             method: 'DELETE',
           })
         } else {
-          await doApiRequest(`/requests/?format=json`, {
+          await doApiRequest(`/requests/membership/?format=json`, {
             method: 'POST',
             body: { club: code },
           })

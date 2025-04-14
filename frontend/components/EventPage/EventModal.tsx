@@ -132,7 +132,7 @@ export const LiveStats = ({
   stats,
 }: {
   stats: LiveStatsData
-}): ReactElement | null => {
+}): ReactElement<any> | null => {
   if (stats.attending - stats.officers + stats.attended <= 8) {
     return null
   }
@@ -159,15 +159,15 @@ export const LiveStats = ({
 
 const EventModal = (props: {
   event: ClubEvent
+  start_time: string
+  end_time: string
   onLinkClicked?: () => void
-}): ReactElement => {
-  const { event, onLinkClicked } = props
+}): ReactElement<any> => {
+  const { event, start_time, end_time, onLinkClicked } = props
   const {
     large_image_url,
     image_url,
     club_name,
-    start_time,
-    end_time,
     ticketed,
     name,
     url,

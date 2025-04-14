@@ -14,13 +14,13 @@ type QuestionsCardProps = {
 
 export default function QuestionsCard({
   club,
-}: QuestionsCardProps): ReactElement {
+}: QuestionsCardProps): ReactElement<any> {
   return (
     <BaseCard title="Student Questions">
       <p className="mb-3">
         You can see a list of questions that prospective {OBJECT_NAME_SINGULAR}{' '}
         members have asked below. Answering any of these questions will make
-        them publically available and show your name as the person who answered
+        them publicly available and show your name as the person who answered
         the question.
       </p>
       <ModelForm

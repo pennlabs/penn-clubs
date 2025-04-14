@@ -24,7 +24,7 @@ type ClubTabTableProps = {
 const RenewTabTable = ({
   className,
   memberships,
-}: ClubTabTableProps): ReactElement => (
+}: ClubTabTableProps): ReactElement<any> => (
   <Table className={`table is-fullwidth ${className}`}>
     <thead>
       <tr>

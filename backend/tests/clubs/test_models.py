@@ -15,6 +15,7 @@ from clubs.models import (
     Badge,
     Club,
     Event,
+    EventShowing,
     Favorite,
     Membership,
     Note,
@@ -135,12 +136,26 @@ class EventTestCase(TestCase):
         self.club = Club.objects.create(
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )
-        self.event = Event.objects.create(
-            name="a", club=self.club, start_time=date, end_time=date, description="a"
-        )
+        self.event = Event.objects.create(name="a", club=self.club, description="a")
 
     def test_str(self):
         self.assertEqual(str(self.event), self.event.name)
+
+
+class EventShowingTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
+        self.club = Club.objects.create(
+            code="a", name="a", subtitle="a", founded=date, description="a", size=1
+        )
+        self.event = Event.objects.create(name="a", club=self.club, description="a")
+        self.showing = EventShowing.objects.create(
+            event=self.event, start_time=date, end_time=date
+        )
+
+    def test_str(self):
+        expected_str = f"{self.showing.event.name} showing at {self.showing.start_time}"
+        self.assertEqual(str(self.showing), expected_str)
 
 
 class FavoriteTestCase(TestCase):

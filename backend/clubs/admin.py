@@ -31,6 +31,7 @@ from clubs.models import (
     ClubFairRegistration,
     ClubVisit,
     Event,
+    EventShowing,
     Favorite,
     Major,
     Membership,
@@ -38,9 +39,10 @@ from clubs.models import (
     MembershipRequest,
     Note,
     NoteTag,
+    OwnershipRequest,
     Profile,
     QuestionAnswer,
-    RecurringEvent,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -101,8 +103,7 @@ def do_merge_clubs(modeladmin, request, queryset):
     if queryset.count() > 5:
         modeladmin.message_user(
             request,
-            "You have selected more than 5 clubs, "
-            "you probably do not want to do this.",
+            "You have selected more than 5 clubs, you probably do not want to do this.",
             level=messages.ERROR,
         )
         return
@@ -229,9 +230,9 @@ class ClubFairAdmin(admin.ModelAdmin):
 
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("name", "club", "type", "start_time", "end_time")
+    list_display = ("name", "club", "type")
     search_fields = ("name", "club__name")
-    list_filter = ("start_time", "end_time")
+    list_filter = ("type",)
 
     def club(self, obj):
         return obj.club.name
@@ -263,23 +264,53 @@ class SubscribeAdmin(admin.ModelAdmin):
 
 
 class MembershipRequestAdmin(admin.ModelAdmin):
-    search_fields = ("person__username", "person__email", "club__name", "club__pk")
-    list_display = ("person", "club", "email", "withdrew", "is_member")
-    list_filter = ("withdrew",)
+    search_fields = (
+        "requester__username",
+        "requester__email",
+        "club__name",
+        "club__pk",
+    )
+    list_display = ("requester", "club", "email", "withdrawn", "is_member")
+    list_filter = ("withdrawn",)
 
-    def person(self, obj):
-        return obj.person.username
+    def requester(self, obj):
+        return obj.requester.username
 
     def club(self, obj):
         return obj.club.name
 
     def email(self, obj):
-        return obj.person.email
+        return obj.requester.email
 
     def is_member(self, obj):
-        return obj.club.membership_set.filter(person__pk=obj.person.pk).exists()
+        return obj.club.membership_set.filter(person__pk=obj.requester.pk).exists()
 
     is_member.boolean = True
+
+
+class OwnershipRequestAdmin(admin.ModelAdmin):
+    search_fields = (
+        "requester__username",
+        "requester__email",
+        "club__name",
+        "created_at",
+    )
+    list_display = ("requester", "club", "email", "withdrawn", "is_owner", "created_at")
+    list_filter = ("withdrawn",)
+
+    def requester(self, obj):
+        return obj.requester.username
+
+    def club(self, obj):
+        return obj.club.name
+
+    def email(self, obj):
+        return obj.requester.email
+
+    def is_owner(self, obj):
+        return obj.club.membership_set.filter(
+            person__pk=obj.requester.pk, role=Membership.ROLE_OWNER
+        ).exists()
 
 
 class MembershipAdmin(admin.ModelAdmin):
@@ -443,9 +474,9 @@ admin.site.register(MembershipRequest, MembershipRequestAdmin)
 admin.site.register(Major, MajorAdmin)
 admin.site.register(Membership, MembershipAdmin)
 admin.site.register(MembershipInvite, MembershipInviteAdmin)
+admin.site.register(OwnershipRequest, OwnershipRequestAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
-admin.site.register(RecurringEvent)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(TargetMajor)
@@ -466,3 +497,5 @@ admin.site.register(TicketTransferRecord)
 admin.site.register(Cart)
 admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
+admin.site.register(RegistrationQueueSettings)
+admin.site.register(EventShowing)

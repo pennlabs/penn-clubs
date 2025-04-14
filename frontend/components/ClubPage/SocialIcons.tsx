@@ -69,7 +69,7 @@ type SocialIconsProps = {
   club: Club
 }
 
-const SocialIcons = ({ club }: SocialIconsProps): ReactElement => (
+const SocialIcons = ({ club }: SocialIconsProps): ReactElement<any> => (
   <>
     {socials
       .filter((item) => club[item.name])

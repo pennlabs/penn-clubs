@@ -8,7 +8,7 @@ type Props = {
   club: Club
 }
 
-const FilesList = ({ club }: Props): ReactElement => {
+const FilesList = ({ club }: Props): ReactElement<any> => {
   const { files } = club
   return (
     <table className="table is-fullwidth">

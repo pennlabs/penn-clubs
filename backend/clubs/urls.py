@@ -14,11 +14,13 @@ from clubs.views import (
     ClubApplicationViewSet,
     ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
+    ClubEventShowingViewSet,
     ClubEventViewSet,
     ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
     EmailInvitesAPIView,
+    EventShowingViewSet,
     EventViewSet,
     ExternalMemberListViewSet,
     FavoriteCalendarAPIView,
@@ -36,7 +38,10 @@ from clubs.views import (
     MemberViewSet,
     NoteViewSet,
     OptionListView,
+    OwnershipRequestManagementViewSet,
+    OwnershipRequestViewSet,
     QuestionAnswerViewSet,
+    RegistrationQueueSettingsView,
     ReportViewSet,
     SchoolViewSet,
     ScriptExecutionView,
@@ -71,7 +76,12 @@ router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
 router.register(r"searches", SearchQueryViewSet, basename="searches")
 router.register(r"memberships", MembershipViewSet, basename="members")
-router.register(r"requests", MembershipRequestViewSet, basename="requests")
+router.register(
+    r"requests/membership", MembershipRequestViewSet, basename="membership-requests"
+)
+router.register(
+    r"requests/ownership", OwnershipRequestViewSet, basename="ownership-requests"
+)
 router.register(r"tickets", TicketViewSet, basename="tickets")
 
 router.register(r"schools", SchoolViewSet, basename="schools")
@@ -96,6 +106,9 @@ router.register(
 router.register(r"submissions", ApplicationSubmissionUserViewSet, basename="submission")
 router.register(r"templates", ClubApprovalResponseTemplateViewSet, basename="templates")
 
+events_router = routers.NestedSimpleRouter(router, r"events", lookup="event")
+events_router.register(r"showings", EventShowingViewSet, basename="event-showings")
+
 clubs_router = routers.NestedSimpleRouter(router, r"clubs", lookup="club")
 clubs_router.register(r"members", MemberViewSet, basename="club-members")
 clubs_router.register(r"events", ClubEventViewSet, basename="club-events")
@@ -109,11 +122,21 @@ clubs_router.register(
     MembershipRequestOwnerViewSet,
     basename="club-membership-requests",
 )
+clubs_router.register(
+    r"ownershiprequests",
+    OwnershipRequestManagementViewSet,
+    basename="club-ownership-requests",
+)
 clubs_router.register(r"advisors", AdvisorViewSet, basename="club-advisors")
 clubs_router.register(
     r"applications", ClubApplicationViewSet, basename="club-applications"
 )
 clubs_router.register(r"adminnotes", AdminNoteViewSet, basename="adminnotes")
+
+club_events_router = routers.NestedSimpleRouter(clubs_router, r"events", lookup="event")
+club_events_router.register(
+    r"showings", ClubEventShowingViewSet, basename="club-events-showings"
+)
 
 badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
 badges_router.register(r"clubs", BadgeClubViewSet, basename="badge-clubs")
@@ -178,9 +201,16 @@ urlpatterns = [
         name="wharton-applications-status",
     ),
     path(r"health/", HealthView.as_view(), name="health"),
+    path(
+        "settings/queue/",
+        RegistrationQueueSettingsView.as_view(),
+        name="queue-settings",
+    ),
 ]
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
 urlpatterns += badges_router.urls
 urlpatterns += applications_router.urls
+urlpatterns += events_router.urls
+urlpatterns += club_events_router.urls

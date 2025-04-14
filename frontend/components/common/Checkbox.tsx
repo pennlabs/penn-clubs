@@ -59,7 +59,7 @@ export const Checkbox = ({
   name,
   color,
   size,
-}: CheckboxProps): ReactElement => {
+}: CheckboxProps): ReactElement<any> => {
   const checkboxRef = createRef<HTMLInputElement>()
 
   return (

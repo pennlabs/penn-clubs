@@ -1,18 +1,14 @@
 import { Field } from 'formik'
 import moment from 'moment'
-import React, { ReactElement, useRef, useState } from 'react'
-import TimeAgo from 'react-timeago'
+import Link from 'next/link'
+import { ReactElement, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 import { LIGHT_GRAY } from '../../constants'
-import { Club, ClubEvent, ClubEventType } from '../../types'
+import { Club, ClubEvent, ClubEventType, EventShowing } from '../../types'
 import { stripTags } from '../../utils'
-import {
-  FAIR_NAME,
-  OBJECT_EVENT_TYPES,
-  OBJECT_NAME_SINGULAR,
-} from '../../utils/branding'
-import { Device, Icon, Line, Modal, Text } from '../common'
+import { FAIR_NAME, OBJECT_EVENT_TYPES } from '../../utils/branding'
+import { Device, Icon, Line, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import {
   DateTimeField,
@@ -22,8 +18,8 @@ import {
   TextField,
 } from '../FormComponents'
 import { ModelForm } from '../ModelForm'
+import Toggle from '../Settings/Toggle'
 import BaseCard from './BaseCard'
-import TicketsModal from './TicketsModal'
 
 const EventBox = styled.div<{ type: 'ios' | 'android' }>`
   text-align: left;
@@ -284,9 +280,11 @@ const eventTableFields = [
     label: 'Name',
   },
   {
-    name: 'start_time',
+    name: 'earliest_start_time',
     label: 'Start Time',
-    converter: (a: string): ReactElement => <TimeAgo date={a} />,
+    converter: (a: string): ReactElement<any> => (
+      <>{moment(a).format('MMM D, h:mma')}</>
+    ),
   },
   {
     name: 'type',
@@ -297,7 +295,7 @@ const eventTableFields = [
   {
     name: 'is_ics_event',
     label: 'ICS',
-    converter: (a: boolean): ReactElement => {
+    converter: (a: boolean): ReactElement<any> => {
       return a ? (
         <span className="has-text-success">
           <Icon name="check" />
@@ -309,52 +307,44 @@ const eventTableFields = [
       )
     },
   },
+  {
+    name: 'showings',
+    label: 'Dates',
+    converter: (showings: EventShowing[] | undefined): string =>
+      `${showings?.length ?? 0} date(s)`,
+  },
 ]
 
-const eventFields = (
-  <>
-    <Field
-      name="name"
-      as={TextField}
-      required
-      helpText="Provide a descriptive name for the planned event."
-    />
-    <Field
-      name="url"
-      as={TextField}
-      type="url"
-      helpText="Provide a videoconference link to join the event (Zoom, Google Meet, etc)."
-      label="Meeting Link"
-    />
-    <Field name="image" as={FileField} isImage />
-    <Field
-      name="type"
-      as={SelectField}
-      required
-      choices={EVENT_TYPES}
-      serialize={({ value }) => value}
-      isMulti={false}
-      valueDeserialize={(val) => EVENT_TYPES.find((x) => x.value === val)}
-    />
-    <Field
-      name="start_time"
-      required
-      placeholder="Provide a start time for the event"
-      as={DateTimeField}
-    />
-    <Field
-      name="end_time"
-      required
-      placeholder="Provide a end time for the event"
-      as={DateTimeField}
-    />
-    <Field
-      name="description"
-      placeholder="Type your event description here!"
-      as={RichTextField}
-    />
-  </>
-)
+const showingTableFields = [
+  {
+    name: 'start_time',
+    label: 'Start Time',
+    converter: (a: string): ReactElement<any> => (
+      <>{moment(a).format('MMM D, h:mma')}</>
+    ),
+  },
+  {
+    name: 'end_time',
+    label: 'End Time',
+    converter: (a: string): ReactElement<any> => (
+      <>{moment(a).format('MMM D, h:mma')}</>
+    ),
+  },
+  {
+    name: 'location',
+    label: 'Location',
+  },
+  {
+    name: 'ticket_drop_time',
+    label: 'Ticket Drop',
+    converter: (a?: string | null): ReactElement | string =>
+      a ? <>{moment(a).format('MMM D, h:mma')}</> : 'N/A',
+  },
+  {
+    name: 'ticket_order_limit',
+    label: 'Order Limit',
+  },
+]
 
 const EventPreviewContainer = styled.div`
   display: flex;
@@ -388,103 +378,301 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
       )}
     </EventPreviewDescriptionContainer>
     <PreviewContainer>
-      <EventModal event={event} />
+      <EventModal
+        event={event}
+        start_time={event.earliest_start_time || ''}
+        end_time={event.latest_end_time || ''}
+      />
     </PreviewContainer>
     {/* TODO: uncomment device preview when we have mobile integration. */}
     {/* <Devices contents={event} /> */}
   </EventPreviewContainer>
 )
 
-const CreateContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`
+export default function EventsCard({
+  club,
+}: EventsCardProps): ReactElement<any> {
+  const [selectedEvent, setSelectedEvent] = useState<ClubEvent | null>(null)
+  const [formObject, setFormObject] = useState<
+    Partial<ClubEvent> & { image?: File | string | null }
+  >({})
 
-const CreateTickets = ({ event, club }: { event: ClubEvent; club: Club }) => {
-  const [show, setShow] = useState(false)
-  const showModal = () => setShow(true)
-  const hideModal = () => setShow(false)
+  const [isEditing, setIsEditing] = useState<boolean>(false)
 
-  return (
-    <CreateContainer>
-      <div className="is-pulled-left">
-        <Text style={{ padding: 0, margin: 0 }}>
-          {event.ticketed ? 'Add' : 'Create'} ticket offerings for this event
-        </Text>
-      </div>
-      <div className="is-pulled-right">
-        <button
-          onClick={() => {
-            showModal()
-          }}
-          disabled={!event.name}
-          className="button is-primary"
-        >
-          Create
-        </button>
-      </div>
-      {show && (
-        <Modal
-          width="50vw"
-          show={show}
-          closeModal={hideModal}
-          marginBottom={false}
-        >
-          <TicketsModal
-            club={club}
-            event={event}
-            onSuccessfulSubmit={hideModal}
-          />
-        </Modal>
-      )}
-    </CreateContainer>
-  )
-}
-
-export default function EventsCard({ club }: EventsCardProps): ReactElement {
-  const [deviceContents, setDeviceContents] = useState<any>({})
   const eventDetailsRef = useRef<HTMLDivElement>(null)
 
-  const event = {
-    ...deviceContents,
-    club_name: club.name,
-    image_url:
-      (deviceContents.image && deviceContents.image instanceof File
-        ? URL.createObjectURL(deviceContents.image)
-        : false) || deviceContents.image_url,
-  } as ClubEvent
+  const [isRecurring, setIsRecurring] = useState<boolean>(false)
+  const [showPastEvents, setShowPastEvents] = useState<boolean>(false)
+
+  const eventFields = (
+    <>
+      <Field
+        name="name"
+        as={TextField}
+        required
+        helpText="Provide a descriptive name for the planned event."
+      />
+      <Field
+        name="url"
+        as={TextField}
+        type="url"
+        helpText="Provide a videoconference link to join the event (Zoom, Google Meet, etc)."
+        label="Meeting Link"
+      />
+      <Field name="image" as={FileField} isImage />
+      <Field
+        name="type"
+        as={SelectField}
+        required
+        choices={EVENT_TYPES}
+        serialize={({ value }) => value}
+        isMulti={false}
+        valueDeserialize={(val) => EVENT_TYPES.find((x) => x.value === val)}
+      />
+      <Field
+        name="description"
+        placeholder="Type your event description here!"
+        as={RichTextField}
+      />
+      {!isEditing && (
+        <>
+          <hr />
+          <p className="mb-3 has-text-weight-bold">
+            Add details for the date of your event (your first date if multiple
+            dates are planned at non-recurring times):
+          </p>
+          <Field
+            name="start_time"
+            required
+            label="Date Start Time"
+            placeholder="When does the first date start?"
+            as={DateTimeField}
+          />
+          <Field
+            name="end_time"
+            required
+            label="Date End Time"
+            placeholder="When does the first date end?"
+            as={DateTimeField}
+          />
+          <Field
+            name="location"
+            label="Date Location"
+            as={TextField}
+            placeholder="Where will this date take place?"
+          />
+          <button
+            className="button is-small is-block mb-2 is-pulled-right"
+            onClick={() => setIsRecurring(!isRecurring)}
+          >
+            Make {isRecurring ? 'non-' : ''}recurring
+          </button>
+          {isRecurring && (
+            <>
+              <hr />
+              <p className="mb-3 has-text-weight-bold">
+                Add details for the recurring dates of your event:
+              </p>
+              <Field
+                name="offset"
+                label="Offset"
+                as={TextField}
+                type="number"
+                step={1}
+                required
+                placeholder="How many days apart are the dates?"
+              />
+              <Field
+                name="end_date"
+                label="End Date"
+                as={DateTimeField}
+                required
+                placeholder="When would you like the recurring dates to end?"
+              />
+            </>
+          )}
+        </>
+      )}
+    </>
+  )
+
+  // Fields for the Event Showing form
+  const showingFields = (
+    <>
+      <Field
+        name="start_time"
+        required
+        placeholder="Date Start Time"
+        as={DateTimeField}
+      />
+      <Field
+        name="end_time"
+        required
+        placeholder="Date End Time"
+        as={DateTimeField}
+      />
+      <Field
+        name="location"
+        as={TextField}
+        placeholder="Date Location (Optional)"
+      />
+      <Field
+        name="ticket_drop_time"
+        id="ticket_drop_time"
+        placeholder="Ticket Drop Time (Optional)"
+        as={DateTimeField}
+        helpText="When tickets first become available. Leave blank if not ticketed or drop immediately."
+      />
+      <Field
+        name="ticket_order_limit"
+        label="Ticket Order Limit"
+        type="number"
+        min="1"
+        as={TextField}
+        helpText="Maximum tickets one user can get per order. Defaults to 10."
+      />
+    </>
+  )
+
+  const eventPreviewObject = selectedEvent
+    ? {
+        // Base with selected event data
+        ...(selectedEvent as ClubEvent),
+        // Overlay with current form state
+        ...formObject,
+        club_name: club.name,
+        image_url:
+          formObject.image && formObject.image instanceof File
+            ? URL.createObjectURL(formObject.image as File)
+            : (formObject.image_url ?? selectedEvent.image_url), // Use formObject URL first if available
+      }
+    : ({ club_name: club.name, ...formObject } as Partial<ClubEvent>)
+
+  // define earliest time for end time as a couple of days ago
+  const earliestEndTime = moment().subtract(2, 'days').format('YYYY-MM-DD')
 
   return (
     <BaseCard title="Events">
-      <Text>
-        Manage events for this {OBJECT_NAME_SINGULAR}. Events that have already
-        passed are hidden by default.
-      </Text>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+        }}
+      >
+        <Text style={{ marginBottom: 0 }}>
+          {club.approved || club.is_ghost
+            ? 'Manage events for this club. Events that have already passed are hidden by default.'
+            : 'Note: you must be an approved club to create publicly-viewable events.'}
+        </Text>
+        {(club.approved || club.is_ghost) && (
+          <Toggle
+            active={showPastEvents}
+            toggle={(_) => setShowPastEvents(!showPastEvents)}
+            club={club}
+            filterOffText="Current"
+            filterOnText="All (incl. Past)"
+          />
+        )}
+      </div>
       <ModelForm
+        actions={(object) => (
+          <Link legacyBehavior href={{ pathname: `/events/${object.id}` }}>
+            <button className="button is-info is-small">
+              <Icon name="eye" /> Page
+            </button>
+          </Link>
+        )}
         baseUrl={`/clubs/${club.code}/events/`}
-        listParams={`&end_time__gte=${new Date().toISOString()}`}
+        listParams={
+          showPastEvents ? '' : `&latest_start_time__gte=${earliestEndTime}`
+        }
+        keyField="id"
         fields={eventFields}
         fileFields={['image']}
         tableFields={eventTableFields}
         noun="Event"
-        currentTitle={(obj) => (obj != null ? obj.name : 'Deleted Event')}
+        currentTitle={(obj) => obj?.name ?? 'New Event'}
         onEditPressed={() => {
+          setIsEditing(true)
           eventDetailsRef.current?.scrollIntoView({
             behavior: 'smooth',
             block: 'start',
           })
         }}
         onChange={(obj) => {
-          setDeviceContents(obj)
+          const eventObject = obj as ClubEvent | null
+          if (eventObject && eventObject.id) {
+            setSelectedEvent(eventObject)
+            setIsEditing(true)
+          } else {
+            setSelectedEvent(null)
+            setIsEditing(false)
+          }
+          setFormObject(
+            (eventObject ?? {}) as Partial<ClubEvent> & {
+              image?: File | string | null
+            },
+          )
         }}
       />
-      <Line />
-      <CreateTickets event={event} club={club} />
-      <Line />
-      <div ref={eventDetailsRef}>
-        <EventPreview event={event} />
-      </div>
+      {selectedEvent && (
+        <div className="mt-5">
+          <h3 className="title is-4">Dates for {selectedEvent.name}</h3>
+          <Text className="mb-3">
+            Add or manage specific dates, times, and locations for this event.
+          </Text>
+          <ModelForm
+            key={selectedEvent.id}
+            baseUrl={`/events/${selectedEvent.id}/showings/`}
+            initialData={selectedEvent.showings || []}
+            keyField="id"
+            fields={showingFields}
+            tableFields={showingTableFields}
+            allowDeletion={false}
+            noun="Date"
+            currentTitle={(obj) => {
+              if (!obj) return 'New Date'
+              const showing = obj as EventShowing
+              const start = moment(showing.start_time).format('MMM D, h:mma')
+              const end = moment(showing.end_time).format('h:mma')
+              return `${start} - ${end} ${showing.location ? `(${showing.location})` : ''}`
+            }}
+            onEditPressed={() => {
+              eventDetailsRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+              })
+            }}
+            actions={(showing: EventShowing) => (
+              <Link
+                href={`/events/${selectedEvent.id}/tickets/${showing.id}/?action=create`}
+                target="_blank"
+              >
+                <button className="button is-small is-primary">
+                  <Icon name="credit-card" />{' '}
+                  {showing.ticketed ? 'Manage Tickets' : 'Add Tickets'}
+                </button>
+              </Link>
+            )}
+            onUpdate={(updatedShowings) => {
+              setSelectedEvent((prev) =>
+                prev
+                  ? { ...prev, showings: updatedShowings as EventShowing[] }
+                  : null,
+              )
+            }}
+          />
+        </div>
+      )}
+
+      {(selectedEvent || Object.keys(formObject).length > 0) && (
+        <div ref={eventDetailsRef} className="mt-4">
+          <Line />
+          <EventPreview event={eventPreviewObject as ClubEvent} />
+        </div>
+      )}
     </BaseCard>
   )
 }

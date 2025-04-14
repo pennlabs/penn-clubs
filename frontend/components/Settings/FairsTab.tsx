@@ -23,7 +23,7 @@ type FairsTabProps = {
   fairs: ClubFair[]
 }
 
-const FairsTab = ({ fairs }: FairsTabProps): ReactElement => {
+const FairsTab = ({ fairs }: FairsTabProps): ReactElement<any> => {
   return (
     <>
       <Text>

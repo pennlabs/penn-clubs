@@ -129,7 +129,7 @@ const Table = ({
   initialPage = 0,
   setInitialPage,
   initialPageSize = 10,
-}: tableProps): ReactElement => {
+}: tableProps): ReactElement<any> => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
   const [selectedFilter, setSelectedFilter] = useState<any>({})
@@ -291,7 +291,6 @@ const Table = ({
           </div>
         </Toolbar>
       )}
-
       {tableData.length > 0 ? (
         <table className="table is-fullwidth" {...getTableProps()}>
           <thead>
@@ -444,7 +443,7 @@ const Table = ({
             style={{ maxWidth: 150, marginRight: '0.5rem' }}
           >
             {pageOptions.map(
-              (idx: number): ReactElement => (
+              (idx: number): ReactElement<any> => (
                 <option value={idx}>Page {idx + 1}</option>
               ),
             )}

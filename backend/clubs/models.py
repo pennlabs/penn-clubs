@@ -117,7 +117,7 @@ def send_mail_helper(
                 )
         else:  # assumes attachment is an image
             image = MIMEImage(attachment["content"], _subtype=attachment["mimetype"])
-            image.add_header("Content-ID", f'<{context["cid"]}>')
+            image.add_header("Content-ID", f"<{context['cid']}>")
             image.add_header(
                 "Content-Disposition", "inline", filename=attachment["filename"]
             )
@@ -355,6 +355,7 @@ class Club(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # signifies the existence of a previous instance within history with approved=True
     ghost = models.BooleanField(default=False)
     history = HistoricalRecords(cascade_delete_history=True)
 
@@ -383,23 +384,29 @@ class Club(models.Model):
             calendar = Calendar(requests.get(url).text)
             event_list = Event.objects.filter(is_ics_event=True, club=self)
             modified_events = []
-            for event in calendar.events:
+            for ics_event in calendar.events:
                 tries = [
                     Event.objects.filter(
                         club=self,
-                        start_time=event.begin.datetime,
-                        end_time=event.end.datetime,
-                    ).first(),
+                        is_ics_event=True,
+                    )
+                    .filter(
+                        eventshowing__start_time=ics_event.begin.datetime,
+                        eventshowing__end_time=ics_event.end.datetime,
+                    )
+                    .first(),
                     Event(),
                 ]
 
                 # try matching using uuid if it is valid
-                if event.uid:
+                if ics_event.uid:
                     try:
-                        event_uuid = uuid.UUID(event.uid[:36])
+                        event_uuid = uuid.UUID(ics_event.uid[:36])
                     except ValueError:
                         # generate uuid from malformed/invalid uuids
-                        event_uuid = uuid.uuid5(ics_import_uuid_namespace, event.uid)
+                        event_uuid = uuid.uuid5(
+                            ics_import_uuid_namespace, ics_event.uid
+                        )
 
                     tries.insert(0, Event.objects.filter(ics_uuid=event_uuid).first())
                 else:
@@ -408,11 +415,8 @@ class Club(models.Model):
                 for ev in tries:
                     if ev:
                         ev.club = self
-                        ev.name = event.name.strip()
-                        ev.start_time = event.begin.datetime
-                        ev.end_time = event.end.datetime
-                        ev.description = clean(event.description.strip())
-                        ev.location = event.location
+                        ev.name = ics_event.name.strip()
+                        ev.description = clean(ics_event.description.strip())
                         ev.is_ics_event = True
 
                         # very simple type detection, only perform on first time
@@ -446,12 +450,8 @@ class Club(models.Model):
                                 ev.url = urls[0]
 
                         # extract url from url or location
-                        if event.url:
-                            ev.url = event.url
-                        elif ev.location:
-                            location_urls = extractor.find_urls(ev.location)
-                            if location_urls:
-                                ev.url = location_urls[0]
+                        if ics_event.url:
+                            ev.url = ics_event.url
 
                         # format url properly with schema
                         if ev.url:
@@ -467,8 +467,6 @@ class Club(models.Model):
                             ev.ics_uuid = event_uuid
 
                         # ensure length limits are met before saving
-                        if ev.location:
-                            ev.location = ev.location[:255]
                         if ev.name:
                             ev.name = ev.name[:255]
                         if ev.code:
@@ -477,6 +475,25 @@ class Club(models.Model):
                             ev.url = ev.url[:2048]
 
                         ev.save()
+
+                        # Update corresponding showing (one per event)
+                        showing, created = EventShowing.objects.get_or_create(
+                            event=ev,
+                            start_time=ics_event.begin.datetime,
+                            end_time=ics_event.end.datetime,
+                            defaults={
+                                "location": ics_event.location[:255]
+                                if ics_event.location
+                                else None,
+                            },
+                        )
+
+                        if not created:
+                            showing.location = (
+                                ics_event.location[:255] if ics_event.location else None
+                            )
+                            showing.save()
+
                         modified_events.append(ev)
                         break
 
@@ -507,24 +524,37 @@ class Club(models.Model):
 
         eastern = pytz.timezone("America/New_York")
 
-        events = self.events.filter(
+        fair_events = Event.objects.filter(
+            club=self,
+            type=Event.FAIR,
+        )
+
+        event_showings = EventShowing.objects.filter(
+            event__in=fair_events,
             start_time__gte=fair.start_time,
             end_time__lte=fair.end_time,
-            type=Event.FAIR,
         ).order_by("start_time")
-        event = events.first()
+
+        first_event_showing = event_showings.first()
+        first_event = first_event_showing.event if first_event_showing else None
+
         fstr = "%B %d, %Y %I:%M %p"
         events = [
             {
-                "time": f"{timezone.localtime(start, eastern).strftime(fstr)} - "
-                f"{timezone.localtime(end, eastern).strftime(fstr)} ET"
+                "time": (
+                    f"{timezone.localtime(showing.start_time, eastern).strftime(fstr)} "
+                    f"- {timezone.localtime(showing.end_time, eastern).strftime(fstr)} "
+                    "ET"
+                )
             }
-            for start, end in events.values_list("start_time", "end_time")
+            for showing in event_showings
         ]
 
         prefix = (
             "ACTION REQUIRED"
-            if event is None or not event.url or "zoom.us" not in event.url
+            if first_event is None
+            or not first_event.url
+            or "zoom.us" not in first_event.url
             else "REMINDER"
         )
 
@@ -854,17 +884,21 @@ class ClubFair(models.Model):
         events = []
         with transaction.atomic():
             for club in club_query:
-                obj, _ = Event.objects.get_or_create(
+                event, _ = Event.objects.get_or_create(
                     code=f"fair-{club.code}-{self.id}-{suffix}",
                     club=club,
                     type=Event.FAIR,
                     defaults={
                         "name": self.name,
-                        "start_time": start_time,
-                        "end_time": end_time,
                     },
                 )
-                events.append(obj)
+
+                showing, _ = EventShowing.objects.get_or_create(
+                    event=event, start_time=start_time, end_time=end_time
+                )
+
+                events.append(event)
+
         return events
 
     def __str__(self):
@@ -895,25 +929,6 @@ class ClubFairRegistration(models.Model):
         return f"{self.club.name} registration for {self.fair.name}"
 
 
-class RecurringEvent(models.Model):
-    """
-    Represents a recurring event hosted by a club.
-    """
-
-    def __str__(self):
-        events = self.event_set.all()
-        if events.exists():
-            first_event = events.first()
-            last_event = events.last()
-            name = first_event.name
-            return (
-                f"{name}: "
-                f"{first_event.start_time} - {last_event.end_time} "
-                f"({events.count()} times)"
-            )
-        return "empty recurring event object"
-
-
 class Event(models.Model):
     """
     Represents an event hosted by a club.
@@ -926,9 +941,6 @@ class Event(models.Model):
     club = models.ForeignKey(
         Club, on_delete=models.CASCADE, related_name="events", null=True
     )
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(max_length=2048, null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(
@@ -937,11 +949,6 @@ class Event(models.Model):
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
-    parent_recurring_event = models.ForeignKey(
-        RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
-    )
-    ticket_order_limit = models.IntegerField(default=10)
-    ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -971,6 +978,25 @@ class Event(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class EventShowing(models.Model):
+    """
+    Represents a showing of an event.
+    """
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    location = models.CharField(max_length=255, null=True, blank=True)
+    ticket_order_limit = models.IntegerField(default=10)
+    ticket_drop_time = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.event.name} showing at {self.start_time}"
 
 
 class Favorite(models.Model):
@@ -1077,49 +1103,89 @@ class SearchQuery(models.Model):
         return "<SearchQuery: {} at {}>".format(self.query, self.created_at)
 
 
-class MembershipRequest(models.Model):
+class JoinRequest(models.Model):
     """
-    Used when users are not in the club but request membership from the owner
+    Abstract base class for Membership Request and Ownership Request
     """
 
-    person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    requester = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="%(class)ss"
+    )
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="%(class)ss")
 
-    withdrew = models.BooleanField(default=False)
+    withdrawn = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        abstract = True
+        unique_together = (("requester", "club"),)
+
+
+class MembershipRequest(JoinRequest):
+    """
+    Used when users are not in the club but request membership from the owner
+    """
+
     def __str__(self):
-        return "<MembershipRequest: {} for {}, with email {}>".format(
-            self.person.username, self.club.code, self.person.email
-        )
+        return f"<MembershipRequest: {self.requester.username} for {self.club.code}>"
 
     def send_request(self, request=None):
         domain = get_domain(request)
+        edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
+        club_name = self.club.name
+        full_name = self.requester.get_full_name()
 
         context = {
-            "club_name": self.club.name,
-            "edit_url": "{}/member".format(
-                settings.EDIT_URL.format(domain=domain, club=self.club.code)
-            ),
-            "full_name": self.person.get_full_name(),
+            "club_name": club_name,
+            "edit_url": f"{edit_url}/member",
+            "full_name": full_name,
         }
 
         emails = self.club.get_officer_emails()
 
         if emails:
             send_mail_helper(
-                name="request",
-                subject="Membership Request from {} for {}".format(
-                    self.person.get_full_name(), self.club.name
-                ),
+                name="membership_request",
+                subject=f"Membership Request from {full_name} for {club_name}",
                 emails=emails,
                 context=context,
             )
 
-    class Meta:
-        unique_together = (("person", "club"),)
+
+class OwnershipRequest(JoinRequest):
+    """
+    Represents a user's request to take ownership of a club
+    """
+
+    def __str__(self):
+        return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"
+
+    def send_request(self, request=None):
+        domain = get_domain(request)
+        edit_url = settings.EDIT_URL.format(domain=domain, club=self.club.code)
+        club_name = self.club.name
+        full_name = self.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "edit_url": f"{edit_url}/member",
+            "full_name": full_name,
+        }
+
+        owner_emails = list(
+            self.club.membership_set.filter(
+                role=Membership.ROLE_OWNER, active=True
+            ).values_list("person__email", flat=True)
+        )
+
+        send_mail_helper(
+            name="ownership_request",
+            subject=f"Ownership Request from {full_name} for {club_name}",
+            emails=owner_emails,
+            context=context,
+        )
 
 
 class Advisor(models.Model):
@@ -1815,7 +1881,9 @@ class Cart(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    event = models.ForeignKey(Event, related_name="carts", on_delete=models.CASCADE)
+    showing = models.ForeignKey(
+        EventShowing, related_name="carts", on_delete=models.CASCADE
+    )
     session_key = models.CharField(max_length=40)
     owner = models.ForeignKey(
         get_user_model(),
@@ -1833,8 +1901,8 @@ class TicketClass(models.Model):
     Represents a type of ticket that can be purchased
     """
 
-    event = models.ForeignKey(
-        Event, related_name="ticket_classes", on_delete=models.CASCADE
+    showing = models.ForeignKey(
+        EventShowing, related_name="ticket_classes", on_delete=models.CASCADE
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -1859,7 +1927,7 @@ class TicketClass(models.Model):
         return False
 
     class Meta:
-        unique_together = (("event", "name"),)
+        unique_together = (("showing", "name"),)
 
 
 class CartItem(models.Model):
@@ -1963,10 +2031,10 @@ class Ticket(models.Model):
 
         context = {
             "first_name": self.transaction_record.buyer_first_name,
-            "name": self.ticket_class.event.name,
+            "name": self.ticket_class.showing.event.name,
             "type": self.ticket_class.name,
-            "start_time": self.ticket_class.event.start_time,
-            "end_time": self.ticket_class.event.end_time,
+            "start_time": self.ticket_class.showing.start_time,
+            "end_time": self.ticket_class.showing.end_time,
             "cid": "qr_code",
             "ticket_url": f"https://{settings.DOMAINS[0]}/settings#Tickets",
         }
@@ -1975,7 +2043,7 @@ class Ticket(models.Model):
             name="ticket_confirmation",
             subject=(
                 f"Ticket confirmation for {buyer_full_name} to "
-                f"{self.ticket_class.event.name}"
+                f"{self.ticket_class.showing.event.name}"
             ),
             emails=[self.owner_email],
             context=context,
@@ -2018,7 +2086,7 @@ class TicketTransferRecord(models.Model):
         context = {
             "sender_email": self.sender_email,
             "receiver_email": self.receiver_email,
-            "event_name": self.ticket.ticket_class.event.name,
+            "event_name": self.ticket.ticket_class.showing.event.name,
             "type": self.ticket.ticket_class.name,
         }
 
@@ -2026,7 +2094,7 @@ class TicketTransferRecord(models.Model):
             name="ticket_transfer",
             subject=(
                 f"Ticket transfer confirmation for "
-                f"{self.ticket.ticket_class.event.name}"
+                f"{self.ticket.ticket_class.showing.event.name}"
             ),
             emails=[self.sender_email, self.receiver_email],
             context=context,
@@ -2081,3 +2149,60 @@ def user_create(sender, instance, created, **kwargs):
 def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+
+
+class RegistrationQueueSettings(models.Model):
+    """
+    Singleton model to store registration queue settings.
+    Only one instance of this model should exist.
+    """
+
+    SINGLETON_PK = 1
+
+    reapproval_queue_open = models.BooleanField(
+        default=True,
+        help_text="Controls whether existing clubs can submit for reapproval",
+    )
+    new_approval_queue_open = models.BooleanField(
+        default=True, help_text="Controls whether new clubs can submit for approval"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="modified_queue_settings",
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to ensure this is a singleton.
+        """
+        if self.pk and self.pk != self.SINGLETON_PK:
+            raise ValueError("Use get() to retrieve singleton instance")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """
+        Prevent deletion of singleton instance.
+        """
+        if self.pk and self.pk == self.SINGLETON_PK:
+            raise ValueError("Cannot delete singleton instance")
+
+    @classmethod
+    def create(cls, **kwargs):
+        """
+        Prevent creation of new singleton instance.
+        """
+        raise ValueError("Use get() to retrieve singleton instance")
+
+    @classmethod
+    def get(cls):
+        """
+        Get or create singleton instance of QueueSettings.
+        """
+        if cls.objects.count() > 1:
+            raise ValueError("Multiple instances of RegistrationQueueSettings found")
+        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+        return obj

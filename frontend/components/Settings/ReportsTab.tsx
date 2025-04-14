@@ -16,7 +16,7 @@ type ReportsProps = {
 
 const ReportsTab = ({
   reports: initialReports,
-}: ReportsProps): ReactElement => {
+}: ReportsProps): ReactElement<any> => {
   const [reports, setReports] = useState<Report[]>(initialReports ?? [])
   const permission = apiCheckPermission('clubs.generate_reports')
 
