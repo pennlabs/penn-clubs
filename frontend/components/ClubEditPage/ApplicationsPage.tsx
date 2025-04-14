@@ -445,7 +445,7 @@ export default function ApplicationsPage({
                 status:
                   APPLICATION_STATUS_TYPES.find(
                     (status) => status.value === response.status,
-                  )?.label + (response.notified && ' (notified)'),
+                  )?.label + (response.notified ? ' (notified)' : ''),
                 created_at: moment(response.created_at)
                   .tz('America/New_York')
                   .format('LLL'),
