@@ -1086,8 +1086,6 @@ class JoinRequest(models.Model):
     )
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="%(class)ss")
 
-    withdrawn = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1100,6 +1098,8 @@ class MembershipRequest(JoinRequest):
     """
     Used when users are not in the club but request membership from the owner
     """
+
+    withdrawn = models.BooleanField(default=False)
 
     def __str__(self):
         return f"<MembershipRequest: {self.requester.username} for {self.club.code}>"
@@ -1131,6 +1131,18 @@ class OwnershipRequest(JoinRequest):
     """
     Represents a user's request to take ownership of a club
     """
+
+    PENDING = 1
+    WITHDRAWN = 2
+    DENIED = 3
+    ACCEPTED = 4
+    STATUS_TYPES = (
+        (PENDING, "Pending"),
+        (WITHDRAWN, "Withdrawn"),
+        (DENIED, "Denied"),
+        (ACCEPTED, "Accepted"),
+    )
+    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
 
     def __str__(self):
         return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"

@@ -3085,7 +3085,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 204], resp.content)
         self.assertEqual(
             OwnershipRequest.objects.filter(
-                club=self.club1, requester=self.user2, withdrawn=True
+                club=self.club1, requester=self.user2, status=OwnershipRequest.WITHDRAWN
             ).count(),
             1,
         )
@@ -3170,9 +3170,16 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(
             OwnershipRequest.objects.filter(
-                club=self.club1, requester=self.user2
+                club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
             ).count(),
             0,
+        )
+
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2, status=OwnershipRequest.ACCEPTED
+            ).count(),
+            1,
         )
 
         self.assertEqual(
@@ -3227,9 +3234,16 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(
             OwnershipRequest.objects.filter(
-                club=self.club1, requester=self.user2
+                club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
             ).count(),
             0,
+        )
+
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2, status=OwnershipRequest.DENIED
+            ).count(),
+            1,
         )
 
         self.assertEqual(
