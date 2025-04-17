@@ -569,7 +569,7 @@ class RenewalTestCase(TestCase):
             call_command("populate", stdout=f)
 
         # run deactivate script
-        call_command("deactivate", "all", "--force")
+        call_command("deactivate", "--force", "--email")
 
         # ensure all clubs are deactivated
         active_statuses = Club.objects.all().values_list("active", flat=True)
@@ -608,12 +608,12 @@ class RenewalTestCase(TestCase):
                 "but did not exist!"
             )
 
-        # send out reminder emails
+        # do not send out any emails
         current_email_count = len(mail.outbox)
 
-        call_command("deactivate", "remind", "--force")
+        call_command("deactivate", "--force")
 
-        self.assertGreater(len(mail.outbox), current_email_count)
+        self.assertEqual(len(mail.outbox), current_email_count)
 
     @override_settings(
         CACHES={  # don't want to clear prod cache while testing
@@ -638,7 +638,7 @@ class RenewalTestCase(TestCase):
         cache_key = f"clubs:{club.id}-anon"
         self.assertIsNotNone(caches["default"].get(cache_key))
 
-        call_command("deactivate", "all", "--force")
+        call_command("deactivate", "--force")
 
         # club should no longer be cached
         self.assertIsNone(caches["default"].get(cache_key))

@@ -1200,7 +1200,7 @@ class ClubTestCase(TestCase):
         # club is approved before deactivation
         self.assertTrue(self.club1.approved)
 
-        call_command("deactivate", "all", "--force")
+        call_command("deactivate", "--force")
 
         club = self.club1
         club.refresh_from_db()
@@ -2357,7 +2357,7 @@ class ClubTestCase(TestCase):
     def test_club_renew(self):
         # run deactivate script
         with open(os.devnull, "w") as f:
-            call_command("deactivate", "all", "--force", stdout=f)
+            call_command("deactivate", "--force", stdout=f)
 
         # count already sent emails
         mail_count = len(mail.outbox)
