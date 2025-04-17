@@ -30,7 +30,9 @@ type Invite = {
   updated_at: string
 }
 
-export default function InviteCard({ club }: InviteCardProps): ReactElement {
+export default function InviteCard({
+  club,
+}: InviteCardProps): ReactElement<any> {
   const [invites, setInvites] = useState<Invite[]>([])
   const [inviteTitle, setInviteTitle] = useState<string>(
     OBJECT_MEMBERSHIP_DEFAULT_TITLE,
@@ -45,7 +47,7 @@ export default function InviteCard({ club }: InviteCardProps): ReactElement {
   const [isInviting, setInviting] = useState<boolean>(false)
 
   const notify = (
-    msg: ReactElement | string,
+    msg: ReactElement<any> | string,
     type: TypeOptions = 'info',
   ): void => {
     toast[type](msg)

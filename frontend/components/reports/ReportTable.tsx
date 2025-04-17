@@ -35,7 +35,7 @@ const ReportTable = ({
   onRun,
   onEdit,
   onDelete,
-}: ReportTableProps): ReactElement => {
+}: ReportTableProps): ReactElement<any> => {
   return (
     <div style={{ padding: '2em' }}>
       <table className="table" style={{ width: '100%' }}>

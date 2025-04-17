@@ -8,7 +8,13 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
 
-from clubs.models import Club, ClubApplication, Membership, send_mail_helper
+from clubs.models import (
+    Club,
+    ClubApplication,
+    Membership,
+    RegistrationQueueSettings,
+    send_mail_helper,
+)
 
 
 class Command(BaseCommand):
@@ -96,7 +102,11 @@ class Command(BaseCommand):
         group_name = "Approvers"
 
         # only send notifications if it is currently a weekday
-        if now.isoweekday() not in range(1, 6) or not settings.REAPPROVAL_QUEUE_OPEN:
+        queue_settings = RegistrationQueueSettings.get()
+        if (
+            now.isoweekday() not in range(1, 6)
+            or not queue_settings.reapproval_queue_open
+        ):
             return False
 
         # get users in group to send notification to

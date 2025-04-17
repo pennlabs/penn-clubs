@@ -26,7 +26,7 @@ type ClubListProps = {
   club: Club
 }
 
-const ClubList = ({ club }: ClubListProps): ReactElement => {
+const ClubList = ({ club }: ClubListProps): ReactElement<any> => {
   const { name, subtitle, tags, code } = club
   const img = club.image_url || getDefaultClubImageURL()
 

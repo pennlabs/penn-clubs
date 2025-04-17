@@ -59,7 +59,7 @@ type ClubManagementCardProps = {
 
 const ClubManagementCard = ({
   club,
-}: ClubManagementCardProps): ReactElement => {
+}: ClubManagementCardProps): ReactElement<any> => {
   const [badges, setBadges] = useState<Badge[] | null>(null)
   const [activeBadge, setActiveBadge] = useState<Badge | null>(null)
   const [clubs, setClubs] = useState<Club[] | null>(null)

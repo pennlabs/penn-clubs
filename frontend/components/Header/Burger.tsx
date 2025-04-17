@@ -1,6 +1,6 @@
 import { ReactElement } from 'react'
 
-const Burger = ({ toggle }: BurgerProps): ReactElement => (
+const Burger = ({ toggle }: BurgerProps): ReactElement<any> => (
   <a
     role="button"
     className="navbar-burger burger"

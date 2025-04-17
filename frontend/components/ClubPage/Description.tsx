@@ -17,7 +17,7 @@ type Props = {
   club: Club
 }
 
-const Description = ({ club }: Props): ReactElement => (
+const Description = ({ club }: Props): ReactElement<any> => (
   <Wrapper>
     <div style={{ width: '100%' }}>
       <StrongText>Club Mission</StrongText>

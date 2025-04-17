@@ -13,7 +13,11 @@ const Toggle = styled.div`
   cursor: pointer;
 `
 
-const MemberList = ({ club: { members } }: { club: Club }): ReactElement => {
+const MemberList = ({
+  club: { members },
+}: {
+  club: Club
+}): ReactElement<any> => {
   const [expanded, setExpanded] = useState(false)
   const hasMembers = members.length > 0
   return hasMembers ? (

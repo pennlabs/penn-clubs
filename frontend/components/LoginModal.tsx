@@ -24,7 +24,7 @@ type Props = {
   closeModal: () => void
 }
 
-const LoginModal = ({ show, ...props }: Props): ReactElement => {
+const LoginModal = ({ show, ...props }: Props): ReactElement<any> => {
   const [newlyMounted, setNewlyMounted] = useState(true)
   useEffect(() => {
     newlyMounted && setNewlyMounted(false)

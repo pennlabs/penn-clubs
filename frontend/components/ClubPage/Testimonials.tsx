@@ -46,7 +46,7 @@ type TestimonialsProps = {
   data: Testimonial[]
 }
 
-const Testimonials = (props: TestimonialsProps): ReactElement | null => {
+const Testimonials = (props: TestimonialsProps): ReactElement<any> | null => {
   const { data: originalData } = props
 
   const [data, setData] = useState<Testimonial[] | null>(null)

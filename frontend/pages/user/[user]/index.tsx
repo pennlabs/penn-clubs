@@ -34,7 +34,11 @@ type UserProfilePageProps = {
   userInfo?: UserInfo
 }
 
-const GraduationYearTag = ({ year }: { year: number | null }): ReactElement => {
+const GraduationYearTag = ({
+  year,
+}: {
+  year: number | null
+}): ReactElement<any> => {
   const now = getCurrentSchoolYear() + 1
   if (year == null || typeof year !== 'number') {
     return <span className="tag is-light ml-1">Unknown</span>
@@ -75,7 +79,7 @@ const UserProfilePage = ({
   profile,
   authenticated,
   userInfo,
-}: UserProfilePageProps): ReactElement => {
+}: UserProfilePageProps): ReactElement<any> => {
   if ('detail' in profile) {
     return (
       <>

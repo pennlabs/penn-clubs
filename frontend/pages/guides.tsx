@@ -16,7 +16,7 @@ type GuideListPageProps = {
   guides: string[]
 }
 
-const GuideListPage = ({ guides }: GuideListPageProps): ReactElement => {
+const GuideListPage = ({ guides }: GuideListPageProps): ReactElement<any> => {
   return (
     <Container fullHeight background={SNOW}>
       <Metadata title="Guide List" />

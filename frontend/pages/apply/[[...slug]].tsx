@@ -17,7 +17,7 @@ function ApplyDashboard({
 }: {
   whartonapplications: any
   submissions: Array<ApplicationSubmission>
-}): ReactElement {
+}): ReactElement<any> {
   const router = useRouter()
   const tabs = [
     {

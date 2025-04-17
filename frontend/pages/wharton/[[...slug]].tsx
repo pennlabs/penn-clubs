@@ -17,7 +17,7 @@ function WhartonDashboard({
   userInfo,
   whartonapplications,
   statuses,
-}): ReactElement {
+}): ReactElement<any> {
   if (!userInfo) {
     return <AuthPrompt />
   }

@@ -39,7 +39,7 @@ const QuestionText = styled.div`
   line-height: 1.5;
 `
 
-const Question = ({ title, children }: QuestionProps): ReactElement => (
+const Question = ({ title, children }: QuestionProps): ReactElement<any> => (
   <>
     <StrongText style={{ marginBottom: '0.5rem' }}>{title}</StrongText>
     <QuestionText>{children}</QuestionText>
@@ -52,7 +52,7 @@ const UnorderedList = styled.ul`
   margin-top: 0.5rem;
 `
 
-const THANKS_CONTENT = (): ReactElement => (
+const THANKS_CONTENT = (): ReactElement<any> => (
   <Question title="Special Thanks">
     Thank you to the organizations below for their support in launching{' '}
     {SITE_NAME}! We're excited to continue building this valuable resource
@@ -83,7 +83,7 @@ const THANKS_CONTENT = (): ReactElement => (
   </Question>
 )
 
-const GENERIC_TEMPLATE = (data): ReactElement => (
+const GENERIC_TEMPLATE = (data): ReactElement<any> => (
   <div>
     <Question title={`What is ${SITE_NAME}?`}>
       {SITE_ID === 'fyh' ? (

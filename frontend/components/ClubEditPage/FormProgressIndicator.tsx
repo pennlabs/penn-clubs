@@ -56,7 +56,7 @@ const FormProgressIndicator = ({
   step,
   steps,
   onStepClick = () => undefined,
-}: FormProgressIndicatorProps): ReactElement => {
+}: FormProgressIndicatorProps): ReactElement<any> => {
   return (
     <StepContainer className="has-text-centered">
       {steps.map(({ name }, i) => (

@@ -66,7 +66,7 @@ type OptionalProfileLinkProps = React.PropsWithChildren<{
 const OptionalProfileLink = ({
   username,
   children,
-}: OptionalProfileLinkProps): ReactElement => {
+}: OptionalProfileLinkProps): ReactElement<any> => {
   const router = useRouter()
 
   if (username != null) {
@@ -89,7 +89,7 @@ const OptionalProfileLink = ({
   return <>{children}</>
 }
 
-const MemberCard = ({ account }: Props): ReactElement => {
+const MemberCard = ({ account }: Props): ReactElement<any> => {
   const { email, name, title, username } = account
   return (
     <OptionalProfileLink username={username}>

@@ -11,7 +11,7 @@ type MembershipRequest = {
   club_name: string
 }
 
-const MembershipRequestsTab = (): ReactElement => {
+const MembershipRequestsTab = (): ReactElement<any> => {
   const [requests, setRequests] = useState<MembershipRequest[] | null>(null)
 
   const fetchTable = (): void => {

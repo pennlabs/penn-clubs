@@ -31,7 +31,7 @@ export const ReportsPageContainer = ({
   authenticated: boolean | null
   title: ReactNode
   buttons: ReactNode
-}>): ReactElement => {
+}>): ReactElement<any> => {
   const permission = apiCheckPermission('clubs.generate_reports')
 
   if (authenticated === false || !permission) {
@@ -89,7 +89,7 @@ export const EditReportPage = ({
   authenticated,
   badges,
   tags,
-}: EditReportPageProps): ReactElement => {
+}: EditReportPageProps): ReactElement<any> => {
   const fields = Object.entries(nameToCode).map(([key, value]) => [
     titleize(key),
     Object.entries(value),

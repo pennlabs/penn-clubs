@@ -27,14 +27,16 @@ export const getServerSideProps = (async (ctx) => {
     headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
   }
   const dateRange = getDefaultDateRange()
+
+  // is currently lax on timings: doesn't technically check if a single EventShowing actually happens in the time range
+  // only that there are events in the vincinity (edge case where time range is between two events in the past and distant future)
   const params = new URLSearchParams({
     // eslint-disable-next-line camelcase
-    start_time__gte: dateRange.start.toISO(),
+    latest_start_time__gte: dateRange.start.toISO(),
     // eslint-disable-next-line camelcase
-    end_time__lte: dateRange.end.toISO(),
+    earliest_end_time__lte: dateRange.end.toISO(),
     format: 'json',
   })
-  // TODO: Add caching
   const [baseProps, clubs, events] = await Promise.all([
     getBaseProps(ctx),
     doApiRequest('/clubs/directory/?format=json', data).then(
@@ -47,7 +49,7 @@ export const getServerSideProps = (async (ctx) => {
   const clubMap = new Map(clubs.map((club) => [club.code, club]))
   const eventsWithClubs = events.map((event) => ({
     ...event,
-    club: event.club ? clubMap.get(event.club) ?? null : null,
+    club: event.club ? (clubMap.get(event.club) ?? null) : null,
     clubPublic: event.club == null || clubMap.get(event.club) !== undefined,
   }))
   return {
@@ -92,8 +94,8 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
   const { pastEvents, liveEvents, upcomingEvents } = useMemo(() => {
     const map = classify(events, (event) => {
       const now = DateTime.local()
-      const startDate = DateTime.fromISO(event.start_time)
-      const endDate = DateTime.fromISO(event.end_time)
+      const startDate = DateTime.fromISO(event.earliest_start_time!)
+      const endDate = DateTime.fromISO(event.latest_end_time!)
       if (endDate < now) return 'past'
       if (startDate <= now && now <= endDate) return 'live'
       return 'upcoming'
@@ -120,6 +122,8 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
                     ...event,
                     club: event.club?.code ?? null,
                   }}
+                  start_time={event.earliest_start_time ?? ''}
+                  end_time={event.latest_end_time ?? ''}
                 />
               </Link>
             </div>
@@ -136,7 +140,8 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
                     ...event,
                     club: event.club?.code ?? null,
                   }}
-                  key={event.id}
+                  start_time={event.earliest_start_time ?? ''}
+                  end_time={event.latest_end_time ?? ''}
                 />
               </Link>
             </div>
