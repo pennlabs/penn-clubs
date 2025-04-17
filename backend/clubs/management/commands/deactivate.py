@@ -17,7 +17,8 @@ class Command(BaseCommand):
             "--force",
             dest="force",
             action="store_true",
-            help="Do not prompt for confirmation, just start the club renewal process.",
+            help="Do not prompt for confirmation, just start the club renewal process. "
+            "Necessary if running via web interface.",
         )
         parser.add_argument(
             "--clubs",
@@ -34,22 +35,16 @@ class Command(BaseCommand):
             "currently open and clubs will be notified of the specified open date "
             "in plain text (e.g. put the string 'August 24, 2025').",
         )
-
         parser.add_argument(
-            "action",
-            default="all",
-            choices=["deactivate", "emails", "all"],
-            type=str,
-            help="Specify the actions that you want to take, "
-            "either only deactivating the clubs, only sending the notification emails, "
-            "or performing both actions.",
+            "--email",
+            default=False,
+            help="If set, then notification emails will be sent out to affected clubs "
+            "in addition to deactivating them. Please use the email blast command "
+            "if you wish to solely send out reminders without deactivating clubs.",
         )
 
     def handle(self, *args, **kwargs):
-        action = kwargs["action"]
-
-        deactivate_clubs = action in {"deactivate", "all"}
-        send_emails = action in {"emails", "all"}
+        send_emails = kwargs["email"]
 
         # if queue open date is specified but queue is already open, error
         queue_settings = RegistrationQueueSettings.get()
@@ -87,30 +82,29 @@ class Command(BaseCommand):
             clubs = Club.objects.filter(code__in=kwargs["club"].strip().split(","))
 
         # deactivate all clubs
-        if deactivate_clubs:
-            num_ghosted = 0
+        num_ghosted = 0
 
-            with transaction.atomic():
-                for club in clubs:
-                    club.active = False
-                    club.approved = None
-                    club.approved_by = None
+        with transaction.atomic():
+            for club in clubs:
+                club.active = False
+                club.approved = None
+                club.approved_by = None
 
-                    # allow existing approved version to stay on website for now
-                    if club.history.filter(approved=True).exists():
-                        club.ghost = True
-                        club._change_reason = (
-                            "Mark pending approval (yearly renewal process)"
-                        )
-                        num_ghosted += 1
+                # allow existing approved version to stay on website for now
+                if club.history.filter(approved=True).exists():
+                    club.ghost = True
+                    club._change_reason = (
+                        "Mark pending approval (yearly renewal process)"
+                    )
+                    num_ghosted += 1
 
-                    club.save()
-                    cache.delete(f"clubs:{club.id}-authed")  # clear cache
-                    cache.delete(f"clubs:{club.id}-anon")
+                club.save()
+                cache.delete(f"clubs:{club.id}-authed")  # clear cache
+                cache.delete(f"clubs:{club.id}-anon")
 
-            self.stdout.write(
-                f"{clubs.count()} clubs deactivated! {num_ghosted} clubs ghosted!"
-            )
+        self.stdout.write(
+            f"{clubs.count()} clubs deactivated! {num_ghosted} clubs ghosted!"
+        )
 
         # send out renewal emails to all clubs
         if send_emails:
