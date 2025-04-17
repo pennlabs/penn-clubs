@@ -37,7 +37,8 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--email",
-            default=False,
+            dest="email",
+            action="store_true",
             help="If set, then notification emails will be sent out to affected clubs "
             "in addition to deactivating them. Please use the email blast command "
             "if you wish to solely send out reminders without deactivating clubs.",
