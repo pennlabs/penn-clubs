@@ -6,5 +6,4 @@ uv run /app/manage.py migrate --noinput
 # Switch to project folder
 cd /app/
 
-# Run Daphne
-uv run gunicorn -b 0.0.0.0:80 -w 4 -k uvicorn.workers.UvicornWorker pennclubs.asgi:application
+uv run uwsgi --ini ./setup.cfg --listen 1000

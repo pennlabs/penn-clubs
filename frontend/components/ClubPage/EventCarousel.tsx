@@ -7,7 +7,7 @@ import styled from 'styled-components'
 import { Navigation, Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
 
-import { ClubEvent } from '../../types'
+import { ClubEvent, EventShowing } from '../../types'
 import { Icon, StrongText } from '../common'
 import Modal from '../common/Modal'
 import EventCard from '../EventPage/EventCard'
@@ -32,14 +32,23 @@ const CarouselWrapper = styled.div`
 `
 
 type EventsProps = {
-  data: ClubEvent[]
+  events: ClubEvent[]
 }
 
-const EventCarousel = ({ data }: EventsProps) => {
-  const [show, setShow] = useState(false)
-  const [modalData, setModalData] = useState<ClubEvent>()
+type EventShowingWithEvent = EventShowing & { event: ClubEvent }
 
-  const showModal = (entry: ClubEvent) => {
+const EventCarousel = ({ events }: EventsProps) => {
+  const [show, setShow] = useState(false)
+  const [modalData, setModalData] = useState<EventShowingWithEvent>()
+
+  // flatten showings and set showing.event to the event
+  const showings: EventShowingWithEvent[] = events
+    .filter((event) => event.showings)
+    .flatMap((event) =>
+      event.showings!.map((showing) => ({ ...showing, event })),
+    )
+
+  const showModal = (entry: EventShowingWithEvent) => {
     setModalData(entry)
     setShow(true)
   }
@@ -67,7 +76,7 @@ const EventCarousel = ({ data }: EventsProps) => {
           centeredSlidesBounds
           slidesPerView="auto"
         >
-          {data.map((entry, index) => (
+          {showings.map((entry, index) => (
             <SwiperSlide
               key={index}
               style={{
@@ -77,7 +86,11 @@ const EventCarousel = ({ data }: EventsProps) => {
               }}
               onClick={() => showModal(entry)}
             >
-              <EventCard event={entry} key={index} />
+              <EventCard
+                event={entry.event!}
+                start_time={entry.start_time}
+                end_time={entry.end_time}
+              />
             </SwiperSlide>
           ))}
         </Swiper>
@@ -90,7 +103,13 @@ const EventCarousel = ({ data }: EventsProps) => {
       </Arrow>
       {show && (
         <Modal show={show} closeModal={hideModal} marginBottom={false}>
-          {modalData && <EventModal event={modalData} />}
+          {modalData && (
+            <EventModal
+              event={modalData.event!}
+              start_time={modalData.start_time}
+              end_time={modalData.end_time}
+            />
+          )}
         </Modal>
       )}
     </div>

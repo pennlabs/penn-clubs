@@ -30,6 +30,7 @@ from clubs.models import (
     ClubApplication,
     ClubFair,
     Event,
+    EventShowing,
     Favorite,
     Membership,
     MembershipInvite,
@@ -127,7 +128,11 @@ class ImportCalendarTestCase(TestCase):
 
         call_command("import_calendar_events")
 
-        self.assertGreaterEqual(self.club1.events.count(), 25)
+        event_count = self.club1.events.count()
+        self.assertGreaterEqual(event_count, 25)
+
+        showing_count = EventShowing.objects.filter(event__club=self.club1).count()
+        self.assertEqual(showing_count, event_count)
 
     def test_import_nonstandard_ics(self):
         """
@@ -144,6 +149,9 @@ class ImportCalendarTestCase(TestCase):
         self.assertIsNotNone(ev)
         self.assertEqual(ev.name, "Just a Test")
 
+        showing = EventShowing.objects.filter(event=ev).first()
+        self.assertIsNotNone(showing)
+
     def test_import_calendar_events(self):
         """
         Test importing a standard ICS file generated from the ICS python library.
@@ -156,6 +164,7 @@ class ImportCalendarTestCase(TestCase):
             m.assert_called_with(self.club1.ics_import_url)
 
         desired = self.club1.events.first()
+        showing = EventShowing.objects.filter(event=desired).first()
 
         # ensure event exists with right values
         self.assertIsNotNone(desired)
@@ -165,10 +174,10 @@ class ImportCalendarTestCase(TestCase):
         # ensure difference between calendar date and imported date is
         # less than one second
         self.assertLessEqual(
-            abs(desired.start_time - now), datetime.timedelta(seconds=1)
+            abs(showing.start_time - now), datetime.timedelta(seconds=1)
         )
         self.assertLessEqual(
-            desired.end_time - (now + datetime.timedelta(minutes=60)),
+            showing.end_time - (now + datetime.timedelta(minutes=60)),
             datetime.timedelta(seconds=1),
         )
 
@@ -532,14 +541,18 @@ class RankTestCase(TestCase):
 
         now = timezone.now()
 
-        # add an event
-        Event.objects.create(
+        # add an event and correpsonding showing
+        event = Event.objects.create(
             code="test-event-1",
             name="Test Event 1",
             club=Club.objects.first(),
+            description="This is a test event!",
+        )
+
+        EventShowing.objects.create(
+            event=event,
             start_time=now,
             end_time=now + datetime.timedelta(hours=2),
-            description="This is a test event!",
         )
 
         # run the rank command

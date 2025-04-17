@@ -5,6 +5,7 @@ import { Container, Icon, Title } from 'components/common'
 import { Field, Form, Formik } from 'formik'
 import moment from 'moment'
 import { NextPageContext } from 'next'
+import Link from 'next/link'
 import { type JSX, ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
@@ -116,6 +117,24 @@ const ApplicationPage = ({
 }): ReactElement<any> => {
   if (!userInfo) {
     return <AuthPrompt />
+  } else if (club.detail) {
+    return (
+      <Container paddingTop>
+        <Title>Club Not Found</Title>
+        <p>
+          Back to <Link href="/">Home</Link>.
+        </p>
+      </Container>
+    )
+  } else if (application.detail) {
+    return (
+      <Container paddingTop>
+        <Title>Application Not Found</Title>
+        <p>
+          Back to <Link href={`/club/${club.code}`}>{club.name}</Link>.
+        </p>
+      </Container>
+    )
   }
 
   // Second condition will be replaced with perms check or question nullity check once backend is updated
