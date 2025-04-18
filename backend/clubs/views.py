@@ -1241,6 +1241,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         cache.delete(f"clubs:{club.id}-authed")
         cache.delete(f"clubs:{club.id}-anon")
 
+        # check if reapproval queue is open
+        queue_settings = RegistrationQueueSettings.get()
+        relevant_queue_open = (
+            queue_settings.reapproval_queue_open
+            if club.image is not None
+            else queue_settings.approval_queue_open
+        )
+        if not request.user.has_perm("clubs.approve_club") and not relevant_queue_open:
+            raise PermissionDenied(
+                "The approval queue is not currently open for editing club images."
+            )
+
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
         if status.is_success(resp.status_code):
