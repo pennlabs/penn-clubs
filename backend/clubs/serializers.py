@@ -1638,6 +1638,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             and self.validated_data["approved"] is None
         ):
             needs_reapproval = True
+        elif (
+            # if setting club to be active and not already approved,
+            # then it constitutes a re-approval
+            "active" in self.validated_data
+            and self.validated_data["active"] is True
+            and self.instance
+            and self.instance.active is False
+            and self.instance.approved is not True
+        ):
+            needs_reapproval = True
 
         # if the editing user has approval permissions, skip the approval process
         request = self.context.get("request", None)
