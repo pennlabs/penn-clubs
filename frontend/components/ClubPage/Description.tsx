@@ -39,8 +39,10 @@ type ClubDiff = {
 }
 
 const Description = ({ club }: DescProps): ReactElement => {
+
   const [diffs, setDiffs] = useState<ClubDiff | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
+  const canDeleteClub = apiCheckPermission('clubs.delete_club')
 
   const NewDescription = () => {
     return (
@@ -59,7 +61,8 @@ const Description = ({ club }: DescProps): ReactElement => {
     )
   }
 
-  if (!canApprove) {
+
+  if (!canApprove || club.approved == false) {
     return <NewDescription />
   }
 
