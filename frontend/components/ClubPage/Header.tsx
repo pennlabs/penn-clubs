@@ -54,7 +54,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
     )
   }
 
-  if (!canApprove || club.approved == false) {
+  if (!canApprove || club.approved === false) {
     return <NewHeader />
   }
 
