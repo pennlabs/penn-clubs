@@ -197,7 +197,9 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
 
   const [club, setClub] = useState<Club>(initialClub)
   const [step, setStep] = useState<number>(0)
-  const [changeStatus, setChangeStatus] = useState<boolean>(false)
+  const [changeStatusError, setChangeStatusError] = useState<string | null>(
+    null,
+  )
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement<any> | null
   >(null)
@@ -478,15 +480,22 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             body: {
               active: true,
             },
+          }).then((resp) => {
+            if (resp.ok) {
+              setChangeStatusError(null)
+            } else {
+              resp.json().then((res) => {
+                setChangeStatusError(res.detail || 'An unknown error occurred')
+              })
+            }
           })
-          setChangeStatus(true)
         } catch (e) {
-          setChangeStatus(false)
+          setChangeStatusError('Connection Error')
         }
       },
       content: () => (
         <>
-          {changeStatus ? (
+          {changeStatusError === null ? (
             <>
               <FinishedText>🎉 Congratulations! 🎉</FinishedText>
               <TextInfoBox>
@@ -508,8 +517,9 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
               <TextInfoBox>
                 <p>
                   An error occured while submitting your {OBJECT_NAME_SINGULAR}{' '}
-                  approval form. Please contact <Contact /> and we'll help you
-                  resolve your issue.
+                  approval form: {changeStatusError}. If this is unexpected,
+                  please contact <Contact /> and we'll help you resolve your
+                  issue.
                 </p>
                 <p>Alternatively, you can refresh this page and try again.</p>
               </TextInfoBox>
