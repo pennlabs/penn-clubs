@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
@@ -84,11 +83,11 @@ const QueueTableModal = ({
 
 type QueueTableProps = {
   clubs: Club[] | null
+  refetchClubs?: () => void
 }
 /* TODO: refactor with Table component when render and search
 functionality are disconnected */
-const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
-  const router = useRouter()
+const QueueTable = ({ clubs, refetchClubs }: QueueTableProps): ReactElement => {
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [approve, setApprove] = useState<boolean>(false)
@@ -112,7 +111,12 @@ const QueueTable = ({ clubs }: QueueTableProps): ReactElement => {
             },
           }),
         ),
-    ).then(router.reload)
+    ).then(() => {
+      setLoading(false)
+      setSelectedCodes([])
+      setShowModal(false)
+      if (refetchClubs) refetchClubs()
+    })
   }
 
   return (
@@ -346,27 +350,31 @@ const QueueTab = (): ReactElement => {
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
 
+  function refetchClubs() {
+    doApiRequest('/clubs/?active=true&approved=none&format=json')
+      .then((resp) => resp.json())
+      .then(setPendingClubs)
+
+    doApiRequest('/clubs/?active=true&approved=false&format=json')
+      .then((resp) => resp.json())
+      .then(setRejectedClubs)
+
+    doApiRequest('/clubs/?active=false&format=json')
+      .then((resp) => resp.json())
+      .then(setInactiveClubs)
+
+    doApiRequest('/clubs/?active=true&approved=true&format=json')
+      .then((resp) => resp.json())
+      .then(setApprovedClubs)
+
+    doApiRequest('/clubs/directory/?format=json')
+      .then((resp) => resp.json())
+      .then((data) => setAllClubs(data.map((club: Club) => club.approved)))
+  }
+
   useEffect(() => {
     if (canApprove) {
-      doApiRequest('/clubs/?active=true&approved=none&format=json')
-        .then((resp) => resp.json())
-        .then(setPendingClubs)
-
-      doApiRequest('/clubs/?active=true&approved=false&format=json')
-        .then((resp) => resp.json())
-        .then(setRejectedClubs)
-
-      doApiRequest('/clubs/?active=false&format=json')
-        .then((resp) => resp.json())
-        .then(setInactiveClubs)
-
-      doApiRequest('/clubs/?active=true&approved=true&format=json')
-        .then((resp) => resp.json())
-        .then(setApprovedClubs)
-
-      doApiRequest('/clubs/directory/?format=json')
-        .then((resp) => resp.json())
-        .then((data) => setAllClubs(data.map((club: Club) => club.approved)))
+      refetchClubs()
     }
   }, [])
 
@@ -433,7 +441,7 @@ const QueueTab = (): ReactElement => {
           {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
         </li>
       </ul>
-      <QueueTable clubs={pendingClubs} />
+      <QueueTable clubs={pendingClubs} refetchClubs={refetchClubs} />
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {OBJECT_NAME_PLURAL} that have been

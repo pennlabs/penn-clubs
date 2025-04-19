@@ -2097,6 +2097,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if (
             cached_object
             and not self.request.user.groups.filter(name="Approvers").exists()
+            and not self.request.user.has_perm("clubs.approve_club")
         ):
             return Response(cached_object)
 
@@ -2201,8 +2202,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             ),
             latest_approved_image=Subquery(
                 latest_approved_version_qs.values("image")[:1]
-            ),
-            description_difference=Subquery(latest_version_qs.values("name")[:1]),
+            )
         )
 
         return qs
@@ -2235,6 +2235,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                                     type: string
                                                     description: >
                                                         New name of the club
+                                                diff:
+                                                    type: string
+                                                    description: >
+                                                        Diffed name of the club
                                         description:
                                             type: object
                                             description: >

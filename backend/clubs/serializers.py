@@ -1236,21 +1236,25 @@ class StudentTypeSerializer(serializers.ModelSerializer):
 
 
 def diff_calculator(latest_approved_description, latest_description):
+    """
+    Calculates difference between two HTML strings and
+      returns a diff string visualizing them
+      """
+
     if latest_approved_description == latest_description:
         return latest_description
-    # Get the diff between old and new HTML
+
+    """
+    Retrieve the difference between the two HTML strings
+    """
     html_text = diff(latest_approved_description, latest_description)
     soup = BeautifulSoup(html_text, "html.parser")
 
-    # remove background-color from all elements
+    """
+    Strip original background from all elements and apply diff highlighting
+    """
     for tag in soup.find_all(style=True):
-        tag["style"] = re.sub(
-            r"background-color:\s*[^;]+;?\s*", "", tag["style"]
-        ).strip()
-        if not tag["style"]:  # If the style attribute is now empty, remove it
-            del tag["style"]
-
-    # apply new background color to children of del tags
+        tag["style"] = diff_regex_helper(tag["style"])
     for tag in soup.find_all(["del", "ins"]):
         bg_color = "#ffbdbd" if tag.name == "del" else "#dafdd5"
         for child in tag.find_all(True):
@@ -1258,33 +1262,40 @@ def diff_calculator(latest_approved_description, latest_description):
                 child.get("style", "") + f"; background-color: {bg_color};"
             ).strip("; ")
 
-    # unwrap nested <del> tags inside <ins> and vice versa
+    """
+    Unwrap nested <del> tags inside <ins> and vice versa
+    """
     for del_tag in soup.find_all("del"):
         for nested_ins in del_tag.find_all("ins"):
-            nested_ins.unwrap()  # Removes the <ins> tag but keeps its content
+            nested_ins.unwrap()
     for ins_tag in soup.find_all("ins"):
         for nested_del in ins_tag.find_all("del"):
-            nested_del.unwrap()  # Removes the <del> tag but keeps its content
+            nested_del.unwrap()
 
-    # highlight / style the <del> and <ins> tags
+
+    """
+    Highlight and style the del and ins tags
+    """
     for tag in soup.find_all(["del", "ins"]):
         if tag.name == "del":
             tag["style"] = (
-                "text-decoration: none; background-color: #ffbdbd; opacity: 0.3;"
+                "text-decoration: none; background-color: #ffbdbd; opacity: 0.8;"
             )
         elif tag.name == "ins":
             tag["style"] = (
                 "text-decoration: none; background-color: #dafdd5; opacity: 1;"
             )
 
-    # Color content with same content but different tag yellow
+    """
+    Color new content with a green highlight
+    Color removed content with a red highlight
+    Color resized content with a yellow highlight
+    """
     for del_tag in soup.find_all("del"):
         next_tag = del_tag.find_next_sibling("ins")
         if next_tag and next_tag.get_text() == del_tag.get_text():
             del_tag.decompose()
-            next_tag["style"] = re.sub(
-                r"background-color:\s*[^;]+;?\s*", "", next_tag.get("style", "")
-            )
+            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
             next_tag["style"] = (
                 next_tag.get("style", "") + " background-color: #fff2bd;"
             )
@@ -1294,16 +1305,14 @@ def diff_calculator(latest_approved_description, latest_description):
         next_tag = ins_tag.find_next_sibling("del")
         if next_tag and next_tag.get_text() == ins_tag.get_text():
             next_tag.decompose()
-            next_tag["style"] = re.sub(
-                r"background-color:\s*[^;]+;?\s*", "", next_tag.get("style", "")
-            )
+            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
             ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
             for child in next_tag.find_all(True):
                 child["style"] = child.get("style", "") + " background-color: #fff2bd;"
-
-    # convert soup back to a string and return
     return str(soup)
 
+def diff_regex_helper(text):
+    return re.sub(r"background-color:\s*[^;]+;?\s*", "", text)
 
 def social_validation_helper(value, domain, prefix="", at_prefix=None):
     """
