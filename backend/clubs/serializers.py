@@ -4,6 +4,7 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 import bleach
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -13,6 +14,7 @@ from django.db import models
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from html_diff import diff
 from rest_framework import serializers, validators
 from simple_history.utils import update_change_reason
 
@@ -967,6 +969,45 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
 
 
+class ClubDiffSerializer(serializers.ModelSerializer):
+    diff = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Club
+        fields = ["code"]
+
+    def to_representation(self, instance):
+        fields = ["name", "description", "image"]
+        diff = {}
+        is_same = True
+        for field in fields:
+            diff[field] = {
+                "old": getattr(instance, f"latest_approved_{field}", None),
+                "new": getattr(instance, f"latest_{field}", None),
+            }
+            if diff[field]["old"] != diff[field]["new"]:
+                is_same = False
+
+        latest_approved_description = diff["description"]["old"] or ""
+        latest_description = diff["description"]["new"] or ""
+        latest_approved_title = diff["name"]["old"] or ""
+        latest_title = diff["name"]["new"] or ""
+        diff["description"]["diff"] = diff_calculator(
+            latest_approved_description, latest_description
+        )
+        diff["name"]["diff"] = diff_calculator(
+            latest_approved_title, latest_title
+        )
+
+        if is_same:
+            return {
+                instance.code: "No changes that require approval made"
+                + " since last approval"
+            }
+
+        return {instance.code: diff}
+
+
 class ClubListSerializer(serializers.ModelSerializer):
     """
     The club list serializer returns a subset of the information that the full
@@ -1193,6 +1234,85 @@ class StudentTypeSerializer(serializers.ModelSerializer):
         model = StudentType
         fields = ("id", "name")
 
+
+def diff_calculator(latest_approved_description, latest_description):
+    """
+    Calculates difference between two HTML strings and
+      returns a diff string visualizing them
+      """
+
+    if latest_approved_description == latest_description:
+        return latest_description
+
+    """
+    Retrieve the difference between the two HTML strings
+    """
+    html_text = diff(latest_approved_description, latest_description)
+    soup = BeautifulSoup(html_text, "html.parser")
+
+    """
+    Strip original background from all elements and apply diff highlighting
+    """
+    for tag in soup.find_all(style=True):
+        tag["style"] = diff_regex_helper(tag["style"])
+    for tag in soup.find_all(["del", "ins"]):
+        bg_color = "#ffbdbd" if tag.name == "del" else "#dafdd5"
+        for child in tag.find_all(True):
+            child["style"] = (
+                child.get("style", "") + f"; background-color: {bg_color};"
+            ).strip("; ")
+
+    """
+    Unwrap nested <del> tags inside <ins> and vice versa
+    """
+    for del_tag in soup.find_all("del"):
+        for nested_ins in del_tag.find_all("ins"):
+            nested_ins.unwrap()
+    for ins_tag in soup.find_all("ins"):
+        for nested_del in ins_tag.find_all("del"):
+            nested_del.unwrap()
+
+
+    """
+    Highlight and style the del and ins tags
+    """
+    for tag in soup.find_all(["del", "ins"]):
+        if tag.name == "del":
+            tag["style"] = (
+                "text-decoration: none; background-color: #ffbdbd; opacity: 0.8;"
+            )
+        elif tag.name == "ins":
+            tag["style"] = (
+                "text-decoration: none; background-color: #dafdd5; opacity: 1;"
+            )
+
+    """
+    Color new content with a green highlight
+    Color removed content with a red highlight
+    Color resized content with a yellow highlight
+    """
+    for del_tag in soup.find_all("del"):
+        next_tag = del_tag.find_next_sibling("ins")
+        if next_tag and next_tag.get_text() == del_tag.get_text():
+            del_tag.decompose()
+            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
+            next_tag["style"] = (
+                next_tag.get("style", "") + " background-color: #fff2bd;"
+            )
+            for child in next_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+    for ins_tag in soup.find_all("ins"):
+        next_tag = ins_tag.find_next_sibling("del")
+        if next_tag and next_tag.get_text() == ins_tag.get_text():
+            next_tag.decompose()
+            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
+            ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
+            for child in next_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+    return str(soup)
+
+def diff_regex_helper(text):
+    return re.sub(r"background-color:\s*[^;]+;?\s*", "", text)
 
 def social_validation_helper(value, domain, prefix="", at_prefix=None):
     """
