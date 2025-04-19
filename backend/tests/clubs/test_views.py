@@ -1663,7 +1663,7 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(
             data["new-club"]["description"]["diff"],
-            """We are <ins style="text-decoration: none; background-color: #dafdd5;"""
+            """We are <ins style="text-decoration: none; background-color: #dafdd5; """
             """opacity: 1;">not </ins>open<ins style="text-decoration: none; backg"""
             """round-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decorati"""
             """on: none; background-color: #ffbdbd; opacity: 0.8;">source,</del><in"""
