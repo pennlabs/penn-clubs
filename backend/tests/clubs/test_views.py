@@ -19,6 +19,7 @@ from ics import Calendar
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -1668,7 +1669,7 @@ class ClubTestCase(TestCase):
             """round-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decorati"""
             """on: none; background-color: #ffbdbd; opacity: 0.8;">source,</del><in"""
             """s style="text-decoration: none; background-color: #dafdd5; opacity: """
-            """1;">do not</ins> expect us."""
+            """1;">do not</ins> expect us.""",
         )
 
         # attempt to get diff of approved club
@@ -2096,6 +2097,49 @@ class ClubTestCase(TestCase):
                 club=application.club, email=self.user5.email
             ).exists()
         )
+
+    def test_club_application_duplicate_committees(self):
+        """
+        Test that duplicate committees are not allowed
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # Test creating application
+        resp = self.client.post(
+            reverse("club-applications-list", args=(self.club1.code,)),
+            data={
+                "name": "Test Application",
+                "application_start_time": timezone.now() + timezone.timedelta(days=1),
+                "application_end_time": timezone.now() + timezone.timedelta(days=2),
+                "result_release_time": timezone.now() + timezone.timedelta(days=3),
+                "committees": [{"name": "Committee 1"}, {"name": "Committee 1"}],
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Committee names must be unique", str(resp.content))
+
+        # Test patching application
+        application = ClubApplication.objects.create(
+            name="Test Application",
+            club=self.club1,
+            application_start_time=timezone.now() + timezone.timedelta(days=1),
+            application_end_time=timezone.now() + timezone.timedelta(days=2),
+            result_release_time=timezone.now() + timezone.timedelta(days=3),
+            is_wharton_council=False,
+        )
+        _ = ApplicationCommittee.objects.create(
+            name="Committee 1",
+            application=application,
+        )
+
+        resp = self.client.patch(
+            reverse("club-applications-detail", args=(self.club1.code, application.id)),
+            {"committees": [{"name": "Committee 1"}, {"name": "Committee 1"}]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Committee names must be unique", str(resp.content))
 
     def test_club_invite_insufficient_auth(self):
         self.client.login(username=self.user2.username, password="test")

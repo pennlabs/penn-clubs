@@ -2214,7 +2214,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             ),
             latest_approved_image=Subquery(
                 latest_approved_version_qs.values("image")[:1]
-            )
+            ),
         )
 
         return qs
