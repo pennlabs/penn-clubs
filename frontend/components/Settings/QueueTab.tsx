@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { CLUB_ROUTE } from '../../constants'
@@ -36,6 +37,15 @@ type QueueTableModalProps = {
   closeModal: () => void
   bulkAction: (comment: string) => void
   isApproving: boolean
+}
+
+type OwnershipRequest = {
+  id: number
+  club: string
+  club_name: string
+  name: string
+  username: string
+  created_at: string
 }
 
 const QueueTableModal = ({
@@ -343,6 +353,9 @@ const SmallTitle = styled.div`
 `
 
 const QueueTab = (): ReactElement => {
+  const [ownershipRequests, setOwnershipRequests] = useState<
+    OwnershipRequest[]
+  >([])
   const [pendingClubs, setPendingClubs] = useState<Club[] | null>(null)
   const [approvedClubs, setApprovedClubs] = useState<Club[] | null>(null)
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)
@@ -375,6 +388,10 @@ const QueueTab = (): ReactElement => {
   useEffect(() => {
     if (canApprove) {
       refetchClubs()
+
+      doApiRequest('/requests/ownership/?format=json')
+        .then((resp) => resp.json())
+        .then(setOwnershipRequests)
     }
   }, [])
 
@@ -398,6 +415,37 @@ const QueueTab = (): ReactElement => {
     rejectedClubs &&
     inactiveClubs &&
     approvedClubs.concat(rejectedClubs, inactiveClubs)
+
+  const handleOwnershipDecision = async (
+    clubCode: string,
+    username: string,
+    approve: boolean,
+  ) => {
+    const url = approve
+      ? `/clubs/${clubCode}/ownershiprequests/${username}/accept/?format=json`
+      : `/clubs/${clubCode}/ownershiprequests/${username}/?format=json`
+
+    const method = approve ? 'POST' : 'DELETE'
+
+    try {
+      const res = await doApiRequest(url, { method })
+
+      if (res.ok) {
+        toast.success(
+          `Successfully ${approve ? 'approved' : 'rejected'} request.`,
+        )
+        setOwnershipRequests((prev) =>
+          prev.filter((r) => !(r.club === clubCode && r.username === username)),
+        )
+      } else {
+        const err = await res.json()
+        toast.error(`Failed: ${err.detail || 'Unknown error'}`)
+      }
+    } catch (err) {
+      toast.error('An error occurred while processing the request.')
+    }
+  }
+
   return (
     <>
       <SmallTitle>Overview</SmallTitle>
@@ -442,6 +490,65 @@ const QueueTab = (): ReactElement => {
         </li>
       </ul>
       <QueueTable clubs={pendingClubs} refetchClubs={refetchClubs} />
+      <>
+        <SmallTitle>Pending Ownership Requests</SmallTitle>
+        <div className="mt-3 mb-3">
+          These are user-submitted requests to take ownership of inactive clubs.
+          You can approve or reject each request individually.
+        </div>
+
+        {ownershipRequests.length === 0 ? (
+          <div className="has-text-info">
+            There are no ownership requests at this time.
+          </div>
+        ) : (
+          <table className="table is-fullwidth is-striped">
+            <thead>
+              <tr>
+                <th>Club</th>
+                <th>Requester</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ownershipRequests.map((req) => (
+                <tr key={req.id}>
+                  <td>
+                    <Link href={`/club/${req.club}`} target="_blank">
+                      {req.club_name}
+                    </Link>
+                  </td>
+                  <td>{req.name || 'Unknown User'}</td>
+                  <td>
+                    {req.created_at
+                      ? new Date(req.created_at).toLocaleDateString()
+                      : 'Invalid Date'}
+                  </td>
+                  <td>
+                    <button
+                      className="button is-small is-success mr-2"
+                      onClick={() =>
+                        handleOwnershipDecision(req.club, req.username, true)
+                      }
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="button is-small is-danger"
+                      onClick={() =>
+                        handleOwnershipDecision(req.club, req.username, false)
+                      }
+                    >
+                      Reject
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </>
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {OBJECT_NAME_PLURAL} that have been

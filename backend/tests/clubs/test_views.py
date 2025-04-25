@@ -1668,7 +1668,7 @@ class ClubTestCase(TestCase):
             """round-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decorati"""
             """on: none; background-color: #ffbdbd; opacity: 0.8;">source,</del><in"""
             """s style="text-decoration: none; background-color: #dafdd5; opacity: """
-            """1;">do not</ins> expect us."""
+            """1;">do not</ins> expect us.""",
         )
 
         # attempt to get diff of approved club

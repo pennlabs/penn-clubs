@@ -995,9 +995,7 @@ class ClubDiffSerializer(serializers.ModelSerializer):
         diff["description"]["diff"] = diff_calculator(
             latest_approved_description, latest_description
         )
-        diff["name"]["diff"] = diff_calculator(
-            latest_approved_title, latest_title
-        )
+        diff["name"]["diff"] = diff_calculator(latest_approved_title, latest_title)
 
         if is_same:
             return {
@@ -1239,7 +1237,7 @@ def diff_calculator(latest_approved_description, latest_description):
     """
     Calculates difference between two HTML strings and
       returns a diff string visualizing them
-      """
+    """
 
     if latest_approved_description == latest_description:
         return latest_description
@@ -1271,7 +1269,6 @@ def diff_calculator(latest_approved_description, latest_description):
     for ins_tag in soup.find_all("ins"):
         for nested_del in ins_tag.find_all("del"):
             nested_del.unwrap()
-
 
     """
     Highlight and style the del and ins tags
@@ -1311,8 +1308,10 @@ def diff_calculator(latest_approved_description, latest_description):
                 child["style"] = child.get("style", "") + " background-color: #fff2bd;"
     return str(soup)
 
+
 def diff_regex_helper(text):
     return re.sub(r"background-color:\s*[^;]+;?\s*", "", text)
+
 
 def social_validation_helper(value, domain, prefix="", at_prefix=None):
     """
@@ -2280,9 +2279,24 @@ class UserOwnershipRequestSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     club_name = serializers.CharField(source="club.name", read_only=True)
 
+    name = serializers.SerializerMethodField()
+    username = serializers.CharField(source="requester.username", read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+
+    def get_name(self, obj):
+        return obj.requester.get_full_name()
+
     class Meta:
         model = OwnershipRequest
-        fields = ("club", "club_name", "requester")
+        fields = (
+            "id",
+            "club",
+            "club_name",
+            "requester",
+            "name",
+            "username",
+            "created_at",
+        )
 
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):

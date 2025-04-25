@@ -454,3 +454,12 @@ export type RegistrationQueueSettings = {
   updated_at: string
   updated_by: string
 }
+
+export type OwnershipRequest = {
+  id: number
+  club: string
+  club_name: string
+  name: string
+  username: string
+  created_at: string
+}
