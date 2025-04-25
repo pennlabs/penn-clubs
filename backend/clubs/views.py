@@ -48,8 +48,10 @@ from django.db.models import (
     F,
     Max,
     Min,
+    OuterRef,
     Prefetch,
     Q,
+    Subquery,
     TextField,
     Value,
     When,
@@ -168,6 +170,7 @@ from clubs.serializers import (
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
     ClubConstitutionSerializer,
+    ClubDiffSerializer,
     ClubFairSerializer,
     ClubListSerializer,
     ClubMembershipSerializer,
@@ -1241,6 +1244,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         cache.delete(f"clubs:{club.id}-authed")
         cache.delete(f"clubs:{club.id}-anon")
 
+        # check if reapproval queue is open
+        queue_settings = RegistrationQueueSettings.get()
+        relevant_queue_open = (
+            queue_settings.reapproval_queue_open
+            if club.image is not None
+            else queue_settings.approval_queue_open
+        )
+        if not request.user.has_perm("clubs.approve_club") and not relevant_queue_open:
+            raise PermissionDenied(
+                "The approval queue is not currently open for editing club images."
+            )
+
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
         if status.is_success(resp.status_code):
@@ -2094,6 +2109,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if (
             cached_object
             and not self.request.user.groups.filter(name="Approvers").exists()
+            and not self.request.user.has_perm("clubs.approve_club")
         ):
             return Response(cached_object)
 
@@ -2168,6 +2184,110 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             context=context,
             reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         )
+
+    def _get_club_diff_queryset(self):
+        """
+        Returns a queryset of clubs annotated with the latest and latest approved values
+        for specific fields (name, description, image) from their historical records.
+
+        The annotations include:
+        - `latest_<field>`: The most recent value of the field.
+        - `latest_approved_<field>`: The most recent approved value of the field.
+        """
+        latest_version_qs = Club.history.filter(code=OuterRef("code")).order_by(
+            "-history_date"
+        )
+
+        latest_approved_version_qs = Club.history.filter(
+            code=OuterRef("code"), approved=True
+        ).order_by("-history_date")
+
+        qs = Club.objects.annotate(
+            latest_name=Subquery(latest_version_qs.values("name")[:1]),
+            latest_description=Subquery(latest_version_qs.values("description")[:1]),
+            latest_image=Subquery(latest_version_qs.values("image")[:1]),
+            latest_approved_name=Subquery(
+                latest_approved_version_qs.values("name")[:1]
+            ),
+            latest_approved_description=Subquery(
+                latest_approved_version_qs.values("description")[:1]
+            ),
+            latest_approved_image=Subquery(
+                latest_approved_version_qs.values("image")[:1]
+            ),
+        )
+
+        return qs
+
+    @action(detail=True, methods=["GET"])
+    def club_detail_diff(self, request, *args, **kwargs):
+        """
+        Return old and new data for a club that is pending approval.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                club_code:
+                                    type: object
+                                    description: club code
+                                    properties:
+                                        name:
+                                            type: object
+                                            description: Changes in the name field
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old name of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New name of the club
+                                                diff:
+                                                    type: string
+                                                    description: >
+                                                        Diffed name of the club
+                                        description:
+                                            type: object
+                                            description: >
+                                                Changes in the club description
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old description of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New description of the club
+                                                diff:
+                                                    type: string
+                                                    description: >
+                                                        Diffed description of the club
+                                        image:
+                                            type: object
+                                            description: >
+                                                Changes in the image of the club
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old image URL of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New image URL of the club
+        ---
+        """
+        club = self.get_object()
+
+        club = self._get_club_diff_queryset().get(pk=club.pk)
+        serializer = ClubDiffSerializer(club)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
@@ -6923,7 +7043,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         email_type = self.request.data.get("email_type")["id"]
 
         subject = f"Application Update for {app.name}"
-        n, skip = 0, 0
+        n, skip = 0, collections.defaultdict(int)
 
         allow_resend = self.request.data.get("allow_resend")
 
@@ -6933,12 +7053,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         mass_emails = []
         invitee_emails = []
         for submission in submissions:
-            if (
-                (not allow_resend and submission.notified)
-                or submission.status == ApplicationSubmission.PENDING
-                or not (submission.reason and submission.user.email)
-            ):
-                skip += 1
+            if not allow_resend and submission.notified:
+                skip["already_notified"] += 1
+                continue
+            elif submission.status == ApplicationSubmission.PENDING:
+                skip["pending"] += 1
+                continue
+            elif not (submission.reason and submission.user.email):
+                skip["no_reason"] += 1
                 continue
             elif (
                 submission.status == ApplicationSubmission.ACCEPTED
@@ -7005,10 +7127,17 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 invite.send_mail(self.request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
+        skip_msg = []
+        if skip["already_notified"]:
+            skip_msg.append(f" {skip['already_notified']} already notified")
+        if skip["pending"]:
+            skip_msg.append(f" {skip['pending']} still marked as pending")
+        if skip["no_reason"]:
+            skip_msg.append(f" {skip['no_reason']} have no reason provided")
         return Response(
             {
-                "detail": f"{dry_run_msg} emails to {n} people, "
-                f"skipping {skip} due to one of (already notified, no reason, no email)"
+                "detail": f"{dry_run_msg} emails to {n} people"
+                f"{(': ' + ', '.join(skip_msg)) if len(skip_msg) > 0 else ''}",
             }
         )
 
