@@ -111,6 +111,26 @@ const ClubPage = ({
   const questionsScrollRef = useRef(null)
   const scrollToQuestions = () => scrollToRef(questionsScrollRef)
 
+  const handleOwnershipRequest = async () => {
+    const csrftoken = document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+    const res = await fetch('/api/requests/ownership/?format=json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken || '',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ club: club.code }),
+    })
+
+    if (res.ok) {
+      alert('Ownership request submitted!')
+    } else {
+      const err = await res.json()
+      alert(`Error: ${err.detail || 'Something went wrong'}`)
+    }
+  }
+
   const updateRequests = async (code: string): Promise<void> => {
     const newClub = { ...club }
     logEvent(!newClub.is_request ? 'request' : 'unrequest', code)
@@ -203,6 +223,19 @@ const ClubPage = ({
               }}
             >
               <RenewalRequest club={club} />
+              {!club.is_member && userInfo && (
+                <div className="mt-4">
+                  <p style={{ color: 'white' }}>
+                    If you want to take over this club, click the button below:
+                  </p>
+                  <button
+                    className="button is-warning is-light mt-2"
+                    onClick={handleOwnershipRequest}
+                  >
+                    Request Ownership
+                  </button>
+                </div>
+              )}
             </InactiveCard>
           )}
 
@@ -273,7 +306,7 @@ const ClubPage = ({
               <MemberList club={club} />
             </>
           )}
-          {events.length > 0 && <EventCarousel data={events} />}
+          {events.length > 0 && <EventCarousel events={events} />}
         </div>
         <div className="column is-one-third">
           <DesktopActions

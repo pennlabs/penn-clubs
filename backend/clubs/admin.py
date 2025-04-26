@@ -31,6 +31,7 @@ from clubs.models import (
     ClubFairRegistration,
     ClubVisit,
     Event,
+    EventShowing,
     Favorite,
     Major,
     Membership,
@@ -41,7 +42,7 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
-    RecurringEvent,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
@@ -102,8 +103,7 @@ def do_merge_clubs(modeladmin, request, queryset):
     if queryset.count() > 5:
         modeladmin.message_user(
             request,
-            "You have selected more than 5 clubs, "
-            "you probably do not want to do this.",
+            "You have selected more than 5 clubs, you probably do not want to do this.",
             level=messages.ERROR,
         )
         return
@@ -230,9 +230,9 @@ class ClubFairAdmin(admin.ModelAdmin):
 
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("name", "club", "type", "start_time", "end_time")
+    list_display = ("name", "club", "type")
     search_fields = ("name", "club__name")
-    list_filter = ("start_time", "end_time")
+    list_filter = ("type",)
 
     def club(self, obj):
         return obj.club.name
@@ -477,7 +477,6 @@ admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(OwnershipRequest, OwnershipRequestAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
-admin.site.register(RecurringEvent)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(TargetMajor)
@@ -498,3 +497,5 @@ admin.site.register(TicketTransferRecord)
 admin.site.register(Cart)
 admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
+admin.site.register(RegistrationQueueSettings)
+admin.site.register(EventShowing)

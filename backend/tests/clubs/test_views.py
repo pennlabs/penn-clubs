@@ -29,6 +29,7 @@ from clubs.models import (
     ClubFair,
     ClubFairRegistration,
     Event,
+    EventShowing,
     Favorite,
     Major,
     Membership,
@@ -36,6 +37,7 @@ from clubs.models import (
     MembershipRequest,
     OwnershipRequest,
     QuestionAnswer,
+    RegistrationQueueSettings,
     School,
     Tag,
     Testimonial,
@@ -172,6 +174,11 @@ class ClubTestCase(TestCase):
         Tag.objects.create(name="Graduate")
         Tag.objects.create(name="Undergraduate")
 
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = True
+        queue_settings.new_approval_queue_open = True
+        queue_settings.save()
+
     def setUp(self):
         cache.clear()  # clear the cache between tests
 
@@ -188,9 +195,13 @@ class ClubTestCase(TestCase):
             code="test-event",
             club=self.club1,
             name="Test Event",
+            url="https://zoom.us/j/4880003126",
+        )
+
+        self.event_showing1 = EventShowing.objects.create(
+            event=self.event1,
             start_time=timezone.now() + timezone.timedelta(days=2),
             end_time=timezone.now() + timezone.timedelta(days=3),
-            url="https://zoom.us/j/4880003126",
         )
 
         self.question1 = QuestionAnswer.objects.create(
@@ -527,40 +538,50 @@ class ClubTestCase(TestCase):
 
         e2_start = timezone.now() - timezone.timedelta(days=3)
         e2_end = timezone.now() - timezone.timedelta(days=2)
-        Event.objects.create(
+        ev2 = Event.objects.create(
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
-            start_time=e2_start,
-            end_time=e2_end,
             type=Event.FAIR,
         )
-        Event.objects.create(
+        _ = EventShowing.objects.create(
+            event=ev2,
+            start_time=e2_start,
+            end_time=e2_end,
+        )
+        ev3 = Event.objects.create(
             code="test-event-3",
             club=self.club1,
             name="Present Test Event 3",
-            start_time=timezone.now() - timezone.timedelta(days=3),
-            end_time=timezone.now() + timezone.timedelta(days=2),
             type=Event.FAIR,
         )
+        _ = EventShowing.objects.create(
+            event=ev3,
+            start_time=timezone.now() - timezone.timedelta(days=3),
+            end_time=timezone.now() + timezone.timedelta(days=2),
+        )
+
         self.event1.type = Event.FAIR
         self.event1.save()
 
         # test global event
-        Event.objects.create(
+        global_event = Event.objects.create(
             code="test-event-4",
             club=None,
             name="Test Global Event",
+            type=Event.OTHER,
+        )
+        _ = EventShowing.objects.create(
+            event=global_event,
             start_time=timezone.now() + timezone.timedelta(days=2),
             end_time=timezone.now() + timezone.timedelta(days=3),
-            type=Event.OTHER,
         )
 
         # list events without a club to namespace.
         now = timezone.now()
         resp = self.client.get(
             reverse("events-list"),
-            {"end_time__gte": now},
+            {"latest_end_time__gte": now},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200], resp.content)
@@ -570,8 +591,8 @@ class ClubTestCase(TestCase):
         resp = self.client.get(
             reverse("events-list"),
             {
-                "start_time__gte": e2_start.isoformat(),
-                "end_time__lte": e2_end.isoformat(),
+                "earliest_start_time__gte": e2_start.isoformat(),
+                "latest_end_time__lte": e2_end.isoformat(),
             },
             content_type="application/json",
         )
@@ -597,9 +618,13 @@ class ClubTestCase(TestCase):
             code="test-event-2",
             club=self.club1,
             name="Past Test Event 2",
+            type=Event.FAIR,
+        )
+
+        _ = EventShowing.objects.create(
+            event=e2,
             start_time=timezone.now() - timezone.timedelta(days=3),
             end_time=timezone.now() + timezone.timedelta(days=2),
-            type=Event.FAIR,
         )
 
         # cannot change fair event to non-fair event
@@ -657,7 +682,7 @@ class ClubTestCase(TestCase):
         # add 4 clubs to user 1's favorite set
         Favorite.objects.bulk_create(
             [
-                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i+1}"))
+                Favorite(person=self.user1, club=Club.objects.get(code=f"club-{i + 1}"))
                 for i in range(4)
             ]
         )
@@ -665,7 +690,9 @@ class ClubTestCase(TestCase):
         # add 2, different clubs to user 2's favorite set
         Favorite.objects.bulk_create(
             [
-                Favorite(person=self.user2, club=Club.objects.get(code=f"club-{i+4+1}"))
+                Favorite(
+                    person=self.user2, club=Club.objects.get(code=f"club-{i + 4 + 1}")
+                )
                 for i in range(2)
             ]
         )
@@ -673,12 +700,22 @@ class ClubTestCase(TestCase):
         st = timezone.now() + timezone.timedelta(days=2)
         et = timezone.now() + timezone.timedelta(days=3)
         # add one event for every club
-        Event.objects.bulk_create(
+        _ = Event.objects.bulk_create(
             [
                 Event(
                     code=f"{i}",
                     name=f"Test Event for #{i}",
                     club=Club.objects.get(code=f"club-{i}"),
+                )
+                for i in range(1, 7)
+            ]
+        )
+
+        # Add showings for the events
+        EventShowing.objects.bulk_create(
+            [
+                EventShowing(
+                    event=Event.objects.get(code=f"{i}"),
                     start_time=st,
                     end_time=et,
                 )
@@ -687,10 +724,13 @@ class ClubTestCase(TestCase):
         )
 
         # add an event outside the 30-day window
-        Event.objects.create(
+        bad_event = Event.objects.create(
             code="test-event-6",
             name="Test Bad Event for Club 1",
             club=Club.objects.get(code="club-1"),
+        )
+        EventShowing.objects.create(
+            event=bad_event,
             start_time=timezone.now() - timezone.timedelta(days=33),
             end_time=timezone.now() - timezone.timedelta(days=32),
         )
@@ -705,9 +745,11 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         cal = Calendar(resp.content.decode("utf8"))
-        actual = [ev.name for ev in cal.events]
-        expected = [f"Club #{k+1} - Test Event for #{k+1}" for k in range(4)]
-        self.assertEqual(actual.sort(), expected.sort())
+        actual = sorted([ev.name for ev in cal.events])
+        expected = sorted(
+            [f"Club #{k + 1} - Test Event for #{k + 1}" for k in range(4)]
+        )
+        self.assertEqual(actual, expected)
 
     def test_retrieve_ics_url(self):
         """
@@ -731,10 +773,6 @@ class ClubTestCase(TestCase):
             person=self.user4, club=self.club1, role=Membership.ROLE_OFFICER
         )
 
-        # set event start and end dates
-        start_date = datetime.datetime.now() - datetime.timedelta(days=3)
-        end_date = start_date + datetime.timedelta(hours=2)
-
         # add event
         resp = self.client.post(
             reverse("club-events-list", args=(self.club1.code,)),
@@ -743,8 +781,8 @@ class ClubTestCase(TestCase):
                 "description": "Interest Meeting on Friday!",
                 "location": "JMHH G06",
                 "type": Event.RECRUITMENT,
-                "start_time": start_date.isoformat(),
-                "end_time": end_date.isoformat(),
+                "start_time": timezone.now().isoformat(),
+                "end_time": (timezone.now() + timezone.timedelta(hours=1)).isoformat(),
             },
             content_type="application/json",
         )
@@ -762,8 +800,6 @@ class ClubTestCase(TestCase):
                 "name": "Awesome Interest Meeting",
                 "description": "Interest meeting is actually on Sunday!",
                 "location": "JMHH 256",
-                "start_time": start_date + datetime.timedelta(days=1),
-                "end_time": end_date + datetime.timedelta(days=1),
             },
             content_type="application/json",
         )
@@ -788,9 +824,10 @@ class ClubTestCase(TestCase):
         )
 
         # set event start and end dates
-        start_time = datetime.datetime.now() - datetime.timedelta(days=3)
+        start_time = timezone.now() - datetime.timedelta(days=3)
         end_time = start_time + datetime.timedelta(hours=2)
         end_date = start_time + datetime.timedelta(days=15)
+        offset = 7
 
         # add recurring event
         resp = self.client.post(
@@ -802,23 +839,28 @@ class ClubTestCase(TestCase):
                 "type": Event.RECRUITMENT,
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
-                "is_recurring": True,
-                "offset": 7,
+                "offset": offset,
                 "end_date": end_date.isoformat(),
             },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        for event in resp.data:
-            self.assertEqual(event["name"], "Interest Recurring Meeting")
+        self.assertEqual(resp.data["name"], "Interest Recurring Meeting")
 
         # ensure event exists
         events = Event.objects.filter(name="Interest Recurring Meeting")
-        self.assertEqual(events.count(), 3)
-        recurring = events.first().parent_recurring_event
-        for event in events:
-            self.assertEqual(event.creator, self.user4)
-            self.assertEqual(event.parent_recurring_event, recurring)
+        self.assertEqual(events.count(), 1)
+
+        # ensure recurring event showings exist
+        showings = EventShowing.objects.filter(event=events.first())
+        self.assertEqual(showings.count(), 3)
+
+        for i, showing in enumerate(showings.order_by("start_time")):
+            expected_start_time = start_time + datetime.timedelta(days=offset * i)
+            expected_end_time = end_time + datetime.timedelta(days=offset * i)
+            self.assertEqual(showing.event, events.first())
+            self.assertEqual(showing.start_time, expected_start_time)
+            self.assertEqual(showing.end_time, expected_end_time)
 
     def test_testimonials(self):
         """
@@ -1060,26 +1102,23 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user4.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "code": "penn-labs",
-                    "name": "Penn Labs",
-                    "description": "This is an example description.",
-                    "tags": [{"name": "Graduate"}],
-                    "email": "example@example.com",
-                    "facebook": "",
-                    "twitter": "",
-                    "instagram": "",
-                    "website": "",
-                    "linkedin": "",
-                    "github": "",
-                },
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "penn-labs",
+                "name": "Penn Labs",
+                "description": "This is an example description.",
+                "tags": [{"name": "Graduate"}],
+                "email": "example@example.com",
+                "facebook": "",
+                "twitter": "",
+                "instagram": "",
+                "website": "",
+                "linkedin": "",
+                "github": "",
+            },
+            content_type="application/json",
+        )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # continue these tests as not a superuser but still logged in
@@ -1109,20 +1148,22 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user4.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", False
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "code": "new-club",
-                    "name": "New Club",
-                    "description": "This is a new club.",
-                    "tags": [{"name": "Undergraduate"}],
-                    "email": "newclub@example.com",
-                },
-                content_type="application/json",
-            )
+        # Close new approval queue
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "new-club",
+                "name": "New Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "newclub@example.com",
+            },
+            content_type="application/json",
+        )
 
         self.assertEqual(resp.status_code, 400, resp.content)
         self.assertIn("The approval queue is not currently open.", str(resp.content))
@@ -1161,7 +1202,7 @@ class ClubTestCase(TestCase):
         # club is approved before deactivation
         self.assertTrue(self.club1.approved)
 
-        call_command("deactivate", "all", "--force")
+        call_command("deactivate", "--force")
 
         club = self.club1
         club.refresh_from_db()
@@ -1212,23 +1253,20 @@ class ClubTestCase(TestCase):
 
         exploit_string = "javascript:alert(1)"
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "name": "Bad Club",
-                    "tags": [],
-                    "facebook": exploit_string,
-                    "twitter": exploit_string,
-                    "instagram": exploit_string,
-                    "website": exploit_string,
-                    "linkedin": exploit_string,
-                    "github": exploit_string,
-                },
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Bad Club",
+                "tags": [],
+                "facebook": exploit_string,
+                "twitter": exploit_string,
+                "instagram": exploit_string,
+                "website": exploit_string,
+                "linkedin": exploit_string,
+                "github": exploit_string,
+            },
+            content_type="application/json",
+        )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create_description_sanitize_good(self):
@@ -1251,19 +1289,16 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user5.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "name": "Penn Labs",
-                    "tags": [{"name": "Undergraduate"}],
-                    "description": test_good_string,
-                    "email": "example@example.com",
-                },
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Penn Labs",
+                "tags": [{"name": "Undergraduate"}],
+                "description": test_good_string,
+                "email": "example@example.com",
+            },
+            content_type="application/json",
+        )
         cache.clear()
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -1281,19 +1316,17 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user5.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "name": "Penn Labs",
-                    "tags": [{"name": "Graduate"}],
-                    "description": test_bad_string,
-                    "email": "example@example.com",
-                },
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Penn Labs",
+                "tags": [{"name": "Graduate"}],
+                "description": test_bad_string,
+                "email": "example@example.com",
+            },
+            content_type="application/json",
+        )
+        cache.clear()
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         resp = self.client.get(reverse("clubs-detail", args=("penn-labs",)))
@@ -1309,12 +1342,9 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"), {}, content_type="application/json"
-            )
+        resp = self.client.post(
+            reverse("clubs-list"), {}, content_type="application/json"
+        )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create_nonexistent_tag(self):
@@ -1323,42 +1353,35 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "name": "Penn Labs",
-                    "description": "We code stuff.",
-                    "email": "contact@pennlabs.org",
-                    "tags": [{"name": "totally definitely nonexistent tag"}],
-                },
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Penn Labs",
+                "description": "We code stuff.",
+                "email": "contact@pennlabs.org",
+                "tags": [{"name": "totally definitely nonexistent tag"}],
+            },
+            content_type="application/json",
+        )
         self.assertIn(resp.status_code, [400, 404], resp.content)
 
     def test_club_create_no_auth(self):
         """
         Creating a club without authentication should result in an error.
         """
-
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "name": "Penn Labs",
-                    "description": "We code stuff.",
-                    "email": "contact@pennlabs.org",
-                    "facebook": "966590693376781",
-                    "twitter": "@Penn",
-                    "instagram": "@uofpenn",
-                    "tags": [],
-                },
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Penn Labs",
+                "description": "We code stuff.",
+                "email": "contact@pennlabs.org",
+                "facebook": "966590693376781",
+                "twitter": "@Penn",
+                "instagram": "@uofpenn",
+                "tags": [],
+            },
+            content_type="application/json",
+        )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create(self):
@@ -1374,34 +1397,31 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user5.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {
-                    "name": "Penn Labs",
-                    "description": "We code stuff.",
-                    "badges": [{"label": "SAC Funded"}],
-                    "tags": [
-                        {"name": tag1.name},
-                        {"name": tag2.name},
-                        {"name": "Graduate"},
-                    ],
-                    "target_schools": [{"id": school1.id}],
-                    "email": "example@example.com",
-                    "facebook": "https://www.facebook.com/groups/966590693376781/"
-                    + "?ref=nf_target&fref=nf",
-                    "twitter": "https://twitter.com/Penn",
-                    "instagram": "https://www.instagram.com/uofpenn/?hl=en",
-                    "website": "https://pennlabs.org",
-                    "linkedin": "https://www.linkedin.com"
-                    "/school/university-of-pennsylvania/",
-                    "youtube": "https://youtu.be/dQw4w9WgXcQ",
-                    "github": "https://github.com/pennlabs",
-                },
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Penn Labs",
+                "description": "We code stuff.",
+                "badges": [{"label": "SAC Funded"}],
+                "tags": [
+                    {"name": tag1.name},
+                    {"name": tag2.name},
+                    {"name": "Graduate"},
+                ],
+                "target_schools": [{"id": school1.id}],
+                "email": "example@example.com",
+                "facebook": "https://www.facebook.com/groups/966590693376781/"
+                + "?ref=nf_target&fref=nf",
+                "twitter": "https://twitter.com/Penn",
+                "instagram": "https://www.instagram.com/uofpenn/?hl=en",
+                "website": "https://pennlabs.org",
+                "linkedin": "https://www.linkedin.com"
+                "/school/university-of-pennsylvania/",
+                "youtube": "https://youtu.be/dQw4w9WgXcQ",
+                "github": "https://github.com/pennlabs",
+            },
+            content_type="application/json",
+        )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure club was actually created
@@ -1441,14 +1461,11 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True), patch(
-            "django.conf.settings.NEW_APPROVAL_QUEUE_OPEN", True
-        ):
-            resp = self.client.post(
-                reverse("clubs-list"),
-                {"name": "Test Club", "tags": []},
-                content_type="application/json",
-            )
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {"name": "Test Club", "tags": []},
+            content_type="application/json",
+        )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_list_search(self):
@@ -1500,6 +1517,175 @@ class ClubTestCase(TestCase):
             data = json.loads(resp.content.decode("utf-8"))
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
+
+    def test_club_detail_diff(self):
+        """
+        Test that diff returns the correct old and new club for a club in approval queue
+        """
+
+        # create club that requires approval
+        new_club = Club.objects.create(
+            code="new-club",
+            name="New Club",
+            description="We're the spirits of open source.",
+            approved=None,
+            active=True,
+            email="example@example.com",
+        )
+
+        # add officer to club
+        Membership.objects.create(
+            person=self.user4, club=new_club, role=Membership.ROLE_OFFICER
+        )
+
+        # login to officer user
+        self.client.login(username=self.user4.username, password="test")
+
+        # New club should not have any old data
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        self.assertEqual(data["new-club"]["name"]["new"], "New Club")
+        self.assertEqual(data["new-club"]["name"]["old"], None)
+
+        self.assertEqual(
+            data["new-club"]["description"]["new"], "We're the spirits of open source."
+        )
+        self.assertEqual(data["new-club"]["description"]["old"], None)
+
+        self.assertEqual(data["new-club"]["image"]["new"], "")
+        self.assertEqual(data["new-club"]["image"]["old"], None)
+
+        # approve club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        # trigger reapproval by changing name
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 2"},
+            content_type="application/json",
+        )
+
+        # Ensure change successful
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        new_club.refresh_from_db()
+        self.assertFalse(new_club.approved)
+        self.assertEqual(data["new-club"]["name"]["new"], "New Club 2")
+
+        # approve club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        # changing description should not trigger reapproval.
+        # Might later be changed back to trigger reapproval
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"description": "We are open source, expect us."},
+            content_type="application/json",
+        )
+
+        # Ensure change successful
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(
+            data["new-club"],
+            "No changes that require approval made since last approval",
+        )
+
+        # change club name twice before approval
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 3"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 4"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Ensure club is marked as not approved
+        new_club.refresh_from_db()
+        self.assertFalse(new_club.approved)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        # should have latest unapproved name
+        self.assertEqual(
+            data["new-club"]["name"]["new"],
+            "New Club 4",
+        )
+        # should have latest approved name
+        self.assertEqual(
+            data["new-club"]["name"]["old"],
+            "New Club 2",
+        )
+        # should have latest description, since description doesn't require reapproval
+        self.assertEqual(
+            data["new-club"]["description"]["new"],
+            "We are open source, expect us.",
+        )
+        # should have latest description
+        self.assertEqual(
+            data["new-club"]["description"]["old"],
+            "We are open source, expect us.",
+        )
+        # difference will just return current description
+        self.assertEqual(
+            data["new-club"]["description"]["diff"],
+            "We are open source, expect us.",
+        )
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"description": "We are not open, do not expect us."},
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        self.assertEqual(
+            data["new-club"]["description"]["diff"],
+            """We are <ins style="text-decoration: none; background-color: #dafdd5; """
+            """opacity: 1;">not </ins>open<ins style="text-decoration: none; backg"""
+            """round-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decorati"""
+            """on: none; background-color: #ffbdbd; opacity: 0.8;">source,</del><in"""
+            """s style="text-decoration: none; background-color: #dafdd5; opacity: """
+            """1;">do not</ins> expect us.""",
+        )
+
+        # attempt to get diff of approved club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+        resp3 = self.client.get(
+            reverse("clubs-club-detail-diff", args=(new_club.code,))
+        )
+        new_data1 = json.loads(resp3.content.decode("utf-8"))
+        self.assertEqual(
+            new_data1["new-club"],
+            "No changes that require approval made since last approval",
+        )
 
     def test_club_modify_wrong_auth(self):
         """
@@ -1559,16 +1745,15 @@ class ClubTestCase(TestCase):
 
         self.client.login(username=self.user1.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
-            resp = self.client.patch(
-                reverse("clubs-detail", args=(self.club1.code,)),
-                {
-                    "description": "We do stuff.",
-                    "tags": [{"name": tag3.name}, {"name": "Graduate"}],
-                },
-                content_type="application/json",
-            )
-            self.assertIn(resp.status_code, [200, 201], resp.content)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {
+                "description": "We do stuff.",
+                "tags": [{"name": tag3.name}, {"name": "Graduate"}],
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure that changes were made
         resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
@@ -2180,19 +2365,47 @@ class ClubTestCase(TestCase):
         # login to officer user
         self.client.login(username=self.user4.username, password="test")
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", False):
-            for field in {"name"}:
-                # edit sensitive field
-                resp = self.client.patch(
-                    reverse("clubs-detail", args=(club.code,)),
-                    {field: "New Club Name/Description"},
-                    content_type="application/json",
-                )
-                self.assertIn(resp.status_code, [400], resp.content)
+        # Close reapproval queue
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = False
+        queue_settings.save()
 
-                # ensure club is marked as approved (request didn't go through)
-                club.refresh_from_db()
-                self.assertTrue(club.approved)
+        for field in {"name"}:
+            # edit sensitive field
+            resp = self.client.patch(
+                reverse("clubs-detail", args=(club.code,)),
+                {field: "New Club Name/Description"},
+                content_type="application/json",
+            )
+            self.assertIn(resp.status_code, [400], resp.content)
+
+            # ensure club is marked as approved (request didn't go through)
+            club.refresh_from_db()
+            self.assertTrue(club.approved)
+
+        # ensure that explicit reapproval requests without sensitive fields are
+        # still not allowed
+        club.approved = False
+        club.save(update_fields=["approved"])
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"approved": None},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400], resp.content)
+        club.approved = True
+        club.save(update_fields=["approved"])
+
+        # ensure that non-reapproval requests are still allowed
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"address": "1234 Walnut St."},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        # Re-open reapproval queue
+        queue_settings.reapproval_queue_open = True
+        queue_settings.save()
 
         # store result of approval history query
         resp = self.client.get(reverse("clubs-history", args=(club.code,)))
@@ -2200,30 +2413,29 @@ class ClubTestCase(TestCase):
         previous_history = json.loads(resp.content.decode("utf-8"))
         self.assertTrue(previous_history[0]["approved"])
 
-        with patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
-            for field in {"name"}:
-                # edit sensitive field
-                resp = self.client.patch(
-                    reverse("clubs-detail", args=(club.code,)),
-                    {field: "New Club Name/Description"},
-                    content_type="application/json",
-                )
-                self.assertIn(resp.status_code, [200, 201], resp.content)
-                resp = self.client.get(reverse("clubs-history", args=(club.code,)))
-                # find the approval history
-                resp = self.client.get(reverse("clubs-history", args=(club.code,)))
-                self.assertIn(resp.status_code, [200], resp.content)
-                history = json.loads(resp.content.decode("utf-8"))
-                self.assertEqual(len(history), len(previous_history) + 1)
-                self.assertFalse(history[0]["approved"])
+        for field in {"name"}:
+            # edit sensitive field
+            resp = self.client.patch(
+                reverse("clubs-detail", args=(club.code,)),
+                {field: "New Club Name/Description"},
+                content_type="application/json",
+            )
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+            resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+            # find the approval history
+            resp = self.client.get(reverse("clubs-history", args=(club.code,)))
+            self.assertIn(resp.status_code, [200], resp.content)
+            history = json.loads(resp.content.decode("utf-8"))
+            self.assertEqual(len(history), len(previous_history) + 1)
+            self.assertFalse(history[0]["approved"])
 
-                # ensure club is marked as not approved
-                club.refresh_from_db()
-                self.assertFalse(club.approved)
+            # ensure club is marked as not approved
+            club.refresh_from_db()
+            self.assertFalse(club.approved)
 
-                # reset to approved
-                club.approved = True
-                club.save(update_fields=["approved"])
+            # reset to approved
+            club.approved = True
+            club.save(update_fields=["approved"])
 
         # login to superuser account
         self.client.login(username=self.user5.username, password="test")
@@ -2316,7 +2528,7 @@ class ClubTestCase(TestCase):
     def test_club_renew(self):
         # run deactivate script
         with open(os.devnull, "w") as f:
-            call_command("deactivate", "all", "--force", stdout=f)
+            call_command("deactivate", "--force", stdout=f)
 
         # count already sent emails
         mail_count = len(mail.outbox)
@@ -2826,9 +3038,11 @@ class ClubTestCase(TestCase):
         )
 
         self.event1.type = Event.FAIR
-        self.event1.start_time = start_time
-        self.event1.end_time = end_time
         self.event1.save()
+
+        self.event_showing1.start_time = start_time
+        self.event_showing1.end_time = end_time
+        self.event_showing1.save()
 
         ZoomMeetingVisit.objects.bulk_create(
             ZoomMeetingVisit(
@@ -3667,3 +3881,307 @@ class HealthTestCase(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data, {"message": "OK"})
+
+
+class RegistrationQueueSettingsTestCase(TestCase):
+    """
+    Test the registration queue settings view.
+    """
+
+    def setUp(self):
+        self.client = Client()
+
+        self.user = get_user_model().objects.create_user(
+            "user", "user@example.com", "password"
+        )
+        self.superuser = get_user_model().objects.create_user(
+            "super", "super@example.com", "password", is_superuser=True
+        )
+
+    def test_get_settings_permissions(self):
+        # unauthenticated users can't access
+        resp = self.client.get(reverse("queue-settings"))
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # non-superusers can't access
+        self.client.login(username="user", password="password")
+        resp = self.client.get(reverse("queue-settings"))
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # superusers can access
+        self.client.login(username="super", password="password")
+        resp = self.client.get(reverse("queue-settings"))
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = resp.json()
+        self.assertIn("reapproval_queue_open", data)
+        self.assertIn("new_approval_queue_open", data)
+
+    def test_update_settings(self):
+        # non-superusers can't update
+        self.client.login(username="user", password="password")
+        resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {"reapproval_queue_open": False, "new_approval_queue_open": False}
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # superusers can update
+        self.client.login(username="super", password="password")
+        resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {"reapproval_queue_open": False, "new_approval_queue_open": False}
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = resp.json()
+        self.assertFalse(data["reapproval_queue_open"])
+        self.assertFalse(data["new_approval_queue_open"])
+
+        resp = self.client.get(reverse("queue-settings"))
+        data = resp.json()
+        self.assertFalse(data["reapproval_queue_open"])
+        self.assertFalse(data["new_approval_queue_open"])
+
+
+class EventShowingTestCase(TestCase):
+    """
+    Test the EventShowing API endpoints not related to ticketing.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+        cls.user1 = User.objects.create_user(
+            "officer@example.com", "officer@example.com", "password"
+        )
+        cls.user2 = User.objects.create_user(
+            "member@example.com", "member@example.com", "password"
+        )
+        cls.user3 = User.objects.create_user(
+            "random@example.com", "random@example.com", "password"
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+        # Create a test club
+        self.club = Club.objects.create(
+            code="showing-test-club",
+            name="Showing Test Club",
+            approved=True,
+            email="showing@example.com",
+        )
+
+        # Add user1 as an officer and user2 as a member
+        Membership.objects.create(
+            person=self.user1, club=self.club, role=Membership.ROLE_OFFICER
+        )
+        Membership.objects.create(
+            person=self.user2, club=self.club, role=Membership.ROLE_MEMBER
+        )
+
+        # Create a test event
+        self.event = Event.objects.create(
+            code="showing-test-event",
+            club=self.club,
+            name="Showing Test Event",
+            creator=self.user1,
+        )
+
+        # Create a test event showing
+        self.showing = EventShowing.objects.create(
+            event=self.event,
+            start_time=timezone.now() + timezone.timedelta(days=2),
+            end_time=timezone.now() + timezone.timedelta(days=3),
+            location="Test Location",
+        )
+
+    def test_list_showings(self):
+        """
+        Test that anyone can list event showings.
+        """
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
+    def test_retrieve_showing(self):
+        """
+        Test that anyone can retrieve a specific event showing.
+        """
+        response = self.client.get(
+            reverse("event-showings-detail", args=[self.event.id, self.showing.id])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["location"], "Test Location")
+
+    def test_create_showing_permissions(self):
+        """
+        Test permissions for creating event showings.
+        """
+        new_showing_data = {
+            "start_time": (timezone.now() + timezone.timedelta(days=5)).isoformat(),
+            "end_time": (timezone.now() + timezone.timedelta(days=6)).isoformat(),
+            "location": "New Location",
+        }
+
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            new_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            new_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            new_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["location"], "New Location")
+        self.assertEqual(EventShowing.objects.count(), 2)
+
+    def test_update_showing_permissions(self):
+        """
+        Test permissions for updating event showings.
+        """
+        update_data = {"location": "Updated Location"}
+
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            ),
+            update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            ),
+            update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.patch(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            ),
+            update_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["location"], "Updated Location")
+
+        # Verify database was updated
+        self.showing.refresh_from_db()
+        self.assertEqual(self.showing.location, "Updated Location")
+
+    def test_delete_showing_permissions(self):
+        """
+        Test permissions for deleting event showings.
+        """
+        # Test unauthenticated user
+        self.client.logout()
+        response = self.client.delete(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Test member
+        self.client.login(username=self.user2.username, password="password")
+        response = self.client.delete(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, self.showing.id],
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Create a new showing for the officer test
+        new_showing = EventShowing.objects.create(
+            event=self.event,
+            start_time=timezone.now() + timezone.timedelta(days=2),
+            end_time=timezone.now() + timezone.timedelta(days=3),
+            location="Test Location for Delete",
+        )
+
+        # Test officer
+        self.client.login(username=self.user1.username, password="password")
+        response = self.client.delete(
+            reverse(
+                "club-events-showings-detail",
+                args=[self.club.code, self.event.id, new_showing.id],
+            )
+        )
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(EventShowing.objects.filter(id=new_showing.id).count(), 0)
+
+    def test_validation_event_time(self):
+        """
+        Test that start_time must be before end_time.
+        """
+        self.client.login(username=self.user1.username, password="password")
+        invalid_showing_data = {
+            "start_time": (timezone.now() + timezone.timedelta(days=6)).isoformat(),
+            "end_time": (timezone.now() + timezone.timedelta(days=5)).isoformat(),
+            "location": "Invalid Timing",
+        }
+
+        response = self.client.post(
+            reverse("club-events-showings-list", args=[self.club.code, self.event.id]),
+            invalid_showing_data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(
+            "event start time must be before the end time", str(response.data).lower()
+        )
