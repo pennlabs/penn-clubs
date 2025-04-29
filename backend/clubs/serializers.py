@@ -371,7 +371,7 @@ class EventShowingSerializer(serializers.ModelSerializer):
     ticketed = serializers.SerializerMethodField("get_ticketed")
 
     def get_ticketed(self, obj):
-        return obj.tickets.exists()
+        return obj.ticket_classes.exists()
 
     class Meta:
         model = EventShowing
@@ -490,7 +490,8 @@ class ClubEventSerializer(serializers.ModelSerializer):
     latest_end_time = serializers.DateTimeField(read_only=True)
 
     def get_ticketed(self, obj) -> bool:
-        return obj.ticket_classes.exists()
+        # Check if any showing for this event has ticket classes defined
+        return obj.eventshowing_set.filter(ticket_classes__isnull=False).exists()
 
     def get_event_url(self, obj):
         # if no url, return that
@@ -1900,8 +1901,7 @@ class TicketSerializer(serializers.ModelSerializer):
     """
 
     owner = serializers.SerializerMethodField("get_owner_name")
-    showing = EventShowingSerializer()
-    event = EventSerializer(source="ticket_class.showing.event")
+    event = EventSerializer(source="ticket_class.showing.event", read_only=True)
     ticket_type = serializers.CharField(source="ticket_class.name", read_only=True)
     price = serializers.FloatField(source="ticket_class.price", read_only=True)
 

@@ -2697,10 +2697,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             )
 
         # Check if any showing has bought or held tickets
-        showings = EventShowing.objects.filter(event=event)
+        showings = event.eventshowing_set.all()
         if (
-            Ticket.objects.filter(showing__in=showings)
-            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            Ticket.objects.filter(ticket_class__showing__in=showings)
+            .filter(Q(owner__isnull=False))
             .exists()
         ):
             raise DRFValidationError(
@@ -2757,11 +2757,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             .prefetch_related(
                 Prefetch(
                     "eventshowing_set",
-                    queryset=EventShowing.objects.all(),
-                ),
-                Prefetch(
-                    "eventshowing_set__tickets",
-                    queryset=Ticket.objects.select_related("owner", "holder"),
+                    queryset=EventShowing.objects.prefetch_related("ticket_classes"),
                 ),
                 Prefetch(
                     "club__badges",
@@ -3103,8 +3099,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 showing.ticket_drop_time is None  # case where sales immediately start
                 or showing.ticket_drop_time <= timezone.now()
             )
-            and Ticket.objects.filter(showing=showing)
-            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            and Ticket.objects.filter(ticket_class__showing=showing)
+            .filter(Q(owner__isnull=False))
             .exists()
         ):
             raise DRFValidationError(
@@ -3119,8 +3115,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         """
         showing = self.get_object()
         if (
-            Ticket.objects.filter(showing=showing)
-            .filter(Q(owner__isnull=False) | Q(holder__isnull=False))
+            Ticket.objects.filter(ticket_class__showing=showing)
+            .filter(Q(owner__isnull=False))
             .exists()
         ):
             raise DRFValidationError(
@@ -3343,7 +3339,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             if ticket_class.remaining < quantity:
                 return Response(
                     {
-                        "detail": f"Not enough tickets of type {type} left!",
+                        "detail": "Not enough tickets of type "
+                        f"{ticket_class.name} left!",
                         "success": False,
                     },
                     status=status.HTTP_403_FORBIDDEN,
@@ -3566,6 +3563,24 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         """
         showing = self.get_object()
 
+        club = showing.event.club
+
+        # Check if club is approved
+        if not club:
+            return Response(
+                {"detail": "Related club does not exist", "success": False},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        elif not club.approved and not club.ghost:
+            return Response(
+                {
+                    "detail": "This club has not been approved "
+                    "and cannot sell tickets.",
+                    "success": False,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         # Tickets can't be edited after they've dropped
         if showing.ticket_drop_time and timezone.now() >= showing.ticket_drop_time:
             return Response(
@@ -3728,11 +3743,13 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         inventory_needed = {}
         errors = []
         validated_requests = []
+        fetched_ticket_classes = {}  # Store fetched objects keyed by name
 
         for ticket_request in tickets_to_issue:
             # Get or validate recipient
             username = ticket_request.get("username")
             email = ticket_request.get("email")
+            user = None  # Initialize user
 
             if username:
                 try:
@@ -3748,9 +3765,14 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             # Get ticket class
             ticket_type = ticket_request.get("ticket_type")
             try:
-                ticket_class = TicketClass.objects.select_for_update().get(
-                    showing=showing, name=ticket_type
-                )
+                # Check if already fetched in this request
+                ticket_class = fetched_ticket_classes.get(ticket_type)
+                if not ticket_class:
+                    ticket_class = TicketClass.objects.select_for_update().get(
+                        showing=showing, name=ticket_type
+                    )
+                    fetched_ticket_classes[ticket_type] = ticket_class  # Store it
+
             except TicketClass.DoesNotExist:
                 errors.append(f"Ticket type '{ticket_type}' not found")
                 continue
@@ -6147,13 +6169,13 @@ class TicketViewSet(viewsets.ModelViewSet):
         ).values_list("club", flat=True)
         if self.action == "partial_update":
             return Ticket.objects.filter(
-                showing__event__club__in=officer_clubs
-            ).select_related("showing__event__club")
+                ticket_class__showing__event__club__in=officer_clubs
+            ).select_related("ticket_class__showing__event__club")
         elif self.action == "retrieve":
             return Ticket.objects.filter(
                 Q(owner=self.request.user.id)
-                | Q(showing__event__club__in=officer_clubs)
-            ).select_related("showing__event__club")
+                | Q(ticket_class__showing__event__club__in=officer_clubs)
+            ).select_related("ticket_class__showing__event__club")
         return Ticket.objects.filter(owner=self.request.user.id)
 
 

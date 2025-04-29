@@ -827,26 +827,30 @@ class Command(BaseCommand):
             person = ben if idx < 2 else user_objs[1]
 
             # Create ticket classes for the event
-            regular_class = TicketClass.objects.create(
+            regular_class, _ = TicketClass.objects.get_or_create(
                 showing=showing,
                 name="Regular",
-                description="Regular admission ticket",
-                price=10.10,
-                quantity=50,
-                remaining=50,
-                buyable=True,
+                defaults={
+                    "description": "Regular admission ticket",
+                    "price": 10.10,
+                    "quantity": 50,
+                    "remaining": 50,
+                    "buyable": True,
+                },
             )
 
-            premium_class = TicketClass.objects.create(
+            premium_class, _ = TicketClass.objects.get_or_create(
                 showing=showing,
                 name="Premium",
-                description="Premium admission ticket with perks",
-                price=100.10,
-                quantity=20,
-                remaining=20,
-                buyable=True,
-                group_discount=0.15,
-                group_size=5,
+                defaults={
+                    "description": "Premium admission ticket with perks",
+                    "price": 100.10,
+                    "quantity": 20,
+                    "remaining": 20,
+                    "buyable": True,
+                    "group_discount": 0.15,
+                    "group_size": 5,
+                },
             )
 
             # Create some owned tickets
@@ -864,7 +868,9 @@ class Command(BaseCommand):
 
             # Create some items in cart
             cart, _ = Cart.objects.get_or_create(
-                event=event, owner=person, session_key=f"test_session_{person.username}"
+                showing=showing,
+                owner=person,
+                session_key=f"test_session_{person.username}",
             )
 
             CartItem.objects.create(cart=cart, ticket_class=regular_class, quantity=2)

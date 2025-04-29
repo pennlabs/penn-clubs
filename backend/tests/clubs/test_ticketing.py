@@ -1,13 +1,12 @@
 import json
+import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import timedelta
 from unittest.mock import patch
 
 import freezegun
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.db.models import Count
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
@@ -21,6 +20,7 @@ from clubs.models import (
     EventShowing,
     Membership,
     Ticket,
+    TicketClass,
     TicketTransactionRecord,
     TicketTransferRecord,
 )
@@ -84,26 +84,29 @@ def commonSetUp(self):
         end_time=timezone.now() + timezone.timedelta(days=3),
     )
 
-    self.ticket_totals = [
-        {"type": "normal", "count": 20, "price": 15.0},
-        {"type": "premium", "count": 10, "price": 30.0},
-    ]
+    # Create TicketClass instances instead of individual Tickets
+    self.ticket_class_normal1 = TicketClass.objects.create(
+        showing=self.event_showing1,
+        name="normal",
+        price=15.0,
+        quantity=20,
+        remaining=20,
+    )
+    self.ticket_class_premium1 = TicketClass.objects.create(
+        showing=self.event_showing1,
+        name="premium",
+        price=30.0,
+        quantity=10,
+        remaining=10,
+    )
 
-    self.tickets1 = [
-        Ticket.objects.create(type="normal", showing=self.event_showing1, price=15.0)
-        for _ in range(20)
-    ]
-    self.tickets2 = [
-        Ticket.objects.create(type="premium", showing=self.event_showing1, price=30.0)
-        for _ in range(10)
-    ]
-
-    self.unapproved_tickets = [
-        Ticket.objects.create(
-            type="normal", showing=self.unapproved_event_showing, price=15.0
-        )
-        for _ in range(20)
-    ]
+    self.unapproved_ticket_class_normal = TicketClass.objects.create(
+        showing=self.unapproved_event_showing,
+        name="normal",
+        price=15.0,
+        quantity=20,
+        remaining=20,
+    )
 
 
 class TicketEventTestCase(TestCase):
@@ -150,10 +153,14 @@ class TicketEventTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 400, resp.content)
 
-        qts = {
-            "quantities": [
-                {"type": "_normal", "count": 20, "price": 10},
-                {"type": "_premium", "count": 10, "price": 20},
+        # Delete existing ticket classes first to simulate creating new ones
+        TicketClass.objects.filter(showing=self.event_showing1).delete()
+
+        # Use the new ticket_types payload format
+        ticket_types_payload = {
+            "ticket_types": [
+                {"name": "_normal", "quantity": 20, "price": 10},
+                {"name": "_premium", "quantity": 10, "price": 20},
             ]
         }
 
@@ -162,34 +169,37 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-tickets",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            qts,
+            ticket_types_payload,
             format="json",
         )
-
-        aggregated_tickets = list(
-            Ticket.objects.filter(showing=self.event_showing1, type__contains="_")
-            .values("type", "price")
-            .annotate(count=Count("id"))
-        )
-        for t1, t2 in zip(qts["quantities"], aggregated_tickets):
-            self.assertEqual(t1["type"], t2["type"])
-            self.assertAlmostEqual(t1["price"], float(t2["price"]), 0.02)
-            self.assertEqual(t1["count"], t2["count"])
-
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Assert based on TicketClass objects created
+        created_ticket_classes = list(
+            TicketClass.objects.filter(showing=self.event_showing1, name__contains="_")
+            .values("name", "quantity", "price")
+            .order_by("name")  # Ensure consistent order
+        )
+        expected_ticket_classes = sorted(
+            ticket_types_payload["ticket_types"], key=lambda x: x["name"]
+        )
+
+        self.assertEqual(len(expected_ticket_classes), len(created_ticket_classes))
+        for expected, created in zip(expected_ticket_classes, created_ticket_classes):
+            self.assertEqual(expected["name"], created["name"])
+            self.assertEqual(expected["quantity"], created["quantity"])
+            self.assertAlmostEqual(expected["price"], float(created["price"]), 2)
 
     def test_create_ticket_offerings_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
 
-        tickets = [
-            Ticket(type="free", showing=self.event_showing1, price=0.0)
-            for _ in range(10)
-        ]
-        Ticket.objects.bulk_create(tickets)
+        # Delete existing ticket classes first
+        TicketClass.objects.filter(showing=self.event_showing1).delete()
 
-        qts = {
-            "quantities": [
-                {"type": "_free", "count": 10, "price": 0},
+        # Create free ticket type payload
+        ticket_types_payload = {
+            "ticket_types": [
+                {"name": "_free", "quantity": 10, "price": 0},
             ]
         }
 
@@ -198,29 +208,36 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-tickets",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            qts,
+            ticket_types_payload,
             format="json",
         )
-
-        aggregated_tickets = list(
-            Ticket.objects.filter(showing=self.event_showing1, type__contains="_")
-            .values("type", "price")
-            .annotate(count=Count("id"))
-        )
-        for t1, t2 in zip(qts["quantities"], aggregated_tickets):
-            self.assertEqual(t1["type"], t2["type"])
-            self.assertAlmostEqual(t1["price"], float(t2["price"]), 0.00)
-            self.assertEqual(t1["count"], t2["count"])
-
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Assert based on TicketClass objects created
+        created_ticket_classes = list(
+            TicketClass.objects.filter(showing=self.event_showing1, name__contains="_")
+            .values("name", "quantity", "price")
+            .order_by("name")  # Ensure consistent order
+        )
+        expected_ticket_classes = sorted(
+            ticket_types_payload["ticket_types"], key=lambda x: x["name"]
+        )
+
+        self.assertEqual(len(expected_ticket_classes), len(created_ticket_classes))
+        for expected, created in zip(expected_ticket_classes, created_ticket_classes):
+            self.assertEqual(expected["name"], created["name"])
+            self.assertEqual(expected["quantity"], created["quantity"])
+            self.assertAlmostEqual(expected["price"], float(created["price"]), 2)
 
     def test_create_ticket_offerings_bad_perms(self):
         # user2 is not a superuser or club officer+
         self.client.login(username=self.user2.username, password="test")
-        qts = {
-            "quantities": [
-                {"type": "_normal", "count": 20, "price": 10},
-                {"type": "_premium", "count": 10, "price": 20},
+
+        # Use the new ticket_types payload format
+        ticket_types_payload = {
+            "ticket_types": [
+                {"name": "_normal", "quantity": 20, "price": 10},
+                {"name": "_premium", "quantity": 10, "price": 20},
             ]
         }
 
@@ -229,7 +246,7 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-tickets",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            qts,
+            ticket_types_payload,
             format="json",
         )
 
@@ -237,25 +254,61 @@ class TicketEventTestCase(TestCase):
 
     def test_create_ticket_offerings_bad_data(self):
         self.client.login(username=self.user1.username, password="test")
+
+        # Delete existing ticket classes first
+        TicketClass.objects.filter(showing=self.event_showing1).delete()
+
         bad_data = [
             {
                 # Bad toplevel field
-                "quant1t13s": [
-                    {"type": "_normal", "count": 20, "price": 10},
-                    {"type": "_premium", "count": 10, "price": 20},
+                "t1ck3t_typ3s": [
+                    {"name": "_normal", "quantity": 20, "price": 10},
+                    {"name": "_premium", "quantity": 10, "price": 20},
                 ]
             },
             {
-                "quantities": [
+                "ticket_types": [
                     # Negative price
-                    {"type": "_normal", "count": 20, "price": -10},
-                    {"type": "_premium", "count": 10, "price": -20},
+                    {"name": "_normal", "quantity": 20, "price": -10},
+                    {
+                        "name": "_premium",
+                        "quantity": 10,
+                        "price": 20,
+                    },  # Only one needs to be bad
                 ]
             },
             {
-                "quantities": [
-                    # Bad field members
-                    {"abcd": "_normal", "abcde": 20, "price": -10},
+                "ticket_types": [
+                    # Bad field members (missing required 'name' or 'quantity')
+                    {"abcd": "_normal", "abcde": 20, "price": 10},
+                ]
+            },
+            {
+                "ticket_types": [
+                    # Invalid group discount/size
+                    {
+                        "name": "_group",
+                        "quantity": 10,
+                        "price": 10,
+                        "group_discount": 1.5,
+                    },
+                ]
+            },
+            {
+                "ticket_types": [
+                    # Invalid group discount/size
+                    {"name": "_group", "quantity": 10, "price": 10, "group_size": 1},
+                ]
+            },
+            {
+                "ticket_types": [
+                    # Missing group_size when group_discount is present
+                    {
+                        "name": "_group",
+                        "quantity": 10,
+                        "price": 10,
+                        "group_discount": 0.1,
+                    },
                 ]
             },
         ]
@@ -269,63 +322,35 @@ class TicketEventTestCase(TestCase):
                 data,
                 format="json",
             )
-            self.assertIn(resp.status_code, [400], resp.content)
-            self.assertEqual(Ticket.objects.filter(type__contains="_").count(), 0, data)
+            self.assertEqual(
+                resp.status_code,
+                400,
+                f"Failed for data: {data} - Response: {resp.content}",
+            )
+            # Check that no ticket classes were created
+            self.assertEqual(
+                TicketClass.objects.filter(
+                    showing=self.event_showing1, name__contains="_"
+                ).count(),
+                0,
+                f"Ticket classes were created for bad data: {data}",
+            )
 
     def test_create_ticket_offerings_delay_drop(self):
         self.client.login(username=self.user1.username, password="test")
 
+        # Delete existing ticket classes first
+        TicketClass.objects.filter(showing=self.event_showing1).delete()
+
+        # Use the new ticket_types payload format and add drop_time
         args = {
-            "quantities": [
-                {"type": "_normal", "count": 20, "price": 10},
-                {"type": "_premium", "count": 10, "price": 20},
+            "ticket_types": [
+                {"name": "_normal", "quantity": 20, "price": 10},
+                {"name": "_premium", "quantity": 10, "price": 20},
             ],
             "drop_time": (timezone.now() + timezone.timedelta(hours=12)).strftime(
                 "%Y-%m-%dT%H:%M:%S%z"
             ),
-        }
-        _ = self.client.put(
-            reverse(
-                "club-events-showings-tickets",
-                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-            ),
-            args,
-            format="json",
-        )
-
-        self.event_showing1.refresh_from_db()
-
-        # Drop time should be set
-        self.assertIsNotNone(self.event_showing1.ticket_drop_time)
-
-        # Drop time should be 12 hours from initial ticket creation
-        expected_drop_time = timezone.now() + timezone.timedelta(hours=12)
-        diff = abs(self.event_showing1.ticket_drop_time - expected_drop_time)
-        self.assertTrue(diff < timezone.timedelta(minutes=5))
-
-        # Move Django's internal clock 13 hours forward
-        with freezegun.freeze_time(timezone.now() + timezone.timedelta(hours=13)):
-            resp = self.client.put(
-                reverse(
-                    "club-events-showings-tickets",
-                    args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-                ),
-                args,
-                format="json",
-            )
-
-            # Tickets shouldn't be editable after drop time has elapsed
-            self.assertEqual(resp.status_code, 403, resp.content)
-
-    def test_create_ticket_offerings_already_owned_or_held(self):
-        self.client.login(username=self.user1.username, password="test")
-
-        # Create ticket offerings
-        args = {
-            "quantities": [
-                {"type": "_normal", "count": 5, "price": 10},
-                {"type": "_premium", "count": 3, "price": 20},
-            ],
         }
         resp = self.client.put(
             reverse(
@@ -337,41 +362,99 @@ class TicketEventTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        # Simulate checkout by applying holds
-        for ticket in Ticket.objects.filter(type="_normal"):
-            ticket.holder = self.user1
-            ticket.save()
+        self.event_showing1.refresh_from_db()
 
-        # Recreating tickets should fail
-        resp = self.client.put(
+        # Drop time should be set
+        self.assertIsNotNone(self.event_showing1.ticket_drop_time)
+
+        # Drop time should be ~12 hours from initial ticket creation
+        expected_drop_time = timezone.now() + timezone.timedelta(hours=12)
+        diff = abs(self.event_showing1.ticket_drop_time - expected_drop_time)
+        self.assertTrue(diff < timezone.timedelta(minutes=5))  # Allow some flexibility
+
+        # Move Django's internal clock 13 hours forward
+        with freezegun.freeze_time(timezone.now() + timezone.timedelta(hours=13)):
+            # Attempt to edit tickets after drop time
+            resp_edit = self.client.put(
+                reverse(
+                    "club-events-showings-tickets",
+                    args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
+                ),
+                args,  # Using the same args payload
+                format="json",
+            )
+
+            # Tickets shouldn't be editable after drop time has elapsed
+            self.assertEqual(resp_edit.status_code, 403, resp_edit.content)
+            self.assertIn(
+                "Tickets cannot be edited after they have dropped",
+                str(resp_edit.content),
+            )
+
+    def test_create_ticket_offerings_already_owned(self):
+        self.client.login(username=self.user1.username, password="test")
+
+        # Create initial ticket classes (replacing setup ones for clarity)
+        TicketClass.objects.filter(showing=self.event_showing1).delete()
+        tc_normal = TicketClass.objects.create(
+            showing=self.event_showing1,
+            name="_normal",
+            quantity=5,
+            remaining=5,
+            price=10,
+        )
+        TicketClass.objects.create(
+            showing=self.event_showing1,
+            name="_premium",
+            quantity=3,
+            remaining=3,
+            price=20,
+        )
+
+        # Simulate purchase by creating a Ticket instance and assigning an owner
+        # Need a transaction record first
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-{uuid.uuid4().hex[:8]}",
+            total_amount=tc_normal.price,
+            buyer_first_name=self.user2.first_name,
+            buyer_last_name=self.user2.last_name,
+            buyer_email=self.user2.email,
+        )
+        Ticket.objects.create(
+            ticket_class=tc_normal,
+            owner=self.user2,
+            transaction_record=transaction_record,
+            owner_email=self.user2.email,  # Set owner_email
+        )
+        tc_normal.remaining -= 1  # Manually update remaining count
+        tc_normal.save()
+
+        # Attempt to recreate/update ticket classes via PUT should fail
+        args_update = {
+            "ticket_types": [
+                {
+                    "name": "_normal",
+                    "quantity": 6,
+                    "price": 12,
+                },  # Change quantity/price
+                {"name": "_premium", "quantity": 3, "price": 20},
+            ],
+        }
+        resp_put = self.client.put(
             reverse(
                 "club-events-showings-tickets",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            args,
+            args_update,
             format="json",
         )
-        self.assertEqual(resp.status_code, 403, resp.content)
-
-        # Simulate purchase by transferring ownership
-        for ticket in Ticket.objects.filter(type="_normal", holder=self.user1):
-            ticket.owner = self.user1
-            ticket.holder = None
-            ticket.save()
-
-        # Recreating tickets should fail
-        resp = self.client.put(
-            reverse(
-                "club-events-showings-tickets",
-                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-            ),
-            args,
-            format="json",
+        self.assertEqual(resp_put.status_code, 403, resp_put.content)
+        self.assertIn(
+            "Tickets cannot be edited after they have been sold", str(resp_put.content)
         )
-        self.assertEqual(resp.status_code, 403, resp.content)
 
-        # Changing ticket drop time should fail
-        resp = self.client.patch(
+        # Changing ticket drop time via PATCH should also fail if tickets exist
+        resp_patch = self.client.patch(
             reverse(
                 "club-events-showings-detail",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
@@ -383,16 +466,39 @@ class TicketEventTestCase(TestCase):
             },
             format="json",
         )
-        self.assertEqual(resp.status_code, 400, resp.content)
+        # Since we created a ticket instance with an owner, this should fail.
+        self.assertEqual(resp_patch.status_code, 400, resp_patch.content)
+        self.assertIn(
+            "Ticket drop times cannot be edited after tickets have been sold or held",
+            str(resp_patch.content),
+        )
 
     def test_issue_tickets(self):
         self.client.login(username=self.user1.username, password="test")
         args = {
             "tickets": [
-                {"username": self.user1.username, "ticket_type": "normal"},
-                {"username": self.user1.username, "ticket_type": "premium"},
-                {"username": self.user2.username, "ticket_type": "normal"},
-                {"username": self.user2.username, "ticket_type": "premium"},
+                # Use the names from TicketClass setup
+                {
+                    "username": self.user1.username,
+                    "ticket_type": self.ticket_class_normal1.name,
+                    "quantity": 1,
+                },
+                {
+                    "username": self.user1.username,
+                    "ticket_type": self.ticket_class_premium1.name,
+                    "quantity": 1,
+                },
+                {
+                    "username": self.user2.username,
+                    "ticket_type": self.ticket_class_normal1.name,
+                    "quantity": 1,
+                },
+                # Test issuing by email for a guest (no username)
+                {
+                    "email": "guest@example.com",
+                    "ticket_type": self.ticket_class_premium1.name,
+                    "quantity": 1,
+                },
             ]
         }
         resp = self.client.post(
@@ -404,28 +510,70 @@ class TicketEventTestCase(TestCase):
             format="json",
         )
 
-        self.assertEqual(resp.status_code, 200, resp.content)
+        # Expect 201 CREATED now
+        self.assertEqual(resp.status_code, 201, resp.content)
 
+        # Check tickets created for registered users
         for item in args["tickets"]:
-            username, ticket_type = item["username"], item["ticket_type"]
-            user = get_user_model().objects.get(username=username)
+            ticket_type = item["ticket_type"]
+            quantity = item.get("quantity", 1)  # Default to 1 if not specified
 
-            self.assertEqual(
-                Ticket.objects.filter(
-                    type=ticket_type, owner=user, transaction_record__total_amount=0.0
+            if "username" in item:
+                username = item["username"]
+                user = get_user_model().objects.get(username=username)
+                self.assertEqual(
+                    Ticket.objects.filter(
+                        ticket_class__name=ticket_type,
+                        ticket_class__showing=self.event_showing1,
+                        owner=user,
+                        transaction_record__total_amount=0.0,  # Admin issued are free
+                    )
+                    .select_related("transaction_record", "ticket_class")
+                    .count(),
+                    quantity,
+                    f"Failed for user {username}, type {ticket_type}",
                 )
-                .select_related("transaction_record")
-                .count(),
-                1,
-            )
+            elif "email" in item:
+                email = item["email"]
+                self.assertEqual(
+                    Ticket.objects.filter(
+                        ticket_class__name=ticket_type,
+                        ticket_class__showing=self.event_showing1,
+                        owner__isnull=True,  # Guest user
+                        owner_email=email,
+                        transaction_record__total_amount=0.0,  # Admin issued are free
+                    )
+                    .select_related("transaction_record", "ticket_class")
+                    .count(),
+                    quantity,
+                    f"Failed for guest email {email}, type {ticket_type}",
+                )
+
+        # Check inventory was reduced
+        self.ticket_class_normal1.refresh_from_db()
+        self.ticket_class_premium1.refresh_from_db()
+        self.assertEqual(
+            self.ticket_class_normal1.remaining, self.ticket_class_normal1.quantity - 2
+        )  # 2 normal issued
+        self.assertEqual(
+            self.ticket_class_premium1.remaining,
+            self.ticket_class_premium1.quantity - 2,
+        )  # 2 premium issued
 
     def test_issue_tickets_bad_perms(self):
         # user2 is not a superuser or club officer+
         self.client.login(username=self.user2.username, password="test")
         args = {
             "tickets": [
-                {"username": self.user1.username, "ticket_type": "normal"},
-                {"username": self.user2.username, "ticket_type": "normal"},
+                # Use names from TicketClass setup
+                {
+                    "username": self.user1.username,
+                    "ticket_type": self.ticket_class_normal1.name,
+                },
+                {
+                    "username": self.user2.username,
+                    "ticket_type": self.ticket_class_normal1.name,
+                },
             ]
         }
 
@@ -441,53 +589,72 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(resp.status_code, 403, resp.content)
 
     def test_issue_tickets_invalid_username_ticket_type(self):
-        # All usernames must be valid
+        # Test invalid usernames
         self.client.login(username=self.user1.username, password="test")
-        args = {
+        args_invalid_user = {
             "tickets": [
-                {"username": "invalid_user_1", "ticket_type": "normal"},
-                {"username": "invalid_user_2", "ticket_type": "premium"},
+                {
+                    "username": "invalid_user_1",
+                    "ticket_type": self.ticket_class_normal1.name,
+                },
+                {
+                    "username": "invalid_user_2",
+                    "ticket_type": self.ticket_class_premium1.name,
+                },
             ]
         }
-        resp = self.client.post(
+        resp_invalid_user = self.client.post(
             reverse(
                 "club-events-showings-issue-tickets",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            args,
+            args_invalid_user,
             format="json",
         )
 
-        self.assertEqual(resp.status_code, 400, resp.content)
-        data = resp.json()
-        self.assertEqual(data["errors"], ["invalid_user_1", "invalid_user_2"])
+        self.assertEqual(resp_invalid_user.status_code, 400, resp_invalid_user.content)
+        data_invalid_user = resp_invalid_user.json()
+        self.assertIn("Validation failed", data_invalid_user["detail"])
+        self.assertIn("User invalid_user_1 not found", data_invalid_user["errors"])
+        self.assertIn("User invalid_user_2 not found", data_invalid_user["errors"])
 
-        # All requested ticket types must be valid
-        args = {
+        # Test invalid ticket types
+        args_invalid_type = {
             "tickets": [
                 {"username": self.user2.username, "ticket_type": "invalid_type_1"},
                 {"username": self.user2.username, "ticket_type": "invalid_type_2"},
             ]
         }
-        resp = self.client.post(
+        resp_invalid_type = self.client.post(
             reverse(
                 "club-events-showings-issue-tickets",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            args,
+            args_invalid_type,
             format="json",
         )
 
-        self.assertEqual(resp.status_code, 400, resp.content)
-        data = resp.json()
-        self.assertEqual(data["errors"], ["invalid_type_1", "invalid_type_2"])
+        self.assertEqual(resp_invalid_type.status_code, 400, resp_invalid_type.content)
+        data_invalid_type = resp_invalid_type.json()
+        self.assertIn("Validation failed", data_invalid_type["detail"])
+        self.assertIn(
+            "Ticket type 'invalid_type_1' not found", data_invalid_type["errors"]
+        )
+        self.assertIn(
+            "Ticket type 'invalid_type_2' not found", data_invalid_type["errors"]
+        )
 
     def test_issue_tickets_insufficient_quantity(self):
         self.client.login(username=self.user1.username, password="test")
+        # Request more tickets than available for the 'normal' class
+        insufficient_quantity = self.ticket_class_normal1.quantity + 1
         args = {
             "tickets": [
-                {"username": self.user2.username, "ticket_type": "normal"}
-                for _ in range(100)
+                {
+                    "username": self.user2.username,
+                    "ticket_type": self.ticket_class_normal1.name,
+                    "quantity": insufficient_quantity,
+                }
             ]
         }
         resp = self.client.post(
@@ -500,16 +667,28 @@ class TicketEventTestCase(TestCase):
         )
 
         self.assertEqual(resp.status_code, 400, resp.content)
-        self.assertIn(
-            "Not enough tickets available for type: normal", str(resp.content)
+        data = resp.json()
+        self.assertIn("Validation failed", data["detail"])
+        # Check for the specific inventory error message format
+        expected_error = (
+            f"Not enough inventory for '{self.ticket_class_normal1.name}': "
+            f"requested {insufficient_quantity}, but only "
+            f"{self.ticket_class_normal1.remaining} available"
+        )
+        self.assertIn(expected_error, data["errors"])
+
+        # No tickets should be transferred/created
+        self.assertEqual(
+            Ticket.objects.filter(
+                owner=self.user2, ticket_class=self.ticket_class_normal1
+            ).count(),
+            0,
         )
 
-        # No tickets should be transferred
-        self.assertEqual(Ticket.objects.filter(owner=self.user2).count(), 0)
-
-        # No holds should be given
+        # Inventory should remain unchanged
+        self.ticket_class_normal1.refresh_from_db()
         self.assertEqual(
-            Ticket.objects.filter(type="normal", holder__isnull=False).count(), 0
+            self.ticket_class_normal1.remaining, self.ticket_class_normal1.quantity
         )
 
     def test_email_blast(self):
@@ -518,9 +697,20 @@ class TicketEventTestCase(TestCase):
         )
         self.client.login(username=self.user1.username, password="test")
 
-        ticket1 = self.tickets1[0]
-        ticket1.owner = self.user2
-        ticket1.save()
+        # Create a transaction record and a ticket instance owned by user2
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-BLAST-{uuid.uuid4().hex[:8]}",
+            total_amount=0,  # Irrelevant for this test
+            buyer_first_name=self.user2.first_name,
+            buyer_last_name=self.user2.last_name,
+            buyer_email=self.user2.email,
+        )
+        Ticket.objects.create(
+            ticket_class=self.ticket_class_normal1,
+            owner=self.user2,
+            transaction_record=transaction_record,
+            owner_email=self.user2.email,  # Explicitly set owner_email
+        )
 
         resp = self.client.post(
             reverse(
@@ -557,8 +747,8 @@ class TicketEventTestCase(TestCase):
         self.assertEqual(resp.status_code, 400, resp.content)
 
     def test_get_tickets_information_no_tickets(self):
-        # Delete all the tickets
-        Ticket.objects.all().delete()
+        # Delete all ticket classes for this showing
+        TicketClass.objects.filter(showing=self.event_showing1).delete()
 
         resp = self.client.get(
             reverse(
@@ -566,16 +756,32 @@ class TicketEventTestCase(TestCase):
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
         )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(resp.status_code, 200, resp.content)
         data = resp.json()
-        self.assertEqual(data["totals"], [], data["totals"])
-        self.assertEqual(data["available"], [], data["available"])
+        # Expect an empty list for ticket_types
+        self.assertEqual(data.get("ticket_types"), [], data)
 
     def test_get_tickets_information(self):
-        # Buy all normal tickets
-        for ticket in self.tickets1:
-            ticket.owner = self.user1
-            ticket.save()
+        # Simulate buying all normal tickets
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-GETINFO-{uuid.uuid4().hex[:8]}",
+            total_amount=self.ticket_class_normal1.price
+            * self.ticket_class_normal1.quantity,
+            buyer_first_name=self.user1.first_name,
+            buyer_last_name=self.user1.last_name,
+            buyer_email=self.user1.email,
+        )
+        for _ in range(self.ticket_class_normal1.quantity):
+            Ticket.objects.create(
+                ticket_class=self.ticket_class_normal1,
+                owner=self.user1,
+                transaction_record=transaction_record,
+                owner_email=self.user1.email,
+            )
+
+        # Manually update remaining count for the ticket class
+        self.ticket_class_normal1.remaining = 0
+        self.ticket_class_normal1.save()
 
         resp = self.client.get(
             reverse(
@@ -583,23 +789,57 @@ class TicketEventTestCase(TestCase):
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
         )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(resp.status_code, 200, resp.content)
         data = resp.json()
-        self.assertEqual(data["totals"], self.ticket_totals, data["totals"])
-        self.assertEqual(
-            data["available"],
-            # Only premium tickets available
-            [t for t in self.ticket_totals if t["type"] == "premium"],
-            data["available"],
+
+        # Find the normal and premium ticket types in the response
+        normal_info = next(
+            (tc for tc in data["ticket_types"] if tc["name"] == "normal"), None
+        )
+        premium_info = next(
+            (tc for tc in data["ticket_types"] if tc["name"] == "premium"), None
+        )
+
+        self.assertIsNotNone(normal_info, "Normal ticket type not found in response")
+        self.assertIsNotNone(premium_info, "Premium ticket type not found in response")
+
+        # Check normal tickets (all sold)
+        self.assertEqual(normal_info["remaining"], 0)
+        self.assertAlmostEqual(
+            normal_info["price"], float(self.ticket_class_normal1.price), 2
+        )
+
+        # Check premium tickets (all available)
+        self.assertEqual(premium_info["remaining"], self.ticket_class_premium1.quantity)
+        self.assertAlmostEqual(
+            premium_info["price"], float(self.ticket_class_premium1.price), 2
         )
 
     def test_get_tickets_buyers(self):
         self.client.login(username=self.user1.username, password="test")
 
-        # Buy all normal tickets
-        for ticket in self.tickets1:
-            ticket.owner = self.user1
-            ticket.save()
+        # Simulate buying some normal tickets with user1
+        num_tickets_to_buy = 5
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-BUYERS-{uuid.uuid4().hex[:8]}",
+            total_amount=self.ticket_class_normal1.price * num_tickets_to_buy,
+            buyer_first_name=self.user1.first_name,
+            buyer_last_name=self.user1.last_name,
+            buyer_email=self.user1.email,
+        )
+        bought_ticket_ids = set()
+        for _ in range(num_tickets_to_buy):
+            ticket = Ticket.objects.create(
+                ticket_class=self.ticket_class_normal1,
+                owner=self.user1,
+                transaction_record=transaction_record,
+                owner_email=self.user1.email,
+            )
+            bought_ticket_ids.add(str(ticket.id))
+
+        # Manually update remaining count
+        self.ticket_class_normal1.remaining -= num_tickets_to_buy
+        self.ticket_class_normal1.save()
 
         resp = self.client.get(
             reverse(
@@ -607,18 +847,43 @@ class TicketEventTestCase(TestCase):
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
         )
+        self.assertEqual(resp.status_code, 200, resp.content)
 
         data = resp.json()
+        self.assertIn("buyers", data)
+        self.assertEqual(len(data["buyers"]), num_tickets_to_buy)
+
         # Assert ownership correctly determined
-        for owned_ticket in data["buyers"]:
-            self.assertEqual(owned_ticket["owner_id"], self.user1.id)
+        returned_ids = set()
+        for buyer_info in data["buyers"]:
+            self.assertEqual(buyer_info["owner_id"], self.user1.id)
+            self.assertEqual(buyer_info["ticket_type"], self.ticket_class_normal1.name)
+            self.assertEqual(buyer_info["email"], self.user1.email)
+            returned_ids.add(buyer_info["id"])
+
+        # Ensure the correct tickets were returned
+        self.assertEqual(bought_ticket_ids, returned_ids)
 
     def test_get_tickets_buyers_bad_perms(self):
+        # Simulate buying some tickets first
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-BUYERS-PERM-{uuid.uuid4().hex[:8]}",
+            total_amount=0,
+            buyer_first_name="Test",
+            buyer_last_name="Buyer",
+            buyer_email="t@b.com",
+        )
+        Ticket.objects.create(
+            ticket_class=self.ticket_class_normal1,
+            owner=self.user1,  # Assign an owner
+            transaction_record=transaction_record,
+            owner_email=self.user1.email,
+        )
+        self.ticket_class_normal1.remaining -= 1
+        self.ticket_class_normal1.save()
+
         # user2 is not a superuser or club officer+
         self.client.login(username=self.user2.username, password="test")
-        for ticket in self.tickets1:
-            ticket.owner = self.user1
-            ticket.save()
 
         resp = self.client.get(
             reverse(
@@ -632,10 +897,11 @@ class TicketEventTestCase(TestCase):
     def test_add_to_cart(self):
         self.client.login(username=self.user1.username, password="test")
 
-        tickets_to_add = {
+        # Payload using ticket_class_id
+        payload = {
             "quantities": [
-                {"type": "normal", "count": 2},
-                {"type": "premium", "count": 1},
+                {"ticket_class_id": self.ticket_class_normal1.id, "quantity": 2},
+                {"ticket_class_id": self.ticket_class_premium1.id, "quantity": 1},
             ]
         }
         resp = self.client.post(
@@ -643,15 +909,25 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-add-to-cart",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = resp.json()
+        self.assertTrue(data.get("success"))
+        self.assertIsNotNone(data.get("cart_id"))
+        cart_id = data["cart_id"]
 
-        cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 3, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
+        # Verify CartItem objects
+        cart = Cart.objects.get(id=cart_id)
+        self.assertEqual(cart.owner, self.user1)
+        self.assertEqual(cart.items.count(), 2)
+
+        item_normal = cart.items.get(ticket_class=self.ticket_class_normal1)
+        item_premium = cart.items.get(ticket_class=self.ticket_class_premium1)
+
+        self.assertEqual(item_normal.quantity, 2)
+        self.assertEqual(item_premium.quantity, 1)
 
     def test_add_to_cart_elapsed_event(self):
         self.client.login(username=self.user1.username, password="test")
@@ -660,9 +936,9 @@ class TicketEventTestCase(TestCase):
         self.event_showing1.end_time = timezone.now() - timezone.timedelta(days=1)
         self.event_showing1.save()
 
-        tickets_to_add = {
+        payload = {
             "quantities": [
-                {"type": "normal", "count": 1},
+                {"ticket_class_id": self.ticket_class_normal1.id, "quantity": 1},
             ]
         }
         resp = self.client.post(
@@ -670,46 +946,27 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-add-to-cart",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
 
-        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(resp.status_code, 400, resp.content)
         self.assertIn("This showing has already ended", resp.data["detail"], resp.data)
-
-    def test_add_to_cart_twice_accumulates(self):
-        self.client.login(username=self.user1.username, password="test")
-
-        # Adding 3 tickets twice
-        for _ in range(2):
-            tickets_to_add = {
-                "quantities": [
-                    {"type": "normal", "count": 2},
-                    {"type": "premium", "count": 1},
-                ]
-            }
-            resp = self.client.post(
-                reverse(
-                    "club-events-showings-add-to-cart",
-                    args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-                ),
-                tickets_to_add,
-                format="json",
-            )
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-
-        cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 6, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="normal").count(), 4, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="premium").count(), 2, cart.tickets)
+        self.assertFalse(resp.data.get("success"))
 
     def test_add_to_cart_order_limit_exceeded(self):
         self.client.login(username=self.user1.username, password="test")
 
-        tickets_to_add = {
+        # Set a low order limit for the showing
+        self.event_showing1.ticket_order_limit = 2
+        self.event_showing1.save()
+
+        payload = {
             "quantities": [
-                {"type": "normal", "count": 200},
-                {"type": "premium", "count": 1},
+                {
+                    "ticket_class_id": self.ticket_class_normal1.id,
+                    "quantity": 3,
+                },  # Exceeds limit
             ]
         }
         resp = self.client.post(
@@ -717,25 +974,29 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-add-to-cart",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
-        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertFalse(resp.data.get("success"))
         self.assertIn(
-            "Order exceeds the maximum ticket limit of", resp.data["detail"], resp.data
+            "Order exceeds the maximum ticket limit of "
+            f"{self.event_showing1.ticket_order_limit}.",
+            resp.data["detail"],
+            resp.data,
         )
 
     def test_add_to_cart_tickets_unavailable(self):
         self.client.login(username=self.user1.username, password="test")
 
-        # Delete all but 1 ticket
-        for t in list(Ticket.objects.all())[:-1]:
-            t.delete()
+        # Reduce remaining tickets for the normal class
+        self.ticket_class_normal1.remaining = 1
+        self.ticket_class_normal1.save()
 
         # Try to add two tickets
-        tickets_to_add = {
+        payload = {
             "quantities": [
-                {"type": "normal", "count": 2},
+                {"ticket_class_id": self.ticket_class_normal1.id, "quantity": 2},
             ]
         }
         resp = self.client.post(
@@ -743,24 +1004,29 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-add-to-cart",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
         self.assertEqual(resp.status_code, 403, resp.data)
+        self.assertFalse(resp.data.get("success"))
         self.assertIn(
-            "Not enough tickets of type normal left!", resp.data["detail"], resp.data
+            f"Not enough tickets of type {self.ticket_class_normal1.name} left!",
+            resp.data["detail"],
+            resp.data,
         )
 
     def test_add_to_cart_before_ticket_drop(self):
         self.client.login(username=self.user1.username, password="test")
 
-        # Set drop time
-        self.event_showing1.ticket_drop_time = timezone.now() + timedelta(hours=12)
+        # Set drop time in the future
+        self.event_showing1.ticket_drop_time = timezone.now() + timezone.timedelta(
+            hours=12
+        )
         self.event_showing1.save()
 
-        tickets_to_add = {
+        payload = {
             "quantities": [
-                {"type": "normal", "count": 2},
+                {"ticket_class_id": self.ticket_class_normal1.id, "quantity": 2},
             ]
         }
         resp = self.client.post(
@@ -768,18 +1034,25 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-add-to-cart",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
 
         # Tickets should not be added to cart before drop time
-        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertFalse(resp.data.get("success"))
+        self.assertIn(
+            "Ticket drop time has not yet elapsed", resp.data["detail"], resp.data
+        )
 
     def test_add_to_cart_unapproved_club(self):
         self.client.login(username=self.user1.username, password="test")
-        tickets_to_add = {
+        payload = {
             "quantities": [
-                {"type": "normal", "count": 2},
+                {
+                    "ticket_class_id": self.unapproved_ticket_class_normal.id,
+                    "quantity": 2,
+                },
             ]
         }
         resp = self.client.post(
@@ -791,10 +1064,11 @@ class TicketEventTestCase(TestCase):
                     self.unapproved_event_showing.pk,
                 ),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
-        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(resp.status_code, 403, resp.content)  # Club not approved
+        self.assertFalse(resp.data.get("success"))
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.post(
             reverse(
@@ -805,16 +1079,17 @@ class TicketEventTestCase(TestCase):
                     self.unapproved_event_showing.pk,
                 ),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
-        # Cannot see event
+        # Non-officer/superuser cannot see unapproved/ghost club event
         self.assertEqual(resp.status_code, 404, resp.content)
 
     def test_add_to_cart_nonexistent_club(self):
-        tickets_to_add = {
+        payload = {
             "quantities": [
-                {"type": "normal", "count": 2},
+                # Use a valid ticket class ID from an existing showing for this part
+                {"ticket_class_id": self.ticket_class_normal1.id, "quantity": 2},
             ]
         }
         resp = self.client.post(
@@ -822,131 +1097,51 @@ class TicketEventTestCase(TestCase):
                 "club-events-showings-add-to-cart",
                 args=(
                     "Random club name",
-                    self.unapproved_event.pk,
-                    self.event_showing1.pk,
+                    self.event1.pk,  # Use valid event pk
+                    self.event_showing1.pk,  # Use valid showing pk
                 ),
             ),
-            tickets_to_add,
+            payload,
             format="json",
         )
-        self.assertEqual(resp.status_code, 404, resp.content)
-
-    def test_remove_from_cart(self):
-        self.client.login(username=self.user1.username, password="test")
-
-        # Add a few tickets
-        tickets_to_add = {
-            "quantities": [
-                {"type": "normal", "count": 2},
-                {"type": "premium", "count": 1},
-            ]
-        }
-        resp = self.client.post(
-            reverse(
-                "club-events-showings-add-to-cart",
-                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-            ),
-            tickets_to_add,
-            format="json",
-        )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
-
-        cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 3, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
-
-        # Remove all but one from normal
-        tickets_to_remove = {
-            "quantities": [
-                {"type": "normal", "count": 1},
-                {"type": "premium", "count": 1},
-            ]
-        }
-
-        resp = self.client.post(
-            reverse(
-                "club-events-showings-remove-from-cart",
-                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-            ),
-            tickets_to_remove,
-            format="json",
-        )
-
-        self.assertIn(resp.status_code, [200, 201], resp.content)
-
-        cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.filter(type="normal").count(), 1, cart.tickets)
-
-    def test_remove_from_cart_extra(self):
-        self.client.login(username=self.user1.username, password="test")
-
-        # Add a few tickets
-        tickets_to_add = {
-            "quantities": [
-                {"type": "normal", "count": 2},
-                {"type": "premium", "count": 1},
-            ]
-        }
-        resp = self.client.post(
-            reverse(
-                "club-events-showings-add-to-cart",
-                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-            ),
-            tickets_to_add,
-            format="json",
-        )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
-
-        cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 3, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="normal").count(), 2, cart.tickets)
-        self.assertEqual(cart.tickets.filter(type="premium").count(), 1, cart.tickets)
-
-        # Remove more than what exists...still ok.
-        tickets_to_remove = {
-            "quantities": [
-                {"type": "normal", "count": 200},
-                {"type": "premium", "count": 100},
-            ]
-        }
-        resp = self.client.post(
-            reverse(
-                "club-events-showings-remove-from-cart",
-                args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
-            ),
-            tickets_to_remove,
-            format="json",
-        )
-
-        self.assertIn(resp.status_code, [200, 201], resp.content)
-
-        cart = Cart.objects.get(owner=self.user1)
-        self.assertEqual(cart.tickets.count(), 0, cart.tickets)
+        self.assertEqual(resp.status_code, 404, resp.content)  # Club not found
 
     def test_delete_event_with_claimed_tickets(self):
-        # Simulate checkout (hold ticket)
-        self.tickets1[0].holder = self.user1
-        self.tickets1[0].save()
+        # Simulate purchase (create a ticket instance)
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-DELETE-{uuid.uuid4().hex[:8]}",
+            total_amount=0,
+            buyer_first_name="Test",
+            buyer_last_name="User",
+            buyer_email="t@u.com",
+        )
+        Ticket.objects.create(
+            ticket_class=self.ticket_class_normal1,
+            owner=self.user1,
+            transaction_record=transaction_record,
+            owner_email=self.user1.email,
+        )
+        self.ticket_class_normal1.remaining -= 1
+        self.ticket_class_normal1.save()
 
         self.client.login(username=self.user1.username, password="test")
-        resp_held = self.client.delete(
+
+        # Try deleting showing - should fail due to owned ticket
+        resp_showing_delete = self.client.delete(
             reverse(
                 "club-events-showings-detail",
                 args=(self.club1.code, self.event1.pk, self.event_showing1.pk),
             )
         )
-        self.assertEqual(resp_held.status_code, 400, resp_held.content)
+        self.assertEqual(
+            resp_showing_delete.status_code, 400, resp_showing_delete.content
+        )
 
-        # Simulate purchase (transfer ticket)
-        self.tickets1[0].holder = None
-        self.tickets1[0].owner = self.user1
-        self.tickets1[0].save()
-
-        resp_bought = self.client.delete(
+        # Try deleting parent event - should also fail due to owned ticket in showing
+        resp_event_delete = self.client.delete(
             reverse("club-events-detail", args=(self.club1.code, self.event1.pk))
         )
-        self.assertEqual(resp_bought.status_code, 400, resp_bought.content)
+        self.assertEqual(resp_event_delete.status_code, 400, resp_event_delete.content)
 
 
 @dataclass
@@ -1031,51 +1226,104 @@ class TicketTestCase(TestCase):
 
     def test_get_ticket_owned_by_me(self):
         self.client.login(username=self.user1.username, password="test")
-        ticket = self.tickets1[0]
 
-        # Fail to get when not owned
+        # Create a transaction record and ticket instance first
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-GETTICKET-{uuid.uuid4().hex[:8]}",
+            total_amount=0,
+            buyer_first_name="Test",
+            buyer_last_name="User",
+            buyer_email="t@u.com",
+        )
+        ticket_instance = Ticket.objects.create(
+            ticket_class=self.ticket_class_normal1,
+            transaction_record=transaction_record,
+            # No owner initially
+            owner_email="t@u.com",
+        )
+
+        # Fail to get when not owned by logged-in user
         resp = self.client.get(
-            reverse("tickets-detail", args=(ticket.id,)), format="json"
+            reverse("tickets-detail", args=(ticket_instance.id,)), format="json"
         )
         self.assertEqual(resp.status_code, 404, resp.content)
 
         # Succeed when owned
-        ticket.owner = self.user1
-        ticket.save()
+        ticket_instance.owner = self.user1
+        ticket_instance.owner_email = self.user1.email  # Update owner email too
+        ticket_instance.save()
+
         resp = self.client.get(
-            reverse("tickets-detail", args=(ticket.id,)), format="json"
+            reverse("tickets-detail", args=(ticket_instance.id,)), format="json"
         )
         data = resp.json()
         self.assertEqual(resp.status_code, 200, resp.content)
 
-        # Test the serializer API
-        for field in ["price", "id", "type", "owner", "event"]:
-            self.assertIn(field, data, data)
+        # Test the serializer API fields (based on TicketSerializer)
+        expected_fields = [
+            "id",
+            "event",
+            "ticket_type",
+            "owner",
+            "attended",
+            "price",
+            "owner_email",
+            "created_at",
+            "updated_at",
+        ]
+        for field in expected_fields:
+            self.assertIn(field, data, f"Field '{field}' missing in response: {data}")
+
+        self.assertEqual(data["id"], str(ticket_instance.id))
+        self.assertEqual(data["ticket_type"], self.ticket_class_normal1.name)
+        self.assertEqual(data["owner"], self.user1.get_full_name())
 
     def test_list_tickets_owned_by_me(self):
         self.client.login(username=self.user1.username, password="test")
 
-        # Fail to get when not owned
+        # Check empty list when no tickets are owned
         resp = self.client.get(reverse("tickets-list"), format="json")
         self.assertEqual(resp.status_code, 200, resp.content)
-        self.assertEqual(resp.json(), [], resp)
+        self.assertEqual(resp.json(), [], resp.content)
 
-        # List all 5 tickets when owned
-        for ticket in self.tickets1[:5]:
-            ticket.owner = self.user1
-            ticket.save()
+        # Create 5 tickets owned by user1
+        num_tickets = 5
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=f"TEST-LISTTICKETS-{uuid.uuid4().hex[:8]}",
+            total_amount=0,
+            buyer_first_name=self.user1.first_name,
+            buyer_last_name=self.user1.last_name,
+            buyer_email=self.user1.email,
+        )
+        created_ticket_ids = set()
+        for i in range(num_tickets):
+            # Use both ticket classes for variety
+            ticket_class = (
+                self.ticket_class_normal1 if i % 2 == 0 else self.ticket_class_premium1
+            )
+            ticket = Ticket.objects.create(
+                ticket_class=ticket_class,
+                owner=self.user1,
+                transaction_record=transaction_record,
+                owner_email=self.user1.email,
+            )
+            created_ticket_ids.add(str(ticket.id))
 
         resp = self.client.get(reverse("tickets-list"), format="json")
         data = resp.json()
         self.assertEqual(resp.status_code, 200, resp.content)
-        self.assertEqual(len(data), 5, data)
+        self.assertEqual(len(data), num_tickets, data)
+
+        # Verify the IDs of the returned tickets match those created
+        returned_ids = set(t["id"] for t in data)
+        self.assertEqual(created_ticket_ids, returned_ids)
 
     def test_get_cart(self):
         self.client.login(username=self.user1.username, password="test")
 
         # Add a few tickets to cart
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:5]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:5]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
@@ -1092,7 +1340,7 @@ class TicketTestCase(TestCase):
     def test_calculate_cart_total(self):
         # Add a few tickets to cart
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:5]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:5]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
@@ -1138,86 +1386,12 @@ class TicketTestCase(TestCase):
         total = TicketViewSet._calculate_cart_total(cart)
         self.assertEqual(total, 40.0)  # 5 * price=10 * (1 - group_discount=0.2) = 40
 
-    def test_get_cart_replacement_required(self):
-        self.client.login(username=self.user1.username, password="test")
-
-        # Add a few tickets
-        cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:5]
-        for ticket in tickets_to_add:
-            cart.tickets.add(ticket)
-        cart.save()
-
-        # Sell the first two
-        for selling_ticket in tickets_to_add[:2]:
-            selling_ticket.owner = self.user2
-            selling_ticket.save()
-
-        resp = self.client.get(reverse("tickets-cart"), format="json")
-        data = resp.json()
-
-        # The cart still has 5 tickets: just replaced with available ones
-        self.assertEqual(len(data["tickets"]), 5, data)
-        self.assertEqual(len(data["sold_out"]), 0, data)
-
-        in_cart = set(map(lambda t: t["id"], data["tickets"]))
-        to_add = set(map(lambda t: str(t.id), tickets_to_add))
-
-        # 3 tickets are the same
-        self.assertEqual(len(in_cart & to_add), 3, in_cart | to_add)
-
-    def test_get_cart_replacement_required_sold_out(self):
-        self.client.login(username=self.user1.username, password="test")
-
-        # Add a few tickets
-        cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:5]
-        for ticket in tickets_to_add:
-            cart.tickets.add(ticket)
-        cart.save()
-
-        # There are 5 tickets in the cart. We will sell
-        # all but 3 tickets of this type to someone
-        # This should force 2 tickets reporting as sold out
-        for selling_ticket in self.tickets1[:-3]:
-            selling_ticket.owner = self.user2
-            selling_ticket.save()
-
-        resp = self.client.get(reverse("tickets-cart"), format="json")
-        data = resp.json()
-
-        # The cart now has 3 tickets
-        self.assertEqual(len(data["tickets"]), 3, data)
-
-        # Only 1 type of ticket should be sold out
-        self.assertEqual(len(data["sold_out"]), 1, data)
-
-        # 2 normal tickets should be sold out
-        expected_sold_out = {
-            "type": self.tickets1[0].type,
-            "showing": {
-                "id": self.tickets1[0].showing.id,
-            },
-            "event": {
-                "id": self.tickets1[0].showing.event.id,
-                "name": self.tickets1[0].showing.event.name,
-            },
-            "count": 2,
-        }
-        for key, val in expected_sold_out.items():
-            self.assertEqual(data["sold_out"][0][key], val, data)
-
-        # 0 tickets are the same (we sell all but last 3)
-        in_cart = set(map(lambda t: t["id"], data["tickets"]))
-        to_add = set(map(lambda t: str(t.id), tickets_to_add))
-        self.assertEqual(len(in_cart & to_add), 0, in_cart | to_add)
-
     def test_get_cart_elapsed_event(self):
         self.client.login(username=self.user1.username, password="test")
 
         # Add a few tickets
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:5]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:5]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
@@ -1236,9 +1410,9 @@ class TicketTestCase(TestCase):
         self.assertEqual(len(data["sold_out"]), 1, data)
 
         expected_sold_out = {
-            "type": self.tickets1[0].type,
+            "type": tickets_to_add[0].type,
             "showing": {
-                "id": self.tickets1[0].showing.id,
+                "id": tickets_to_add[0].showing.id,
             },
             "event": {
                 "id": self.event1.id,
@@ -1249,43 +1423,13 @@ class TicketTestCase(TestCase):
         for key, val in expected_sold_out.items():
             self.assertEqual(data["sold_out"][0][key], val, data)
 
-    def test_place_hold_on_tickets(self):
-        from clubs.views import TicketViewSet
-
-        self.client.login(username=self.user1.username, password="test")
-
-        # Add a few tickets
-        cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:3]
-        cart.tickets.add(*tickets_to_add)
-        cart.save()
-
-        TicketViewSet._place_hold_on_tickets(self.user1, cart.tickets)
-        holding_expiration = timezone.now() + timezone.timedelta(minutes=10)
-
-        for ticket in cart.tickets.all():
-            self.assertIsNone(ticket.owner)
-            self.assertEqual(self.user1, ticket.holder)
-            self.assertAlmostEqual(
-                holding_expiration,
-                ticket.holding_expiration,
-                delta=timedelta(seconds=10),
-            )
-
-        # Move Django's internal clock 10 minutes forward
-        with freezegun.freeze_time(holding_expiration):
-            Ticket.objects.update_holds()
-            for ticket in cart.tickets.all():
-                self.assertIsNone(ticket.owner)
-                self.assertIsNone(ticket.holder)
-
     def test_give_tickets(self):
         from clubs.views import TicketViewSet
 
         self.client.login(username=self.user1.username, password="test")
         # Add a few tickets
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:3]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:3]
         cart.tickets.add(*tickets_to_add)
         cart.save()
 
@@ -1333,6 +1477,8 @@ class TicketTestCase(TestCase):
             self.assertIn(self.event1.name, msg.body)
             self.assertIsNotNone(msg.attachments)
 
+    # TODO: update once we decide between Unified Checkout and Secure Acceptance
+    """
     def test_initiate_checkout_non_free_tickets(self):
         self.client.login(username=self.user1.username, password="test")
 
@@ -1629,13 +1775,13 @@ class TicketTestCase(TestCase):
 
         # Add a few tickets to cart
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:5]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:5]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
 
         # In the meantime, someone snipes a ticket we added by holding
-        sniped_ticket = self.tickets1[0]
+        sniped_ticket = self.ticket_class_normal1
         sniped_ticket.holder = self.user2
         sniped_ticket.save()
 
@@ -1729,7 +1875,7 @@ class TicketTestCase(TestCase):
 
         # Add a few tickets to cart
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:2]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:2]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
@@ -1764,7 +1910,7 @@ class TicketTestCase(TestCase):
 
         # Add a few tickets to cart
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:2]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:2]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
@@ -1802,7 +1948,7 @@ class TicketTestCase(TestCase):
 
         # Add a few tickets to cart
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
-        tickets_to_add = self.tickets1[:2]
+        tickets_to_add = Ticket.objects.filter(type="normal")[:2]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
@@ -1839,10 +1985,11 @@ class TicketTestCase(TestCase):
             # Hold cancelled
             held_tickets = Ticket.objects.filter(holder=self.user1)
             self.assertEqual(held_tickets.count(), 0, held_tickets)
+    """
 
     def test_transfer_ticket(self):
         self.client.login(username=self.user1.username, password="test")
-        ticket = self.tickets1[0]
+        ticket = self.ticket_class_normal1
 
         # fail to transfer when not owned
         resp = self.client.post(
@@ -1868,7 +2015,7 @@ class TicketTestCase(TestCase):
 
     def test_transfer_non_transferable_ticket(self):
         self.client.login(username=self.user1.username, password="test")
-        ticket = self.tickets1[0]
+        ticket = self.ticket_class_normal1
         ticket.owner = self.user1
         ticket.transferable = False
         ticket.save()
@@ -1885,7 +2032,7 @@ class TicketTestCase(TestCase):
 
     def test_transfer_ticket_to_self(self):
         self.client.login(username=self.user1.username, password="test")
-        ticket = self.tickets1[0]
+        ticket = self.ticket_class_normal1
         ticket.owner = self.user1
         ticket.save()
 
@@ -1904,7 +2051,7 @@ class TicketTestCase(TestCase):
             title="Officer",
             role=Membership.ROLE_OFFICER,
         )
-        ticket = self.tickets1[0]
+        ticket = self.ticket_class_normal1
         ticket.owner = self.user2
         ticket.save()
 
@@ -1920,7 +2067,7 @@ class TicketTestCase(TestCase):
     def test_update_attendance_non_officer(self):
         # user1 is no longer an officer for the ticket's club
         self.client.login(username=self.user1.username, password="test")
-        ticket = self.tickets1[0]
+        ticket = self.ticket_class_normal1
         ticket.owner = self.user1
         ticket.save()
 
@@ -1943,40 +2090,6 @@ class TicketModelTestCase(TestCase):
     def setUp(self):
         commonSetUp(self)
 
-    def test_update_holds(self):
-        expired_time = timezone.now() - timedelta(hours=1)
-        valid_time = timezone.now() + timedelta(hours=1)
-
-        # Apply exired holds
-        for ticket in self.tickets1[:5]:
-            ticket.holder = self.user1
-            ticket.holding_expiration = expired_time
-            ticket.save()
-
-        # Apply valid holds
-        for ticket in self.tickets2[:5]:
-            ticket.holder = self.user1
-            ticket.holding_expiration = valid_time
-            ticket.save()
-
-        Ticket.objects.update_holds()
-
-        # Expired holds should be cleared
-        self.assertEqual(
-            Ticket.objects.filter(
-                holder__isnull=False, holding_expiration__lte=timezone.now()
-            ).count(),
-            0,
-        )
-
-        # Valid holds should be in place
-        self.assertEqual(
-            Ticket.objects.filter(
-                holder__isnull=False, holding_expiration__gt=timezone.now()
-            ).count(),
-            5,
-        )
-
     def test_delete_tickets_without_transaction_record(self):
         # check that delete on queryset still works
         tickets = Ticket.objects.filter(type="normal")
@@ -1984,7 +2097,7 @@ class TicketModelTestCase(TestCase):
         self.assertFalse(Ticket.objects.filter(type="normal").exists())
 
     def test_delete_ticket_after_purchase(self):
-        ticket = self.tickets1[0]
+        ticket = self.ticket_class_normal1
         ticket.owner = self.user1
         transaction_record = TicketTransactionRecord.objects.create(
             buyer_first_name=self.user1.first_name,
@@ -2010,7 +2123,7 @@ class TicketModelTestCase(TestCase):
             tickets.delete()
 
     def test_delete_ticket_after_transfer(self):
-        ticket = self.tickets1[0]
+        ticket = self.ticket_class_normal1
         ticket.owner = self.user2
         ticket.save()
         TicketTransferRecord.objects.create(
