@@ -6804,8 +6804,25 @@ class UserViewSet(viewsets.ModelViewSet):
                     submissions page""",
                 }
             )
+
+        # check if user profile is complete before creating a submission
+        user = self.request.user
+        if (
+            not user.profile.graduation_year
+            or not user.profile.school.exists()
+            or not user.profile.major.exists()
+        ):
+            return Response(
+                {
+                    "success": False,
+                    "detail": """You need to set your graduation year, major, and
+                    school before you can apply to a club!""",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         submission, _ = ApplicationSubmission.objects.get_or_create(
-            user=self.request.user,
+            user=user,
             application=application,
             committee=committee,
         )
