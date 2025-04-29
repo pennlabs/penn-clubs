@@ -344,7 +344,7 @@ const TicketCard = ({
                   <Form>
                     <Subtitle>Issue Tickets</Subtitle>
                     <HelperText>
-                      Issue Tickets by entering pennkeys below, separated by
+                      Issue tickets by entering pennkeys below, separated by
                       commas or spaces
                     </HelperText>
                     <CSVTagInput
