@@ -20,6 +20,7 @@ from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
     ApplicationCommittee,
+    ApplicationQuestion,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -31,6 +32,7 @@ from clubs.models import (
     Event,
     EventShowing,
     Favorite,
+    Major,
     Membership,
     MembershipInvite,
     MembershipRequest,
@@ -3278,6 +3280,7 @@ class ClubTestCase(TestCase):
             person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
         )
 
+        # Create ownership request
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.post(
             reverse("ownership-requests-list"),
@@ -3819,6 +3822,101 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
         self.assertEqual(len(mail.outbox), 3)
+
+    def test_application_submission_requires_complete_profile(self):
+        """
+        Test that users must have a complete profile (graduation year, school, major)
+        before submitting a club application.
+        """
+        # Create a club application
+        now = timezone.now()
+        application = ClubApplication.objects.create(
+            name="Test Application",
+            club=self.club1,
+            application_start_time=now - timezone.timedelta(days=1),
+            application_end_time=now + timezone.timedelta(days=1),
+            result_release_time=now + timezone.timedelta(days=2),
+        )
+
+        # Create a test question for the application
+        question = application.questions.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Test question",
+            word_limit=100,
+        )
+
+        # Login as user with incomplete profile
+        self.client.login(username=self.user2.username, password="test")
+
+        # Ensure user profile is incomplete
+        profile = self.user2.profile
+        profile.graduation_year = None
+        profile.school.clear()
+        profile.major.clear()
+        profile.save()
+
+        # Try to submit a response
+        resp = self.client.post(
+            reverse("users-question-response"),
+            {
+                "application": application.id,
+                "questionIds": [str(question.id)],
+                "committee": None,
+                question.id: {"text": "Life is good we are done"},
+            },
+            content_type="application/json",
+        )
+
+        # Should get a 400 error with specific message
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertFalse(resp.data["success"], resp.content)
+        self.assertIn("graduation year", resp.data["detail"].lower())
+        self.assertIn("major", resp.data["detail"].lower())
+        self.assertIn("school", resp.data["detail"].lower())
+
+        # Make sure no submission was created
+        self.assertEqual(
+            ApplicationSubmission.objects.filter(
+                user=self.user2, application=application
+            ).count(),
+            0,
+        )
+
+        # Complete the profile
+        school = School.objects.create(
+            name="Rajiv Gandhi School of Cope", is_graduate=False
+        )
+        major = Major.objects.create(name="Coping")
+        profile.graduation_year = now.year + 1
+        profile.school.add(school)
+        profile.major.add(major)
+        profile.save()
+
+        # Try submitting again
+        resp = self.client.post(
+            reverse("users-question-response"),
+            {
+                "application": application.id,
+                "questionIds": [str(question.id)],
+                "committee": None,
+                question.id: {"text": "Life is good we are done"},
+            },
+            content_type="application/json",
+        )
+
+        # Should succeed
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(
+            isinstance(resp.data, list) or resp.data.get("success", True), resp.content
+        )
+
+        # Verify submission was created
+        self.assertEqual(
+            ApplicationSubmission.objects.filter(
+                user=self.user2, application=application
+            ).count(),
+            1,
+        )
 
 
 class HealthTestCase(TestCase):

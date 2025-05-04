@@ -6,6 +6,7 @@ import { Field, Form, Formik } from 'formik'
 import moment from 'moment'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { type JSX, ReactElement, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
@@ -115,6 +116,10 @@ const ApplicationPage = ({
   questions,
   initialValues,
 }): ReactElement<any> => {
+  const router = useRouter()
+  const [redirected, setRedirected] = useState<boolean>(false)
+
+  // Return null during redirection to prevent flashing of content
   if (!userInfo) {
     return <AuthPrompt />
   } else if (club.detail) {
@@ -282,6 +287,17 @@ const ApplicationPage = ({
                   .then((resp) => {
                     if (resp.status === 200) {
                       return resp.json()
+                    } else if (resp.status === 400) {
+                      setSaved(false)
+                      setErrors('User profile is incomplete. Redirecting...')
+                      setRedirected(true)
+                      setTimeout(() => {
+                        router.push({
+                          pathname: '/settings',
+                          query: { from_application: club.code },
+                          hash: 'Profile',
+                        })
+                      }, 1000)
                     } else {
                       setSaved(false)
                       setErrors(

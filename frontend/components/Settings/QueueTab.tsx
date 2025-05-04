@@ -1,9 +1,12 @@
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
+import Select from 'react-select'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { CLUB_ROUTE } from '../../constants'
-import { Club } from '../../types'
+import { Club, RegistrationQueueSettings, Template } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -36,6 +39,16 @@ type QueueTableModalProps = {
   closeModal: () => void
   bulkAction: (comment: string) => void
   isApproving: boolean
+  templates: Template[]
+}
+
+type OwnershipRequest = {
+  id: number
+  club: string
+  club_name: string
+  name: string
+  username: string
+  created_at: string
 }
 
 const QueueTableModal = ({
@@ -43,13 +56,23 @@ const QueueTableModal = ({
   closeModal,
   bulkAction,
   isApproving,
+  templates,
 }: QueueTableModalProps): ReactElement => {
   const [comment, setComment] = useState<string>('')
+  const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
+
+  useEffect(() => {
+    setComment(
+      selectedTemplates.map((template) => template.content).join('\n\n'),
+    )
+  }, [selectedTemplates])
+
   return (
     <Modal
       show={show}
       closeModal={() => {
         setComment('')
+        setSelectedTemplates([])
         closeModal()
       }}
       marginBottom={false}
@@ -60,6 +83,36 @@ const QueueTableModal = ({
           notes will be emailed to the requesters when you{' '}
           {isApproving ? 'approve' : 'reject'} these requests.
         </div>
+        <Select
+          isMulti
+          isClearable
+          placeholder="Select templates"
+          value={selectedTemplates.map((template) => ({
+            value: template.id,
+            label: template.title,
+            content: template.content,
+            author: template.author,
+          }))}
+          options={templates.map((template) => ({
+            value: template.id,
+            label: template.title,
+            content: template.content,
+            author: template.author,
+          }))}
+          onChange={(selectedOptions) => {
+            if (selectedOptions) {
+              const selected = selectedOptions.map((option) => ({
+                id: option.value,
+                title: option.label,
+                content: option.content,
+                author: option.author,
+              }))
+              setSelectedTemplates(selected)
+            } else {
+              setSelectedTemplates([])
+            }
+          }}
+        />
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
@@ -84,10 +137,16 @@ const QueueTableModal = ({
 type QueueTableProps = {
   clubs: Club[] | null
   refetchClubs?: () => void
+  templates: Template[]
 }
 /* TODO: refactor with Table component when render and search
 functionality are disconnected */
-const QueueTable = ({ clubs, refetchClubs }: QueueTableProps): ReactElement => {
+const QueueTable = ({
+  clubs,
+  refetchClubs,
+  templates,
+}: QueueTableProps): ReactElement => {
+  const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [approve, setApprove] = useState<boolean>(false)
@@ -126,9 +185,10 @@ const QueueTable = ({ clubs, refetchClubs }: QueueTableProps): ReactElement => {
         closeModal={() => setShowModal(false)}
         bulkAction={bulkAction}
         isApproving={approve}
+        templates={templates}
       />
-      <QueueTableHeader>
-        <QueueTableHeaderText>
+      <QueueSectionHeader>
+        <QueueSectionHeaderText>
           <SmallTitle>Pending Clubs</SmallTitle>
           <div className="mt-3 mb-3">
             As an administrator of {SITE_NAME}, you can approve and reject{' '}
@@ -136,7 +196,7 @@ const QueueTable = ({ clubs, refetchClubs }: QueueTableProps): ReactElement => {
             list of {OBJECT_NAME_PLURAL} pending your approval. Click on the{' '}
             {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
           </div>
-        </QueueTableHeaderText>
+        </QueueSectionHeaderText>
         <div className="buttons">
           <button
             className="button is-success"
@@ -159,7 +219,7 @@ const QueueTable = ({ clubs, refetchClubs }: QueueTableProps): ReactElement => {
             <Icon name="x" /> Reject
           </button>
         </div>
-      </QueueTableHeader>
+      </QueueSectionHeader>
       {(() => {
         if (clubs === null)
           return <div className="has-text-info">Loading table...</div>
@@ -305,7 +365,7 @@ const TableTag = styled.div`
   font-size: 0.875rem;
 `
 
-const QueueTableHeader = styled.div`
+const QueueSectionHeader = styled.div`
   margin-top: 2rem;
   display: flex;
   align-items: center;
@@ -315,7 +375,7 @@ const QueueRowContent = styled.div`
   display: flex;
 `
 
-const QueueTableHeaderText = styled.div`
+const QueueSectionHeaderText = styled.div`
   flex-basis: 75%;
 `
 
@@ -342,12 +402,69 @@ const SmallTitle = styled.div`
   }
 `
 
+const QueueSettingsButtonStack = styled.div<{ direction: 'column' | 'row' }>`
+  display: flex;
+  flex-direction: ${({ direction }) => direction};
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 0.5rem;
+`
+
+const QueueSettingsButton = ({
+  open,
+  for: queueType,
+  setOpen: setQueueOpen,
+}: {
+  open: boolean
+  for: 'reapproval_queue_open' | 'new_approval_queue_open'
+  setOpen: (open: boolean) => void
+}): ReactElement<any> => {
+  const onClick = () => {
+    doApiRequest('/settings/queue/', {
+      method: 'PATCH',
+
+      body: {
+        [queueType]: !open,
+      },
+    }).then((resp) => {
+      if (resp.ok) {
+        setQueueOpen(!open)
+      } else {
+        toast.error('Failed to update queue settings.')
+      }
+    })
+  }
+
+  const name =
+    queueType === 'reapproval_queue_open' ? 'Reapprovals' : 'New Approvals'
+
+  if (open) {
+    return (
+      <button className="button is-small is-danger is-block" onClick={onClick}>
+        Close {name}
+      </button>
+    )
+  } else {
+    return (
+      <button className="button is-small is-success is-block" onClick={onClick}>
+        Open {name}
+      </button>
+    )
+  }
+}
+
 const QueueTab = (): ReactElement => {
+  const [ownershipRequests, setOwnershipRequests] = useState<
+    OwnershipRequest[]
+  >([])
   const [pendingClubs, setPendingClubs] = useState<Club[] | null>(null)
   const [approvedClubs, setApprovedClubs] = useState<Club[] | null>(null)
   const [rejectedClubs, setRejectedClubs] = useState<Club[] | null>(null)
   const [inactiveClubs, setInactiveClubs] = useState<Club[] | null>(null)
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [registrationQueueSettings, setRegistrationQueueSettings] =
+    useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
 
   function refetchClubs() {
@@ -370,11 +487,23 @@ const QueueTab = (): ReactElement => {
     doApiRequest('/clubs/directory/?format=json')
       .then((resp) => resp.json())
       .then((data) => setAllClubs(data.map((club: Club) => club.approved)))
+
+    doApiRequest('/templates/?format=json')
+      .then((resp) => resp.json())
+      .then(setTemplates)
+
+    doApiRequest('/settings/queue/?format=json')
+      .then((resp) => resp.json())
+      .then(setRegistrationQueueSettings)
   }
 
   useEffect(() => {
     if (canApprove) {
       refetchClubs()
+
+      doApiRequest('/requests/ownership/?format=json')
+        .then((resp) => resp.json())
+        .then(setOwnershipRequests)
     }
   }, [])
 
@@ -398,6 +527,37 @@ const QueueTab = (): ReactElement => {
     rejectedClubs &&
     inactiveClubs &&
     approvedClubs.concat(rejectedClubs, inactiveClubs)
+
+  const handleOwnershipDecision = async (
+    clubCode: string,
+    username: string,
+    approve: boolean,
+  ) => {
+    const url = approve
+      ? `/clubs/${clubCode}/ownershiprequests/${username}/accept/?format=json`
+      : `/clubs/${clubCode}/ownershiprequests/${username}/?format=json`
+
+    const method = approve ? 'POST' : 'DELETE'
+
+    try {
+      const res = await doApiRequest(url, { method })
+
+      if (res.ok) {
+        toast.success(
+          `Successfully ${approve ? 'approved' : 'rejected'} request.`,
+        )
+        setOwnershipRequests((prev) =>
+          prev.filter((r) => !(r.club === clubCode && r.username === username)),
+        )
+      } else {
+        const err = await res.json()
+        toast.error(`Failed: ${err.detail || 'Unknown error'}`)
+      }
+    } catch (err) {
+      toast.error('An error occurred while processing the request.')
+    }
+  }
+
   return (
     <>
       <SmallTitle>Overview</SmallTitle>
@@ -441,7 +601,133 @@ const QueueTab = (): ReactElement => {
           {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
         </li>
       </ul>
-      <QueueTable clubs={pendingClubs} refetchClubs={refetchClubs} />
+      {registrationQueueSettings && (
+        <>
+          <QueueSectionHeader>
+            <div>
+              <SmallTitle>Status</SmallTitle>
+              <div className="mb-3">
+                The approval queue is currently
+                <b
+                  className={
+                    registrationQueueSettings.reapproval_queue_open
+                      ? 'has-text-success'
+                      : 'has-text-danger'
+                  }
+                >
+                  {registrationQueueSettings.reapproval_queue_open
+                    ? ' open'
+                    : ' closed'}
+                </b>{' '}
+                for reapproval requests and
+                <b
+                  className={
+                    registrationQueueSettings.new_approval_queue_open
+                      ? 'has-text-success'
+                      : 'has-text-danger'
+                  }
+                >
+                  {registrationQueueSettings.new_approval_queue_open
+                    ? ' open'
+                    : ' closed'}
+                </b>{' '}
+                for new requests.
+                <span
+                  title={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
+                >
+                  <Icon name="clock" className="ml-1" />
+                </span>
+              </div>
+            </div>
+          </QueueSectionHeader>
+          <QueueSettingsButtonStack direction="row">
+            <QueueSettingsButton
+              open={registrationQueueSettings.reapproval_queue_open}
+              for="reapproval_queue_open"
+              setOpen={(open) =>
+                setRegistrationQueueSettings({
+                  ...registrationQueueSettings,
+                  reapproval_queue_open: open,
+                })
+              }
+            />
+            <QueueSettingsButton
+              open={registrationQueueSettings.new_approval_queue_open}
+              for="new_approval_queue_open"
+              setOpen={(open) =>
+                setRegistrationQueueSettings({
+                  ...registrationQueueSettings,
+                  new_approval_queue_open: open,
+                })
+              }
+            />
+          </QueueSettingsButtonStack>
+        </>
+      )}
+      <QueueTable
+        clubs={pendingClubs}
+        refetchClubs={refetchClubs}
+        templates={templates}
+      />
+      <>
+        <SmallTitle>Pending Ownership Requests</SmallTitle>
+        <div className="mt-3 mb-3">
+          These are user-submitted requests to take ownership of inactive clubs.
+          You can approve or reject each request individually.
+        </div>
+
+        {ownershipRequests.length === 0 ? (
+          <div className="has-text-info">
+            There are no ownership requests at this time.
+          </div>
+        ) : (
+          <table className="table is-fullwidth is-striped">
+            <thead>
+              <tr>
+                <th>Club</th>
+                <th>Requester</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ownershipRequests.map((req) => (
+                <tr key={req.id}>
+                  <td>
+                    <Link href={`/club/${req.club}`} target="_blank">
+                      {req.club_name}
+                    </Link>
+                  </td>
+                  <td>{req.name || 'Unknown User'}</td>
+                  <td>
+                    {req.created_at
+                      ? new Date(req.created_at).toLocaleDateString()
+                      : 'Invalid Date'}
+                  </td>
+                  <td>
+                    <button
+                      className="button is-small is-success mr-2"
+                      onClick={() =>
+                        handleOwnershipDecision(req.club, req.username, true)
+                      }
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="button is-small is-danger"
+                      onClick={() =>
+                        handleOwnershipDecision(req.club, req.username, false)
+                      }
+                    >
+                      Reject
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </>
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {OBJECT_NAME_PLURAL} that have been

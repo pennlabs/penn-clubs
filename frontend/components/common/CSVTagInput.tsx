@@ -1,5 +1,5 @@
 import React from 'react'
-import CreatableSelect from 'react-select/creatable'
+import Creatable from 'react-select/creatable'
 
 import { CLUBS_RED } from '~/constants'
 
@@ -47,7 +47,7 @@ const CSVTagInput: React.FC<CSVTagInputProps> = ({
   }, [tags])
 
   return (
-    <CreatableSelect
+    <Creatable
       components={
         invalidTags
           ? {
@@ -56,8 +56,10 @@ const CSVTagInput: React.FC<CSVTagInputProps> = ({
                 return (
                   <div
                     style={{
-                      backgroundColor: isInvalid ? CLUBS_RED : 'inherit',
                       borderRadius: '2px',
+                      border: '1px solid',
+                      backgroundColor: isInvalid ? CLUBS_RED : 'inherit',
+                      marginRight: '6px',
                       color: isInvalid ? CLUBS_RED : 'inherit',
                     }}
                   >

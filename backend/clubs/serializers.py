@@ -2279,9 +2279,24 @@ class UserOwnershipRequestSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     club_name = serializers.CharField(source="club.name", read_only=True)
 
+    name = serializers.SerializerMethodField()
+    username = serializers.CharField(source="requester.username", read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+
+    def get_name(self, obj):
+        return obj.requester.get_full_name()
+
     class Meta:
         model = OwnershipRequest
-        fields = ("club", "club_name", "requester")
+        fields = (
+            "id",
+            "club",
+            "club_name",
+            "requester",
+            "name",
+            "username",
+            "created_at",
+        )
 
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):
