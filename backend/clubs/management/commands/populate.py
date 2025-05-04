@@ -16,6 +16,7 @@ from clubs.models import (
     ApplicationSubmission,
     Badge,
     Cart,
+    CartItem,
     Club,
     ClubApplication,
     ClubFair,
@@ -31,6 +32,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Ticket,
+    TicketClass,
     Year,
 )
 
@@ -808,7 +810,6 @@ class Command(BaseCommand):
 
         # Add tickets
         hr = Club.objects.get(code="harvard-rejects")
-
         hr_events = Event.objects.filter(club=hr)
 
         for idx, event in enumerate(hr_events[:3]):
@@ -825,31 +826,55 @@ class Command(BaseCommand):
             # Switch up person every so often
             person = ben if idx < 2 else user_objs[1]
 
-            # Create some unowned tickets
-            Ticket.objects.bulk_create(
-                [
-                    Ticket(showing=showing, type="Regular", price=10.10)
-                    for _ in range(10)
-                ]
+            # Create ticket classes for the event
+            regular_class, _ = TicketClass.objects.get_or_create(
+                showing=showing,
+                name="Regular",
+                defaults={
+                    "description": "Regular admission ticket",
+                    "price": 10.10,
+                    "quantity": 50,
+                    "remaining": 50,
+                    "buyable": True,
+                },
             )
 
-            Ticket.objects.bulk_create(
-                [
-                    Ticket(showing=showing, type="Premium", price=100.10)
-                    for _ in range(5)
-                ]
+            premium_class, _ = TicketClass.objects.get_or_create(
+                showing=showing,
+                name="Premium",
+                defaults={
+                    "description": "Premium admission ticket with perks",
+                    "price": 100.10,
+                    "quantity": 20,
+                    "remaining": 20,
+                    "buyable": True,
+                    "group_discount": 0.15,
+                    "group_size": 5,
+                },
             )
 
-            # Create some owned tickets and tickets in cart
-            for i in range((idx + 1) * 10):
-                if i % 5:
-                    Ticket.objects.create(
-                        showing=showing, owner=person, type="Regular", price=i
-                    )
-                else:
-                    c, _ = Cart.objects.get_or_create(owner=person)
-                    c.tickets.add(
-                        Ticket.objects.create(showing=showing, type="Premium", price=i)
-                    )
+            # Create some owned tickets
+            for i in range((idx + 1) * 5):
+                ticket_class = regular_class if i % 2 else premium_class
+                Ticket.objects.create(
+                    ticket_class=ticket_class,
+                    owner=person,
+                    owner_email=person.email,
+                    attended=False,
+                )
+                # Update remaining count
+                ticket_class.remaining -= 1
+                ticket_class.save()
+
+            # Create some items in cart
+            cart, _ = Cart.objects.get_or_create(
+                showing=showing,
+                owner=person,
+                session_key=f"test_session_{person.username}",
+            )
+
+            CartItem.objects.create(cart=cart, ticket_class=regular_class, quantity=2)
+
+            CartItem.objects.create(cart=cart, ticket_class=premium_class, quantity=1)
 
         self.stdout.write("Finished populating database!")

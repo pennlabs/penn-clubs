@@ -31,6 +31,8 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Cart,
+    CartItem,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -62,6 +64,7 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    TicketClass,
     Year,
 )
 from clubs.utils import clean
@@ -79,6 +82,7 @@ ALL_TAGS_SELECTED_ERROR_MESSAGE = (
         "question asking if your resource applies to "
         "all undergraduate, graduate, and professional Penn students. "
         "Thanks for doing your part to ensure that Hub@Penn "
+        "quickly and efficiently gets resources to our Penn community. "
         "quickly and efficiently gets resources to our Penn community. "
     )
     if settings.BRANDING == "fyh"
@@ -369,7 +373,7 @@ class EventShowingSerializer(serializers.ModelSerializer):
     ticketed = serializers.SerializerMethodField("get_ticketed")
 
     def get_ticketed(self, obj):
-        return obj.tickets.exists()
+        return obj.ticket_classes.exists()
 
     class Meta:
         model = EventShowing
@@ -488,7 +492,8 @@ class ClubEventSerializer(serializers.ModelSerializer):
     latest_end_time = serializers.DateTimeField(read_only=True)
 
     def get_ticketed(self, obj) -> bool:
-        return obj.eventshowing_set.filter(tickets__isnull=False).exists()
+        # Check if any showing for this event has ticket classes defined
+        return obj.eventshowing_set.filter(ticket_classes__isnull=False).exists()
 
     def get_event_url(self, obj):
         # if no url, return that
@@ -2025,8 +2030,9 @@ class TicketSerializer(serializers.ModelSerializer):
     """
 
     owner = serializers.SerializerMethodField("get_owner_name")
-    showing = EventShowingSerializer()
-    event = EventSerializer(source="showing.event")
+    event = EventSerializer(source="ticket_class.showing.event", read_only=True)
+    ticket_type = serializers.CharField(source="ticket_class.name", read_only=True)
+    price = serializers.FloatField(source="ticket_class.price", read_only=True)
 
     def get_owner_name(self, obj):
         return obj.owner.get_full_name() if obj.owner else "None"
@@ -2035,12 +2041,105 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = (
             "id",
-            "showing",
             "event",
-            "type",
+            "ticket_type",
             "owner",
             "attended",
             "price",
+            "owner_email",
+            "created_at",
+            "updated_at",
+        )
+
+
+class TicketClassSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ticket class information within cart items
+    """
+
+    price = serializers.FloatField()
+    group_discount = serializers.FloatField(allow_null=True)
+
+    class Meta:
+        model = TicketClass
+        fields = (
+            "id",
+            "name",
+            "description",
+            "price",
+            "remaining",
+            "group_discount",
+            "group_size",
+            "buyable",
+        )
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    """
+    Serializer for individual items in a cart
+    """
+
+    ticket_class = TicketClassSerializer(read_only=True)
+    ticket_class_id = serializers.PrimaryKeyRelatedField(
+        source="ticket_class", queryset=TicketClass.objects.all(), write_only=True
+    )
+    total_price = serializers.FloatField(read_only=True)
+
+    def validate(self, data):
+        ticket_class = data["ticket_class"]
+        quantity = data["quantity"]
+
+        # Validate quantity is available
+        if quantity > ticket_class.remaining:
+            raise serializers.ValidationError(
+                f"Only {ticket_class.remaining} tickets remaining"
+            )
+
+        # Validate ticket class is buyable
+        if not ticket_class.buyable:
+            raise serializers.ValidationError(
+                "This ticket type is not currently available for purchase"
+            )
+
+        # Validate against event's ticket order limit
+        cart = self.context.get("cart")
+        if cart:
+            current_total = sum(
+                item.quantity
+                for item in cart.items.exclude(
+                    id=self.instance.id if self.instance else None
+                )
+            )
+            if current_total + quantity > cart.event.ticket_order_limit:
+                raise serializers.ValidationError(
+                    f"""Cannot exceed event ticket limit of
+                    {cart.event.ticket_order_limit}"""
+                )
+
+        return data
+
+    class Meta:
+        model = CartItem
+        fields = ("id", "ticket_class", "ticket_class_id", "quantity", "total_price")
+
+
+class CartSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Cart model and its associated items
+    """
+
+    items = CartItemSerializer(many=True, read_only=True)
+    total = serializers.SerializerMethodField()
+
+    def get_total(self, obj):
+        return float(sum(item.total_price() for item in obj.items.all()))
+
+    class Meta:
+        model = Cart
+        fields = (
+            "id",
+            "items",
+            "total",
         )
 
 
