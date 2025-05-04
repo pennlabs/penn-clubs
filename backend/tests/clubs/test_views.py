@@ -19,7 +19,6 @@ from ics import Calendar
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
-    ApplicationCommittee,
     ApplicationQuestion,
     ApplicationSubmission,
     Asset,
@@ -2106,7 +2105,7 @@ class ClubTestCase(TestCase):
         """
         self.client.login(username=self.user5.username, password="test")
 
-        # Test creating application
+        # Creating new application with duplicate committees
         resp = self.client.post(
             reverse("club-applications-list", args=(self.club1.code,)),
             data={
@@ -2121,7 +2120,7 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn("Committee names must be unique", str(resp.content))
 
-        # Test patching application
+        # Patching existing application with duplicate committees
         application = ClubApplication.objects.create(
             name="Test Application",
             club=self.club1,
@@ -2129,10 +2128,6 @@ class ClubTestCase(TestCase):
             application_end_time=timezone.now() + timezone.timedelta(days=2),
             result_release_time=timezone.now() + timezone.timedelta(days=3),
             is_wharton_council=False,
-        )
-        _ = ApplicationCommittee.objects.create(
-            name="Committee 1",
-            application=application,
         )
 
         resp = self.client.patch(
