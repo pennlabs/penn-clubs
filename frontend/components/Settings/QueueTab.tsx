@@ -501,7 +501,7 @@ const QueueTab = (): ReactElement => {
     if (canApprove) {
       refetchClubs()
 
-      doApiRequest('/requests/ownership/?format=json')
+      doApiRequest('/clubs/any/ownershiprequests/all/?format=json')
         .then((resp) => resp.json())
         .then(setOwnershipRequests)
     }
