@@ -2266,6 +2266,7 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
             "name",
             "requester",
             "school",
+            "status",
             "username",
         )
 
