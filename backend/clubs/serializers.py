@@ -2240,6 +2240,7 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
 
     requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    club_name = serializers.CharField(source="club.name", read_only=True)
     name = serializers.SerializerMethodField("get_full_name")
     username = serializers.CharField(source="requester.username", read_only=True)
     email = serializers.EmailField(source="requester.email", read_only=True)
@@ -2259,6 +2260,7 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
         model = OwnershipRequest
         fields = (
             "club",
+            "club_name",
             "created_at",
             "email",
             "graduation_year",

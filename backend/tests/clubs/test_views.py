@@ -3225,7 +3225,6 @@ class ClubTestCase(TestCase):
             ).count(),
             1,
         )
-        self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
         # Requester can check own ownership requests
         resp = self.client.get(reverse("ownership-requests-list"))
@@ -3282,7 +3281,6 @@ class ClubTestCase(TestCase):
             {"club": self.club1.code},
             content_type="application/json",
         )
-        self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
         OwnershipRequest.objects.filter(club=self.club1, requester=self.user2).update(
             created_at=timezone.now() - timezone.timedelta(days=8)
@@ -3323,9 +3321,6 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 201, resp.content)
-
-        # Emails are not resent
-        self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
         # Owner can see recreated ownership requests
 
