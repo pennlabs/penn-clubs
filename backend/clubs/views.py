@@ -5978,6 +5978,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                                             type: string
                                         checkout_context:
                                             type: object
+                                            nullable: true
+                                            properties: {}
             "400":
                 content:
                     application/json:
