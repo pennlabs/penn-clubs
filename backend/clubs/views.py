@@ -3130,8 +3130,13 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         """
         Get the current cart for this event and display a summary (no validation).
         ---
-        requestBody:
-            content: {}
+        parameters:
+            - name: cart_id
+              in: query
+              required: true
+              schema:
+                  type: string
+              description: ID of the cart to retrieve
         responses:
             "200":
                 content:
@@ -3179,6 +3184,30 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                                         type: integer
                                 total:
                                     type: number
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "404":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
         ---
         """
         showing = self.get_object()
@@ -3237,23 +3266,44 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                         schema:
                             type: object
                             properties:
+                                detail:
+                                    type: string
+                                    description: Success message
+                                cart_id:
+                                    type: string
+                                    description: ID of the cart
+                                success:
+                                    type: boolean
+            "400":
+                content:
+                    application/json:
+                        schema:
                             type: object
                             properties:
                                 detail:
                                     type: string
-                                    description: Success message
                                 success:
                                     type: boolean
-        "403":
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            detail:
-                                type: string
-                            success:
-                                type: boolean
+            "403":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
+            "404":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+                                success:
+                                    type: boolean
         ---
         """
         showing = self.get_object()
@@ -3393,9 +3443,6 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                                             attended:
                                                 type: boolean
                                                 description: Whether the buyer attended
-                                            owner__email:
-                                                type: string
-                                                description: Email of the buyer
         ---
         """
         showing = self.get_object()
@@ -5892,6 +5939,66 @@ class TicketViewSet(viewsets.ModelViewSet):
         - first_name
         - last_name
         - email
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            cart_id:
+                                type: string
+                            first_name:
+                                type: string
+                            last_name:
+                                type: string
+                            email:
+                                type: string
+                        required:
+                            - cart_id
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+                                order:
+                                    type: object
+                                    properties:
+                                        status:
+                                            type: string
+                                        payment_required:
+                                            type: boolean
+                                        total_amount:
+                                            type: string
+                                        checkout_context:
+                                            type: object
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+        ---
         """
         cart_id = request.data.get("cart_id")
         if not cart_id:
@@ -6008,6 +6115,69 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         The decision from CyberSource can be ACCEPT, REVIEW, DECLINE, ERROR, or CANCEL.
         See CyberSource documentation for details.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            decision:
+                                type: string
+                            req_transaction_uuid:
+                                type: string
+                            req_amount:
+                                type: string
+                            req_first_name:
+                                type: string
+                            req_last_name:
+                                type: string
+                            req_email:
+                                type: string
+                            req_reference_number:
+                                type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+            "403":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+            "404":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                success:
+                                    type: boolean
+                                detail:
+                                    type: string
+        ---
         """
         decision = request.data.get("decision", "").upper()
         if not decision:
