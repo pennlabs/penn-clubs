@@ -2002,6 +2002,8 @@ class Ticket(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = TicketQuerySet.as_manager()
+
     def delete(self, *args, **kwargs):
         if self.transaction_record:
             raise ProtectedError(
@@ -2084,8 +2086,8 @@ class TicketTransferRecord(models.Model):
         Send confirmation email to the sender and recipient of the transfer.
         """
         context = {
-            "sender_email": self.sender_email,
-            "receiver_email": self.receiver_email,
+            "sender_email": self.sender.email,
+            "receiver_email": self.receiver.email,
             "event_name": self.ticket.ticket_class.showing.event.name,
             "type": self.ticket.ticket_class.name,
         }
@@ -2096,7 +2098,7 @@ class TicketTransferRecord(models.Model):
                 f"Ticket transfer confirmation for "
                 f"{self.ticket.ticket_class.showing.event.name}"
             ),
-            emails=[self.sender_email, self.receiver_email],
+            emails=[self.sender.email, self.receiver.email],
             context=context,
         )
 

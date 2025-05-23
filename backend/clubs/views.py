@@ -3017,9 +3017,6 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
     buyers:
     Get information about the buyers of a showing's tickets.
 
-    remove_from_cart:
-    Remove a ticket for this showing from cart.
-
     add_to_cart:
     Add a ticket for this showing to cart.
 
@@ -3184,7 +3181,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                                     type: number
         ---
         """
-        event = self.get_object()
+        showing = self.get_object()
         cart_id = request.query_params.get("cart_id")
 
         if not cart_id:
@@ -3193,7 +3190,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        cart = Cart.objects.filter(id=cart_id, event=event).first()
+        cart = Cart.objects.filter(id=cart_id, showing=showing).first()
         if not cart:
             return Response(
                 {"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
@@ -6177,6 +6174,62 @@ class TicketViewSet(viewsets.ModelViewSet):
                 | Q(ticket_class__showing__event__club__in=officer_clubs)
             ).select_related("ticket_class__showing__event__club")
         return Ticket.objects.filter(owner=self.request.user.id)
+
+    def _give_tickets(self, user, order_info, cart, reconciliation_id, cart_items):
+        """
+        Helper method to create tickets and transaction record
+        """
+        from decimal import Decimal
+
+        from django.core.exceptions import ValidationError
+
+        # Extract billing information
+        bill_to = order_info.get("billTo", {})
+        amount_details = order_info.get("amountDetails", {})
+        total_amount = Decimal(amount_details.get("totalAmount", "0.00"))
+
+        # Create transaction record
+        transaction_record = TicketTransactionRecord.objects.create(
+            reconciliation_id=reconciliation_id or f"FREE-{cart.id}",
+            total_amount=total_amount,
+            buyer_first_name=bill_to.get("firstName", ""),
+            buyer_last_name=bill_to.get("lastName", ""),
+            buyer_email=bill_to.get("email", ""),
+        )
+
+        # Create tickets for each cart item
+        created_tickets = []
+        for cart_item in cart_items:
+            # Check inventory one more time
+            if cart_item.ticket_class.remaining < cart_item.quantity:
+                raise ValidationError(
+                    f"Not enough inventory for {cart_item.ticket_class.name}"
+                )
+
+            # Create individual tickets
+            for _ in range(cart_item.quantity):
+                ticket = Ticket.objects.create(
+                    ticket_class=cart_item.ticket_class,
+                    owner=user,
+                    owner_email=user.email if user else bill_to.get("email", ""),
+                    transaction_record=transaction_record,
+                )
+                created_tickets.append(ticket)
+
+            # Update inventory
+            cart_item.ticket_class.remaining -= cart_item.quantity
+            cart_item.ticket_class.save()
+
+        # Clear the cart
+        cart.items.all().delete()
+        cart.delete()
+
+        # Send confirmation emails
+        if created_tickets:
+            # Send email to buyer
+            created_tickets[0].send_confirmation_email()
+
+        return created_tickets
 
 
 class MemberInviteViewSet(viewsets.ModelViewSet):

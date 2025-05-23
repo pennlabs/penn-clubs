@@ -631,7 +631,7 @@ class TicketPermission(permissions.BasePermission):
             if not request.user.is_authenticated:
                 return False
             membership = find_membership_helper(
-                request.user, obj.ticket_class.event.club
+                request.user, obj.ticket_class.showing.event.club
             )
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         if view.action == "transfer":
@@ -640,7 +640,7 @@ class TicketPermission(permissions.BasePermission):
             if obj.owner == request.user:
                 return True
             membership = find_membership_helper(
-                request.user, obj.ticket_class.event.club
+                request.user, obj.ticket_class.showing.event.club
             )
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
         return False
