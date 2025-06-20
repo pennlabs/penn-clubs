@@ -4518,9 +4518,6 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
             create_defaults=create_defaults,
         )
 
-        if created:
-            obj.send_request(request)
-
         serializer = self.get_serializer(obj, many=False)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
