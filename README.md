@@ -44,7 +44,7 @@ dependencies, you can revisit later if not)
 
 Now, you can run
 
-- `$ apt-get install gcc python3.13-dev libpq-dev` for necessary Python package build dependencies (Linux only)
+- `$ sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt-get update && sudo apt-get install gcc python3.13-dev libpq-dev` for necessary Python package build dependencies (Linux only)
 - `$ uv sync` to install Python dependencies. This may take a few
   minutes. If you skipped installing `psycopg2` earlier, you might see
   an error with locking -- this is expected!
