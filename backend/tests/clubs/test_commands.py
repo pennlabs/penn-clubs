@@ -615,6 +615,23 @@ class RenewalTestCase(TestCase):
 
         self.assertEqual(len(mail.outbox), current_email_count)
 
+    def test_deactivate_failure_modes(self):
+        # Deactivate clubs when queue is not open without queue_open_date
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = False
+        queue_settings.save()
+        with self.assertRaises(CommandError):
+            call_command("deactivate", "--force")
+        # No raise sanity check
+        call_command("deactivate", "--force", "--queue-open-date", "July 3, 2025")
+
+        # Deactivate clubs when queue is open with queue_open_date
+        queue_settings.reapproval_queue_open = True
+        queue_settings.save()
+        with self.assertRaises(CommandError):
+            call_command("deactivate", "--force", "--queue-open-date", "July 3, 2025")
+        call_command("deactivate", "--force")
+
     @override_settings(
         CACHES={  # don't want to clear prod cache while testing
             "default": {

@@ -33,7 +33,8 @@ class Command(BaseCommand):
             type=str,
             help="If this parameter is specified, then the approval queue is not "
             "currently open and clubs will be notified of the specified open date "
-            "in plain text (e.g. put the string 'August 24, 2025').",
+            "in plain text (e.g. put the string 'August 24, 2025'). The approval queue "
+            "must be already open if the parameter is not specified.",
         )
         parser.add_argument(
             "--email",
@@ -51,6 +52,8 @@ class Command(BaseCommand):
         queue_settings = RegistrationQueueSettings.get()
         if kwargs["queue_open_date"] and queue_settings.reapproval_queue_open:
             raise CommandError("The re-approval queue is already open!")
+        elif not kwargs["queue_open_date"] and not queue_settings.reapproval_queue_open:
+            raise CommandError("The re-approval queue is not open yet!")
 
         # warn if we're resetting all clubs and force flag is not specified
         if not kwargs["force"] and not kwargs["club"]:
