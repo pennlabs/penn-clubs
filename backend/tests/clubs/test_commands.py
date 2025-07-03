@@ -632,6 +632,20 @@ class RenewalTestCase(TestCase):
             call_command("deactivate", "--force", "--queue-open-date", "July 3, 2025")
         call_command("deactivate", "--force")
 
+    def test_deactivate_specific_clubs(self):
+        # Create some clubs
+        Club.objects.create(code="one", name="Club One", active=True)
+        Club.objects.create(code="two", name="Club Two", active=True)
+        Club.objects.create(code="three", name="Club Three", active=True)
+
+        # Deactivate only certain clubs
+        call_command("deactivate", "--force", "--clubs", "one,three")
+
+        # Check that only the specified clubs are deactivated
+        self.assertFalse(Club.objects.get(code="one").active)
+        self.assertTrue(Club.objects.get(code="two").active)
+        self.assertFalse(Club.objects.get(code="three").active)
+
     @override_settings(
         CACHES={  # don't want to clear prod cache while testing
             "default": {
