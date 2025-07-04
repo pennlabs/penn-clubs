@@ -60,4 +60,5 @@ module.exports = {
     SENTRY_URL: process.env.SENTRY_URL,
   },
   productionBrowserSourceMaps: true,
+  trailingSlash: true,
 }
