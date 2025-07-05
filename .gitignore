@@ -12,6 +12,7 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+backend/static/
 
 # Code testing/coverage
 .tox

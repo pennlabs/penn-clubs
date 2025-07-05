@@ -6,5 +6,5 @@ uv run /app/manage.py migrate --noinput
 # Switch to project folder
 cd /app/
 
-# Run Daphne
+# Run Uvicorn as Gunicorn workers
 uv run gunicorn -b 0.0.0.0:80 -w 4 -k uvicorn.workers.UvicornWorker pennclubs.asgi:application

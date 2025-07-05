@@ -2,7 +2,7 @@ from channels.testing import WebsocketCommunicator
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from pennclubs.routing import application
+from pennclubs.asgi import application
 
 
 class WebsocketTestCase(TestCase):
