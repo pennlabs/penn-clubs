@@ -56,6 +56,7 @@ dependencies = [
     "pip>=25.0.1",
     "html-diff>=0.4.1",
     "aiosmtpd>=1.4.6",
+    "blacknoise>=1.2.0",
 ]
 
 [dependency-groups]

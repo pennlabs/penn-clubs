@@ -28,9 +28,10 @@ export class MyChart extends PennLabsChart {
       persistData: true,
     });
 
-    new DjangoApplication(this, 'django-wsgi', {
+    new DjangoApplication(this, 'django-asgi', {
       deployment: {
         image: backendImage,
+        cmd: ['/usr/local/bin/asgi-run'],
         replicas: 2,
         secret: clubsSecret,
         env: [
@@ -40,21 +41,6 @@ export class MyChart extends PennLabsChart {
       ingressProps,
       djangoSettingsModule: 'pennclubs.settings.production',
       domains: [{ host: clubsDomain, paths: ['/api'] }],
-    });
-
-    new DjangoApplication(this, 'django-asgi', {
-      deployment: {
-        image: backendImage,
-        cmd: ['/usr/local/bin/asgi-run'],
-        replicas: 1,
-        secret: clubsSecret,
-        env: [
-          { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
-        ],
-      },
-      ingressProps,
-      djangoSettingsModule: 'pennclubs.settings.production',
-      domains: [{ host: clubsDomain, paths: ['/api/ws'] }],
     });
 
     new ReactApplication(this, 'react', {
