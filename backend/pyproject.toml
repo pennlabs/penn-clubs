@@ -30,7 +30,6 @@ dependencies = [
     "social-auth-app-django",
     "django-redis",
     "channels-redis",
-    "uwsgi",
     "uvloop",
     "uvicorn[standard]",
     "gunicorn",

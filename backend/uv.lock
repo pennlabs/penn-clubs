@@ -1037,7 +1037,6 @@ dependencies = [
     { name = "urlextract" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "uvloop" },
-    { name = "uwsgi" },
 ]
 
 [package.dev-dependencies]
@@ -1102,7 +1101,6 @@ requires-dist = [
     { name = "urlextract" },
     { name = "uvicorn", extras = ["standard"] },
     { name = "uvloop" },
-    { name = "uwsgi" },
 ]
 
 [package.metadata.requires-dev]
@@ -1776,12 +1774,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/47/57/66f061ee118f413cd22a656de622925097170b9380b30091b78ea0c6ea75/uvloop-0.21.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:bd53ecc9a0f3d87ab847503c2e1552b690362e005ab54e8a48ba97da3924c0dc", size = 4454428, upload-time = "2024-10-14T23:38:08.416Z" },
     { url = "https://files.pythonhosted.org/packages/63/9a/0962b05b308494e3202d3f794a6e85abe471fe3cafdbcf95c2e8c713aabd/uvloop-0.21.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a5c39f217ab3c663dc699c04cbd50c13813e31d917642d459fdcec07555cc553", size = 4660018, upload-time = "2024-10-14T23:38:10.888Z" },
 ]
-
-[[package]]
-name = "uwsgi"
-version = "2.0.30"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6f/f0/d794e9c7359f488b158e88c9e718c5600efdb74a0daf77331e5ffb6c87c4/uwsgi-2.0.30.tar.gz", hash = "sha256:c12aa652124f062ac216077da59f6d247bd7ef938234445881552e58afb1eb5f", size = 822560, upload-time = "2025-06-03T08:13:53.772Z" }
 
 [[package]]
 name = "virtualenv"

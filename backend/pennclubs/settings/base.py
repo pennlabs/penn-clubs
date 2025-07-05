@@ -82,8 +82,6 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "pennclubs.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
