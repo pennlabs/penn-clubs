@@ -106,6 +106,18 @@ wheels = [
 ]
 
 [[package]]
+name = "blacknoise"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "starlette" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2e/67/ec7cf9bf75b02d7224d1bf8fb93a61c0886c323248710d12dbfa761cc6d7/blacknoise-1.2.0.tar.gz", hash = "sha256:e44d38fbabba18dffb682d9463b670b63c4fbc94c128263aa1a6365618912593", size = 8308, upload-time = "2024-12-09T08:48:50.795Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/70/7425bd7047bf4fa56719aa2a8f17bf098fc80f496ea9bcd315339d3af7d1/blacknoise-1.2.0-py3-none-any.whl", hash = "sha256:1914b179ed37c237e3b914f759afb926371dd60f87649684b5e17a9c55c60b32", size = 6378, upload-time = "2024-12-09T08:48:52.58Z" },
+]
+
+[[package]]
 name = "bleach"
 version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -975,6 +987,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiosmtpd" },
+    { name = "blacknoise" },
     { name = "bleach" },
     { name = "boto3" },
     { name = "bs4" },
@@ -1024,7 +1037,6 @@ dependencies = [
     { name = "urlextract" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "uvloop" },
-    { name = "uwsgi" },
 ]
 
 [package.dev-dependencies]
@@ -1039,6 +1051,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiosmtpd", specifier = ">=1.4.6" },
+    { name = "blacknoise", specifier = ">=1.2.0" },
     { name = "bleach", specifier = "==4.1.0" },
     { name = "boto3" },
     { name = "bs4" },
@@ -1088,7 +1101,6 @@ requires-dist = [
     { name = "urlextract" },
     { name = "uvicorn", extras = ["standard"] },
     { name = "uvloop" },
-    { name = "uwsgi" },
 ]
 
 [package.metadata.requires-dev]
@@ -1581,6 +1593,18 @@ wheels = [
 ]
 
 [[package]]
+name = "starlette"
+version = "0.47.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/69/662169fdb92fb96ec3eaee218cf540a629d629c86d7993d9651226a6789b/starlette-0.47.1.tar.gz", hash = "sha256:aef012dd2b6be325ffa16698f9dc533614fb1cebd593a906b90dc1025529a79b", size = 2583072, upload-time = "2025-06-21T04:03:17.337Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/95/38ef0cd7fa11eaba6a99b3c4f5ac948d8bc6ff199aabd327a29cc000840c/starlette-0.47.1-py3-none-any.whl", hash = "sha256:5e11c9f5c7c3f24959edbf2dffdc01bba860228acf657129467d8a7468591527", size = 72747, upload-time = "2025-06-21T04:03:15.705Z" },
+]
+
+[[package]]
 name = "tatsu"
 version = "5.13.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1750,12 +1774,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/47/57/66f061ee118f413cd22a656de622925097170b9380b30091b78ea0c6ea75/uvloop-0.21.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:bd53ecc9a0f3d87ab847503c2e1552b690362e005ab54e8a48ba97da3924c0dc", size = 4454428, upload-time = "2024-10-14T23:38:08.416Z" },
     { url = "https://files.pythonhosted.org/packages/63/9a/0962b05b308494e3202d3f794a6e85abe471fe3cafdbcf95c2e8c713aabd/uvloop-0.21.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a5c39f217ab3c663dc699c04cbd50c13813e31d917642d459fdcec07555cc553", size = 4660018, upload-time = "2024-10-14T23:38:10.888Z" },
 ]
-
-[[package]]
-name = "uwsgi"
-version = "2.0.30"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6f/f0/d794e9c7359f488b158e88c9e718c5600efdb74a0daf77331e5ffb6c87c4/uwsgi-2.0.30.tar.gz", hash = "sha256:c12aa652124f062ac216077da59f6d247bd7ef938234445881552e58afb1eb5f", size = 822560, upload-time = "2025-06-03T08:13:53.772Z" }
 
 [[package]]
 name = "virtualenv"
