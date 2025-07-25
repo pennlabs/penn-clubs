@@ -446,9 +446,9 @@ export default function ClubEditCard({
       type: 'group',
       description: (
         <div className="mb-4">
-          <a onClick={() => setShowRankModal(true)}>
+          {/* <a onClick={() => setShowRankModal(true)}>
             How does filling out this information affect your club?
-          </a>
+          </a> */}
           <Modal
             show={showRankModal}
             closeModal={() => setShowRankModal(false)}
@@ -505,10 +505,11 @@ export default function ClubEditCard({
           disabled: !REAPPROVAL_QUEUE_ENABLED,
           help: isEdit ? (
             <>
-              If you would like to change your {OBJECT_NAME_SINGULAR} URL in
-              addition to your {OBJECT_NAME_SINGULAR} name, you will need to
-              email <Contact />. Changing this field will require reapproval
-              from the {APPROVAL_AUTHORITY}.
+              Changing this field will require reapproval from the{' '}
+              {APPROVAL_AUTHORITY}. If you would like to change your{' '}
+              {OBJECT_NAME_SINGULAR} URL to match your {OBJECT_NAME_SINGULAR}{' '}
+              name, you will need to contact it at <Contact point="support" />{' '}
+              for permission and copy <Contact />.
             </>
           ) : (
             <>
@@ -952,7 +953,7 @@ export default function ClubEditCard({
               <LiveTitle>Queue Closed for Summer Break</LiveTitle>
               <LiveSub>
                 No edits to existing clubs or applications for new clubs will be
-                submitted for review to OSA.
+                submitted for review to the {APPROVAL_AUTHORITY}.
               </LiveSub>
             </LiveBanner>
           )}
@@ -963,8 +964,8 @@ export default function ClubEditCard({
                 <LiveTitle>Queue Closed for New Clubs</LiveTitle>
                 <LiveSub>
                   Submissions for new clubs are closed for the time being.
-                  Please reach out to the Office of Student Affairs at
-                  vpul-pennosa@pobox.upenn.edu with any questions.
+                  Please reach out to the {APPROVAL_AUTHORITY} at
+                  <Contact point="osa" /> with any questions.
                 </LiveSub>
               </LiveBanner>
             )}

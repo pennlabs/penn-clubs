@@ -383,8 +383,8 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             ))}
             <p>
               If you have any questions about the club registration process,
-              please contact the Office of Student Affairs at
-              vpul-pennosa@pobox.upenn.edu.
+              please contact the {APPROVAL_AUTHORITY} at
+              <Contact point="osa" />.
             </p>
           </TextInfoBox>
         </>
