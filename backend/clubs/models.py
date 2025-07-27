@@ -335,7 +335,17 @@ class Club(models.Model):
     parent_orgs = models.ManyToManyField(
         "Club", related_name="children_orgs", blank=True
     )
-    badges = models.ManyToManyField("Badge", blank=True)
+    affiliations = models.ManyToManyField("Affiliation", blank=True)
+    category = models.ForeignKey(
+        "Category",
+        on_delete=models.PROTECT,
+        related_name="clubs",
+        null=True,
+        blank=True,
+    )
+    eligibility = models.ManyToManyField(
+        "Eligibility", related_name="clubs", blank=True
+    )
 
     target_years = models.ManyToManyField("Year", through="TargetYear")
     target_schools = models.ManyToManyField("School", through="TargetSchool")
@@ -367,7 +377,10 @@ class Club(models.Model):
 
     @cached_property
     def is_wharton(self):
-        return any(badge.label == "Wharton Council" for badge in self.badges.all())
+        return any(
+            affiliation.label == "Wharton Council"
+            for affiliation in self.affiliations.all()
+        )
 
     def add_ics_events(self):
         """
@@ -1466,14 +1479,15 @@ class Tag(models.Model):
         return self.name
 
 
-class Badge(models.Model):
+class Affiliation(models.Model):
     """
     Represents a category that a club could fall under.
-    Clubs do not select badges, these are designated by an external authority.
+    Clubs do not select affiliations, these are designated by an external authority.
 
     The label and description are shown to the public.
 
-    The purpose field is used for tagging badges with special purposes (ex: "fair").
+    The purpose field is used for tagging affiliations with special purposes
+    (ex: "fair").
     """
 
     PURPOSE_CHOICES = [("fair", "Fair"), ("org", "Organization")]
@@ -1482,24 +1496,53 @@ class Badge(models.Model):
     purpose = models.CharField(max_length=255, choices=PURPOSE_CHOICES)
     description = models.TextField(blank=True)
 
-    # The color of the badge to be displayed on the frontend.
+    # The color of the affiliation to be displayed on the frontend.
     color = models.CharField(max_length=16, default="")
 
-    # The organization that this badge represents (If this is the "SAC Funded" badge,
-    # then this would link to SAC)
+    # The organization that this affiliation represents (If this is the "SAC Funded"
+    # affiliation, then this would link to SAC)
     org = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
 
-    # The fair that this badge is related to
+    # The fair that this affiliation is related to
     fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE, blank=True, null=True)
 
-    # whether or not users can view and filter by this badge
+    # whether or not users can view and filter by this affiliation
     visible = models.BooleanField(default=False)
 
-    # optional message to display on club pages with the badge
+    # optional message to display on club pages with the affiliation
     message = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.label
+
+
+class Category(models.Model):
+    """
+    Indicates the primary group category determined by the club's mission.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
+
+class Eligibility(models.Model):
+    """
+    Indicates the group's ability to request funding based on its classification,
+    registration status and type of organization.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Eligibilities"
+
+    def __str__(self):
+        return self.name
 
 
 class Asset(models.Model):

@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { Checkbox, CheckboxLabel, Icon, Text } from '../../components/common'
 import { CLUBS_GREY } from '../../constants/colors'
-import { Badge, Report, Tag } from '../../types'
+import { Affiliation, Report, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { CheckboxField, SelectField, TextField } from '../FormComponents'
@@ -41,13 +41,13 @@ const ReportBox = ({
 type Props = {
   fields: [string, [string, string][]][]
   initial?: Report
-  badges: Badge[]
+  affiliations: Affiliation[]
   tags: Tag[]
   onSubmit: (report: Report) => void
 }
 
 /**
- * Try to reconcile the JSON format for tags/badges returned by the API and the format that the field is expecting.
+ * Try to reconcile the JSON format for tags/affiliations returned by the API and the format that the field is expecting.
  */
 export const fixDeserialize =
   (options: { id: number; label?: string; name?: string }[]) =>
@@ -76,7 +76,7 @@ const ReportForm = ({
   fields,
   onSubmit,
   initial,
-  badges,
+  affiliations,
   tags,
 }: Props): ReactElement<any> => {
   const generateCheckboxGroup = (
@@ -171,14 +171,14 @@ const ReportForm = ({
       description: string
       public: boolean
       fields: string[]
-      badges__in: { id: number }[]
+      affiliations__in: { id: number }[]
       tags__in: { id: number }[]
     }>,
   ): Promise<void> => {
     const parameters: { [key: string]: string | undefined } = {
       format: 'xlsx',
       fields: data.fields?.join(','),
-      badges__in: serializeParameter(data.badges__in ?? []),
+      affiliations__in: serializeParameter(data.affiliations__in ?? []),
       tags__in: serializeParameter(data.tags__in ?? []),
     }
 
@@ -193,7 +193,10 @@ const ReportForm = ({
       parameters: JSON.stringify(parameters),
     }
 
-    const resp = await doApiRequest('/reports/', { method: 'POST', body })
+    const resp = await doApiRequest('/reports/?format=json', {
+      method: 'POST',
+      body,
+    })
     const report = await resp.json()
     onSubmit(report)
   }
@@ -262,13 +265,13 @@ const ReportForm = ({
                 helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified tags.`}
               />
               <Field
-                name="badges__in"
-                label="Badges"
+                name="affiliations__in"
+                label="Affiliations"
                 as={SelectField}
-                choices={badges}
-                valueDeserialize={fixDeserialize(badges)}
+                choices={affiliations}
+                valueDeserialize={fixDeserialize(affiliations)}
                 isMulti
-                helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified badges.`}
+                helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified affiliations.`}
               />
             </ReportBox>
             <ReportBox title="Included Fields">

@@ -19,10 +19,10 @@ from ics import Calendar
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
+    Affiliation,
     ApplicationQuestion,
     ApplicationSubmission,
     Asset,
-    Badge,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -449,6 +449,7 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Greek Life"},
             },
             content_type="application/json",
         )
@@ -910,6 +911,7 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1116,6 +1118,7 @@ class ClubTestCase(TestCase):
                 "website": "",
                 "linkedin": "",
                 "github": "",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1161,6 +1164,7 @@ class ClubTestCase(TestCase):
                 "description": "This is a new club.",
                 "tags": [{"name": "Undergraduate"}],
                 "email": "newclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1296,6 +1300,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Undergraduate"}],
                 "description": test_good_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1323,6 +1328,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "description": test_bad_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1391,7 +1397,7 @@ class ClubTestCase(TestCase):
         tag1 = Tag.objects.create(name="Wharton")
         tag2 = Tag.objects.create(name="Engineering")
 
-        badge1 = Badge.objects.create(label="SAC Funded", purpose="org")
+        affiliation1 = Affiliation.objects.create(label="SAC Funded", purpose="org")
         school1 = School.objects.create(name="Engineering", is_graduate=False)
         School.objects.create(name="Wharton", is_graduate=False)
 
@@ -1402,7 +1408,7 @@ class ClubTestCase(TestCase):
             {
                 "name": "Penn Labs",
                 "description": "We code stuff.",
-                "badges": [{"label": "SAC Funded"}],
+                "affiliations": [{"label": "SAC Funded"}],
                 "tags": [
                     {"name": tag1.name},
                     {"name": tag2.name},
@@ -1419,6 +1425,7 @@ class ClubTestCase(TestCase):
                 "/school/university-of-pennsylvania/",
                 "youtube": "https://youtu.be/dQw4w9WgXcQ",
                 "github": "https://github.com/pennlabs",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1452,8 +1459,8 @@ class ClubTestCase(TestCase):
         ]:
             self.assertIn(link, data)
 
-        self.assertEqual(club_obj.badges.count(), 1)
-        self.assertEqual(club_obj.badges.all()[0].label, badge1.label)
+        self.assertEqual(club_obj.affiliations.count(), 1)
+        self.assertEqual(club_obj.affiliations.all()[0].label, affiliation1.label)
 
     def test_club_create_duplicate(self):
         """
@@ -2166,14 +2173,14 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
-    def test_club_has_badges(self):
-        badge = Badge(label="SAC Funded", description="", visible=True)
-        badge.save()
-        self.club1.badges.add(badge)
+    def test_club_has_affiliations(self):
+        affiliation = Affiliation(label="SAC Funded", description="", visible=True)
+        affiliation.save()
+        self.club1.affiliations.add(affiliation)
         resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
         club = json.loads(resp.content)
-        badge_json = club["badges"][0]
-        self.assertEqual(badge.label, badge_json["label"])
+        affiliation_json = club["affiliations"][0]
+        self.assertEqual(affiliation.label, affiliation_json["label"])
 
     def test_create_note(self):
         self.client.login(username=self.user2.username, password="test")
@@ -2575,11 +2582,11 @@ class ClubTestCase(TestCase):
         # choose a club
         club = self.club1
 
-        # add a badge to the club
-        badge = Badge.objects.create(
-            label="Test Badge", description="This is a test badge!"
+        # add an affiliation to the club
+        affiliation = Affiliation.objects.create(
+            label="Test Affiliation", description="This is a test affiliation!"
         )
-        club.badges.add(badge)
+        club.affiliations.add(affiliation)
 
         # add officer to club
         Membership.objects.create(
@@ -2660,8 +2667,8 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        # ensure badge still exists
-        self.assertTrue(club.badges.filter(pk=badge.pk).count(), 1)
+        # ensure affiliation still exists
+        self.assertTrue(club.affiliations.filter(pk=affiliation.pk).count(), 1)
 
         # mark club as unapproved
         club.approved = None
@@ -2786,9 +2793,9 @@ class ClubTestCase(TestCase):
             ),
         )
 
-        # add the SAC badge to the club
-        badge, _ = Badge.objects.get_or_create(label="SAC")
-        self.club1.badges.add(badge)
+        # add the SAC affiliation to the club
+        affiliation, _ = Affiliation.objects.get_or_create(label="SAC")
+        self.club1.affiliations.add(affiliation)
 
         # add a file to the club
         Asset.objects.create(name="constitution.pdf", club=self.club1)

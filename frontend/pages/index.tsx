@@ -25,7 +25,15 @@ import {
 } from 'react'
 import { PaginatedClubPage, renderListPage } from 'renderPage'
 import styled from 'styled-components'
-import { Badge, Maybe, School, StudentType, Tag, UserInfo, Year } from 'types'
+import {
+  Affiliation,
+  Maybe,
+  School,
+  StudentType,
+  Tag,
+  UserInfo,
+  Year,
+} from 'types'
 import { doApiRequest, doBulkLookup, isClubFieldShown, useSetting } from 'utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -84,7 +92,7 @@ type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
   tags: Tag[]
-  badges: Badge[]
+  affiliations: Affiliation[]
   schools: School[]
   years: Year[]
   studentTypes: StudentType[]
@@ -367,15 +375,15 @@ const Splash = (props: SplashProps): ReactElement<any> => {
     [props.tags],
   )
 
-  const badgeOptions = useMemo<FuseTag[]>(
+  const affiliationOptions = useMemo<FuseTag[]>(
     () =>
-      props.badges.map(({ id, label, color, description }) => ({
+      props.affiliations.map(({ id, label, color, description }) => ({
         value: id,
         label,
         color,
         description,
       })),
-    [props.badges],
+    [props.affiliations],
   )
 
   const applicationRequiredOptions = [
@@ -448,11 +456,11 @@ const Splash = (props: SplashProps): ReactElement<any> => {
             label="Tags"
             options={tagOptions}
           />
-          {isClubFieldShown('badges') && (
+          {isClubFieldShown('affiliations') && (
             <SearchBarTagItem
-              param="badges__in"
+              param="affiliations__in"
               label="Filters"
-              options={badgeOptions}
+              options={affiliationOptions}
             />
           )}
           <SearchBarOptionItem param="ordering" label="Ordering" />
@@ -585,7 +593,7 @@ const Splash = (props: SplashProps): ReactElement<any> => {
               setSearchInput={setSearchInput}
               optionMapping={{
                 tags__in: tagOptions,
-                badges__in: badgeOptions,
+                affiliations__in: affiliationOptions,
                 application_required__in: applicationRequiredOptions,
                 size__in: sizeOptions,
                 target_schools__in: schoolOptions,

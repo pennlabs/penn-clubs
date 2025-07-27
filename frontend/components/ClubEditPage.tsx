@@ -20,6 +20,7 @@ import {
   HOME_ROUTE,
 } from '../constants/routes'
 import {
+  Category,
   Club,
   Major,
   School,
@@ -74,6 +75,7 @@ type ClubFormProps = {
   years: Year[]
   tags: Tag[]
   studentTypes: StudentType[]
+  categories: Category[]
   tab?: string | null
   userInfo?: UserInfo
 }
@@ -85,6 +87,7 @@ const ClubForm = ({
   majors,
   tags,
   studentTypes,
+  categories,
   clubId,
   tab,
   userInfo,
@@ -235,6 +238,7 @@ const ClubForm = ({
             majors={majors}
             tags={tags}
             studentTypes={studentTypes}
+            categories={categories}
             club={club}
             onSubmit={submit}
           />
@@ -443,6 +447,7 @@ const ClubForm = ({
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            categories={categories}
             onSubmit={submit}
           />
         </div>

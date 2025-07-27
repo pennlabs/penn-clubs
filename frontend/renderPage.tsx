@@ -23,7 +23,15 @@ import {
 } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
+import {
+  Affiliation,
+  Club,
+  School,
+  StudentType,
+  Tag,
+  UserInfo,
+  Year,
+} from './types'
 import {
   cache,
   doApiRequest,
@@ -323,8 +331,12 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
       return await cache(
         'base:options',
         async () => {
-          const resp = await doApiRequest('/options/?format=json')
-          return await resp.json()
+          try {
+            const resp = await doApiRequest('/options/?format=json')
+            return await resp.json()
+          } catch (e) {
+            return {}
+          }
         },
         1000 * 60 * 5,
       )
@@ -383,7 +395,7 @@ export type PaginatedClubPage = {
 }
 
 type ListPageProps = {
-  badges: Badge[]
+  affiliations: Affiliation[]
   clubs: PaginatedClubPage
   schools: School[]
   studentTypes: StudentType[]
@@ -407,13 +419,13 @@ const getPublicCachedContent = async () => {
     async () => {
       const [
         tagsRequest,
-        badgesRequest,
+        affiliationsRequest,
         schoolRequest,
         yearRequest,
         studentTypesRequest,
       ] = await Promise.all([
         doApiRequest('/tags/?format=json'),
-        doApiRequest('/badges/?format=json'),
+        doApiRequest('/affiliations/?format=json'),
         doApiRequest('/schools/?format=json'),
         doApiRequest('/years/?format=json'),
         isClubFieldShown('student_types')
@@ -423,13 +435,13 @@ const getPublicCachedContent = async () => {
 
       const [
         tagsResponse,
-        badgesResponse,
+        affiliationsResponse,
         schoolResponse,
         yearResponse,
         studentTypesResponse,
       ] = await Promise.all([
         tagsRequest.json(),
-        badgesRequest.json(),
+        affiliationsRequest.json(),
         schoolRequest.json(),
         yearRequest.json(),
         studentTypesRequest != null
@@ -438,7 +450,7 @@ const getPublicCachedContent = async () => {
       ])
 
       return {
-        badges: badgesResponse as Badge[],
+        affiliations: affiliationsResponse as Affiliation[],
         schools: schoolResponse as School[],
         studentTypes: studentTypesResponse as StudentType[],
         tags: tagsResponse as Tag[],

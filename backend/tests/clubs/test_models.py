@@ -12,7 +12,7 @@ from django.test import TestCase
 
 from clubs.models import (
     Advisor,
-    Badge,
+    Affiliation,
     Club,
     Event,
     EventShowing,
@@ -196,14 +196,14 @@ class TagTestCase(TestCase):
         self.assertEqual(str(self.tag), self.tag.name)
 
 
-class BadgeTestCase(TestCase):
+class AffiliationTestCase(TestCase):
     def setUp(self):
-        self.badge = Badge.objects.create(
+        self.affiliation = Affiliation.objects.create(
             label="SAC Funded", description="SAC Funded Club"
         )
 
     def test_str(self):
-        self.assertTrue(str(self.badge), self.badge.label)
+        self.assertTrue(str(self.affiliation), self.affiliation.label)
 
 
 class AdvisorTestCase(TestCase):

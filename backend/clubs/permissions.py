@@ -272,9 +272,9 @@ class EventShowingPermission(permissions.BasePermission):
         return True
 
 
-class ClubBadgePermission(permissions.BasePermission):
+class ClubAffiliationPermission(permissions.BasePermission):
     """
-    Officers and above can edit the badges that the club has control over.
+    Officers and above can edit the affiliations that the club has control over.
     """
 
     def has_object_permission(self, request, view, obj):
@@ -287,21 +287,21 @@ class ClubBadgePermission(permissions.BasePermission):
         if request.user.has_perm("clubs.manage_club"):
             return True
 
-        # only effective superusers can modify badges without clubs
+        # only effective superusers can modify affiliations without clubs
         if obj.org is None:
             return False
 
-        # club officers and above can modify badges they own
+        # club officers and above can modify affiliations they own
         membership = find_membership_helper(request.user, obj.org)
 
         return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
     def has_permission(self, request, view):
-        # must be at least logged in to modify badge relationships
+        # must be at least logged in to modify affiliation relationships
         if view.action in {"create", "destroy"}:
             return request.user.is_authenticated
 
-        # anyone can view badge relationships
+        # anyone can view affiliation relationships
         if view.action in {"list", "retrieve"}:
             return True
 

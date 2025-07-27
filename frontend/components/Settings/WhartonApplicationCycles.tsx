@@ -150,7 +150,7 @@ const WhartonApplicationCycles = (): ReactElement<any> => {
   }, [membershipCycle])
 
   useEffect(() => {
-    doApiRequest('/cycles')
+    doApiRequest('/cycles?format=json')
       .then((resp) => resp.json())
       .then((data) => {
         setPermissions(!data.detail)

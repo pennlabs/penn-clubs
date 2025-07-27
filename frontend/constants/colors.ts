@@ -174,6 +174,6 @@ export const TAG_BACKGROUND_COLOR_MAP = {
   tags__in: PRIMARY_TAG_BG,
   size__in: CLUBS_NAVY,
   application_required__in: CLUBS_RED,
-  badges__in: CLUBS_PURPLE,
+  affiliations__in: CLUBS_PURPLE,
   recruiting_cycle__in: CLUBS_RED_DARK,
 }

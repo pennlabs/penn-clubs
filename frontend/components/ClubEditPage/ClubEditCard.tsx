@@ -5,6 +5,7 @@ import React, { ReactElement, useState } from 'react'
 import { BLACK } from '~/constants'
 
 import {
+  Category,
   Club,
   ClubApplicationRequired,
   ClubRecruitingCycle,
@@ -127,6 +128,7 @@ type ClubEditCardProps = {
   studentTypes: Readonly<StudentType[]>
   years: Readonly<Year[]>
   tags: Readonly<Tag[]>
+  categories: Readonly<Category[]>
   club: Partial<Club>
   isEdit: boolean
   onSubmit?: (data: {
@@ -229,6 +231,7 @@ export default function ClubEditCard({
   studentTypes,
   years,
   tags,
+  categories,
   club,
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
@@ -559,6 +562,14 @@ export default function ClubEditCard({
           help: `${FORM_TAG_DESCRIPTION}`,
           placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
+        },
+        {
+          name: 'category',
+          type: 'select',
+          required: true,
+          label: 'Category',
+          help: "Select the primary category that best describes your club's mission and activities.",
+          choices: categories,
         },
         {
           name: 'image',
@@ -902,6 +913,7 @@ export default function ClubEditCard({
     size: CLUB_SIZES[0].value,
     application_required: CLUB_APPLICATIONS[0].value,
     recruiting_cycle: CLUB_RECRUITMENT_CYCLES[0].value,
+    category: categories.length > 0 ? categories[0] : null,
   }
 
   const editingFields = new Set<string>()

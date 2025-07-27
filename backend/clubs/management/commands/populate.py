@@ -10,16 +10,18 @@ from options.models import Option
 
 from clubs.models import (
     Advisor,
+    Affiliation,
     ApplicationCommittee,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationSubmission,
-    Badge,
     Cart,
+    Category,
     Club,
     ClubApplication,
     ClubFair,
     ClubFairRegistration,
+    Eligibility,
     Event,
     EventShowing,
     Major,
@@ -57,21 +59,21 @@ hone your skills in time for recruiting season!""",
             {"name": "Athletics"},
             {"name": "Undergraduate"},
         ],
-        "badges": [
+        "affiliations": [
             {
-                "label": "Red Badge",
+                "label": "Red Affiliation",
                 "color": "ff0000",
                 "visible": True,
                 "purpose": "org",
             },
             {
-                "label": "Green Badge",
+                "label": "Green Affiliation",
                 "color": "00ff00",
                 "visible": True,
                 "purpose": "org",
             },
             {
-                "label": "Blue Badge",
+                "label": "Blue Affiliation",
                 "color": "0000ff",
                 "visible": True,
                 "purpose": "org",
@@ -328,6 +330,39 @@ class Command(BaseCommand):
             ]
         ]
 
+        # create categories
+        [
+            Category.objects.get_or_create(name=category)
+            for category in [
+                "Academic & Pre-Professional",
+                "Arts & Performance",
+                "Civic Engagement & Community Service",
+                "Cultural & International",
+                "Greek Life",
+                "Instructional & Competitive (Non Sports-Related)",
+                "Media & Publication",
+                "Peer Education & Support",
+                "Political & Advocacy",
+                "Religious & Spiritual",
+                "Special Interest",
+                "Sports & Recreational",
+                "Student Governance",
+            ]
+        ]
+
+        # create eligibility options
+        [
+            Eligibility.objects.get_or_create(name=eligibility)
+            for eligibility in [
+                "ALTERNATIVE",
+                "GAPSA",
+                "SAC",
+                "SCHOOL-SPECIFIC",
+                "UA",
+                "NOT ELIGIBLE",
+            ]
+        ]
+
         image_cache = {}
 
         def get_image(url):
@@ -339,19 +374,25 @@ class Command(BaseCommand):
             return contents
 
         # create clubs
+        default_category = Category.objects.first()
+
         for info in clubs:
             partial = dict(info)
             custom_fields = [
                 "code",
                 "image",
                 "tags",
-                "badges",
+                "affiliations",
                 "testimonials",
                 "questions",
             ]
             for field in custom_fields:
                 if field in partial:
                     del partial[field]
+
+            # assign a default category if not specified
+            if "category" not in partial:
+                partial["category"] = default_category
 
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
 
@@ -360,7 +401,7 @@ class Command(BaseCommand):
                 club.image.save("image.png", ContentFile(contents))
                 club.save()
 
-            m2m_fields = [(Tag, "tags"), (Badge, "badges")]
+            m2m_fields = [(Tag, "tags"), (Affiliation, "affiliations")]
 
             for obj, name in m2m_fields:
                 if name in info:
@@ -377,8 +418,8 @@ class Command(BaseCommand):
                     for new_obj in info[name]:
                         new_obj, _ = obj.objects.get_or_create(club=club, **new_obj)
 
-        # create badges
-        badge, _ = Badge.objects.get_or_create(
+        # create affiliations
+        affiliation, _ = Affiliation.objects.get_or_create(
             label="TAC",
             description="Testing Activities Council",
             purpose="org",
@@ -386,7 +427,7 @@ class Command(BaseCommand):
             visible=True,
         )
 
-        badge2, _ = Badge.objects.get_or_create(
+        affiliation2, _ = Affiliation.objects.get_or_create(
             label="SAC",
             description="Student Activities Council",
             purpose="org",
@@ -397,9 +438,9 @@ class Command(BaseCommand):
         tag_undergrad, _ = Tag.objects.get_or_create(name="Undergraduate")
         tag_generic, _ = Tag.objects.get_or_create(name="Generic")
 
-        wharton_badge, _ = Badge.objects.get_or_create(
+        wharton_affiliation, _ = Affiliation.objects.get_or_create(
             label="Wharton Council",
-            purpose="Dummy badge to mock Wharton-affiliated clubs",
+            purpose="Dummy affiliation to mock Wharton-affiliated clubs",
             visible=True,
         )
 
@@ -412,12 +453,13 @@ class Command(BaseCommand):
                     "approved": True,
                     "active": True,
                     "email": "example@example.com",
+                    "category": default_category,
                 },
             )
 
             if 10 <= i <= 15:
                 # Make some clubs Wharton-affiliated
-                club.badges.add(wharton_badge)
+                club.affiliations.add(wharton_affiliation)
 
             if created:
                 club.available_virtually = i % 2 == 0
@@ -461,8 +503,8 @@ class Command(BaseCommand):
 
             club.tags.add(tag_undergrad)
             club.tags.add(tag_generic)
-            club.badges.add(badge)
-            club.badges.add(badge2)
+            club.affiliations.add(affiliation)
+            club.affiliations.add(affiliation2)
 
         # create users
         count = 0
@@ -588,7 +630,7 @@ class Command(BaseCommand):
             },
         )
 
-        fair_cat_badge, _ = Badge.objects.get_or_create(
+        fair_cat_affiliation, _ = Affiliation.objects.get_or_create(
             label="General Category",
             purpose="fair",
             defaults={"description": "Grouping for Sample Fair", "fair": fair},
@@ -598,7 +640,7 @@ class Command(BaseCommand):
             ClubFairRegistration.objects.get_or_create(
                 fair=fair, registrant=ben, club=club
             )
-            club.badges.add(fair_cat_badge)
+            club.affiliations.add(fair_cat_affiliation)
 
         fair.create_events()
 

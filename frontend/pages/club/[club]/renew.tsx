@@ -13,6 +13,7 @@ import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import {
+  Category,
   Club,
   Major,
   MembershipRank,
@@ -47,6 +48,7 @@ type InitialRenewPageProps = {
   years: Year[]
   tags: Tag[]
   studentTypes: StudentType[]
+  categories: Category[]
 }
 
 type RenewPageProps = InitialRenewPageProps & {
@@ -193,6 +195,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     years,
     tags,
     studentTypes,
+    categories,
   } = props
 
   const [club, setClub] = useState<Club>(initialClub)
@@ -406,6 +409,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             tags={tags}
             studentTypes={studentTypes}
             club={club}
+            categories={categories}
             isEdit={true}
             onSubmit={({ club, message }): Promise<void> => {
               if (club !== undefined) {
@@ -612,7 +616,14 @@ RenewPage.getInitialProps = async ({
 
   RenewPage.permissions = [`clubs.manage_club:${query.club}`]
 
-  const endpoints = ['tags', 'schools', 'majors', 'years', 'student_types']
+  const endpoints = [
+    'tags',
+    'schools',
+    'majors',
+    'years',
+    'student_types',
+    'categories',
+  ]
   return Promise.all(
     endpoints.map(async (item) => {
       if (!isClubFieldShown(item)) {

@@ -4,13 +4,14 @@ from rest_framework_nested import routers
 from clubs.views import (
     AdminNoteViewSet,
     AdvisorViewSet,
+    AffiliationClubViewSet,
+    AffiliationViewSet,
     ApplicationExtensionViewSet,
     ApplicationQuestionViewSet,
     ApplicationSubmissionUserViewSet,
     ApplicationSubmissionViewSet,
     AssetViewSet,
-    BadgeClubViewSet,
-    BadgeViewSet,
+    CategoryViewSet,
     ClubApplicationViewSet,
     ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
@@ -19,6 +20,7 @@ from clubs.views import (
     ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
+    EligibilityViewSet,
     EmailInvitesAPIView,
     EventShowingViewSet,
     EventViewSet,
@@ -70,7 +72,9 @@ router.register(r"clubs", ClubViewSet, basename="clubs")
 router.register(r"clubfairs", ClubFairViewSet, basename="clubfairs")
 router.register(r"events", EventViewSet, basename="events")
 router.register(r"tags", TagViewSet, basename="tags")
-router.register(r"badges", BadgeViewSet, basename="badges")
+router.register(r"affiliations", AffiliationViewSet, basename="affiliations")
+router.register(r"categories", CategoryViewSet, basename="categories")
+router.register(r"eligibilities", EligibilityViewSet, basename="eligibilities")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
@@ -138,8 +142,12 @@ club_events_router.register(
     r"showings", ClubEventShowingViewSet, basename="club-events-showings"
 )
 
-badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
-badges_router.register(r"clubs", BadgeClubViewSet, basename="badge-clubs")
+affiliations_router = routers.NestedSimpleRouter(
+    router, r"affiliations", lookup="affiliation"
+)
+affiliations_router.register(
+    r"clubs", AffiliationClubViewSet, basename="affiliation-clubs"
+)
 
 applications_router = routers.NestedSimpleRouter(
     clubs_router, r"applications", lookup="application"
@@ -210,7 +218,7 @@ urlpatterns = [
 
 urlpatterns += router.urls
 urlpatterns += clubs_router.urls
-urlpatterns += badges_router.urls
+urlpatterns += affiliations_router.urls
 urlpatterns += applications_router.urls
 urlpatterns += events_router.urls
 urlpatterns += club_events_router.urls

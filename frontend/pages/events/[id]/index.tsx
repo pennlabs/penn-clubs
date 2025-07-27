@@ -285,7 +285,7 @@ const EventPage: React.FC<EventPageProps> = ({ baseProps, club, event }) => {
       setTicketAvailability(null)
       setTicketOrder({})
 
-      const fetchUrl = `/events/${event.id}/showings/${selectedShowing.id}/tickets/`
+      const fetchUrl = `/events/${event.id}/showings/${selectedShowing.id}/tickets/?format=json`
 
       doApiRequest(fetchUrl)
         .then((resp) => (resp.ok ? resp.json() : Promise.reject(resp)))
@@ -466,9 +466,12 @@ const EventPage: React.FC<EventPageProps> = ({ baseProps, club, event }) => {
                 )}
               </Subtitle>
               <div>
-                {event.badges?.map((badge) => (
-                  <Tag key={badge.id} style={{ backgroundColor: badge.color }}>
-                    {badge.label}
+                {event.affiliations?.map((affiliation) => (
+                  <Tag
+                    key={affiliation.id}
+                    style={{ backgroundColor: affiliation.color }}
+                  >
+                    {affiliation.label}
                   </Tag>
                 ))}
               </div>

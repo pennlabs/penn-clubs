@@ -11,8 +11,8 @@ from django.db.models import Count, Q
 from django.utils import timezone
 
 from clubs.models import (
+    Affiliation,
     ApplicationSubmission,
-    Badge,
     Club,
     ClubFair,
     Event,
@@ -203,11 +203,11 @@ class Command(BaseCommand):
             tf.close()
 
         if action == "update_status_reminder":
-            wc_badge = Badge.objects.filter(
+            wc_affiliation = Affiliation.objects.filter(
                 label="Wharton Council",
                 purpose="org",
             ).first()
-            clubs = Club.objects.filter(badges__in=[wc_badge])
+            clubs = Club.objects.filter(affiliations__in=[wc_affiliation])
             payloads = []
             for club in clubs:
                 emails = (

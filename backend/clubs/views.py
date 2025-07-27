@@ -87,6 +87,7 @@ from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     AdminNote,
     Advisor,
+    Affiliation,
     ApplicationCycle,
     ApplicationExtension,
     ApplicationMultipleChoice,
@@ -94,8 +95,8 @@ from clubs.models import (
     ApplicationQuestionResponse,
     ApplicationSubmission,
     Asset,
-    Badge,
     Cart,
+    Category,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -103,6 +104,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
@@ -131,7 +133,7 @@ from clubs.models import (
 )
 from clubs.permissions import (
     AssetPermission,
-    ClubBadgePermission,
+    ClubAffiliationPermission,
     ClubFairPermission,
     ClubItemPermission,
     ClubPermission,
@@ -154,6 +156,7 @@ from clubs.permissions import (
 from clubs.serializers import (
     AdminNoteSerializer,
     AdvisorSerializer,
+    AffiliationSerializer,
     ApplicationCycleSerializer,
     ApplicationExtensionSerializer,
     ApplicationQuestionResponseSerializer,
@@ -165,7 +168,7 @@ from clubs.serializers import (
     AssetSerializer,
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
-    BadgeSerializer,
+    CategorySerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
@@ -176,6 +179,7 @@ from clubs.serializers import (
     ClubMembershipSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    EligibilitySerializer,
     EventSerializer,
     EventShowingSerializer,
     EventShowingWriteSerializer,
@@ -444,7 +448,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
                     queryset = queryset.filter(**{f"{field}__{label}": tag})
             return queryset
 
-        def parse_badges(field, value, operation, queryset):
+        def parse_affiliations(field, value, operation, queryset):
             return parse_many_to_many("label", field, value, operation, queryset)
 
         def parse_tags(field, value, operation, queryset):
@@ -495,7 +499,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "appointment_needed": parse_boolean,
             "approved": parse_boolean,
             "available_virtually": parse_boolean,
-            "badges": parse_badges,
+            "affiliations": parse_affiliations,
             "code": parse_string,
             "enables_subscription": parse_boolean,
             "favorite_count": parse_int,
@@ -871,10 +875,10 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                                         description: >
                                             Whether this club has been approved by the
                                             approval authority or not.
-                                    badges:
+                                    affiliations:
                                         type: array
                                         description: >
-                                            A list of badges associated with this
+                                            A list of affiliations associated with this
                                             club and fair.
                                         items:
                                             type: string
@@ -901,12 +905,12 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         ):
             events[club_code].append(event_url)
 
-        # collect badges
-        badges = collections.defaultdict(list)
-        for code, lbl in Badge.objects.filter(purpose="fair", fair=fair).values_list(
-            "club__code", "label"
-        ):
-            badges[code].append(lbl)
+        # collect affiliations
+        affiliations = collections.defaultdict(list)
+        for code, lbl in Affiliation.objects.filter(
+            purpose="fair", fair=fair
+        ).values_list("club__code", "label"):
+            affiliations[code].append(lbl)
 
         return Response(
             [
@@ -915,7 +919,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
                     "name": name,
                     "approved": approved or ghost,
                     "meetings": events.get(code, []),
-                    "badges": badges.get(code, []),
+                    "affiliations": affiliations.get(code, []),
                 }
                 for code, name, approved, ghost in clubs.order_by("name").values_list(
                     "code", "name", "approved", "ghost"
@@ -1012,7 +1016,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         if (
             status
             and fair.organization == "Student Activities Council"
-            and club.badges.filter(label="SAC").exists()
+            and club.affiliations.filter(label="SAC").exists()
         ):
             if club.asset_set.count() <= 0 or not any(
                 asset.name.lower().endswith((".pdf", ".doc", ".docx"))
@@ -1140,7 +1144,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     queryset=Membership.objects.filter(person=person),
                     to_attr="user_membership_set",
                 ),
-                "badges",
+                "affiliations",
             )
 
             if self.action in {"retrieve"}:
@@ -1367,10 +1371,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["get"])
-    def owned_badges(self, request, *args, **kwargs):
+    def owned_affiliations(self, request, *args, **kwargs):
         """
-        Return a list of badges that this club is an owner of.
-        The club will be able to assign these badges to other clubs.
+        Return a list of affiliations that this club is an owner of.
+        The club will be able to assign these affiliations to other clubs.
         ---
         responses:
             "200":
@@ -1378,12 +1382,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     application/json:
                         schema:
                             allOf:
-                                - $ref: "#/components/schemas/Badge"
+                                - $ref: "#/components/schemas/Affiliation"
         ---
         """
         club = self.get_object()
-        badges = Badge.objects.filter(org=club)
-        return Response(BadgeSerializer(badges, many=True).data)
+        affiliations = Affiliation.objects.filter(org=club)
+        return Response(AffiliationSerializer(affiliations, many=True).data)
 
     @action(detail=True, methods=["get"])
     def children(self, request, *args, **kwargs):
@@ -1833,10 +1837,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         operationId: List Club Constitutions
         ---
         """
-        badge = Badge.objects.filter(label="SAC").first()
-        if badge:
+        affiliation = Affiliation.objects.filter(label="SAC").first()
+        if affiliation:
             query = (
-                Club.objects.filter(badges=badge, archived=False)
+                Club.objects.filter(affiliations=affiliation, archived=False)
                 .order_by(Lower("name"))
                 .prefetch_related(
                     Prefetch("asset_set", to_attr="prefetch_asset_set"),
@@ -1855,7 +1859,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             )
             return Response(serializer.data)
         else:
-            return Response({"error": "The SAC badge does not exist in the database."})
+            return Response(
+                {"error": "The SAC affiliation does not exist in the database."}
+            )
 
     @action(detail=False, methods=["post"])
     def lookup(self, request, *args, **kwargs):
@@ -1928,7 +1934,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                                     parameters:
                                         id:
                                             type: number
-                            badges:
+                            affiliations:
                                 type: array
                                 items:
                                     type: object
@@ -2004,28 +2010,30 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             )
 
         tags = request.data.get("tags", [])
-        badges = request.data.get("badges", [])
+        affiliations = request.data.get("affiliations", [])
         fairs = request.data.get("fairs", [])
 
-        if not tags and not badges and not fairs:
+        if not tags and not affiliations and not fairs:
             return Response(
                 {"error": "You must specify some related objects to manipulate!"}
             )
 
         tags = Tag.objects.filter(id__in=[tag["id"] for tag in tags])
-        badges = Badge.objects.filter(id__in=[badge["id"] for badge in badges])
+        affiliations = Affiliation.objects.filter(
+            id__in=[affiliation["id"] for affiliation in affiliations]
+        )
         fairs = ClubFair.objects.filter(id__in=[fair["id"] for fair in fairs])
 
         count = 0
-        if tags or badges:
+        if tags or affiliations:
             for club in club_objs:
                 if action == "add":
                     club.tags.add(*tags)
-                    club.badges.add(*badges)
+                    club.affiliations.add(*affiliations)
                     count += 1
                 elif action == "remove":
                     club.tags.remove(*tags)
-                    club.badges.remove(*badges)
+                    club.affiliations.remove(*affiliations)
                     count += 1
 
         if fairs:
@@ -2898,13 +2906,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     queryset=Ticket.objects.select_related("owner", "holder"),
                 ),
                 Prefetch(
-                    "club__badges",
+                    "club__affiliations",
                     queryset=(
-                        Badge.objects.filter(
+                        Affiliation.objects.filter(
                             fair__id=self.request.query_params.get("fair")
                         )
                         if "fair" in self.request.query_params
-                        else Badge.objects.filter(visible=True)
+                        else Affiliation.objects.filter(visible=True)
                     ),
                 ),
             )
@@ -2944,7 +2952,8 @@ class EventViewSet(ClubEventViewSet):
         """
         Get the minimal information required for a fair directory listing.
         Groups by the start date of the event, and then the event category.
-        Each event's club must have an associated fair badge in order to be displayed.
+        Each event's club must have an associated fair affiliation in order to be
+        displayed.
         ---
         parameters:
             - name: date
@@ -3040,7 +3049,9 @@ class EventViewSet(ClubEventViewSet):
 
         now = date or timezone.now()
         events = Event.objects.filter(
-            type=Event.FAIR, club__badges__purpose="fair", club__badges__fair=fair
+            type=Event.FAIR,
+            club__affiliations__purpose="fair",
+            club__affiliations__fair=fair,
         )
 
         # Get event showings for these events
@@ -3062,7 +3073,7 @@ class EventViewSet(ClubEventViewSet):
             "end_time",
             "event__club__name",
             "event__club__code",
-            "event__club__badges__label",
+            "event__club__affiliations__label",
         ).distinct()
 
         output = {}
@@ -4785,16 +4796,16 @@ class TagViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
 
-class BadgeViewSet(viewsets.ModelViewSet):
+class AffiliationViewSet(viewsets.ModelViewSet):
     """
     list:
-    Return a list of badges.
+    Return a list of affiliations.
 
     get:
-    Return details for a specific badge by name.
+    Return details for a specific affiliation by name.
     """
 
-    serializer_class = BadgeSerializer
+    serializer_class = AffiliationSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
 
@@ -4803,11 +4814,35 @@ class BadgeViewSet(viewsets.ModelViewSet):
         fair = self.request.query_params.get("fair", None)
 
         if show_all:
-            return Badge.objects.all()
+            return Affiliation.objects.all()
         elif fair and fair not in {"null", "undefined"}:
-            return Badge.objects.filter(fair__id=fair)
+            return Affiliation.objects.filter(fair__id=fair)
 
-        return Badge.objects.filter(visible=True)
+        return Affiliation.objects.filter(visible=True)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of categories.
+    """
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+
+
+class EligibilityViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of eligibilities.
+    """
+
+    queryset = Eligibility.objects.all()
+    serializer_class = EligibilitySerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
 
 
 def parse_boolean(inpt):
@@ -4840,7 +4875,7 @@ class FavoriteEventsAPIView(generics.ListAPIView):
                 eventshowing__start_time__gte=today,
             )
             .select_related("club")
-            .prefetch_related("club__badges")
+            .prefetch_related("club__affiliations")
             .order_by("eventshowing__start_time")
             .distinct()
         )
@@ -4900,7 +4935,7 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
                 start_time__gte=today, end_time__gte=timezone.now()
             )
             .select_related("club")
-            .prefetch_related("club__badges")
+            .prefetch_related("club__affiliations")
             .order_by("start_time")
             .all()
         )
@@ -7208,7 +7243,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
             if "club_code" in self.kwargs:
                 club = (
                     Club.objects.filter(code=self.kwargs["club_code"])
-                    .prefetch_related("badges")
+                    .prefetch_related("affiliations")
                     .first()
                 )
                 if club and club.is_wharton:
@@ -8060,34 +8095,36 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
         return Response([])
 
 
-class BadgeClubViewSet(viewsets.ModelViewSet):
+class AffiliationClubViewSet(viewsets.ModelViewSet):
     """
-    create: Add this badge to a club.
+    create: Add this affiliation to a club.
 
-    list: List the clubs with this badge.
+    list: List the clubs with this affiliation.
 
-    destroy: Remove this badge from a club.
+    destroy: Remove this affiliation from a club.
     """
 
-    permission_classes = [ClubBadgePermission | IsSuperuser]
+    permission_classes = [ClubAffiliationPermission | IsSuperuser]
     serializer_class = ClubMinimalSerializer
     http_method_names = ["get", "post", "delete"]
     lookup_field = "code"
 
     def create(self, request, *args, **kwargs):
-        badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
+        affiliation = get_object_or_404(Affiliation, pk=self.kwargs["affiliation_pk"])
         club = get_object_or_404(Club, code=request.data["club"])
-        club.badges.add(badge)
+        club.affiliations.add(affiliation)
         return Response({"success": True})
 
     def destroy(self, request, *args, **kwargs):
         club = self.get_object()
-        badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
-        club.badges.remove(badge)
+        affiliation = get_object_or_404(Affiliation, pk=self.kwargs["affiliation_pk"])
+        club.affiliations.remove(affiliation)
         return Response({"success": True})
 
     def get_queryset(self):
-        return Club.objects.filter(badges__id=self.kwargs["badge_pk"]).order_by("name")
+        return Club.objects.filter(
+            affiliations__id=self.kwargs["affiliation_pk"]
+        ).order_by("name")
 
 
 class MassInviteAPIView(APIView):

@@ -195,7 +195,7 @@ const EventModal = (props: {
         })
     }
     if (ticketed) {
-      doApiRequest(`/events/${event.id}/tickets/`)
+      doApiRequest(`/events/${event.id}/tickets/?format=json`)
         .then((resp) => resp.json())
         .then((resp) => {
           const ticketMap = resp.totals.reduce(
@@ -216,7 +216,7 @@ const EventModal = (props: {
           setTickets(ticketMap)
         })
       setUserHasTickets(false)
-      doApiRequest(`/tickets/`)
+      doApiRequest(`/tickets/?format=json`)
         .then((resp) => resp.json())
         .then((resp) => {
           for (let i = 0; i < resp.length; i++) {

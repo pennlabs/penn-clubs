@@ -50,7 +50,8 @@ const sites = {
     CLUB_FIELDS: [
       'accepting_members',
       'application_required',
-      'badges',
+      'affiliations',
+      'category',
       'email_public',
       'founded',
       'github',
@@ -77,7 +78,7 @@ const sites = {
     SHOW_SEARCHBAR_TOP: false,
     // show applications
     SHOW_APPLICATIONS: true,
-    // show organization and badge management
+    // show organization and affiliation management
     SHOW_ORG_MANAGEMENT: true,
     // show feedback icon on bottom right
     SHOW_FEEDBACK: true,
@@ -192,6 +193,7 @@ const sites = {
     CLUB_FIELDS: [
       'appointment_needed',
       'available_virtually',
+      'category',
       'signature_events',
       'student_types',
       'target_schools',

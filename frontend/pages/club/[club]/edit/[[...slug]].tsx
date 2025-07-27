@@ -17,6 +17,7 @@ Edit.getInitialProps = async ({ query }): Promise<EditPageProps> => {
     'majors',
     'years',
     ['student_types', 'studentTypes'],
+    'categories',
   ]
   return Promise.all(
     endpoints.map(async (item) => {

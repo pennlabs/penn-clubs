@@ -13,6 +13,7 @@ from clubs.management.commands.remind import send_reminder_to_club
 from clubs.models import (
     AdminNote,
     Advisor,
+    Affiliation,
     ApplicationCommittee,
     ApplicationCycle,
     ApplicationExtension,
@@ -21,8 +22,8 @@ from clubs.models import (
     ApplicationQuestionResponse,
     ApplicationSubmission,
     Asset,
-    Badge,
     Cart,
+    Category,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -30,6 +31,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
@@ -394,11 +396,11 @@ class TagAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
-class BadgeAdmin(admin.ModelAdmin):
+class AffiliationAdmin(admin.ModelAdmin):
     def club_count(self, obj):
         return obj.club_set.count()
 
-    def badge_color(self, obj):
+    def affiliation_color(self, obj):
         if not re.match(r"^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", obj.color):
             return obj.color
         return mark_safe(
@@ -410,9 +412,32 @@ class BadgeAdmin(admin.ModelAdmin):
         )
 
     search_fields = ("label",)
-    list_display = ("label", "purpose", "org", "club_count", "badge_color", "visible")
+    list_display = (
+        "label",
+        "purpose",
+        "org",
+        "club_count",
+        "affiliation_color",
+        "visible",
+    )
     list_filter = ("visible", "purpose")
     actions = [do_merge_tags]
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class EligibilityAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
 
 
 class MajorAdmin(admin.ModelAdmin):
@@ -464,7 +489,7 @@ admin.site.register(ClubFair, ClubFairAdmin)
 admin.site.register(ClubApplication)
 admin.site.register(ClubFairRegistration)
 admin.site.register(ClubVisit)
-admin.site.register(Badge, BadgeAdmin)
+admin.site.register(Affiliation, AffiliationAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(School)
@@ -499,3 +524,5 @@ admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
 admin.site.register(RegistrationQueueSettings)
 admin.site.register(EventShowing)
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Eligibility, EligibilityAdmin)
