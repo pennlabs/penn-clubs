@@ -2,8 +2,6 @@ import { Field, Form, Formik } from 'formik'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { WHITE } from '~/constants'
-
 import { Badge, ClubFair, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
@@ -82,7 +80,6 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
       } else if (contents.error) {
         toast.error(contents.error, {
           hideProgressBar: true,
-          style: { color: WHITE },
         })
       }
     } finally {

@@ -1605,8 +1605,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         word_count = len(text_content.split())
         if word_count > 150:
             raise serializers.ValidationError(
-                "Your club's mission cannot exceed 150 words."
-                f"You have {word_count} words."
+                "Club mission cannot exceed 150 words. "
+                f"It currently has {word_count} words."
             )
         return out
 

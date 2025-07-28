@@ -54,6 +54,11 @@ export const ToastStyle = styled.div`
 
   & .Toastify__toast--info {
     background-color: ${BULMA_INFO};
+    color: white;
+    --toastify-icon-color-info: white;
+    .Toastify__close-button {
+      color: white;
+    }
   }
 
   & .Toastify__toast--warning {
@@ -67,7 +72,13 @@ export const ToastStyle = styled.div`
 
   & .Toastify__toast--error {
     background-color: ${BULMA_DANGER};
+    color: white;
+    --toastify-icon-color-error: white;
+    .Toastify__close-button {
+      color: white;
+    }
   }
+}
 `
 
 export const Wrapper = styled.div`

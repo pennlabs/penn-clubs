@@ -353,7 +353,6 @@ const EventPage: React.FC<EventPageProps> = ({ baseProps, club, event }) => {
           err instanceof Error
             ? err.message
             : 'An error occurred while adding tickets to cart.',
-          { style: { color: WHITE } },
         )
       })
   }
