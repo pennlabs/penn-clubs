@@ -64,7 +64,7 @@ from clubs.models import (
     Ticket,
     Year,
 )
-from clubs.utils import clean
+from clubs.utils import clean, html_to_text
 
 
 ALL_TAGS_SELECTED_ERROR_MESSAGE = (
@@ -1594,12 +1594,19 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def validate_description(self, value):
         """
         Allow the description to have HTML tags that come from a allowlist.
-        The description must exist and not be extremely short.
+        The description must exist and not be extremely short or long.
         """
         out = clean(value).strip()
         if len(out) <= 10:
             raise serializers.ValidationError(
                 "You must enter a valid description for your organization."
+            )
+        text_content = html_to_text(out)
+        word_count = len(text_content.split())
+        if word_count > 150:
+            raise serializers.ValidationError(
+                "Your club's mission cannot exceed 150 words."
+                f"You have {word_count} words."
             )
         return out
 

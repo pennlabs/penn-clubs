@@ -3908,6 +3908,78 @@ class ClubTestCase(TestCase):
             1,
         )
 
+    def test_club_description_word_limit(self):
+        """
+        Test that club descriptions cannot exceed 150 words on creation or update,
+        but existing long descriptions are preserved on unrelated PATCH updates.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        long_description = "<p><b>" + " ".join(["word"] * 151) + "</b></p>"
+        short_description = "<div><i>" + " ".join(["word"] * 149) + "</i></div>"
+
+        # 1. Test failing creation with long description
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Long Desc Club",
+                "description": long_description,
+                "email": "long@example.com",
+                "tags": [{"name": "Graduate"}],
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("cannot exceed 150 words", str(resp.content))
+
+        # 2. Test successful creation with short description
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Short Desc Club",
+                "code": "short-desc-club",
+                "description": short_description,
+                "email": "short@example.com",
+                "tags": [{"name": "Graduate"}],
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="short-desc-club")
+        self.assertEqual(club.description, short_description)
+
+        # 3. Test failing update with long description
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"description": long_description},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("cannot exceed 150 words", str(resp.content))
+
+        # 4. Test PATCHing other fields on a club with an existing long description
+        # Create club with long description, bypassing serializer validation
+        long_desc_club = Club.objects.create(
+            code="long-desc-existing",
+            name="Long Desc Existing",
+            description=long_description,
+            approved=True,
+            active=True,
+        )
+
+        # PATCH a different field
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(long_desc_club.code,)),
+            {"subtitle": "A new subtitle"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Verify the description is unchanged and the subtitle is updated
+        long_desc_club.refresh_from_db()
+        self.assertEqual(long_desc_club.description, long_description)
+        self.assertEqual(long_desc_club.subtitle, "A new subtitle")
+
 
 class HealthTestCase(TestCase):
     def test_health(self):
