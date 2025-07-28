@@ -31,6 +31,7 @@ const sites = {
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
+    APPROVAL_AUTHORITY_SHORTHAND: 'OSA',
 
     FIELD_PARTICIPATION_LABEL: 'How to Get Involved',
 
@@ -279,6 +280,8 @@ export const OBJECT_NAME_TITLE_SINGULAR = sites[site].OBJECT_NAME_TITLE_SINGULAR
 
 export const APPROVAL_AUTHORITY = sites[site].APPROVAL_AUTHORITY
 export const APPROVAL_AUTHORITY_URL = sites[site].APPROVAL_AUTHORITY_URL
+export const APPROVAL_AUTHORITY_SHORTHAND =
+  sites[site].APPROVAL_AUTHORITY_SHORTHAND
 
 export const SITE_LOGO = sites[site].SITE_LOGO
 export const SITE_FAVICON = sites[site].SITE_FAVICON

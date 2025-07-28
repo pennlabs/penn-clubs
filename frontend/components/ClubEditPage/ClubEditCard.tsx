@@ -25,6 +25,7 @@ import {
 } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
+  APPROVAL_AUTHORITY_SHORTHAND,
   FIELD_PARTICIPATION_LABEL,
   FORM_DESCRIPTION_EXAMPLES,
   FORM_LOGO_DESCRIPTION,
@@ -547,6 +548,7 @@ export default function ClubEditCard({
         {
           name: 'description',
           label: 'Club Mission',
+          help: `A focused, short statement in accordance with ${APPROVAL_AUTHORITY_SHORTHAND} guidelines. Cannot exceed 150 words.`,
           required: true,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
