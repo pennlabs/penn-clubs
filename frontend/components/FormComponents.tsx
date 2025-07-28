@@ -156,13 +156,18 @@ export const RichTextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
     const textValue = useRef<string | null>(null)
+    const [isMounted, setIsMounted] = useState(false)
 
     const [editorState, setEditorState] = useState<EditorState>(() =>
       EditorState.createEmpty(),
     )
 
     useEffect(() => {
-      if (props.value !== textValue.current) {
+      setIsMounted(true)
+    }, [])
+
+    useEffect(() => {
+      if (props.value !== textValue.current && htmlToDraft) {
         if (props.value && props.value.length) {
           setEditorState(
             EditorState.createWithContent(
@@ -176,11 +181,11 @@ export const RichTextField = useFieldWrapper(
         }
         textValue.current = props.value
       }
-    }, [props.value])
+    }, [props.value, isMounted])
 
     return (
       <div>
-        {Editor != null && (
+        {isMounted && Editor != null && (
           <Editor
             editorState={editorState}
             placeholder={props.placeholder}
@@ -229,13 +234,18 @@ export const ApplicationUpdateTextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
     const textValue = useRef<string | null>(null)
+    const [isMounted, setIsMounted] = useState(false)
 
     const [editorState, setEditorState] = useState<EditorState>(() =>
       EditorState.createEmpty(),
     )
 
     useEffect(() => {
-      if (props.value !== textValue.current) {
+      setIsMounted(true)
+    }, [])
+
+    useEffect(() => {
+      if (props.value !== textValue.current && htmlToDraft) {
         if (props.value && props.value.length) {
           setEditorState(
             EditorState.createWithContent(
@@ -249,11 +259,11 @@ export const ApplicationUpdateTextField = useFieldWrapper(
         }
         textValue.current = props.value
       }
-    }, [props.value])
+    }, [props.value, isMounted])
 
     return (
       <div>
-        {Editor != null && (
+        {isMounted && Editor != null && (
           <Editor
             editorState={editorState}
             placeholder={props.placeholder}
@@ -347,6 +357,11 @@ export const CreatableMultipleSelectField = useFieldWrapper(
       deserialize,
     } = props
     const { setFieldValue } = useFormikContext()
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+      setIsMounted(true)
+    }, [])
 
     const handleChange = (
       val: Array<{ label: string; value: string; _isNew?: boolean }>,
@@ -375,6 +390,7 @@ export const CreatableMultipleSelectField = useFieldWrapper(
 
     return (
       <CreatableSelect
+        instanceId={`${name}-${isMounted ? 'mounted' : 'unmounted'}`}
         name={name}
         onChange={handleChange}
         isMulti
@@ -789,6 +805,11 @@ export const SelectField = useFieldWrapper(
       { [key: string]: string | number } | string
     >): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+      setIsMounted(true)
+    }, [])
 
     /**
      * Convert from react-select format to the final value that is being set.
@@ -836,7 +857,7 @@ export const SelectField = useFieldWrapper(
 
     return (
       <Select
-        instanceId={name}
+        instanceId={`${name}-${isMounted ? 'mounted' : 'unmounted'}`}
         key={name}
         placeholder={placeholder}
         isMulti={isMulti}
