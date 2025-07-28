@@ -195,6 +195,7 @@ export interface Club {
   category: Category
   code: string
   description: string
+  eligibility: Eligibility
   email: string
   enables_subscription: boolean
   events: ClubEvent[]

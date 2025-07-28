@@ -35,7 +35,43 @@ type InfoBoxProps = {
 }
 
 const InfoBox = (props: InfoBoxProps): ReactElement<any> | null => {
+  const { club } = props
+
+  const getStatusText = () => {
+    if (club.active) {
+      if (club.approved === true) return 'Active & Approved'
+      if (club.approved === false) return 'Active & Pending Approval'
+      if (club.approved === null) return 'Active & Under Review'
+    }
+    return 'Inactive'
+  }
+
   const data = [
+    {
+      field: 'status',
+      icon: club.active ? 'check-circle' : 'x-circle',
+      text: getStatusText(),
+    },
+    {
+      field: 'student_types',
+      icon: 'user',
+      text: `Student Types: ${club.student_types.map((type) => type.name).join(', ') || 'Not Available'}`,
+    },
+    {
+      field: 'affiliations',
+      icon: 'tag',
+      text: `Affiliations: ${club.affiliations.map((aff) => aff.label).join(', ') || 'Not Available'}`,
+    },
+    {
+      field: 'eligibility',
+      icon: 'check-circle',
+      text: `Eligibility: ${club.eligibility ?? 'Not Available'}`,
+    },
+    {
+      field: 'designation',
+      icon: 'award',
+      text: 'Designation: Not Available', // TODO: add designation
+    },
     {
       field: 'size',
       icon: 'user',
@@ -61,7 +97,7 @@ const InfoBox = (props: InfoBoxProps): ReactElement<any> | null => {
     {
       field: 'recruiting_cycle',
       icon: 'clock',
-      text: recruitingTextMap[props.club.recruiting_cycle],
+      text: recruitingTextMap[club.recruiting_cycle],
     },
   ]
 
@@ -81,7 +117,7 @@ const InfoBox = (props: InfoBoxProps): ReactElement<any> | null => {
   return (
     <>
       {' '}
-      <StrongText>Basic Info</StrongText>
+      <StrongText>Organizational Profile</StrongText>
       {infoFields}
     </>
   )
