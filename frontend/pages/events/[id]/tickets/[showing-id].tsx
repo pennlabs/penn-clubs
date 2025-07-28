@@ -298,7 +298,6 @@ const TicketCard = ({
           contents.detail ?? 'Something went wrong with issuing tickets',
           {
             hideProgressBar: true,
-            style: { color: WHITE },
           },
         )
       }

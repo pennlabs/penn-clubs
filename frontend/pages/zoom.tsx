@@ -442,9 +442,7 @@ const ZoomPage = ({
                 .then((resp) => resp.json())
                 .then((data) => {
                   if (Array.isArray(data)) {
-                    toast.error(data.join(' '), {
-                      style: { color: WHITE },
-                    })
+                    toast.error(data.join(' '))
                   } else {
                     toast[data.success ? 'success' : 'error'](data.detail)
                   }
