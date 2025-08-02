@@ -17,6 +17,8 @@ Edit.getInitialProps = async ({ query }): Promise<EditPageProps> => {
     'majors',
     'years',
     ['student_types', 'studentTypes'],
+    'categories',
+    'eligibilities',
   ]
   return Promise.all(
     endpoints.map(async (item) => {
@@ -45,6 +47,6 @@ Edit.getAdditionalPermissions = (ctx: NextPageContext): string[] => {
   ]
 }
 
-Edit.permissions = ['clubs.delete_club']
+Edit.permissions = ['clubs.approve_club', 'clubs.see_pending_clubs']
 
 export default renderPage(Edit)

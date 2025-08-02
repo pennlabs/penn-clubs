@@ -60,6 +60,8 @@ const sites = {
       'size',
       'target_majors',
       'target_schools',
+      'category',
+      'eligibility',
     ],
     // enable showing members for each club
     SHOW_MEMBERS: false,
@@ -195,6 +197,8 @@ const sites = {
       'signature_events',
       'student_types',
       'target_schools',
+      'category',
+      'eligibility',
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,

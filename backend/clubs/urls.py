@@ -11,6 +11,7 @@ from clubs.views import (
     AssetViewSet,
     BadgeClubViewSet,
     BadgeViewSet,
+    CategoryViewSet,
     ClubApplicationViewSet,
     ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
@@ -19,6 +20,7 @@ from clubs.views import (
     ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
+    EligibilityViewSet,
     EmailInvitesAPIView,
     EventShowingViewSet,
     EventViewSet,
@@ -71,6 +73,8 @@ router.register(r"clubfairs", ClubFairViewSet, basename="clubfairs")
 router.register(r"events", EventViewSet, basename="events")
 router.register(r"tags", TagViewSet, basename="tags")
 router.register(r"badges", BadgeViewSet, basename="badges")
+router.register(r"categories", CategoryViewSet, basename="categories")
+router.register(r"eligibilities", EligibilityViewSet, basename="eligibilities")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")

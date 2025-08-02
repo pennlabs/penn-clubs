@@ -23,6 +23,7 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    Category,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -30,6 +31,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
@@ -415,6 +417,22 @@ class BadgeAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class CategoryAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class EligibilityAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
 class MajorAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
@@ -499,3 +517,5 @@ admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
 admin.site.register(RegistrationQueueSettings)
 admin.site.register(EventShowing)
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Eligibility, EligibilityAdmin)

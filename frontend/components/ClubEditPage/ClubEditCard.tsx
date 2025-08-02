@@ -5,10 +5,12 @@ import React, { ReactElement, useState } from 'react'
 import { BLACK } from '~/constants'
 
 import {
+  Category,
   Club,
   ClubApplicationRequired,
   ClubRecruitingCycle,
   ClubSize,
+  Eligibility,
   Major,
   MembershipRank,
   School,
@@ -21,6 +23,7 @@ import {
   categorizeFilter,
   doApiRequest,
   formatResponse,
+  hasAdminPermissions,
   isClubFieldShown,
 } from '../../utils'
 import {
@@ -127,6 +130,8 @@ type ClubEditCardProps = {
   studentTypes: Readonly<StudentType[]>
   years: Readonly<Year[]>
   tags: Readonly<Tag[]>
+  categories: Readonly<Category[]>
+  eligibilities: Readonly<Eligibility[]>
   club: Partial<Club>
   isEdit: boolean
   onSubmit?: (data: {
@@ -229,6 +234,8 @@ export default function ClubEditCard({
   studentTypes,
   years,
   tags,
+  categories,
+  eligibilities,
   club,
   isEdit,
   onSubmit = () => Promise.resolve(undefined),
@@ -559,6 +566,14 @@ export default function ClubEditCard({
           help: `${FORM_TAG_DESCRIPTION}`,
           placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
           choices: tags,
+        },
+        {
+          name: 'category',
+          type: 'select',
+          required: true,
+          label: 'Category',
+          help: "Select the primary category that best describes your club's mission and activities.",
+          choices: categories,
         },
         {
           name: 'image',
@@ -892,6 +907,35 @@ export default function ClubEditCard({
         }),
       ],
     },
+    // Admin-only fields section
+    ...(hasAdminPermissions()
+      ? [
+          {
+            name: 'Admin Settings',
+            type: 'group',
+            description: (
+              <div className="mb-4">
+                <Text>
+                  These fields are only visible to administrators and can be
+                  used to set special attributes for this {OBJECT_NAME_SINGULAR}
+                  .
+                </Text>
+              </div>
+            ),
+            fields: [
+              {
+                name: 'eligibility',
+                type: 'multiselect',
+                label: 'Eligibility',
+                help: 'Select the eligibility categories that apply to this club for funding and other administrative purposes.',
+                placeholder: 'Select eligibility categories...',
+                choices: eligibilities,
+                adminOnly: true,
+              },
+            ],
+          },
+        ]
+      : []),
   ]
 
   const creationDefaults = {

@@ -16,10 +16,12 @@ from clubs.models import (
     ApplicationSubmission,
     Badge,
     Cart,
+    Category,
     Club,
     ClubApplication,
     ClubFair,
     ClubFairRegistration,
+    Eligibility,
     Event,
     EventShowing,
     Major,
@@ -325,6 +327,39 @@ class Command(BaseCommand):
                 "Full-Time Student",
                 "Online Student",
                 "International Student",
+            ]
+        ]
+
+        # create categories
+        [
+            Category.objects.get_or_create(name=category)
+            for category in [
+                "Academic & Pre-Professional",
+                "Arts & Performance",
+                "Civic Engagement & Community Service",
+                "Cultural & International",
+                "Greek Life",
+                "Instructional & Competitive (Non Sports-Related)",
+                "Media & Publication",
+                "Peer Education & Support",
+                "Political & Advocacy",
+                "Religious & Spiritual",
+                "Special Interest",
+                "Sports & Recreational",
+                "Student Governance",
+            ]
+        ]
+
+        # create eligibility options
+        [
+            Eligibility.objects.get_or_create(name=eligibility)
+            for eligibility in [
+                "ALTERNATIVE",
+                "GAPSA",
+                "SAC",
+                "SCHOOL-SPECIFIC",
+                "UA",
+                "NOT ELIGIBLE",
             ]
         ]
 

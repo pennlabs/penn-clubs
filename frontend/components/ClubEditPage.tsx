@@ -20,7 +20,9 @@ import {
   HOME_ROUTE,
 } from '../constants/routes'
 import {
+  Category,
   Club,
+  Eligibility,
   Major,
   School,
   StudentType,
@@ -69,6 +71,8 @@ import { BrowserTabView } from './TabView'
 type ClubFormProps = {
   clubId: string | undefined
   authenticated: boolean | null
+  categories: Category[]
+  eligibilities: Eligibility[]
   schools: School[]
   majors: Major[]
   years: Year[]
@@ -80,6 +84,8 @@ type ClubFormProps = {
 
 const ClubForm = ({
   authenticated,
+  categories,
+  eligibilities,
   schools,
   years,
   majors,
@@ -230,6 +236,8 @@ const ClubForm = ({
         content: (
           <ClubEditCard
             isEdit={isEdit}
+            eligibilities={eligibilities}
+            categories={categories}
             schools={schools}
             years={years}
             majors={majors}
@@ -437,6 +445,8 @@ const ClubForm = ({
         <div style={{ marginTop: '1em' }}>
           <ClubEditCard
             isEdit={isEdit}
+            eligibilities={eligibilities}
+            categories={categories}
             schools={schools}
             years={years}
             majors={majors}
