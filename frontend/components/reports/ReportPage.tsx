@@ -2,7 +2,7 @@ import { useRouter } from 'next/router'
 import React, { ReactElement, ReactNode } from 'react'
 
 import { BG_GRADIENT, REPORT_LIST_ROUTE, WHITE } from '../../constants'
-import { Badge, Report, Tag } from '../../types'
+import { Affiliation, Report, Tag } from '../../types'
 import { API_BASE_URL, apiCheckPermission, titleize } from '../../utils'
 import { OBJECT_NAME_TITLE_SINGULAR, SITE_NAME } from '../../utils/branding'
 import { Contact, Container, Icon, Metadata, Title } from '../common'
@@ -79,7 +79,7 @@ type EditReportPageProps = {
   nameToCode: { [cat: string]: { [key: string]: string } }
   report: Report | null
   authenticated: boolean | null
-  badges: Badge[]
+  affiliations: Affiliation[]
   tags: Tag[]
 }
 
@@ -87,7 +87,7 @@ export const EditReportPage = ({
   nameToCode,
   report,
   authenticated,
-  badges,
+  affiliations,
   tags,
 }: EditReportPageProps): ReactElement<any> => {
   const fields = Object.entries(nameToCode).map(([key, value]) => [
@@ -118,7 +118,7 @@ export const EditReportPage = ({
       authenticated={authenticated}
     >
       <ReportForm
-        badges={badges}
+        affiliations={affiliations}
         tags={tags}
         fields={fields}
         onSubmit={(report: Report): void => {

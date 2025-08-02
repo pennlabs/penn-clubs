@@ -2,7 +2,7 @@ import { Field, Form, Formik } from 'formik'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { Badge, ClubFair, Tag } from '../../types'
+import { Affiliation, ClubFair, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -64,10 +64,10 @@ const ClubNameLookup = (): ReactElement<any> => {
 export interface BulkEditTabProps {
   tags: Tag[]
   clubfairs: ClubFair[]
-  badges: Badge[]
+  affiliations: Affiliation[]
 }
 
-const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
+const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
   const bulkSubmit = async (data, { setSubmitting }) => {
     try {
       const resp = await doApiRequest('/clubs/bulk/?format=json', {
@@ -185,9 +185,9 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
               />
               <Field
                 name="badges"
-                label="Badges"
+                label="Affiliations"
                 as={SelectField}
-                choices={badges}
+                choices={affiliations}
                 deserialize={({ id, label, description, purpose }) => ({
                   value: id,
                   label,
@@ -205,9 +205,9 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
                     <span className="has-text-grey">{description}</span>
                   </>
                 )}
-                valueDeserialize={fixDeserialize(badges)}
+                valueDeserialize={fixDeserialize(affiliations)}
                 isMulti
-                helpText={`Add or remove all of the specified badges.`}
+                helpText={`Add or remove all of the specified affiliations.`}
               />
               <Field
                 name="fairs"
