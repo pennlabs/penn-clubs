@@ -189,6 +189,15 @@ export function apiCheckPermission(
   return false
 }
 
+/**
+ * Check if the user has admin permissions to see hidden admin fields.
+ */
+export function hasAdminPermissions(): boolean {
+  const perms = useContext(PermissionsContext)
+
+  return !!(perms['clubs.approve_club'] || perms['clubs.see_pending_clubs'])
+}
+
 const chooseEndpoint = (input: [string, string] | string) => {
   if (typeof input === 'string') {
     return `/${input}/?format=json`

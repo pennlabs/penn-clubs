@@ -13,7 +13,9 @@ import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import {
+  Category,
   Club,
+  Eligibility,
   Major,
   MembershipRank,
   School,
@@ -47,6 +49,8 @@ type InitialRenewPageProps = {
   years: Year[]
   tags: Tag[]
   studentTypes: StudentType[]
+  categories: Category[]
+  eligibilities: Eligibility[]
 }
 
 type RenewPageProps = InitialRenewPageProps & {
@@ -193,6 +197,8 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     years,
     tags,
     studentTypes,
+    categories,
+    eligibilities,
   } = props
 
   const [club, setClub] = useState<Club>(initialClub)
@@ -400,6 +406,8 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             and hit submit.
           </TextInfoBox>
           <ClubEditCard
+            eligibilities={eligibilities}
+            categories={categories}
             schools={schools}
             majors={majors}
             years={years}
@@ -600,6 +608,8 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   )
 }
 
+RenewPage.permissions = ['clubs.approve_club', 'clubs.see_pending_clubs']
+
 RenewPage.getInitialProps = async ({
   query,
   req,
@@ -610,9 +620,21 @@ RenewPage.getInitialProps = async ({
   const clubReq = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const clubRes = await clubReq.json()
 
-  RenewPage.permissions = [`clubs.manage_club:${query.club}`]
+  RenewPage.permissions = [
+    `clubs.manage_club:${query.club}`,
+    'clubs.approve_club',
+    'clubs.see_pending_clubs',
+  ]
 
-  const endpoints = ['tags', 'schools', 'majors', 'years', 'student_types']
+  const endpoints = [
+    'tags',
+    'schools',
+    'majors',
+    'years',
+    'student_types',
+    'categories',
+    'eligibilities',
+  ]
   return Promise.all(
     endpoints.map(async (item) => {
       if (!isClubFieldShown(item)) {
@@ -630,7 +652,5 @@ RenewPage.getInitialProps = async ({
     return output
   }) as Promise<InitialRenewPageProps>
 }
-
-RenewPage.permissions = []
 
 export default renderPage(RenewPage)

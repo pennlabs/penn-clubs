@@ -336,6 +336,16 @@ class Club(models.Model):
         "Club", related_name="children_orgs", blank=True
     )
     badges = models.ManyToManyField("Badge", blank=True)
+    category = models.ForeignKey(
+        "Category",
+        on_delete=models.PROTECT,
+        related_name="clubs",
+        null=True,
+        blank=True,
+    )
+    eligibility = models.ManyToManyField(
+        "Eligibility", related_name="clubs", blank=True
+    )
 
     target_years = models.ManyToManyField("Year", through="TargetYear")
     target_schools = models.ManyToManyField("School", through="TargetSchool")
@@ -1500,6 +1510,35 @@ class Badge(models.Model):
 
     def __str__(self):
         return self.label
+
+
+class Category(models.Model):
+    """
+    Indicates the primary group category determined by the club's mission.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
+
+class Eligibility(models.Model):
+    """
+    Indicates the group's ability to request funding based on its classification,
+    registration status and type of organization.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Eligibilities"
+
+    def __str__(self):
+        return self.name
 
 
 class Asset(models.Model):

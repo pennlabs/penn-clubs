@@ -8,7 +8,16 @@ import {
   RED,
   SNOW,
 } from '../constants'
-import { Club, Major, School, StudentType, Tag, Year } from '../types'
+import {
+  Category,
+  Club,
+  Eligibility,
+  Major,
+  School,
+  StudentType,
+  Tag,
+  Year,
+} from '../types'
 import { doApiRequest } from '../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -47,6 +56,8 @@ type ResourceCreationPageProps = {
   majors: Major[]
   tags: Tag[]
   studentTypes: StudentType[]
+  categories: Category[]
+  eligibilities: Eligibility[]
 }
 
 type TabItem = {
@@ -64,6 +75,8 @@ const ResourceCreationPage = ({
   majors,
   tags,
   studentTypes,
+  categories,
+  eligibilities,
 }: ResourceCreationPageProps): ReactElement<any> => {
   const isResuming = initialClub != null
   const metadata = (
@@ -182,6 +195,8 @@ const ResourceCreationPage = ({
           </Text>
           <ClubEditCard
             isEdit={club !== null}
+            eligibilities={eligibilities}
+            categories={categories}
             schools={schools}
             years={years}
             majors={majors}

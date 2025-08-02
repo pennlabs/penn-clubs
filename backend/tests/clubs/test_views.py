@@ -23,11 +23,13 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Category,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairRegistration,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
@@ -173,6 +175,8 @@ class ClubTestCase(TestCase):
 
         Tag.objects.create(name="Graduate")
         Tag.objects.create(name="Undergraduate")
+
+        Category.objects.create(name="Academic & Pre-Professional")
 
         queue_settings = RegistrationQueueSettings.get()
         queue_settings.reapproval_queue_open = True
@@ -449,6 +453,7 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -910,6 +915,7 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1110,6 +1116,7 @@ class ClubTestCase(TestCase):
                 "description": "This is an example description.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
                 "facebook": "",
                 "twitter": "",
                 "instagram": "",
@@ -1161,6 +1168,7 @@ class ClubTestCase(TestCase):
                 "description": "This is a new club.",
                 "tags": [{"name": "Undergraduate"}],
                 "email": "newclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1296,6 +1304,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Undergraduate"}],
                 "description": test_good_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1323,6 +1332,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "description": test_bad_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1410,6 +1420,7 @@ class ClubTestCase(TestCase):
                 ],
                 "target_schools": [{"id": school1.id}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",
                 "twitter": "https://twitter.com/Penn",
@@ -3908,6 +3919,66 @@ class ClubTestCase(TestCase):
             1,
         )
 
+    def test_category_viewset_permissions(self):
+        """Test basic permissions for CategoryViewSet."""
+        category = Category.objects.create(name="Test Category")
+
+        # Test user can list categories
+        resp = self.client.get(reverse("categories-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve category
+        resp = self.client.get(reverse("categories-detail", args=[category.id]))
+        self.assertEqual(resp.status_code, 200)
+
+        # test user cannot create categories
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("categories-list"),
+            {"name": "New Category"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create categories
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("categories-list"),
+            {"name": "New Category"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_eligibility_viewset_permissions(self):
+        """Test basic permissions for EligibilityViewSet."""
+        eligibility = Eligibility.objects.create(name="Test Eligibility 1")
+
+        # Test user can list eligibilities
+        resp = self.client.get(reverse("eligibilities-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific eligibility
+        resp = self.client.get(reverse("eligibilities-detail", args=[eligibility.id]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create eligibilities
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("eligibilities-list"),
+            {"name": "New Eligibility"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create eligibilities
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("eligibilities-list"),
+            {"name": "New Eligibility"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
     def test_club_description_word_limit(self):
         """
         Test that club descriptions cannot exceed 150 words on creation or update,
@@ -3926,6 +3997,7 @@ class ClubTestCase(TestCase):
                 "description": long_description,
                 "email": "long@example.com",
                 "tags": [{"name": "Graduate"}],
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -3941,6 +4013,7 @@ class ClubTestCase(TestCase):
                 "description": short_description,
                 "email": "short@example.com",
                 "tags": [{"name": "Graduate"}],
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
