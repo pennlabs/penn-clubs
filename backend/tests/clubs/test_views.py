@@ -23,6 +23,7 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Category,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -173,6 +174,8 @@ class ClubTestCase(TestCase):
 
         Tag.objects.create(name="Graduate")
         Tag.objects.create(name="Undergraduate")
+
+        Category.objects.create(name="Academic & Pre-Professional")
 
         queue_settings = RegistrationQueueSettings.get()
         queue_settings.reapproval_queue_open = True
@@ -449,6 +452,7 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -910,6 +914,7 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1110,6 +1115,7 @@ class ClubTestCase(TestCase):
                 "description": "This is an example description.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
                 "facebook": "",
                 "twitter": "",
                 "instagram": "",
@@ -1161,6 +1167,7 @@ class ClubTestCase(TestCase):
                 "description": "This is a new club.",
                 "tags": [{"name": "Undergraduate"}],
                 "email": "newclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1296,6 +1303,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Undergraduate"}],
                 "description": test_good_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1323,6 +1331,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "description": test_bad_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
             },
             content_type="application/json",
         )
@@ -1410,6 +1419,7 @@ class ClubTestCase(TestCase):
                 ],
                 "target_schools": [{"id": school1.id}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",
                 "twitter": "https://twitter.com/Penn",

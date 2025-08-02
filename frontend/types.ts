@@ -170,6 +170,16 @@ export interface Advisor {
   visibility: AdvisorVisibilityType
 }
 
+export interface Category {
+  id: number
+  name: string
+}
+
+export interface Eligibility {
+  id: number
+  name: string
+}
+
 export interface Club {
   accepting_members: boolean
   active: boolean
@@ -181,9 +191,11 @@ export interface Club {
   approved_comment: string | null
   available_virtually: boolean
   badges: Badge[]
+  category: Category
   beta: boolean
   code: string
   description: string
+  eligibility: Eligibility[]
   email: string
   enables_subscription: boolean
   events: ClubEvent[]

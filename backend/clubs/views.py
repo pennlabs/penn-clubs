@@ -96,6 +96,7 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    Category,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -103,6 +104,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
@@ -166,6 +168,7 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    CategorySerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
@@ -176,6 +179,7 @@ from clubs.serializers import (
     ClubMembershipSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    EligibilitySerializer,
     EventSerializer,
     EventShowingSerializer,
     EventShowingWriteSerializer,
@@ -4808,6 +4812,30 @@ class BadgeViewSet(viewsets.ModelViewSet):
             return Badge.objects.filter(fair__id=fair)
 
         return Badge.objects.filter(visible=True)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of categories.
+    """
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+
+
+class EligibilityViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of eligibilities.
+    """
+
+    queryset = Eligibility.objects.all()
+    serializer_class = EligibilitySerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
 
 
 def parse_boolean(inpt):

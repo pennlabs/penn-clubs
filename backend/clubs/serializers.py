@@ -31,12 +31,14 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Category,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubVisit,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
@@ -139,6 +141,18 @@ class BadgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Badge
         fields = ("id", "purpose", "label", "color", "description", "message")
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ("id", "name")
+
+
+class EligibilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Eligibility
+        fields = ("id", "name")
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -1412,6 +1426,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
+    category = serializers.SlugRelatedField(
+        slug_field="name",
+        queryset=Category.objects.all(),
+        required=True,
+    )
+    eligibility = EligibilitySerializer(many=True, required=False)
 
     target_schools = serializers.SerializerMethodField("get_target_schools")
     target_majors = serializers.SerializerMethodField("get_target_majors")
@@ -1432,6 +1452,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
+
+    def to_internal_value(self, data):
+        if "category" in data and "name" in data["category"]:
+            data["category"] = data["category"]["name"]
+
+        return super().to_internal_value(data)
 
     def get_events(self, obj):
         now = timezone.now()
@@ -1956,6 +1982,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_comment",
             "badges",
             "beta",
+            "category",
+            "eligibility",
             "created_at",
             "description",
             "events",
@@ -1983,6 +2011,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         save_related_fields = [
             "tags",
             "badges",
+            "category",
+            "eligibility",
             "target_schools",
             "student_types",
             "target_majors",
