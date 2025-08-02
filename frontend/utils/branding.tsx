@@ -51,7 +51,7 @@ const sites = {
     CLUB_FIELDS: [
       'accepting_members',
       'application_required',
-      'badges',
+      'affiliations',
       'email_public',
       'founded',
       'github',

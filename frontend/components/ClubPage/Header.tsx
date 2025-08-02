@@ -35,7 +35,7 @@ type ClubDiff = {
 }
 
 const Header = ({ club, style }: HeaderProps): ReactElement => {
-  const { active, name, tags, badges } = club
+  const { active, name, tags, affiliations } = club
   const canApprove = apiCheckPermission('clubs.approve_club')
 
   const NewHeader = () => {
@@ -48,7 +48,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
           </Title>
         </Wrapper>
         <div style={{ marginBottom: '1rem' }}>
-          <TagGroup tags={[...tags, ...badges]} />
+          <TagGroup tags={[...tags, ...affiliations]} />
         </div>
       </div>
     )
@@ -105,7 +105,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
           </Title>
         </Wrapper>
         <div style={{ marginBottom: '1rem' }}>
-          <TagGroup tags={[...tags, ...badges]} />
+          <TagGroup tags={[...tags, ...affiliations]} />
         </div>
       </div>
     )

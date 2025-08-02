@@ -2,13 +2,13 @@ import { EditReportPage } from 'components/reports/ReportPage'
 import { NextPageContext } from 'next'
 import { ReactElement } from 'react'
 import renderPage from 'renderPage'
-import { Badge, Report, Tag } from 'types'
+import { Affiliation, Report, Tag } from 'types'
 import { doBulkLookup } from 'utils'
 
 type CreateReportPageProps = {
   nameToCode: { [cat: string]: { [key: string]: string } }
   authenticated: boolean | null
-  badges: Badge[]
+  affiliations: Affiliation[]
   tags: Tag[]
   report: Report
 }
@@ -21,7 +21,7 @@ CreateReportPage.getInitialProps = async (ctx: NextPageContext) => {
   return await doBulkLookup(
     [
       ['nameToCode', '/clubs/fields/?format=json'],
-      ['badges', '/badges/?format=json'],
+      ['affiliations', '/badges/?format=json'],
       ['tags', '/tags/?format=json'],
       ['report', `/reports/${ctx.query.report}/?format=json`],
     ],

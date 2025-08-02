@@ -204,13 +204,16 @@ const ClubPage = ({
       {userInfo != null && (
         <ClubApprovalDialog club={club} userInfo={userInfo} />
       )}
-      {club.badges.length > 0 &&
-        club.badges
-          .filter((badge) => badge.message && badge.message.length > 0)
-          .map((badge) => (
-            <div className="notification is-info is-light" key={badge.id}>
+      {club.affiliations.length > 0 &&
+        club.affiliations
+          .filter(
+            (affiliation) =>
+              affiliation.message && affiliation.message.length > 0,
+          )
+          .map((affiliation) => (
+            <div className="notification is-info is-light" key={affiliation.id}>
               <Icon name="alert-circle" style={{ marginTop: '-3px' }} />{' '}
-              {badge.message}
+              {affiliation.message}
             </div>
           ))}
       <div className="columns">

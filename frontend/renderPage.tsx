@@ -23,7 +23,15 @@ import {
 } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
+import {
+  Affiliation,
+  Club,
+  School,
+  StudentType,
+  Tag,
+  UserInfo,
+  Year,
+} from './types'
 import {
   cache,
   doApiRequest,
@@ -394,7 +402,7 @@ export type PaginatedClubPage = {
 }
 
 type ListPageProps = {
-  badges: Badge[]
+  affiliations: Affiliation[]
   clubs: PaginatedClubPage
   schools: School[]
   studentTypes: StudentType[]
@@ -449,7 +457,7 @@ const getPublicCachedContent = async () => {
       ])
 
       return {
-        badges: badgesResponse as Badge[],
+        affiliations: badgesResponse as Affiliation[],
         schools: schoolResponse as School[],
         studentTypes: studentTypesResponse as StudentType[],
         tags: tagsResponse as Tag[],

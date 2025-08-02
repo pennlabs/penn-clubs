@@ -51,7 +51,7 @@ export enum ClubEventType {
 
 export interface ClubEvent {
   showings?: EventShowing[]
-  badges: Badge[]
+  affiliations: Affiliation[]
   club: string | null
   club_name: string | null
   description: string
@@ -140,7 +140,7 @@ export interface Tag {
   clubs?: number
 }
 
-export interface Badge {
+export interface Affiliation {
   id: number
   label: string
   color: string
@@ -190,7 +190,7 @@ export interface Club {
   approved_by: string | null
   approved_comment: string | null
   available_virtually: boolean
-  badges: Badge[]
+  affiliations: Affiliation[]
   category: Category
   beta: boolean
   code: string
