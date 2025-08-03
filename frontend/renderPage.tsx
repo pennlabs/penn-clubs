@@ -426,7 +426,7 @@ const getPublicCachedContent = async () => {
     async () => {
       const [
         tagsRequest,
-        badgesRequest,
+        affiliationsRequest,
         schoolRequest,
         yearRequest,
         studentTypesRequest,
@@ -442,13 +442,13 @@ const getPublicCachedContent = async () => {
 
       const [
         tagsResponse,
-        badgesResponse,
+        affiliationsResponse,
         schoolResponse,
         yearResponse,
         studentTypesResponse,
       ] = await Promise.all([
         tagsRequest.json(),
-        badgesRequest.json(),
+        affiliationsRequest.json(),
         schoolRequest.json(),
         yearRequest.json(),
         studentTypesRequest != null
@@ -457,7 +457,7 @@ const getPublicCachedContent = async () => {
       ])
 
       return {
-        affiliations: badgesResponse as Affiliation[],
+        affiliations: affiliationsResponse as Affiliation[],
         schools: schoolResponse as School[],
         studentTypes: studentTypesResponse as StudentType[],
         tags: tagsResponse as Tag[],

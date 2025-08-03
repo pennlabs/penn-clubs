@@ -184,13 +184,13 @@ export interface Club {
   accepting_members: boolean
   active: boolean
   advisor_set: Advisor[]
+  affiliations: Affiliation[]
   application_required: ClubApplicationRequired
   appointment_needed: boolean
   approved: boolean | null
   approved_by: string | null
   approved_comment: string | null
   available_virtually: boolean
-  affiliations: Affiliation[]
   category: Category
   beta: boolean
   code: string

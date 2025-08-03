@@ -161,8 +161,8 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
         <Text>
           You can use the form below to perform bulk editing on{' '}
           {OBJECT_NAME_PLURAL}. Specify the list of {OBJECT_NAME_SINGULAR} codes
-          below, which tags or badges you want to add or remove, and then press
-          the action that you desire.
+          below, which tags or affiliations you want to add or remove, and then
+          press the action that you desire.
         </Text>
         <Formik initialValues={{ action: 'add' }} onSubmit={bulkSubmit}>
           {({ setFieldValue, handleSubmit, isSubmitting }) => (
@@ -184,7 +184,7 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
                 helpText={`Add or remove all of the specified tags.`}
               />
               <Field
-                name="badges"
+                name="affiliations"
                 label="Affiliations"
                 as={SelectField}
                 choices={affiliations}

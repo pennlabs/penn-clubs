@@ -48,7 +48,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
           </Title>
         </Wrapper>
         <div style={{ marginBottom: '1rem' }}>
-          <TagGroup tags={[...tags, ...affiliations]} />
+          <TagGroup tags={[...tags, ...(affiliations || [])]} />
         </div>
       </div>
     )
@@ -105,7 +105,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
           </Title>
         </Wrapper>
         <div style={{ marginBottom: '1rem' }}>
-          <TagGroup tags={[...tags, ...affiliations]} />
+          <TagGroup tags={[...tags, ...(affiliations || [])]} />
         </div>
       </div>
     )

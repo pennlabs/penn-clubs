@@ -204,7 +204,8 @@ const ClubPage = ({
       {userInfo != null && (
         <ClubApprovalDialog club={club} userInfo={userInfo} />
       )}
-      {club.affiliations.length > 0 &&
+      {club.affiliations &&
+        club.affiliations.length > 0 &&
         club.affiliations
           .filter(
             (affiliation) =>

@@ -25,7 +25,7 @@ type FairEvent = {
   name: string
   approved: boolean
   meetings: string[]
-  badges: string[]
+  affiliations: string[]
 }
 
 const BoolIndicator = ({ value }: { value: boolean }): ReactElement<any> => {
@@ -170,7 +170,8 @@ const FairEventsTab = ({
                       </Link>
                     </td>
                     <td>
-                      {event.badges.join(', ') || (
+                      {(event.affiliations &&
+                        event.affiliations.join(', ')) || (
                         <span className="has-text-danger">None</span>
                       )}
                     </td>
