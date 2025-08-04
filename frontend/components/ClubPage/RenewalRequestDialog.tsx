@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { ReactElement } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank } from '../../types'
-import { apiCheckPermission, isSummer } from '../../utils'
+import { apiCheckPermission, doApiRequest, isSummer } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
@@ -23,8 +23,20 @@ type RenewalRequestProps = {
 }
 
 const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
+  const [reapprovalOpen, setReapprovalOpen] = useState<boolean | null>(null)
+
+  // Retrieve registration queue settings once on mount
+  useEffect(() => {
+    doApiRequest('/settings/queue/?format=json')
+      .then((resp) => resp.json())
+      .then((data) => setReapprovalOpen(data.reapproval_queue_open))
+      .catch(() => setReapprovalOpen(null))
+  }, [])
+
   const canRenew =
-    apiCheckPermission(`clubs.manage_club:${club.code}`) && !isSummer()
+    apiCheckPermission(`clubs.manage_club:${club.code}`) &&
+    !isSummer() &&
+    reapprovalOpen === true
   const textMapping = {
     clubs: {
       TITLE: (

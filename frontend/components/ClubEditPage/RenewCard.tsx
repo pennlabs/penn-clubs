@@ -39,9 +39,8 @@ export default function RenewCard({ club }: RenewCardProps): ReactElement<any> {
 
   return (
     <BaseCard title={`Renew ${OBJECT_NAME_TITLE_SINGULAR} Approval`}>
-      {/* Banner if queue is closed */}
-      {reapprovalOpen === false && <ClubRenewalProcessWarningBanner />}
-
+      {/* Banner if queue is not open */}
+      {reapprovalOpen !== true && <ClubRenewalProcessWarningBanner />}
       {club.active ? (
         <>
           <div className="mb-3">
@@ -67,7 +66,7 @@ export default function RenewCard({ club }: RenewCardProps): ReactElement<any> {
           You need to renew your club for the {year}-{year + 1} school year.
           Click on the button below to do so.
           <div className="mt-3">
-            {reapprovalOpen === false ? (
+            {reapprovalOpen !== true ? (
               <button className="button is-primary" disabled>
                 Renew {OBJECT_NAME_TITLE_SINGULAR}
               </button>

@@ -244,7 +244,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     return (
       <AuthPrompt title="Oh no!" hasLogin={false}>
         <ClubMetadata club={club} />
-        {reapprovalQueueOpen === false && <ClubRenewalProcessWarningBanner />}
+        {reapprovalQueueOpen !== true && <ClubRenewalProcessWarningBanner />}
         <p>
           You do not have permission to initiate the renewal process for{' '}
           {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get
@@ -569,7 +569,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   return (
     <Container>
       <ClubMetadata club={club} />
-      {reapprovalQueueOpen === false && <ClubRenewalProcessWarningBanner />}
+      {reapprovalQueueOpen !== true && <ClubRenewalProcessWarningBanner />}
       <div className="is-clearfix mb-5">
         <div className="is-pulled-left">
           <InfoPageTitle>
@@ -601,7 +601,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
         {step < steps.length - 1 ? (
           <button
             onClick={nextStep}
-            disabled={steps[step].disabled || reapprovalQueueOpen === false}
+            disabled={steps[step].disabled || reapprovalQueueOpen !== true}
             className="button is-primary"
           >
             <Icon name="chevrons-right" />
