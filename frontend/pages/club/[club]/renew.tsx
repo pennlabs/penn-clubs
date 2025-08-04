@@ -2,6 +2,7 @@ import ClubEditCard from 'components/ClubEditPage/ClubEditCard'
 import ClubFairCard from 'components/ClubEditPage/ClubFairCard'
 import FilesCard from 'components/ClubEditPage/FilesCard'
 import FormProgressIndicator from 'components/ClubEditPage/FormProgressIndicator'
+import { ClubRenewalProcessWarningBanner } from 'components/ClubEditPage/RenewCard'
 import ClubMetadata from 'components/ClubMetadata'
 import { Contact, Container, Icon, InfoPageTitle } from 'components/common'
 import AuthPrompt from 'components/common/AuthPrompt'
@@ -206,6 +207,17 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   const [changeStatusError, setChangeStatusError] = useState<string | null>(
     null,
   )
+  const [reapprovalQueueOpen, setReapprovalQueueOpen] = useState<
+    boolean | null
+  >(null)
+
+  // Fetch registration queue settings once
+  useEffect(() => {
+    doApiRequest('/settings/queue/?format=json')
+      .then((resp) => resp.json())
+      .then((data) => setReapprovalQueueOpen(data.reapproval_queue_open))
+      .catch(() => setReapprovalQueueOpen(null))
+  }, [])
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement<any> | null
   >(null)
@@ -232,6 +244,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     return (
       <AuthPrompt title="Oh no!" hasLogin={false}>
         <ClubMetadata club={club} />
+        {reapprovalQueueOpen === false && <ClubRenewalProcessWarningBanner />}
         <p>
           You do not have permission to initiate the renewal process for{' '}
           {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get
@@ -556,6 +569,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   return (
     <Container>
       <ClubMetadata club={club} />
+      {reapprovalQueueOpen === false && <ClubRenewalProcessWarningBanner />}
       <div className="is-clearfix mb-5">
         <div className="is-pulled-left">
           <InfoPageTitle>
@@ -587,7 +601,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
         {step < steps.length - 1 ? (
           <button
             onClick={nextStep}
-            disabled={steps[step].disabled}
+            disabled={steps[step].disabled || reapprovalQueueOpen === false}
             className="button is-primary"
           >
             <Icon name="chevrons-right" />

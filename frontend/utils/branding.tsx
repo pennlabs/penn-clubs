@@ -110,6 +110,7 @@ const sites = {
         that you are targeting the general student population.
       </>
     ),
+    FORM_TARGET_ENABLED: false,
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
     CLUB_EMPTY_STATE: (
       <>
@@ -344,5 +345,7 @@ export const FORM_LOGO_DESCRIPTION: ReactNode =
   sites[site].FORM_LOGO_DESCRIPTION
 export const FORM_TARGET_DESCRIPTION: ReactNode =
   sites[site].FORM_TARGET_DESCRIPTION
+
+export const FORM_TARGET_ENABLED = sites[site].FORM_TARGET_ENABLED
 
 export const OBJECT_INVITE_LABEL = sites[site].OBJECT_INVITE_LABEL

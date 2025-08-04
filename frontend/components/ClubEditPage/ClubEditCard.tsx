@@ -34,6 +34,7 @@ import {
   FORM_LOGO_DESCRIPTION,
   FORM_TAG_DESCRIPTION,
   FORM_TARGET_DESCRIPTION,
+  FORM_TARGET_ENABLED,
   MEMBERSHIP_ROLE_NAMES,
   NEW_APPROVAL_QUEUE_ENABLED,
   OBJECT_NAME_SINGULAR,
@@ -788,7 +789,7 @@ export default function ClubEditCard({
                 </div>
               </>
             ),
-          hidden: SITE_ID === 'fyh',
+          hidden: SITE_ID === 'fyh' || !FORM_TARGET_ENABLED,
         },
         {
           name: 'target_years',
