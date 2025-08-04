@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
 
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
-import { Club, MembershipRank } from '../../types'
+import { Club } from '../../types'
 import { apiCheckPermission, doApiRequest, isSummer } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
@@ -41,8 +41,14 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
     clubs: {
       TITLE: (
         <>
-          <b>{club.name}</b> needs to be re-registered for the current academic
-          year.
+          {reapprovalOpen === true ? (
+            <>
+              <b>{club.name}</b> needs to be re-registered for the current
+              academic year.
+            </>
+          ) : (
+            <b>The club renewal process has not started yet.</b>
+          )}
         </>
       ),
       PROCESS_ACTION: 'start the renewal process',
@@ -94,10 +100,13 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
           </>
         ) : (
           <>
-            If you are an{' '}
+            {/* If you are an{' '}
             {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer].toLowerCase()} for
             this {OBJECT_NAME_SINGULAR} and require access, please send an email
-            with your PennKey and {OBJECT_NAME_SINGULAR} name to <Contact />.
+            with your PennKey and {OBJECT_NAME_SINGULAR} name to <Contact />. */}
+            You will be able to submit your renewal for the current school year
+            once the reapproval queue opens. Please contact <Contact /> with any
+            questions.
           </>
         )}
       </AlertDesc>
