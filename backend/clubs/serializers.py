@@ -1458,8 +1458,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
-    category = CategorySerializer()
-    classification = ClassificationSerializer()
+    category = CategorySerializer(required=False)
+    classification = ClassificationSerializer(required=False)
     status = StatusSerializer(required=False)
     type = TypeSerializer(required=False)
     designation = DesignationSerializer(required=False)
@@ -1753,6 +1753,18 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         raise serializers.ValidationError(
             "You do not have permissions to change the active status of the club."
         )
+
+    def validate(self, data):
+        """
+        Enforce presence of category and classification on creation.
+        """
+        if self.instance is None:
+            for field in ("category", "classification"):
+                if field not in data:
+                    raise serializers.ValidationError(
+                        {field: "This field is required."}
+                    )
+        return super().validate(data)
 
     def format_members_for_spreadsheet(self, value):
         """

@@ -333,7 +333,6 @@ class Club(models.Model):
         related_name="clubs",
         on_delete=models.PROTECT,
         null=True,
-        blank=True,
     )
     members = models.ManyToManyField(get_user_model(), through="Membership")
     # Represents which organizations this club is directly under in the org structure.
@@ -348,7 +347,6 @@ class Club(models.Model):
         on_delete=models.PROTECT,
         related_name="clubs",
         null=True,
-        blank=True,
     )
     eligibility = models.ManyToManyField(
         "Eligibility", related_name="clubs", blank=True

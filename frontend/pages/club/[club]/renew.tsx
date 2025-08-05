@@ -574,9 +574,6 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             method: 'PATCH',
             body: {
               active: true,
-              // work around for category and classification required error of submitting renewal form
-              classification: club.classification,
-              category: club.category,
             },
           }).then((resp) => {
             if (resp.ok) {
