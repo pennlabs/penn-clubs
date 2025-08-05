@@ -8683,7 +8683,14 @@ class RegistrationQueueSettingsView(APIView):
     Only superusers can update settings.
     """
 
-    permission_classes = [IsSuperuser]
+    def get_permissions(self):
+        """
+        Allow any authenticated user to read settings,
+        but only superusers can update them.
+        """
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        return [IsSuperuser()]
 
     def get(self, request):
         """
