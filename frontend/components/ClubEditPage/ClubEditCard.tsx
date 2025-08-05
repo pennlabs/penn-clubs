@@ -5,17 +5,22 @@ import React, { ReactElement, useState } from 'react'
 import { BLACK } from '~/constants'
 
 import {
+  Affiliation,
   Category,
+  Classification,
   Club,
   ClubApplicationRequired,
   ClubRecruitingCycle,
   ClubSize,
+  Designation,
   Eligibility,
   Major,
   MembershipRank,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   Year,
 } from '../../types'
 import {
@@ -32,7 +37,6 @@ import {
   FIELD_PARTICIPATION_LABEL,
   FORM_DESCRIPTION_EXAMPLES,
   FORM_LOGO_DESCRIPTION,
-  FORM_TAG_DESCRIPTION,
   FORM_TARGET_DESCRIPTION,
   FORM_TARGET_ENABLED,
   MEMBERSHIP_ROLE_NAMES,
@@ -133,9 +137,15 @@ type ClubEditCardProps = {
   years: Readonly<Year[]>
   tags: Readonly<Tag[]>
   categories: Readonly<Category[]>
+  classifications: Readonly<Classification[]>
+  designations: Readonly<Designation[]>
   eligibilities: Readonly<Eligibility[]>
+  types: Readonly<Type[]>
+  statuses: Readonly<Status[]>
+  affiliations: Readonly<Affiliation[]>
   club: Partial<Club>
   isEdit: boolean
+
   onSubmit?: (data: {
     message: ReactElement<any> | string | null
     club?: Club
@@ -237,9 +247,15 @@ export default function ClubEditCard({
   years,
   tags,
   categories,
+  classifications,
+  designations,
   eligibilities,
+  types,
+  statuses,
+  affiliations,
   club,
   isEdit,
+
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
   const [showRankModal, setShowRankModal] = useState<boolean>(false)
@@ -389,6 +405,18 @@ export default function ClubEditCard({
       }
     }
 
+    // remove admin-only fields if they are null, undefined, or empty
+    const optionalAdminFields = ['status', 'type', 'designation', 'eligibility']
+    optionalAdminFields.forEach((field) => {
+      if (
+        body[field] === null ||
+        body[field] === undefined ||
+        body[field] === ''
+      ) {
+        delete body[field]
+      }
+    })
+
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {
@@ -537,6 +565,39 @@ export default function ClubEditCard({
           help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views. Enter a one sentence description of your ${OBJECT_NAME_SINGULAR}.`,
         },
         {
+          name: 'category',
+          type: 'select',
+          label: 'Category',
+          required: true,
+          help: 'Select the category that best describes your organization.',
+          choices: categories,
+        },
+        {
+          name: 'classification',
+          type: 'select',
+          label: 'Classification',
+          required: true,
+          help: 'Select the classification that applies to your organization.',
+          choices: classifications,
+        },
+        {
+          name: 'tags',
+          type: 'multiselect',
+          label: 'Tags',
+          help: 'Select tags that describe your organization. These are optional and permit multiple choices.',
+          placeholder: 'Select tags...',
+          choices: tags,
+        },
+        {
+          name: 'badges',
+          type: 'multiselect',
+          label: 'Affiliations',
+          help: 'Select affiliations that should be associated with this club.',
+          placeholder: 'Select affiliations...',
+          choices: affiliations,
+          serialize: (affiliation) => affiliation, // override default serializer
+        },
+        {
           name: 'terms',
           type: 'creatableMultiSelect',
           label: 'Keywords',
@@ -561,22 +622,6 @@ export default function ClubEditCard({
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
           hidden: !REAPPROVAL_QUEUE_ENABLED,
-        },
-        {
-          name: 'tags',
-          type: 'multiselect',
-          required: true,
-          help: `${FORM_TAG_DESCRIPTION}`,
-          placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
-          choices: tags,
-        },
-        {
-          name: 'category',
-          type: 'select',
-          required: true,
-          label: 'Category',
-          help: "Select the primary category that best describes your club's mission and activities.",
-          choices: categories,
         },
         {
           name: 'image',
@@ -927,6 +972,33 @@ export default function ClubEditCard({
             ),
             fields: [
               {
+                name: 'status',
+                type: 'select',
+                label: 'Status',
+                help: 'Select the current status of this organization.',
+                choices: statuses,
+                placeholder: 'Select a status...',
+                adminOnly: true,
+              },
+              {
+                name: 'type',
+                type: 'select',
+                label: 'Type',
+                help: 'Select the type that best describes this organization.',
+                choices: types,
+                placeholder: 'Select a type...',
+                adminOnly: true,
+              },
+              {
+                name: 'designation',
+                type: 'select',
+                label: 'Designation',
+                help: 'Select the designation that applies to this organization.',
+                choices: designations,
+                placeholder: 'Select a designation...',
+                adminOnly: true,
+              },
+              {
                 name: 'eligibility',
                 type: 'multiselect',
                 label: 'Eligibility',
@@ -1016,6 +1088,7 @@ export default function ClubEditCard({
                 </LiveSub>
               </LiveBanner>
             )}
+
           <FormStyle isHorizontal>
             {fields.map(({ name, description, fields, hidden }, i) => {
               if (hidden) {

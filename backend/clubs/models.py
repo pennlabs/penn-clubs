@@ -298,7 +298,7 @@ class Club(models.Model):
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     terms = models.CharField(blank=True, max_length=1024)
-    description = models.TextField(blank=True)  # rich html
+    description = models.TextField()  # rich html
     address = models.TextField(blank=True)
     founded = models.DateField(blank=True, null=True)
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
@@ -328,6 +328,13 @@ class Club(models.Model):
         upload_to=get_club_small_file_name, null=True, blank=True
     )
     tags = models.ManyToManyField("Tag")
+    classification = models.ForeignKey(
+        "Classification",
+        related_name="clubs",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
     members = models.ManyToManyField(get_user_model(), through="Membership")
     # Represents which organizations this club is directly under in the org structure.
     # For example, SAC is a parent of PAC, which is a parent of TAC-E which is a parent
@@ -346,6 +353,20 @@ class Club(models.Model):
     eligibility = models.ManyToManyField(
         "Eligibility", related_name="clubs", blank=True
     )
+    designation = models.ForeignKey(
+        "Designation",
+        related_name="clubs",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    type = models.ForeignKey(
+        "Type",
+        related_name="clubs",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
 
     target_years = models.ManyToManyField("Year", through="TargetYear")
     target_schools = models.ManyToManyField("School", through="TargetSchool")
@@ -355,6 +376,16 @@ class Club(models.Model):
     available_virtually = models.BooleanField(default=False)
     appointment_needed = models.BooleanField(default=False)
     signature_events = models.TextField(blank=True)  # html
+
+    # Club registration status
+    status = models.ForeignKey(
+        "Status",
+        related_name="clubs",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Indicates a clubs's current registration status.",
+    )
 
     # cache club aggregation counts
     favorite_count = models.IntegerField(default=0)
@@ -1476,6 +1507,22 @@ class Tag(models.Model):
         return self.name
 
 
+class Classification(models.Model):
+    """
+    Indicates the student membership requirement to join the group, based on enrollment
+    status (undergraduate or graduate/professional).
+    """
+
+    name = models.CharField(max_length=255)
+    symbol = models.CharField(max_length=10, null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Classifications"
+
+    def __str__(self):
+        return f"{self.symbol} ({self.name})"
+
+
 class Badge(models.Model):
     """
     Represents a category that a club could fall under.
@@ -1493,7 +1540,7 @@ class Badge(models.Model):
     description = models.TextField(blank=True)
 
     # The color of the badge to be displayed on the frontend.
-    color = models.CharField(max_length=16, default="")
+    color = models.CharField(max_length=16, default="", blank=True)
 
     # The organization that this badge represents (If this is the "SAC Funded" badge,
     # then this would link to SAC)
@@ -1536,6 +1583,50 @@ class Eligibility(models.Model):
 
     class Meta:
         verbose_name_plural = "Eligibilities"
+
+    def __str__(self):
+        return self.name
+
+
+class Designation(models.Model):
+    """
+    Indicates a club's SAC funding designation based on their group category.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Designations"
+
+    def __str__(self):
+        return self.name
+
+
+class Type(models.Model):
+    """
+    Indicates the type of student organization based on how the group is managed or
+    supported.
+    """
+
+    name = models.CharField(max_length=255)
+    symbol = models.CharField(max_length=10)
+
+    class Meta:
+        verbose_name_plural = "Types"
+
+    def __str__(self):
+        return f"{self.symbol} ({self.name})"
+
+
+class Status(models.Model):
+    """
+    Indicates the current registration status of a club.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Statuses"
 
     def __str__(self):
         return self.name

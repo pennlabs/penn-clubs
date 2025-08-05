@@ -24,6 +24,7 @@ from clubs.models import (
     Badge,
     Cart,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -31,6 +32,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
@@ -48,6 +50,7 @@ from clubs.models import (
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -59,6 +62,7 @@ from clubs.models import (
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
+    Type,
     Year,
     ZoomMeetingVisit,
 )
@@ -396,6 +400,14 @@ class TagAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class ClassificationAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "symbol", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
 class BadgeAdmin(admin.ModelAdmin):
     def club_count(self, obj):
         return obj.club_set.count()
@@ -426,6 +438,30 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 class EligibilityAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class DesignationAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class TypeAdmin(admin.ModelAdmin):
+    search_fields = ("name", "symbol")
+    list_display = ("name", "symbol", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class StatusAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     list_display = ("name", "club_count")
 
@@ -518,4 +554,8 @@ admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAd
 admin.site.register(RegistrationQueueSettings)
 admin.site.register(EventShowing)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(Designation, DesignationAdmin)
 admin.site.register(Eligibility, EligibilityAdmin)
+admin.site.register(Type, TypeAdmin)
+admin.site.register(Status, StatusAdmin)
+admin.site.register(Classification, ClassificationAdmin)

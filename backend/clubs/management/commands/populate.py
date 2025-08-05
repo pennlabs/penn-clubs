@@ -17,10 +17,12 @@ from clubs.models import (
     Badge,
     Cart,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubFair,
     ClubFairRegistration,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
@@ -29,10 +31,12 @@ from clubs.models import (
     Profile,
     QuestionAnswer,
     School,
+    Status,
     StudentType,
     Tag,
     Testimonial,
     Ticket,
+    Type,
     Year,
 )
 
@@ -360,6 +364,53 @@ class Command(BaseCommand):
                 "SCHOOL-SPECIFIC",
                 "UA",
                 "NOT ELIGIBLE",
+            ]
+        ]
+
+        # create classifications
+        [
+            Classification.objects.get_or_create(symbol=symbol, defaults={"name": name})
+            for symbol, name in [
+                ("G", "GRADUATE"),
+                ("Go", "GRADUATE OPEN"),
+                ("UG", "UNDERGRADUATE"),
+                ("UGo", "UNDERGRADUATE OPEN"),
+            ]
+        ]
+
+        # create designations
+        [
+            Designation.objects.get_or_create(name=designation)
+            for designation in [
+                "AMP",
+                "BRIDGE",
+                "CIRCLE",
+                "DASH",
+            ]
+        ]
+
+        # create types
+        [
+            Type.objects.get_or_create(symbol=symbol, defaults={"name": name})
+            for symbol, name in [
+                ("DSP", "Department-Sponsored Program"),
+                ("SDP", "Student-Led Department Program"),
+                ("SRO", "Student-Run Organization"),
+                ("UAO", "University-Affiliated Organization"),
+                ("UAS", "University-Supported Student Service"),
+            ]
+        ]
+
+        # create statuses
+        [
+            Status.objects.get_or_create(name=status)
+            for status in [
+                "Preliminary",
+                "Provisional",
+                "Full",
+                "Inactive",
+                "Suspended",
+                "Defunct",
             ]
         ]
 

@@ -32,12 +32,14 @@ from clubs.models import (
     Asset,
     Badge,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubVisit,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
@@ -55,6 +57,7 @@ from clubs.models import (
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -64,6 +67,7 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    Type,
     Year,
 )
 from clubs.utils import clean, html_to_text
@@ -149,9 +153,37 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
+class ClassificationSerializer(serializers.ModelSerializer):
+    symbol = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Classification
+        fields = ("id", "name", "symbol")
+
+
 class EligibilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Eligibility
+        fields = ("id", "name")
+
+
+class DesignationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Designation
+        fields = ("id", "name")
+
+
+class TypeSerializer(serializers.ModelSerializer):
+    symbol = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Type
+        fields = ("id", "name", "symbol")
+
+
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
         fields = ("id", "name")
 
 
@@ -1029,7 +1061,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     This is done for a quicker response.
     """
 
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(many=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
     membership_count = serializers.IntegerField(read_only=True)
@@ -1426,11 +1458,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
-    category = serializers.SlugRelatedField(
-        slug_field="name",
-        queryset=Category.objects.all(),
-        required=True,
-    )
+    category = CategorySerializer()
+    classification = ClassificationSerializer()
+    status = StatusSerializer(required=False)
+    type = TypeSerializer(required=False)
+    designation = DesignationSerializer(required=False)
     eligibility = EligibilitySerializer(many=True, required=False)
 
     target_schools = serializers.SerializerMethodField("get_target_schools")
@@ -1452,12 +1484,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
-
-    def to_internal_value(self, data):
-        if "category" in data and "name" in data["category"]:
-            data["category"] = data["category"]["name"]
-
-        return super().to_internal_value(data)
 
     def get_events(self, obj):
         now = timezone.now()
@@ -1565,24 +1591,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         return obj
 
     def validate_badges(self, value):
-        return value
-
-    def validate_tags(self, value):
-        """
-        Check for required tags before saving the club.
-        """
-        if settings.BRANDING == "clubs":
-            tag_names = [tag.get("name") for tag in value]
-            necessary_tags = {"Undergraduate", "Graduate"}
-            if not any(tag in necessary_tags for tag in tag_names):
-                if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(
-                    necessary_tags
-                ):
-                    raise serializers.ValidationError(
-                        "You must specify either the {} tag in this list.".format(
-                            " or ".join(f"'{tag}'" for tag in necessary_tags)
-                        )
-                    )
         return value
 
     def validate_target_years(self, value):
@@ -1983,7 +1991,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "beta",
             "category",
+            "designation",
             "eligibility",
+            "type",
             "created_at",
             "description",
             "events",
@@ -2007,12 +2017,19 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "twitter",
             "website",
             "youtube",
+            "status",
+            "eligibility",
+            "classification",
         ]
         save_related_fields = [
             "tags",
+            "classification",
             "badges",
             "category",
+            "designation",
             "eligibility",
+            "type",
+            "status",
             "target_schools",
             "student_types",
             "target_majors",

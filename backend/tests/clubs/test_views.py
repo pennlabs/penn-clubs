@@ -24,11 +24,13 @@ from clubs.models import (
     Asset,
     Badge,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairRegistration,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
@@ -43,6 +45,7 @@ from clubs.models import (
     School,
     Tag,
     Testimonial,
+    Type,
     ZoomMeetingVisit,
 )
 
@@ -3975,6 +3978,100 @@ class ClubTestCase(TestCase):
         resp = self.client.post(
             reverse("eligibilities-list"),
             {"name": "New Eligibility"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_classification_viewset_permissions(self):
+        """Test basic permissions for ClassificationViewSet."""
+        classification = Classification.objects.create(
+            name="Test Classification", symbol="TEST"
+        )
+
+        # Test user can list classifications
+        resp = self.client.get(reverse("classifications-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific classification
+        resp = self.client.get(
+            reverse("classifications-detail", args=[classification.name])
+        )
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create classifications
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("classifications-list"),
+            {"name": "New Classification", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create classifications
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("classifications-list"),
+            {"name": "New Classification", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_designation_viewset_permissions(self):
+        """Test basic permissions for DesignationViewSet."""
+        designation = Designation.objects.create(name="Test Designation")
+
+        # Test user can list designations
+        resp = self.client.get(reverse("designations-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific designation
+        resp = self.client.get(reverse("designations-detail", args=[designation.id]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create designations
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("designations-list"),
+            {"name": "New Designation"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create designations
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("designations-list"),
+            {"name": "New Designation"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_type_viewset_permissions(self):
+        """Test basic permissions for TypeViewSet."""
+        type_obj = Type.objects.create(name="Test Type", symbol="TEST")
+
+        # Test user can list types
+        resp = self.client.get(reverse("types-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific type
+        resp = self.client.get(reverse("types-detail", args=[type_obj.name]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create types
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("types-list"),
+            {"name": "New Type", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create types
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("types-list"),
+            {"name": "New Type", "symbol": "NEW"},
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 405)

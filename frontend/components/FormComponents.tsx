@@ -585,6 +585,7 @@ export const TextField = useFieldWrapper(
       return (
         <textarea
           value={value ?? ''}
+          required={props.required}
           {...other}
           className={`textarea ${isError ? 'is-danger' : ''}`}
           readOnly={readOnly ?? false}
@@ -621,6 +622,7 @@ export const TextField = useFieldWrapper(
         type={actualType}
         value={value != null ? value.toString() : ''}
         readOnly={readOnly ?? false}
+        required={props.required}
         {...other}
         className={`input ${isError ? 'is-danger' : ''}`}
       />
