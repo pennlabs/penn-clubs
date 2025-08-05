@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
 
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
-import { Club } from '../../types'
-import { apiCheckPermission, doApiRequest, isSummer } from '../../utils'
+import { Club, MembershipRank } from '../../types'
+import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
@@ -35,7 +35,6 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
 
   const canRenew =
     apiCheckPermission(`clubs.manage_club:${club.code}`) &&
-    !isSummer() &&
     reapprovalOpen === true
   const textMapping = {
     clubs: {
@@ -100,13 +99,10 @@ const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
           </>
         ) : (
           <>
-            {/* If you are an{' '}
+            If you are an{' '}
             {MEMBERSHIP_ROLE_NAMES[MembershipRank.Officer].toLowerCase()} for
             this {OBJECT_NAME_SINGULAR} and require access, please send an email
-            with your PennKey and {OBJECT_NAME_SINGULAR} name to <Contact />. */}
-            You will be able to submit your renewal for the current school year
-            once the reapproval queue opens. Please contact <Contact /> with any
-            questions.
+            with your PennKey and {OBJECT_NAME_SINGULAR} name to <Contact />.
           </>
         )}
       </AlertDesc>
