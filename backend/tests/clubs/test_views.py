@@ -179,7 +179,8 @@ class ClubTestCase(TestCase):
         Tag.objects.create(name="Graduate")
         Tag.objects.create(name="Undergraduate")
 
-        Category.objects.create(name="Academic & Pre-Professional")
+        cls.category1 = Category.objects.create(name="Academic & Pre-Professional")
+        cls.classification1 = Classification.objects.create(symbol="G", name="Graduate")
 
         queue_settings = RegistrationQueueSettings.get()
         queue_settings.reapproval_queue_open = True
@@ -194,6 +195,8 @@ class ClubTestCase(TestCase):
         self.club1 = Club.objects.create(
             code="test-club",
             name="Test Club",
+            classification=self.classification1,
+            category=self.category1,
             approved=True,
             email="example@example.com",
         )
@@ -457,6 +460,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -919,6 +923,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1120,6 +1125,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
                 "facebook": "",
                 "twitter": "",
                 "instagram": "",
@@ -1172,6 +1178,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Undergraduate"}],
                 "email": "newclub@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1308,6 +1315,7 @@ class ClubTestCase(TestCase):
                 "description": test_good_string,
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1336,6 +1344,7 @@ class ClubTestCase(TestCase):
                 "description": test_bad_string,
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1424,6 +1433,7 @@ class ClubTestCase(TestCase):
                 "target_schools": [{"id": school1.id}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",
                 "twitter": "https://twitter.com/Penn",
@@ -4025,7 +4035,7 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
 
         # Test user can retrieve specific designation
-        resp = self.client.get(reverse("designations-detail", args=[designation.id]))
+        resp = self.client.get(reverse("designations-detail", args=[designation.name]))
         self.assertEqual(resp.status_code, 200)
 
         # Test user cannot create designations
@@ -4111,6 +4121,7 @@ class ClubTestCase(TestCase):
                 "email": "short@example.com",
                 "tags": [{"name": "Graduate"}],
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -4179,10 +4190,10 @@ class RegistrationQueueSettingsTestCase(TestCase):
         resp = self.client.get(reverse("queue-settings"))
         self.assertEqual(resp.status_code, 403, resp.content)
 
-        # non-superusers can't access
+        # authenticated users can access
         self.client.login(username="user", password="password")
         resp = self.client.get(reverse("queue-settings"))
-        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(resp.status_code, 200, resp.content)
 
         # superusers can access
         self.client.login(username="super", password="password")
