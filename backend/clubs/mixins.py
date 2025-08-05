@@ -51,7 +51,6 @@ class ManyToManySaveMixin(object):
                     code="invalid",
                 )
             except MultipleObjectsReturned:
-                print(model, field_name, item, "!!!!!!!!!!!!!!!!!!!!!!")
                 raise serializers.ValidationError(
                     {
                         field_name: [
@@ -83,7 +82,6 @@ class ManyToManySaveMixin(object):
                 model = field.child.Meta.model
                 m2m_lists[field_name] = []
                 items = self.validated_data.pop(field_name, None)
-                print(items, "!!!!!!!!!!!!!!!!!!!!!!")
                 if items is None:
                     ignore_fields.add(field_name)
                     continue
