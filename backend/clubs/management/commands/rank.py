@@ -7,7 +7,39 @@ from django.core.management.base import BaseCommand
 from django.db.models import DurationField, ExpressionWrapper, F
 from django.utils import timezone
 
-from clubs.models import Club, ClubFair, EventShowing, Membership
+from clubs.models import Club, ClubFair, EventShowing, Membership, RankingWeights
+
+
+# Default weight values mirroring the historic constant scoring system
+DEFAULT_WEIGHTS = {
+    "inactive_penalty": -1000,
+    "favorites_per": 1 / 25,
+    "tags_good": 15,
+    "tags_many": 7,
+    "officer_bonus": 15,
+    "member_base": 10,
+    "member_per": 1 / 10,
+    "logo_bonus": 15,
+    "subtitle_bad": -10,
+    "subtitle_good": 5,
+    "images_bonus": 3,
+    "desc_short": 25,
+    "desc_med": 10,
+    "desc_long": 10,
+    "fair_bonus": 10,
+    "application_bonus": 25,
+    "today_event_base": 10,
+    "today_event_good": 10,
+    "week_event_base": 5,
+    "week_event_good": 5,
+    "email_bonus": 10,
+    "social_bonus": 10,
+    "howto_penalty": -30,
+    "outdated_penalty": -10,
+    "testimonial_one": 10,
+    "testimonial_three": 5,
+    "random_scale": 25,
+}
 
 
 class Command(BaseCommand):
@@ -62,6 +94,16 @@ class Command(BaseCommand):
     def rank(self):
         count = 0
 
+        # Retrieve ranking weights singleton
+        weights = RankingWeights.get()
+
+        def _w(key):
+            """Fetch weight: RankingWeights field ➔ DEFAULT_WEIGHTS ➔ 1.0."""
+            val = getattr(weights, key, None)
+            if val is not None:
+                return val
+            return DEFAULT_WEIGHTS.get(key, 1.0)
+
         clubs = Club.objects.prefetch_related(
             "favorite_set",
             "tags",
@@ -77,47 +119,47 @@ class Command(BaseCommand):
 
             # inactive clubs get deprioritized
             if not club.active:
-                ranking -= 1000
+                ranking += _w("inactive_penalty")
 
             # small points for favorites
-            ranking += club.favorite_set.count() / 25
+            ranking += club.favorite_set.count() * _w("favorites_per")
 
             # points for minimum amount of tags
             tags = club.tags.count()
-            if tags >= 3 and tags <= 7:
-                ranking += 15
+            if 3 <= tags <= 7:
+                ranking += _w("tags_good")
             elif tags > 7:
-                ranking += 7
+                ranking += _w("tags_many")
 
             # lots of points for officers
             officers = club.membership_set.filter(
                 active=True, role__lte=Membership.ROLE_OFFICER
             ).count()
             if officers >= 3:
-                ranking += 15
+                ranking += _w("officer_bonus")
 
             # ordinary members give even more points
             members = club.membership_set.filter(
                 active=True, role__gte=Membership.ROLE_MEMBER
             ).count()
             if members >= 3:
-                ranking += 10
-            ranking += members / 10
+                ranking += _w("member_base")
+            ranking += members * _w("member_per")
 
             # points for logo
             if club.image is not None:
-                ranking += 15
+                ranking += _w("logo_bonus")
 
             # points for subtitle
             subtitle = club.subtitle.strip()
             if subtitle.lower() == "your subtitle here":
-                ranking -= 10
+                ranking += _w("subtitle_bad")
             elif len(subtitle) > 3:
-                ranking += 5
+                ranking += _w("subtitle_good")
 
             # images in description? awesome
             if "<img" in club.description or "<iframe" in club.description:
-                ranking += 3
+                ranking += _w("images_bonus")
 
             # points for longer descriptions
             cleaned_description = bleach.clean(
@@ -125,26 +167,26 @@ class Command(BaseCommand):
             ).strip()
 
             if len(cleaned_description) > 25:
-                ranking += 25
+                ranking += _w("desc_short")
 
             if len(cleaned_description) > 250:
-                ranking += 10
+                ranking += _w("desc_med")
 
             if len(cleaned_description) > 1000:
-                ranking += 10
+                ranking += _w("desc_long")
 
             # points for fair
             now = timezone.now()
             if ClubFair.objects.filter(
                 end_time__gte=now, participating_clubs=club
             ).exists():
-                ranking += 10
+                ranking += _w("fair_bonus")
 
             # points for club applications
             if club.clubapplication_set.filter(
                 application_start_time__lte=now, application_end_time__gte=now
             ).exists():
-                ranking += 25
+                ranking += _w("application_bonus")
 
             # points for events
             # Get all events with showings today
@@ -172,7 +214,7 @@ class Command(BaseCommand):
                 )
 
                 if short_showings:
-                    ranking += 10
+                    ranking += _w("today_event_base")
                     # Check for events with good descriptions and images
                     if all(
                         len(e.description) >= 3
@@ -180,7 +222,7 @@ class Command(BaseCommand):
                         and e.image is not None
                         for e in today_events
                     ):
-                        ranking += 10
+                        ranking += _w("today_event_good")
 
             # Get all events with showings in the next week
             close_showings = EventShowing.objects.filter(
@@ -207,7 +249,7 @@ class Command(BaseCommand):
                 )
 
                 if short_showings:
-                    ranking += 5
+                    ranking += _w("week_event_base")
                     # Check for events with good descriptions and images
                     if all(
                         len(e.description) > 3
@@ -215,11 +257,11 @@ class Command(BaseCommand):
                         and e.image is not None
                         for e in close_events
                     ):
-                        ranking += 5
+                        ranking += _w("week_event_good")
 
             # points for public contact email
             if club.email and club.email_public:
-                ranking += 10
+                ranking += _w("email_bonus")
 
             # points for social links
             social_fields = [
@@ -237,28 +279,28 @@ class Command(BaseCommand):
             ]
             has_fields = [field for field in social_fields if field]
             if len(has_fields) >= 2:
-                ranking += 10
+                ranking += _w("social_bonus")
 
             # points for how to get involved
             if len(club.how_to_get_involved.strip()) <= 3:
-                ranking -= 30
+                ranking += _w("howto_penalty")
 
             # points for updated
             if club.updated_at < now - datetime.timedelta(days=30 * 8):
-                ranking -= 10
+                ranking += _w("outdated_penalty")
 
             # points for testimonials
             num_testimonials = club.testimonials.count()
             if num_testimonials >= 1:
-                ranking += 10
+                ranking += _w("testimonial_one")
             if num_testimonials >= 3:
-                ranking += 5
+                ranking += _w("testimonial_three")
 
             # random number, mostly shuffles similar clubs with average of 25 points
             # but with long right tail to periodically feature less popular clubs
             # given ~700 active clubs, multiplier c, expected # clubs with rand > cd
             # is 257, 95, 35, 13, 5, 2, 1 for c = 1, 2, 3, 4, 5, 6, 7
-            ranking += np.random.standard_exponential() * 25
+            ranking += np.random.standard_exponential() * _w("random_scale")
 
             club.rank = floor(ranking)
             club.skip_history_when_saving = True
