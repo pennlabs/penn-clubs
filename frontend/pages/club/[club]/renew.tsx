@@ -11,17 +11,22 @@ import { DARK_GRAY, GREEN, MEDIUM_GRAY } from 'constants/colors'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
+import { toast, TypeOptions } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import {
+  Affiliation,
   Category,
+  Classification,
   Club,
   Eligibility,
   Major,
   MembershipRank,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   Year,
 } from 'types'
 import {
@@ -52,6 +57,10 @@ type InitialRenewPageProps = {
   studentTypes: StudentType[]
   categories: Category[]
   eligibilities: Eligibility[]
+  types: Type[]
+  classifications: Classification[]
+  statuses: Status[]
+  affiliations: Affiliation[]
 }
 
 type RenewPageProps = InitialRenewPageProps & {
@@ -200,6 +209,10 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     studentTypes,
     categories,
     eligibilities,
+    types,
+    classifications,
+    statuses,
+    affiliations,
   } = props
 
   const [club, setClub] = useState<Club>(initialClub)
@@ -224,6 +237,50 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 
   const hasPermission = apiCheckPermission(`clubs.manage_club:${club.code}`)
+
+  const notify = (
+    msg: string | ReactElement<any>,
+    type: TypeOptions = 'info',
+  ): void => {
+    toast[type](msg)
+  }
+
+  const requiredFields = [
+    { field: 'name', label: 'Club Name' },
+    { field: 'category', label: 'Category' },
+    { field: 'classification', label: 'Classification' },
+    { field: 'description', label: 'Club Mission' },
+    { field: 'email', label: 'Contact Email' },
+    { field: 'size', label: 'Club Size' },
+    { field: 'application_required', label: 'Membership Process' },
+    { field: 'recruiting_cycle', label: 'Recruiting Cycle' },
+  ]
+
+  const validateRequiredFields = (): Array<{
+    label: string
+    field: string
+  }> => {
+    const errors: Array<{
+      label: string
+      field: string
+    }> = []
+
+    requiredFields.forEach(({ field, label }) => {
+      const value = club[field as keyof Club]
+
+      if (
+        value === null ||
+        value === undefined ||
+        (typeof value === 'string' && !value.trim()) ||
+        (Array.isArray(value) && !value.length) ||
+        !value
+      ) {
+        errors.push({ label, field })
+      }
+    })
+
+    return errors
+  }
 
   if (authenticated === false) {
     return <AuthPrompt />
@@ -417,15 +474,24 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             Please verify that your {OBJECT_NAME_SINGULAR} information is up to
             date. If you need to make any changes, change it in the form below
             and hit submit.
+            <div className="mt-3 notification is-info is-light">
+              <strong>Required Fields:</strong> All fields marked with an
+              asterisk (*) must be filled in before you can proceed to the next
+              step.
+            </div>
           </TextInfoBox>
           <ClubEditCard
             eligibilities={eligibilities}
             categories={categories}
+            classifications={classifications}
             schools={schools}
             majors={majors}
             years={years}
             tags={tags}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            affiliations={affiliations}
             club={club}
             isEdit={true}
             onSubmit={({ club, message }): Promise<void> => {
@@ -433,7 +499,11 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
                 setClub(club)
               }
               if (message !== undefined) {
-                setSubmitMessage(message)
+                if (typeof message === 'string') {
+                  notify(message, 'success')
+                } else {
+                  setSubmitMessage(message)
+                }
               }
               return Promise.resolve(undefined)
             }}
@@ -552,6 +622,27 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   ]
 
   const nextStep = () => {
+    // only check for required fields on the Club Info step
+    if (step === 1) {
+      const errors = validateRequiredFields()
+      if (errors.length > 0) {
+        notify(
+          <>
+            <div>You must fill in all required fields before continuing:</div>
+            <ul className="mt-2">
+              {errors.map((error, index) => (
+                <li key={index}>
+                  <b>{error.label}</b> is required
+                </li>
+              ))}
+            </ul>
+          </>,
+          'error',
+        )
+        return
+      }
+    }
+
     const enterTab = steps[step + 1].onEnterTab
     if (enterTab !== undefined) {
       enterTab()
@@ -648,6 +739,10 @@ RenewPage.getInitialProps = async ({
     'student_types',
     'categories',
     'eligibilities',
+    'types',
+    'classifications',
+    'statuses',
+    'badges',
   ]
   return Promise.all(
     endpoints.map(async (item) => {

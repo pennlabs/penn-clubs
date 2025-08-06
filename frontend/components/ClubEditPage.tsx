@@ -20,13 +20,17 @@ import {
   HOME_ROUTE,
 } from '../constants/routes'
 import {
+  Affiliation,
   Category,
+  Classification,
   Club,
   Eligibility,
   Major,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   UserInfo,
   VisitType,
   Year,
@@ -72,28 +76,36 @@ type ClubFormProps = {
   clubId: string | undefined
   authenticated: boolean | null
   categories: Category[]
+  classifications: Classification[]
   eligibilities: Eligibility[]
   schools: School[]
   majors: Major[]
   years: Year[]
   tags: Tag[]
   studentTypes: StudentType[]
+  types: Type[]
+  statuses: Status[]
   tab?: string | null
   userInfo?: UserInfo
+  affiliations: Affiliation[]
 }
 
 const ClubForm = ({
   authenticated,
   categories,
+  classifications,
   eligibilities,
   schools,
   years,
   majors,
   tags,
   studentTypes,
+  types,
+  statuses,
   clubId,
   tab,
   userInfo,
+  affiliations,
 }: ClubFormProps): ReactElement<any> => {
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
@@ -238,12 +250,16 @@ const ClubForm = ({
             isEdit={isEdit}
             eligibilities={eligibilities}
             categories={categories}
+            classifications={classifications}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
             club={club}
+            affiliations={affiliations}
             onSubmit={submit}
           />
         ),
@@ -453,6 +469,10 @@ const ClubForm = ({
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            affiliations={affiliations}
+            classifications={classifications}
             onSubmit={submit}
           />
         </div>

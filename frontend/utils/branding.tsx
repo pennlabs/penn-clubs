@@ -63,6 +63,9 @@ const sites = {
       'target_schools',
       'category',
       'eligibility',
+      'status',
+      'type',
+      'designation',
     ],
     // enable showing members for each club
     SHOW_MEMBERS: false,
@@ -201,6 +204,7 @@ const sites = {
       'target_schools',
       'category',
       'eligibility',
+      'status',
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
