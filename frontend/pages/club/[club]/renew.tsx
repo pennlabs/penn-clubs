@@ -19,7 +19,6 @@ import {
   Category,
   Classification,
   Club,
-  Designation,
   Eligibility,
   Major,
   MembershipRank,
@@ -60,7 +59,6 @@ type InitialRenewPageProps = {
   eligibilities: Eligibility[]
   types: Type[]
   classifications: Classification[]
-  designations: Designation[]
   statuses: Status[]
   affiliations: Affiliation[]
 }
@@ -213,7 +211,6 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     eligibilities,
     types,
     classifications,
-    designations,
     statuses,
     affiliations,
   } = props
@@ -487,7 +484,6 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             eligibilities={eligibilities}
             categories={categories}
             classifications={classifications}
-            designations={designations}
             schools={schools}
             majors={majors}
             years={years}
@@ -626,7 +622,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   ]
 
   const nextStep = () => {
-    // O\only check for required fields on the Club Info step
+    // only check for required fields on the Club Info step
     if (step === 1) {
       const errors = validateRequiredFields()
       if (errors.length > 0) {
@@ -745,7 +741,6 @@ RenewPage.getInitialProps = async ({
     'eligibilities',
     'types',
     'classifications',
-    'designations',
     'statuses',
     'badges',
   ]

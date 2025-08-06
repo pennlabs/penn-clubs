@@ -218,7 +218,7 @@ export interface Club {
   beta: boolean
   code: string
   description: string
-  designation: Designation
+  designation?: Designation
   eligibility: Eligibility[]
   email: string
   enables_subscription: boolean

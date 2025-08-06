@@ -24,7 +24,6 @@ import {
   Category,
   Classification,
   Club,
-  Designation,
   Eligibility,
   Major,
   School,
@@ -78,7 +77,6 @@ type ClubFormProps = {
   authenticated: boolean | null
   categories: Category[]
   classifications: Classification[]
-  designations: Designation[]
   eligibilities: Eligibility[]
   schools: School[]
   majors: Major[]
@@ -96,7 +94,6 @@ const ClubForm = ({
   authenticated,
   categories,
   classifications,
-  designations,
   eligibilities,
   schools,
   years,
@@ -254,7 +251,6 @@ const ClubForm = ({
             eligibilities={eligibilities}
             categories={categories}
             classifications={classifications}
-            designations={designations}
             schools={schools}
             years={years}
             majors={majors}
@@ -477,7 +473,6 @@ const ClubForm = ({
             statuses={statuses}
             affiliations={affiliations}
             classifications={classifications}
-            designations={designations}
             onSubmit={submit}
           />
         </div>

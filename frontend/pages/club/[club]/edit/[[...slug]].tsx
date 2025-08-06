@@ -21,7 +21,6 @@ Edit.getInitialProps = async ({ query }): Promise<EditPageProps> => {
     'eligibilities',
     'types',
     'classifications',
-    'designations',
     'statuses',
     ['badges', 'affiliations'],
   ]

@@ -351,13 +351,7 @@ class Club(models.Model):
     eligibility = models.ManyToManyField(
         "Eligibility", related_name="clubs", blank=True
     )
-    designation = models.ForeignKey(
-        "Designation",
-        related_name="clubs",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-    )
+
     type = models.ForeignKey(
         "Type",
         related_name="clubs",
@@ -400,6 +394,14 @@ class Club(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def designation(self):
+        """
+        Get the designation through the category relationship.
+        Returns None if the club has no category or the category has no designation.
+        """
+        return self.category.designation if self.category else None
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 200)
@@ -1563,6 +1565,15 @@ class Category(models.Model):
     """
 
     name = models.CharField(max_length=255)
+    designation = models.ForeignKey(
+        "Designation",
+        on_delete=models.PROTECT,
+        related_name="categories",
+        null=True,
+        blank=True,
+        help_text="""The SAC funding designation automatically assigned to clubs
+        in this category.""",
+    )
 
     class Meta:
         verbose_name_plural = "Categories"

@@ -9,10 +9,10 @@ import {
   SNOW,
 } from '../constants'
 import {
+  Affiliation,
   Category,
   Classification,
   Club,
-  Designation,
   Eligibility,
   Major,
   School,
@@ -62,11 +62,10 @@ type ResourceCreationPageProps = {
   studentTypes: StudentType[]
   categories: Category[]
   classifications: Classification[]
-  designations: Designation[]
   eligibilities: Eligibility[]
   types: Type[]
   statuses: Status[]
-  affiliations: any[]
+  affiliations: Affiliation[]
 }
 
 type TabItem = {
@@ -86,7 +85,6 @@ const ResourceCreationPage = ({
   studentTypes,
   categories,
   classifications,
-  designations,
   eligibilities,
   types,
   statuses,
@@ -212,7 +210,6 @@ const ResourceCreationPage = ({
             eligibilities={eligibilities}
             categories={categories}
             classifications={classifications}
-            designations={designations}
             schools={schools}
             years={years}
             majors={majors}

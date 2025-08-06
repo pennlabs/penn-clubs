@@ -12,7 +12,6 @@ import {
   ClubApplicationRequired,
   ClubRecruitingCycle,
   ClubSize,
-  Designation,
   Eligibility,
   Major,
   MembershipRank,
@@ -138,7 +137,6 @@ type ClubEditCardProps = {
   tags: Readonly<Tag[]>
   categories: Readonly<Category[]>
   classifications: Readonly<Classification[]>
-  designations: Readonly<Designation[]>
   eligibilities: Readonly<Eligibility[]>
   types: Readonly<Type[]>
   statuses: Readonly<Status[]>
@@ -248,7 +246,6 @@ export default function ClubEditCard({
   tags,
   categories,
   classifications,
-  designations,
   eligibilities,
   types,
   statuses,
@@ -406,7 +403,7 @@ export default function ClubEditCard({
     }
 
     // remove admin-only fields if they are null, undefined, or empty
-    const optionalAdminFields = ['status', 'type', 'designation', 'eligibility']
+    const optionalAdminFields = ['status', 'type', 'eligibility']
     optionalAdminFields.forEach((field) => {
       if (
         body[field] === null ||
@@ -987,15 +984,6 @@ export default function ClubEditCard({
                 help: 'Select the type that best describes this organization.',
                 choices: types,
                 placeholder: 'Select a type...',
-                adminOnly: true,
-              },
-              {
-                name: 'designation',
-                type: 'select',
-                label: 'Designation',
-                help: 'Select the designation that applies to this organization.',
-                choices: designations,
-                placeholder: 'Select a designation...',
                 adminOnly: true,
               },
               {

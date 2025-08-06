@@ -190,7 +190,15 @@ class ClubChildrenInline(TabularInline):
 
 class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
     search_fields = ("name", "subtitle", "email", "code")
-    list_display = ("name", "email", "has_owner", "has_invite", "active", "approved")
+    list_display = (
+        "name",
+        "email",
+        "has_owner",
+        "has_invite",
+        "active",
+        "approved",
+        "get_designation",
+    )
     list_filter = (
         "size",
         "application_required",
@@ -227,6 +235,11 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
         return obj.has_owner
 
     has_owner.boolean = True
+
+    def get_designation(self, obj):
+        return obj.designation.name if obj.designation else "None"
+
+    get_designation.short_description = "Designation"
 
 
 class ClubFairAdmin(admin.ModelAdmin):
@@ -431,7 +444,8 @@ class BadgeAdmin(admin.ModelAdmin):
 
 class CategoryAdmin(admin.ModelAdmin):
     search_fields = ("name",)
-    list_display = ("name", "club_count")
+    list_display = ("name", "designation", "club_count")
+    list_filter = ("designation",)
 
     def club_count(self, obj):
         return obj.clubs.count()
@@ -447,10 +461,10 @@ class EligibilityAdmin(admin.ModelAdmin):
 
 class DesignationAdmin(admin.ModelAdmin):
     search_fields = ("name",)
-    list_display = ("name", "club_count")
+    list_display = ("name", "categories")
 
-    def club_count(self, obj):
-        return obj.clubs.count()
+    def categories(self, obj):
+        return ", ".join(obj.categories.values_list("name", flat=True))
 
 
 class TypeAdmin(admin.ModelAdmin):

@@ -1462,7 +1462,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     classification = ClassificationSerializer(required=False)
     status = StatusSerializer(required=False)
     type = TypeSerializer(required=False)
-    designation = DesignationSerializer(required=False)
+    designation = DesignationSerializer(required=False, read_only=True)
     eligibility = EligibilitySerializer(many=True, required=False)
 
     target_schools = serializers.SerializerMethodField("get_target_schools")

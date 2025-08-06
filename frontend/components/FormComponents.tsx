@@ -622,7 +622,6 @@ export const TextField = useFieldWrapper(
         type={actualType}
         value={value != null ? value.toString() : ''}
         readOnly={readOnly ?? false}
-        required={props.required}
         {...other}
         className={`input ${isError ? 'is-danger' : ''}`}
       />

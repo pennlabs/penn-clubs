@@ -334,25 +334,34 @@ class Command(BaseCommand):
             ]
         ]
 
-        # create categories
-        [
-            Category.objects.get_or_create(name=category)
-            for category in [
-                "Academic & Pre-Professional",
-                "Arts & Performance",
-                "Civic Engagement & Community Service",
-                "Cultural & International",
-                "Greek Life",
-                "Instructional & Competitive (Non Sports-Related)",
-                "Media & Publication",
-                "Peer Education & Support",
-                "Political & Advocacy",
-                "Religious & Spiritual",
-                "Special Interest",
-                "Sports & Recreational",
-                "Student Governance",
-            ]
-        ]
+        # create designations first
+        amp, _ = Designation.objects.get_or_create(name="AMP")
+        bridge, _ = Designation.objects.get_or_create(name="BRIDGE")
+        circle, _ = Designation.objects.get_or_create(name="CIRCLE")
+        dash, _ = Designation.objects.get_or_create(name="DASH")
+
+        # create categories with their corresponding designations
+        category_designation_mapping = {
+            "Arts & Performance": amp,
+            "Instructional & Competitive (Non Sports-Related)": amp,
+            "Academic & Pre-Professional": bridge,
+            "Civic Engagement & Community Service": bridge,
+            "Media & Publication": bridge,
+            "Peer Education & Support": bridge,
+            "Political & Advocacy": bridge,
+            "Religious & Spiritual": bridge,
+            "Cultural & International": circle,
+            "Special Interest": circle,
+            "Sports & Recreational": dash,
+            # Categories without specific designations
+            "Greek Life": None,
+            "Student Governance": None,
+        }
+
+        for category_name, designation in category_designation_mapping.items():
+            Category.objects.get_or_create(
+                name=category_name, defaults={"designation": designation}
+            )
 
         # create eligibility options
         [
@@ -375,17 +384,6 @@ class Command(BaseCommand):
                 ("Go", "GRADUATE OPEN"),
                 ("UG", "UNDERGRADUATE"),
                 ("UGo", "UNDERGRADUATE OPEN"),
-            ]
-        ]
-
-        # create designations
-        [
-            Designation.objects.get_or_create(name=designation)
-            for designation in [
-                "AMP",
-                "BRIDGE",
-                "CIRCLE",
-                "DASH",
             ]
         ]
 
