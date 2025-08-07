@@ -435,6 +435,13 @@ class Club(models.Model):
     def is_wharton(self):
         return any(badge.label == "Wharton Council" for badge in self.badges.all())
 
+    @cached_property
+    def has_constitution(self):
+        """
+        Check if the club has a constitution uploaded.
+        """
+        return self.asset_set.filter(is_constitution=True).exists()
+
     def add_ics_events(self):
         """
         Fetch the ICS events from the club's calendar URL
@@ -1606,6 +1613,7 @@ class Asset(models.Model):
     file = models.FileField(upload_to=get_asset_file_name)
     club = models.ForeignKey(Club, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
+    is_constitution = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

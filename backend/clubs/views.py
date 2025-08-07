@@ -243,11 +243,14 @@ def update_holds(func):
 def file_upload_endpoint_helper(request, code):
     obj = get_object_or_404(Club, code=code)
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
+        is_constitution = request.data.get("is_constitution", "false").lower() == "true"
+
         asset = Asset.objects.create(
             creator=request.user,
             club=obj,
             file=request.data["file"],
             name=request.data["file"].name,
+            is_constitution=is_constitution,
         )
     else:
         return Response(

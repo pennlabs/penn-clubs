@@ -61,6 +61,18 @@ import {
 } from '../FormComponents'
 import { doFormikInitialValueFixes } from '../ModelForm'
 
+function isConstitutionRequired(
+  club: Club | Partial<Club>,
+  isEdit: boolean = false,
+): boolean {
+  // if on edit page and club already has constitution, it's not required
+  if (isEdit && club.has_constitution) {
+    return false
+  }
+
+  return !club.has_constitution
+}
+
 export const CLUB_APPLICATIONS = [
   {
     value: ClubApplicationRequired.Open,
@@ -289,6 +301,11 @@ export default function ClubEditCard({
       delete data.image
     }
 
+    const constitution = data.constitution
+    if (constitution !== null) {
+      delete data.constitution
+    }
+
     const entries = Object.entries(data)
     let body = {}
 
@@ -433,6 +450,25 @@ export default function ClubEditCard({
                 msg += ` However, failed to upload ${OBJECT_NAME_SINGULAR} image file!`
               }
             }
+
+            if (constitution && constitution instanceof File) {
+              const formData = new FormData()
+              formData.append('file', constitution)
+              formData.append('is_constitution', 'true')
+              const resp = await doApiRequest(
+                `/clubs/${clubCode}/upload_file/?format=json`,
+                {
+                  method: 'POST',
+                  body: formData,
+                },
+              )
+              if (resp.ok) {
+                msg += ` ${OBJECT_NAME_TITLE_SINGULAR} constitution also saved.`
+              } else {
+                msg += ` However, failed to upload ${OBJECT_NAME_SINGULAR} constitution file!`
+              }
+            }
+
             await onSubmit({ isEdit: true, club: info, message: msg })
             setStatus({})
             setSubmitting(false)
@@ -585,6 +621,14 @@ export default function ClubEditCard({
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
           disabled: !REAPPROVAL_QUEUE_ENABLED,
+        },
+        {
+          name: 'constitution',
+          help: `Upload your ${OBJECT_NAME_SINGULAR} constitution. This is required for all clubs. Please upload a PDF, DOC, or DOCX file.`,
+          accept: '.pdf,.doc,.docx',
+          type: 'file',
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Constitution`,
+          required: isConstitutionRequired(club, isEdit),
         },
         {
           name: 'size',
@@ -971,8 +1015,8 @@ export default function ClubEditCard({
         submit({ ...values, emailOverride: false }, actions)
       }
       enableReinitialize
-      validate={(values) => {
-        const errors: { email?: string } = {}
+      validate={(values: any) => {
+        const errors: { email?: string; constitution?: string } = {}
         if (values.email.includes('upenn.edu') && !emailModal) {
           showEmailModal(true)
           errors.email = 'Please confirm your email'
@@ -1058,6 +1102,7 @@ export default function ClubEditCard({
                               multiselect: SelectField,
                               select: SelectField,
                               image: FileField,
+                              file: FileField,
                               address: FormikAddressField,
                               checkboxText: CheckboxTextField,
                               creatableMultiSelect:

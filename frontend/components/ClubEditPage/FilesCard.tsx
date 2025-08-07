@@ -1,5 +1,5 @@
 import { Field, Form, Formik } from 'formik'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
 import { Club, File } from '../../types'
@@ -15,23 +15,49 @@ import BaseCard from './BaseCard'
 
 type FilesCardProps = {
   club: Club
+  refreshTrigger?: number
 }
 
 /**
  * A card that allows club officers to view, download, delete, and add files to the club.
  */
-export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
+export default function FilesCard({
+  club,
+  refreshTrigger,
+}: FilesCardProps): ReactElement<any> {
   const [files, setFiles] = useState<File[]>(club.files)
+  const [clubHasConstitution, setClubHasConstitution] = useState<boolean>(
+    club.has_constitution,
+  )
 
   const reloadFiles = async (): Promise<void> => {
     await doApiRequest(`/clubs/${club.code}/assets/?format=json`)
       .then((resp) => resp.json())
       .then(setFiles)
+
+    // use clublist serializer (minimal data)
+    await doApiRequest(`/clubs/${club.code}/?format=json`)
+      .then((resp) => resp.json())
+      .then((data) => {
+        setClubHasConstitution(data.has_constitution)
+      })
   }
+
+  // trigger reload from ClubEditCard submissions
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      reloadFiles()
+    }
+  }, [refreshTrigger])
 
   const submitForm = (data, { setSubmitting, resetForm, setStatus }) => {
     const formData = new FormData()
     formData.append('file', data.file)
+
+    // if filename contains "constitution" then file must be constitution
+    const isConstitution = data.file.name.toLowerCase().includes('constitution')
+    formData.append('is_constitution', isConstitution.toString())
+
     doApiRequest(`/clubs/${club.code}/upload_file/?format=json`, {
       method: 'POST',
       body: formData,
@@ -56,6 +82,28 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
         {OBJECT_NAME_SINGULAR} members and {SITE_NAME} administrators.{' '}
         {OBJECT_TAB_FILES_DESCRIPTION}
       </Text>
+
+      {/* constitution requirement message */}
+      {!clubHasConstitution && (
+        <div className="notification is-warning is-light mb-4">
+          <div className="content">
+            <p className="has-text-weight-bold">
+              <Icon name="alert-triangle" /> Constitution Upload Required
+            </p>
+            <p>
+              Your {OBJECT_NAME_SINGULAR} is required to upload a constitution.
+              You can upload your constitution using the form below or through
+              the club edit form.
+            </p>
+            <p className="has-text-weight-semibold">
+              Important: If you choose to upload your constitution from this
+              tab, please ensure the file name contains the word "constitution"
+              to automatically mark it as a constitution file.
+            </p>
+          </div>
+        </div>
+      )}
+
       <table className="table is-fullwidth">
         <thead>
           <tr>
@@ -68,7 +116,14 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
           {files && files.length ? (
             files.map((a) => (
               <tr key={`${a.id}-${a.name}`}>
-                <td>{a.name}</td>
+                <td>
+                  {a.name}
+                  {a.is_constitution && (
+                    <span className="tag is-info is-small ml-2">
+                      Constitution
+                    </span>
+                  )}
+                </td>
                 <td>
                   <TimeAgo date={a.created_at} />
                 </td>
