@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
+import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
+
 import { mediaMaxWidth, PHONE } from '../constants'
 import {
   ALLBIRDS_GRAY,
@@ -10,7 +12,6 @@ import {
   WHITE_ALPHA,
 } from '../constants/colors'
 import { BODY_FONT } from '../constants/styles'
-import { isSummer } from '../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -52,36 +53,40 @@ const buttonStyles = {
 
 const DisplayButtons = ({
   switchDisplay,
-}: DisplayButtonsProps): ReactElement<any> => (
-  <DisplayButtonsTag>
-    <button
-      onClick={() => switchDisplay('cards')}
-      className="button is-small"
-      style={buttonStyles}
-      aria-label="switch to grid view"
-    >
-      <Icon name="grid" alt="grid icon" style={iconStyles} />
-    </button>
-    <button
-      onClick={() => switchDisplay('list')}
-      className="button is-small"
-      style={buttonStyles}
-      aria-label="switch to list view"
-    >
-      <Icon name="list" alt="list icon" style={iconStyles} />
-    </button>
-    {!isSummer() && (
-      <Link href="/create" className="button is-small is-primary">
-        <Icon
-          name="plus"
-          alt={`register ${OBJECT_NAME_SINGULAR}`}
-          style={iconStylesDark}
-        />
-        Register {OBJECT_NAME_TITLE_SINGULAR}
-      </Link>
-    )}
-  </DisplayButtonsTag>
-)
+}: DisplayButtonsProps): ReactElement<any> => {
+  const { settings: queueSettings } = useRegistrationQueueSettings()
+
+  return (
+    <DisplayButtonsTag>
+      <button
+        onClick={() => switchDisplay('cards')}
+        className="button is-small"
+        style={buttonStyles}
+        aria-label="switch to grid view"
+      >
+        <Icon name="grid" alt="grid icon" style={iconStyles} />
+      </button>
+      <button
+        onClick={() => switchDisplay('list')}
+        className="button is-small"
+        style={buttonStyles}
+        aria-label="switch to list view"
+      >
+        <Icon name="list" alt="list icon" style={iconStyles} />
+      </button>
+      {queueSettings?.new_approval_queue_open === true && (
+        <Link href="/create" className="button is-small is-primary">
+          <Icon
+            name="plus"
+            alt={`register ${OBJECT_NAME_SINGULAR}`}
+            style={iconStylesDark}
+          />
+          Register {OBJECT_NAME_TITLE_SINGULAR}
+        </Link>
+      )}
+    </DisplayButtonsTag>
+  )
+}
 
 type DisplayButtonsProps = {
   switchDisplay: (disp: 'list' | 'cards') => void

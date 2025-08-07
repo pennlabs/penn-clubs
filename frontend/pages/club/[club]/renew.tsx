@@ -42,6 +42,7 @@ import {
 } from 'utils/branding'
 
 import { CLUB_ROUTE } from '~/constants/routes'
+import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
 
 type InitialRenewPageProps = {
   club: Club
@@ -207,17 +208,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   const [changeStatusError, setChangeStatusError] = useState<string | null>(
     null,
   )
-  const [reapprovalQueueOpen, setReapprovalQueueOpen] = useState<
-    boolean | null
-  >(null)
-
-  // Fetch registration queue settings once
-  useEffect(() => {
-    doApiRequest('/settings/queue/?format=json')
-      .then((resp) => resp.json())
-      .then((data) => setReapprovalQueueOpen(data.reapproval_queue_open))
-      .catch(() => setReapprovalQueueOpen(null))
-  }, [])
+  const { settings: queueSettings } = useRegistrationQueueSettings()
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement<any> | null
   >(null)
@@ -244,7 +235,9 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     return (
       <AuthPrompt title="Oh no!" hasLogin={false}>
         <ClubMetadata club={club} />
-        {reapprovalQueueOpen !== true && <ClubRenewalProcessWarningBanner />}
+        {queueSettings?.reapproval_queue_open !== true && (
+          <ClubRenewalProcessWarningBanner />
+        )}
         <p>
           You do not have permission to initiate the renewal process for{' '}
           {(club && club.name) || `this ${OBJECT_NAME_SINGULAR}`}. To get
@@ -569,7 +562,9 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   return (
     <Container>
       <ClubMetadata club={club} />
-      {reapprovalQueueOpen !== true && <ClubRenewalProcessWarningBanner />}
+      {queueSettings?.reapproval_queue_open !== true && (
+        <ClubRenewalProcessWarningBanner />
+      )}
       <div className="is-clearfix mb-5">
         <div className="is-pulled-left">
           <InfoPageTitle>
@@ -601,7 +596,10 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
         {step < steps.length - 1 ? (
           <button
             onClick={nextStep}
-            disabled={steps[step].disabled || reapprovalQueueOpen !== true}
+            disabled={
+              steps[step].disabled ||
+              queueSettings?.reapproval_queue_open !== true
+            }
             className="button is-primary"
           >
             <Icon name="chevrons-right" />

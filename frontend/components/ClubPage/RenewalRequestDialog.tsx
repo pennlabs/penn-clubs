@@ -1,9 +1,11 @@
 import Link from 'next/link'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement } from 'react'
+
+import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
 
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
 import { Club } from '../../types'
-import { apiCheckPermission, doApiRequest, isSummer } from '../../utils'
+import { apiCheckPermission } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
@@ -23,25 +25,16 @@ type RenewalRequestProps = {
 }
 
 const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
-  const [reapprovalOpen, setReapprovalOpen] = useState<boolean | null>(null)
-
-  // Retrieve registration queue settings once on mount
-  useEffect(() => {
-    doApiRequest('/settings/queue/?format=json')
-      .then((resp) => resp.json())
-      .then((data) => setReapprovalOpen(data.reapproval_queue_open))
-      .catch(() => setReapprovalOpen(null))
-  }, [])
+  const { settings: queueSettings } = useRegistrationQueueSettings()
 
   const canRenew =
     apiCheckPermission(`clubs.manage_club:${club.code}`) &&
-    !isSummer() &&
-    reapprovalOpen === true
+    queueSettings?.reapproval_queue_open === true
   const textMapping = {
     clubs: {
       TITLE: (
         <>
-          {reapprovalOpen === true ? (
+          {queueSettings?.reapproval_queue_open === true ? (
             <>
               <b>{club.name}</b> needs to be re-registered for the current
               academic year.
