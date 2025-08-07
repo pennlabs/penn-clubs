@@ -97,6 +97,7 @@ const ClubForm = ({
 }: ClubFormProps): ReactElement<any> => {
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
+  const [refreshFiles, setRefreshFiles] = useState<number>(0)
 
   const router = useRouter()
 
@@ -116,6 +117,8 @@ const ClubForm = ({
     club?: Club
     isEdit?: boolean
   }): Promise<void> => {
+    // trigger files refresh after successful submission
+    setRefreshFiles((prev) => prev + 1)
     if (typeof club !== 'undefined' && typeof isEditNew !== 'undefined') {
       if (!isEdit && isEditNew) {
         // if the club is not active, redirect to the renewal page instead of the edit page
@@ -350,7 +353,7 @@ const ClubForm = ({
         content: (
           <>
             <MemberExperiencesCard club={club} />
-            <FilesCard club={club} />
+            <FilesCard club={club} refreshTrigger={refreshFiles} />
           </>
         ),
       },

@@ -214,6 +214,7 @@ export interface Club {
   is_request: boolean
   is_subscribe: boolean
   is_wharton: boolean
+  has_constitution: boolean
   linkedin: string
   listserv: string
   members: Membership[]
@@ -260,6 +261,7 @@ export interface File {
   name: string
   created_at: string
   file_url: string
+  is_constitution: boolean
 }
 
 export interface UserInfo {

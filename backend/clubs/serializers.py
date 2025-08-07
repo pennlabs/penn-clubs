@@ -974,8 +974,7 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
                     "url": asset.file.url if perm or has_member else None,
                 }
                 for asset in obj.prefetch_asset_set
-                if asset.name.endswith((".docx", ".doc", ".pdf"))
-                or "constitution" in asset.name.lower()
+                if asset.is_constitution
             ]
         return None
 
@@ -1039,6 +1038,11 @@ class ClubListSerializer(serializers.ModelSerializer):
 
     email = serializers.SerializerMethodField("get_email")
     subtitle = serializers.SerializerMethodField("get_short_description")
+
+    has_constitution = serializers.BooleanField(read_only=True)
+
+    def get_has_constitution(self, obj):
+        return obj.has_constitution
 
     def get_email(self, obj):
         if obj.email_public:
@@ -1177,6 +1181,7 @@ class ClubListSerializer(serializers.ModelSerializer):
             "enables_subscription",
             "favorite_count",
             "founded",
+            "has_constitution",
             "image_url",
             "is_favorite",
             "is_member",
@@ -2546,7 +2551,16 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ("id", "file_url", "file", "creator", "club", "name", "created_at")
+        fields = (
+            "id",
+            "file_url",
+            "file",
+            "creator",
+            "club",
+            "name",
+            "created_at",
+            "is_constitution",
+        )
 
 
 class AuthenticatedClubSerializer(ClubSerializer):
