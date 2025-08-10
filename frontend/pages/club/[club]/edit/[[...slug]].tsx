@@ -22,7 +22,6 @@ Edit.getInitialProps = async ({ query }): Promise<EditPageProps> => {
     'types',
     'classifications',
     'statuses',
-    ['badges', 'affiliations'],
   ]
   return Promise.all(
     endpoints.map(async (item) => {

@@ -9,7 +9,6 @@ import {
   SNOW,
 } from '../constants'
 import {
-  Affiliation,
   Category,
   Classification,
   Club,
@@ -65,7 +64,6 @@ type ResourceCreationPageProps = {
   eligibilities: Eligibility[]
   types: Type[]
   statuses: Status[]
-  affiliations: Affiliation[]
 }
 
 type TabItem = {
@@ -88,7 +86,6 @@ const ResourceCreationPage = ({
   eligibilities,
   types,
   statuses,
-  affiliations,
 }: ResourceCreationPageProps): ReactElement<any> => {
   const isResuming = initialClub != null
   const metadata = (
@@ -218,7 +215,6 @@ const ResourceCreationPage = ({
             studentTypes={studentTypes}
             types={types}
             statuses={statuses}
-            affiliations={affiliations}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
               if (club) {

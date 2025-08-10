@@ -20,7 +20,6 @@ import {
   HOME_ROUTE,
 } from '../constants/routes'
 import {
-  Affiliation,
   Category,
   Classification,
   Club,
@@ -87,7 +86,6 @@ type ClubFormProps = {
   statuses: Status[]
   tab?: string | null
   userInfo?: UserInfo
-  affiliations: Affiliation[]
 }
 
 const ClubForm = ({
@@ -105,7 +103,6 @@ const ClubForm = ({
   clubId,
   tab,
   userInfo,
-  affiliations,
 }: ClubFormProps): ReactElement<any> => {
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
@@ -259,7 +256,6 @@ const ClubForm = ({
             types={types}
             statuses={statuses}
             club={club}
-            affiliations={affiliations}
             onSubmit={submit}
           />
         ),
@@ -471,7 +467,6 @@ const ClubForm = ({
             studentTypes={studentTypes}
             types={types}
             statuses={statuses}
-            affiliations={affiliations}
             classifications={classifications}
             onSubmit={submit}
           />

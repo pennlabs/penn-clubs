@@ -1540,7 +1540,7 @@ class Badge(models.Model):
     description = models.TextField(blank=True)
 
     # The color of the badge to be displayed on the frontend.
-    color = models.CharField(max_length=16, default="", blank=True)
+    color = models.CharField(max_length=16, default="")
 
     # The organization that this badge represents (If this is the "SAC Funded" badge,
     # then this would link to SAC)

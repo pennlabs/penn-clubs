@@ -5,7 +5,6 @@ import React, { ReactElement, useState } from 'react'
 import { BLACK } from '~/constants'
 
 import {
-  Affiliation,
   Category,
   Classification,
   Club,
@@ -140,7 +139,6 @@ type ClubEditCardProps = {
   eligibilities: Readonly<Eligibility[]>
   types: Readonly<Type[]>
   statuses: Readonly<Status[]>
-  affiliations: Readonly<Affiliation[]>
   club: Partial<Club>
   isEdit: boolean
 
@@ -249,7 +247,6 @@ export default function ClubEditCard({
   eligibilities,
   types,
   statuses,
-  affiliations,
   club,
   isEdit,
 
@@ -584,15 +581,6 @@ export default function ClubEditCard({
           help: 'Select tags that describe your organization. These are optional and permit multiple choices.',
           placeholder: 'Select tags...',
           choices: tags,
-        },
-        {
-          name: 'badges',
-          type: 'multiselect',
-          label: 'Affiliations',
-          help: 'Select affiliations that should be associated with this club.',
-          placeholder: 'Select affiliations...',
-          choices: affiliations,
-          serialize: (affiliation) => affiliation, // override default serializer
         },
         {
           name: 'terms',

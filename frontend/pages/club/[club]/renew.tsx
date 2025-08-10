@@ -15,7 +15,6 @@ import { toast, TypeOptions } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import {
-  Affiliation,
   Category,
   Classification,
   Club,
@@ -60,7 +59,6 @@ type InitialRenewPageProps = {
   types: Type[]
   classifications: Classification[]
   statuses: Status[]
-  affiliations: Affiliation[]
 }
 
 type RenewPageProps = InitialRenewPageProps & {
@@ -212,7 +210,6 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     types,
     classifications,
     statuses,
-    affiliations,
   } = props
 
   const [club, setClub] = useState<Club>(initialClub)
@@ -491,7 +488,6 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             studentTypes={studentTypes}
             types={types}
             statuses={statuses}
-            affiliations={affiliations}
             club={club}
             isEdit={true}
             onSubmit={({ club, message }): Promise<void> => {
