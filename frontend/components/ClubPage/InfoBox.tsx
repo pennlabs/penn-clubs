@@ -45,15 +45,15 @@ const InfoBox = (props: InfoBoxProps): ReactElement<any> | null => {
     // Admin-only fields
     ...(isAdmin
       ? [
-          ...(props.club.status?.name
-            ? [
-                {
-                  field: 'status',
-                  icon: 'activity',
-                  text: `Status: ${props.club.status.name}`,
-                },
-              ]
-            : []),
+          // ...(props.club.status?.name
+          //   ? [
+          //       {
+          //         field: 'status',
+          //         icon: 'activity',
+          //         text: `Status: ${props.club.status.name}`,
+          //       },
+          //     ]
+          //   : []),
           ...(props.club.type?.name
             ? [
                 {
