@@ -76,28 +76,38 @@ const GroupActivityAssessmentField: React.FC<{
   const { setFieldValue, setFieldTouched } = useFormikContext()
 
   const currentValues = field.value || []
+  const noneOption = options.find((opt) => opt.text === 'None of the above')
+  const isNoneSelected = noneOption
+    ? currentValues.includes(noneOption.id)
+    : false
 
-  const handleCheckboxChange = (option: string, checked: boolean) => {
+  const handleCheckboxChange = (
+    option: GroupActivityOption,
+    checked: boolean,
+  ) => {
     if (checked) {
-      // If "None of the above" is selected, clear all other selections
-      if (option === 'None of the above') {
-        setFieldValue(name, ['None of the above'])
+      if (option.text === 'None of the above') {
+        // Selecting "None of the above" clears all other selections
+        setFieldValue(name, [option.id])
       } else {
-        // Remove "None of the above" if it was previously selected
-        const newValues = currentValues.filter(
-          (val: string) => val !== 'None of the above',
+        // Selecting any other option removes "None of the above" and adds the option
+        const valuesWithoutNone = currentValues.filter(
+          (val: number) => val !== noneOption?.id,
         )
-        setFieldValue(name, [...newValues, option])
+        setFieldValue(name, [...valuesWithoutNone, option.id])
       }
     } else {
+      // Unchecking removes the option
       setFieldValue(
         name,
-        currentValues.filter((val: string) => val !== option),
+        currentValues.filter((val: number) => val !== option.id),
       )
     }
-    // Mark field as touched for validation
     setFieldTouched(name, true, false)
   }
+
+  const isOptionSelected = (optionId: number) =>
+    currentValues.includes(optionId)
 
   return (
     <div className="field">
@@ -107,8 +117,8 @@ const GroupActivityAssessmentField: React.FC<{
       </label>
       <div className="control">
         <div style={{ marginBottom: '1rem' }}>
-          {(options || []).map((option, index) => (
-            <div key={index} style={{ marginBottom: '0.5rem' }}>
+          {options.map((option) => (
+            <div key={option.id} style={{ marginBottom: '0.5rem' }}>
               <label
                 style={{
                   display: 'flex',
@@ -119,9 +129,9 @@ const GroupActivityAssessmentField: React.FC<{
                 <input
                   type="checkbox"
                   style={{ marginRight: '0.5rem', transform: 'scale(1.2)' }}
-                  checked={currentValues.includes(option.text)}
+                  checked={isOptionSelected(option.id)}
                   onChange={(e) =>
-                    handleCheckboxChange(option.text, e.target.checked)
+                    handleCheckboxChange(option, e.target.checked)
                   }
                 />
                 <span>{option.text}</span>

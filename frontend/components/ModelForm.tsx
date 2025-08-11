@@ -106,7 +106,16 @@ export const doFormikInitialValueFixes = (currentObject: {
         prev[otherKey] = val
       }
     }
-    prev[key] = val
+
+    // Handle group_activity_assessment conversion from objects to IDs
+    if (key === 'group_activity_assessment' && Array.isArray(val)) {
+      prev[key] = val.map((item: any) =>
+        typeof item === 'object' && item !== null ? item.id : item,
+      )
+    } else {
+      prev[key] = val
+    }
+
     return prev
   }, {})
 }

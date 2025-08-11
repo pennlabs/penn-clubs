@@ -464,8 +464,8 @@ class Club(models.Model):
     rank = models.IntegerField(default=0, db_index=True)
 
     # Group Activity Assessment field
-    group_activity_assessment = models.JSONField(
-        default=list,
+    group_activity_assessment = models.ManyToManyField(
+        "GroupActivityOption",
         blank=True,
         help_text="List of activities the club engages in",
     )

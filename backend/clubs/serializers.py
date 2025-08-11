@@ -1493,6 +1493,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
+    # Group Activity Assessment field - handle both IDs and full objects
+    group_activity_assessment = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=GroupActivityOption.objects.filter(is_active=True),
+        required=False,
+        allow_empty=True,
+    )
+
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
 
@@ -2055,33 +2063,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "target_majors",
             "target_years",
             "advisor_set",
+            "group_activity_assessment",
         ]
-
-    def validate_group_activity_assessment(self, value):
-        """
-        Validate that all submitted group activity assessment options are valid.
-        """
-        if not value:
-            return value
-
-        # Get all active options from the database
-        valid_options = set(
-            GroupActivityOption.objects.filter(is_active=True).values_list(
-                "text", flat=True
-            )
-        )
-
-        # Check if all submitted options are valid
-        invalid_options = set(value) - valid_options
-        if invalid_options:
-            raise serializers.ValidationError(
-                (
-                    "Invalid group activity assessment options: "
-                    f"{', '.join(invalid_options)}"
-                )
-            )
-
-        return value
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
