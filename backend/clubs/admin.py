@@ -37,6 +37,7 @@ from clubs.models import (
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -519,6 +520,16 @@ class ClubApprovalResponseTemplateAdmin(admin.ModelAdmin):
     search_fields = ("title", "content")
 
 
+class GroupActivityOptionAdmin(admin.ModelAdmin):
+    list_display = ["text", "is_active", "order", "created_at"]
+    list_editable = ["is_active", "order"]
+    list_filter = ["is_active", "created_at"]
+    search_fields = ["text", "description"]
+    ordering = ["order", "text"]
+
+    fieldsets = ((None, {"fields": ("text", "is_active", "order")}),)
+
+
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
 admin.site.register(ApplicationExtension)
@@ -573,3 +584,4 @@ admin.site.register(Eligibility, EligibilityAdmin)
 admin.site.register(Type, TypeAdmin)
 admin.site.register(Status, StatusAdmin)
 admin.site.register(Classification, ClassificationAdmin)
+admin.site.register(GroupActivityOption, GroupActivityOptionAdmin)

@@ -110,6 +110,7 @@ from clubs.models import (
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -195,6 +196,7 @@ from clubs.serializers import (
     FavoriteSerializer,
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
+    GroupActivityOptionSerializer,
     MajorSerializer,
     ManagedClubApplicationSerializer,
     MembershipInviteSerializer,
@@ -2502,6 +2504,38 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if see_pending or manage_club or is_member:
                 return AuthenticatedClubSerializer
         return ClubSerializer
+
+    @action(detail=False, methods=["get"])
+    def group_activity_options(self, request):
+        """
+        Get all active group activity assessment options.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    text:
+                                        type: string
+                                        description: The text content of the option
+                                    is_active:
+                                        type: boolean
+                                        description: Whether this option is
+                                            currently available
+                                    order:
+                                        type: integer
+                                        description: Display order for the frontend
+        ---
+        """
+        options = GroupActivityOption.objects.filter(is_active=True).order_by(
+            "order", "text"
+        )
+        serializer = GroupActivityOptionSerializer(options, many=True)
+        return Response(serializer.data)
 
 
 class SchoolViewSet(viewsets.ModelViewSet):
@@ -4901,6 +4935,17 @@ class StatusViewSet(viewsets.ModelViewSet):
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
     lookup_field = "name"
+
+
+class GroupActivityOptionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing group activity assessment options.
+    """
+
+    queryset = GroupActivityOption.objects.all()
+    serializer_class = GroupActivityOptionSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
 
 
 def parse_boolean(inpt):

@@ -25,6 +25,7 @@ Create.getInitialProps = async (ctx: NextPageContext) => {
       'types',
       'classifications',
       'statuses',
+      ['groupActivityOptions', 'group_activity_options'],
     ],
     ctx,
   )

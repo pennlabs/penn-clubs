@@ -30,6 +30,7 @@ from clubs.views import (
     FavoriteCalendarAPIView,
     FavoriteEventsAPIView,
     FavoriteViewSet,
+    GroupActivityOptionViewSet,
     HealthView,
     MajorViewSet,
     MassInviteAPIView,
@@ -101,6 +102,11 @@ router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
 router.register(r"types", TypeViewSet, basename="types")
 router.register(r"statuses", StatusViewSet, basename="statuses")
+router.register(
+    r"group_activity_options",
+    GroupActivityOptionViewSet,
+    basename="group_activity_options",
+)
 router.register(r"users", UserViewSet, basename="users")
 router.register(
     r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"

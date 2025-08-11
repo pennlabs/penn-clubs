@@ -202,6 +202,13 @@ export interface Status {
   name: string
 }
 
+export interface GroupActivityOption {
+  id: number
+  text: string
+  is_active: boolean
+  order: number
+}
+
 export interface Club {
   accepting_members: boolean
   active: boolean

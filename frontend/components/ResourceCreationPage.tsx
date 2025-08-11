@@ -13,6 +13,7 @@ import {
   Classification,
   Club,
   Eligibility,
+  GroupActivityOption,
   Major,
   School,
   Status,
@@ -64,6 +65,7 @@ type ResourceCreationPageProps = {
   eligibilities: Eligibility[]
   types: Type[]
   statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
 }
 
 type TabItem = {
@@ -86,6 +88,7 @@ const ResourceCreationPage = ({
   eligibilities,
   types,
   statuses,
+  groupActivityOptions,
 }: ResourceCreationPageProps): ReactElement<any> => {
   const isResuming = initialClub != null
   const metadata = (
@@ -215,6 +218,7 @@ const ResourceCreationPage = ({
             studentTypes={studentTypes}
             types={types}
             statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
               if (club) {

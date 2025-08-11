@@ -286,6 +286,30 @@ def create_thumbnail_helper(self, request, height):
     return True
 
 
+class GroupActivityOption(models.Model):
+    """
+    Configurable options for group activity assessment.
+    Allows administrators to modify the available options without code changes.
+    """
+
+    text = models.CharField(max_length=255, unique=True)
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this option is currently available for selection",
+    )
+    order = models.PositiveIntegerField(
+        default=0, help_text="Display order for the frontend"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "text"]
+
+    def __str__(self):
+        return self.text
+
+
 class Club(models.Model):
     """
     Represents a club at the University of Pennsylvania.

@@ -19,6 +19,7 @@ import {
   Classification,
   Club,
   Eligibility,
+  GroupActivityOption,
   Major,
   MembershipRank,
   School,
@@ -60,6 +61,7 @@ type InitialRenewPageProps = {
   types: Type[]
   classifications: Classification[]
   statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
 }
 
 type RenewPageProps = InitialRenewPageProps & {
@@ -211,6 +213,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     types,
     classifications,
     statuses,
+    groupActivityOptions,
   } = props
 
   const [club, setClub] = useState<Club>(initialClub)
@@ -481,6 +484,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             studentTypes={studentTypes}
             types={types}
             statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             club={club}
             isEdit={true}
             onSubmit={({ club, message }): Promise<void> => {
@@ -737,6 +741,7 @@ RenewPage.getInitialProps = async ({
     'classifications',
     'statuses',
     'badges',
+    'group_activity_options',
   ]
   return Promise.all(
     endpoints.map(async (item) => {

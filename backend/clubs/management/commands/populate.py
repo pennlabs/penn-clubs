@@ -412,6 +412,58 @@ class Command(BaseCommand):
             ]
         ]
 
+        # create group activity assessment options
+        from clubs.models import GroupActivityOption
+
+        group_activity_options = [
+            {
+                "text": "Physical activities (e.g., sports, fitness events)",
+                "order": 1,
+            },
+            {
+                "text": (
+                    "Medical/health-related services (e.g., blood drives, "
+                    "doula support)"
+                ),
+                "order": 2,
+            },
+            {
+                "text": "Working with minors or vulnerable populations",
+                "order": 3,
+            },
+            {
+                "text": "Off-campus travel (local or distant)",
+                "order": 4,
+            },
+            {
+                "text": "Handling of food or beverages",
+                "order": 5,
+            },
+            {
+                "text": "Use of specialized equipment or technology",
+                "order": 6,
+            },
+            {
+                "text": (
+                    "Host large-scale events or activities with 500 or more attendees"
+                ),
+                "order": 7,
+            },
+            {
+                "text": "None of the above",
+                "order": 8,
+            },
+        ]
+
+        for option_data in group_activity_options:
+            GroupActivityOption.objects.get_or_create(
+                text=option_data["text"],
+                defaults={
+                    "order": option_data["order"],
+                    "is_active": True,
+                },
+            )
+
         image_cache = {}
 
         def get_image(url):

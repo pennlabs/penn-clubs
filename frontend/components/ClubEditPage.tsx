@@ -24,6 +24,7 @@ import {
   Classification,
   Club,
   Eligibility,
+  GroupActivityOption,
   Major,
   School,
   Status,
@@ -84,6 +85,7 @@ type ClubFormProps = {
   studentTypes: StudentType[]
   types: Type[]
   statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
   tab?: string | null
   userInfo?: UserInfo
 }
@@ -100,6 +102,7 @@ const ClubForm = ({
   studentTypes,
   types,
   statuses,
+  groupActivityOptions,
   clubId,
   tab,
   userInfo,
@@ -255,6 +258,7 @@ const ClubForm = ({
             studentTypes={studentTypes}
             types={types}
             statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             club={club}
             onSubmit={submit}
           />
@@ -468,6 +472,7 @@ const ClubForm = ({
             types={types}
             statuses={statuses}
             classifications={classifications}
+            groupActivityOptions={groupActivityOptions}
             onSubmit={submit}
           />
         </div>

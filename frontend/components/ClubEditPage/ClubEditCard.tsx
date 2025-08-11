@@ -14,6 +14,7 @@ import {
   ClubRecruitingCycle,
   ClubSize,
   Eligibility,
+  GroupActivityOption,
   Major,
   MembershipRank,
   School,
@@ -69,7 +70,8 @@ const GroupActivityAssessmentField: React.FC<{
   name: string
   label?: string
   helpText?: string
-}> = ({ name, label = 'Group Activity Assessment', helpText }) => {
+  options: GroupActivityOption[]
+}> = ({ name, label = 'Group Activity Assessment', helpText, options }) => {
   const [field, meta] = useField(name)
   const { setFieldValue, setFieldTouched } = useFormikContext()
 
@@ -97,17 +99,6 @@ const GroupActivityAssessmentField: React.FC<{
     setFieldTouched(name, true, false)
   }
 
-  const ACTIVITY_OPTIONS = [
-    'Physical activities (e.g., sports, fitness events)',
-    'Medical/health-related services (e.g., blood drives, doula support)',
-    'Working with minors or vulnerable populations',
-    'Off-campus travel (local or distant)',
-    'Handling of food or beverages',
-    'Use of specialized equipment or technology',
-    'Host large-scale events or activities with 500 or more attendees',
-    'None of the above',
-  ]
-
   return (
     <div className="field">
       <label className="label">
@@ -116,7 +107,7 @@ const GroupActivityAssessmentField: React.FC<{
       </label>
       <div className="control">
         <div style={{ marginBottom: '1rem' }}>
-          {ACTIVITY_OPTIONS.map((option, index) => (
+          {(options || []).map((option, index) => (
             <div key={index} style={{ marginBottom: '0.5rem' }}>
               <label
                 style={{
@@ -128,12 +119,12 @@ const GroupActivityAssessmentField: React.FC<{
                 <input
                   type="checkbox"
                   style={{ marginRight: '0.5rem', transform: 'scale(1.2)' }}
-                  checked={currentValues.includes(option)}
+                  checked={currentValues.includes(option.text)}
                   onChange={(e) =>
-                    handleCheckboxChange(option, e.target.checked)
+                    handleCheckboxChange(option.text, e.target.checked)
                   }
                 />
-                <span>{option}</span>
+                <span>{option.text}</span>
               </label>
             </div>
           ))}
@@ -221,6 +212,7 @@ type ClubEditCardProps = {
   eligibilities: Readonly<Eligibility[]>
   types: Readonly<Type[]>
   statuses: Readonly<Status[]>
+  groupActivityOptions: Readonly<GroupActivityOption[]>
   club: Partial<Club>
   isEdit: boolean
 
@@ -329,6 +321,7 @@ export default function ClubEditCard({
   eligibilities,
   types,
   statuses,
+  groupActivityOptions,
   club,
   isEdit,
 
@@ -1233,8 +1226,12 @@ export default function ClubEditCard({
                               checkboxText: CheckboxTextField,
                               creatableMultiSelect:
                                 CreatableMultipleSelectField,
-                              groupActivityAssessment:
-                                GroupActivityAssessmentField,
+                              groupActivityAssessment: (props) => (
+                                <GroupActivityAssessmentField
+                                  {...props}
+                                  options={groupActivityOptions || []}
+                                />
+                              ),
                             }[props.type] ?? TextField
                           }
                           {...other}

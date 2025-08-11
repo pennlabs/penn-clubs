@@ -44,6 +44,7 @@ from clubs.models import (
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -1447,6 +1448,16 @@ class TargetStudentTypeSerializer(serializers.ModelSerializer):
         return obj.target_student_types.id
 
 
+class GroupActivityOptionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for group activity assessment options.
+    """
+
+    class Meta:
+        model = GroupActivityOption
+        fields = ["id", "text", "is_active", "order"]
+
+
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
@@ -2045,6 +2056,32 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "target_years",
             "advisor_set",
         ]
+
+    def validate_group_activity_assessment(self, value):
+        """
+        Validate that all submitted group activity assessment options are valid.
+        """
+        if not value:
+            return value
+
+        # Get all active options from the database
+        valid_options = set(
+            GroupActivityOption.objects.filter(is_active=True).values_list(
+                "text", flat=True
+            )
+        )
+
+        # Check if all submitted options are valid
+        invalid_options = set(value) - valid_options
+        if invalid_options:
+            raise serializers.ValidationError(
+                (
+                    "Invalid group activity assessment options: "
+                    f"{', '.join(invalid_options)}"
+                )
+            )
+
+        return value
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
