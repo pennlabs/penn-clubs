@@ -1,9 +1,11 @@
 import Link from 'next/link'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement } from 'react'
+
+import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
 
 import { CLUB_RENEW_ROUTE } from '../../constants'
 import { Club } from '../../types'
-import { doApiRequest, getCurrentSchoolYear } from '../../utils'
+import { getCurrentSchoolYear } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   OBJECT_NAME_SINGULAR,
@@ -26,21 +28,14 @@ type RenewCardProps = {
 
 export default function RenewCard({ club }: RenewCardProps): ReactElement<any> {
   const year = getCurrentSchoolYear()
-
-  const [reapprovalOpen, setReapprovalOpen] = useState<boolean | null>(null)
-
-  // Retrieve registration queue settings once on mount
-  useEffect(() => {
-    doApiRequest('/settings/queue/?format=json')
-      .then((resp) => resp.json())
-      .then((data) => setReapprovalOpen(data.reapproval_queue_open))
-      .catch(() => setReapprovalOpen(null))
-  }, [])
+  const { settings: queueSettings } = useRegistrationQueueSettings()
 
   return (
     <BaseCard title={`Renew ${OBJECT_NAME_TITLE_SINGULAR} Approval`}>
       {/* Banner if queue is not open */}
-      {reapprovalOpen !== true && <ClubRenewalProcessWarningBanner />}
+      {queueSettings?.reapproval_queue_open !== true && (
+        <ClubRenewalProcessWarningBanner />
+      )}
       {club.active ? (
         <>
           <div className="mb-3">
@@ -66,7 +61,7 @@ export default function RenewCard({ club }: RenewCardProps): ReactElement<any> {
           You need to renew your club for the {year}-{year + 1} school year.
           Click on the button below to do so.
           <div className="mt-3">
-            {reapprovalOpen !== true ? (
+            {queueSettings?.reapproval_queue_open !== true ? (
               <button className="button is-primary" disabled>
                 Renew {OBJECT_NAME_TITLE_SINGULAR}
               </button>

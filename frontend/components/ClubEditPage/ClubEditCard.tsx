@@ -3,6 +3,7 @@ import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
 
 import { BLACK } from '~/constants'
+import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
 
 import {
   Category,
@@ -28,6 +29,7 @@ import {
   formatResponse,
   hasAdminPermissions,
   isClubFieldShown,
+  isSummer,
 } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -38,11 +40,9 @@ import {
   FORM_TARGET_DESCRIPTION,
   FORM_TARGET_ENABLED,
   MEMBERSHIP_ROLE_NAMES,
-  NEW_APPROVAL_QUEUE_ENABLED,
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
   OBJECT_TAB_ADMISSION_LABEL,
-  REAPPROVAL_QUEUE_ENABLED,
   SHOW_RANK_ALGORITHM,
   SITE_ID,
   SITE_NAME,
@@ -252,6 +252,7 @@ export default function ClubEditCard({
 
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
+  const { settings: queueSettings } = useRegistrationQueueSettings()
   const [showRankModal, setShowRankModal] = useState<boolean>(false)
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
@@ -521,7 +522,7 @@ export default function ClubEditCard({
           type: 'text',
           required: true,
           label: `${OBJECT_NAME_TITLE_SINGULAR} Name`,
-          disabled: !REAPPROVAL_QUEUE_ENABLED,
+          disabled: queueSettings?.reapproval_queue_open !== true,
           help: isEdit ? (
             <>
               Changing this field will require reapproval from the{' '}
@@ -595,7 +596,7 @@ export default function ClubEditCard({
           required: true,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
-          hidden: !REAPPROVAL_QUEUE_ENABLED,
+          hidden: queueSettings?.reapproval_queue_open !== true,
         },
         {
           name: 'image',
@@ -603,7 +604,7 @@ export default function ClubEditCard({
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
-          disabled: !REAPPROVAL_QUEUE_ENABLED,
+          disabled: queueSettings?.reapproval_queue_open !== true,
         },
         {
           name: 'size',
@@ -1035,17 +1036,21 @@ export default function ClubEditCard({
               }}
             />
           )}
-          {!REAPPROVAL_QUEUE_ENABLED && (
-            <LiveBanner>
-              <LiveTitle>Queue Closed for Summer Break</LiveTitle>
-              <LiveSub>
-                No edits to existing clubs or applications for new clubs will be
-                submitted for review to the {APPROVAL_AUTHORITY}.
-              </LiveSub>
-            </LiveBanner>
-          )}
-          {!NEW_APPROVAL_QUEUE_ENABLED &&
-            REAPPROVAL_QUEUE_ENABLED &&
+          {queueSettings?.reapproval_queue_open !== true &&
+            queueSettings?.new_approval_queue_open !== true && (
+              <LiveBanner>
+                <LiveTitle>
+                  Queue Closed{isSummer() ? ' for Summer Break' : ''}
+                </LiveTitle>
+                <LiveSub>
+                  No edits to existing clubs or applications for new clubs will
+                  be submitted for review to the {APPROVAL_AUTHORITY}. Please
+                  reach out to <Contact point="osa" /> with any questions.
+                </LiveSub>
+              </LiveBanner>
+            )}
+          {queueSettings?.new_approval_queue_open !== true &&
+            queueSettings?.reapproval_queue_open === true &&
             !isEdit && (
               <LiveBanner>
                 <LiveTitle>Queue Closed for New Clubs</LiveTitle>
@@ -1056,7 +1061,18 @@ export default function ClubEditCard({
                 </LiveSub>
               </LiveBanner>
             )}
-
+          {queueSettings?.reapproval_queue_open !== true &&
+            queueSettings?.new_approval_queue_open === true &&
+            isEdit && (
+              <LiveBanner>
+                <LiveTitle>Queue Closed for Re-Approval</LiveTitle>
+                <LiveSub>
+                  Submissions for re-approval are closed for the time being.
+                  Please reach out to the {APPROVAL_AUTHORITY} at
+                  <Contact point="osa" /> with any questions.
+                </LiveSub>
+              </LiveBanner>
+            )}
           <FormStyle isHorizontal>
             {fields.map(({ name, description, fields, hidden }, i) => {
               if (hidden) {
@@ -1117,7 +1133,7 @@ export default function ClubEditCard({
               disabled={
                 !dirty ||
                 isSubmitting ||
-                (!NEW_APPROVAL_QUEUE_ENABLED && !isEdit)
+                (queueSettings?.new_approval_queue_open !== true && !isEdit)
               }
               type="submit"
               className="button is-primary is-large"

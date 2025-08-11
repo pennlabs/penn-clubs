@@ -4240,7 +4240,7 @@ class RegistrationQueueSettingsTestCase(TestCase):
         resp = self.client.get(reverse("queue-settings"))
         self.assertEqual(resp.status_code, 403, resp.content)
 
-        # authenticated users can access
+        # non-superusers can access
         self.client.login(username="user", password="password")
         resp = self.client.get(reverse("queue-settings"))
         self.assertEqual(resp.status_code, 200, resp.content)

@@ -25,6 +25,7 @@ from django.utils import timezone
 from ics import Calendar
 from ics import Event as ICSEvent
 
+from clubs.management.commands.rank import DEFAULT_WEIGHTS
 from clubs.models import (
     Club,
     ClubApplication,
@@ -34,6 +35,7 @@ from clubs.models import (
     Favorite,
     Membership,
     MembershipInvite,
+    RankingWeights,
     RegistrationQueueSettings,
     Subscribe,
     Tag,
@@ -513,6 +515,50 @@ class PopulateTestCase(TestCase):
 
 
 class RankTestCase(TestCase):
+    def _run_rank(self):
+        from unittest.mock import patch
+
+        with patch(
+            "clubs.management.commands.rank.np.random.standard_exponential",
+            return_value=0,
+        ):
+            call_command("rank", verbosity=0)
+
+    def test_custom_inactive_weight(self):
+        # create inactive club
+        club = Club.objects.create(code="inactive", name="Inactive Club", active=False)
+        # default run (should combine inactive + logo + how-to penalties/bonuses)
+        self._run_rank()
+        club.refresh_from_db()
+        weights = RankingWeights.get()
+        expected_default = (
+            weights.inactive_penalty + weights.logo_bonus + weights.howto_penalty
+        )
+        self.assertEqual(club.rank, expected_default)
+
+        # modify weight
+        weights = RankingWeights.get()
+        weights.inactive_penalty = -500
+        weights.save()
+
+        self._run_rank()
+        club.refresh_from_db()
+        expected_modified = (
+            weights.inactive_penalty + weights.logo_bonus + weights.howto_penalty
+        )
+        self.assertEqual(club.rank, expected_modified)
+
+        # reset to defaults
+        weights.inactive_penalty = DEFAULT_WEIGHTS["inactive_penalty"]  # type: ignore
+        weights.save()
+
+        self._run_rank()
+        club.refresh_from_db()
+        expected_reset = (
+            weights.inactive_penalty + weights.logo_bonus + weights.howto_penalty
+        )
+        self.assertEqual(club.rank, expected_reset)
+
     def test_rank(self):
         # create some clubs
         Club.objects.bulk_create(
