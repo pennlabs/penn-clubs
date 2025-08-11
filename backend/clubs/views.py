@@ -97,6 +97,7 @@ from clubs.models import (
     Badge,
     Cart,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -104,6 +105,7 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
@@ -119,6 +121,7 @@ from clubs.models import (
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -126,6 +129,7 @@ from clubs.models import (
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
+    Type,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -154,6 +158,7 @@ from clubs.permissions import (
     find_membership_helper,
 )
 from clubs.serializers import (
+    AdminClubSerializer,
     AdminNoteSerializer,
     AdvisorSerializer,
     ApplicationCycleSerializer,
@@ -169,6 +174,7 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     CategorySerializer,
+    ClassificationSerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
@@ -179,6 +185,7 @@ from clubs.serializers import (
     ClubMembershipSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    DesignationSerializer,
     EligibilitySerializer,
     EventSerializer,
     EventShowingSerializer,
@@ -202,12 +209,14 @@ from clubs.serializers import (
     ReportSerializer,
     SchoolSerializer,
     SearchQuerySerializer,
+    StatusSerializer,
     StudentTypeSerializer,
     SubscribeBookmarkSerializer,
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
     TicketSerializer,
+    TypeSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -2477,7 +2486,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 else:
                     return ClubSerializer
             return ClubListSerializer
+
         if self.request is not None and self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                return AdminClubSerializer
+
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
             manage_club = self.request.user.has_perm("clubs.manage_club")
             is_member = (
@@ -4789,6 +4802,19 @@ class TagViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
 
+class ClassificationViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of classifications.
+    """
+
+    queryset = Classification.objects.all()
+    serializer_class = ClassificationSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
 class BadgeViewSet(viewsets.ModelViewSet):
     """
     list:
@@ -4836,6 +4862,45 @@ class EligibilityViewSet(viewsets.ModelViewSet):
     serializer_class = EligibilitySerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
+
+
+class DesignationViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of designations.
+    """
+
+    queryset = Designation.objects.all()
+    serializer_class = DesignationSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class TypeViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of types.
+    """
+
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class StatusViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of statuses.
+    """
+
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
 
 
 def parse_boolean(inpt):

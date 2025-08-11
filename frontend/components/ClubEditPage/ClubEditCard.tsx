@@ -7,6 +7,7 @@ import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettin
 
 import {
   Category,
+  Classification,
   Club,
   ClubApplicationRequired,
   ClubRecruitingCycle,
@@ -15,8 +16,10 @@ import {
   Major,
   MembershipRank,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   Year,
 } from '../../types'
 import {
@@ -34,7 +37,6 @@ import {
   FIELD_PARTICIPATION_LABEL,
   FORM_DESCRIPTION_EXAMPLES,
   FORM_LOGO_DESCRIPTION,
-  FORM_TAG_DESCRIPTION,
   FORM_TARGET_DESCRIPTION,
   FORM_TARGET_ENABLED,
   MEMBERSHIP_ROLE_NAMES,
@@ -133,9 +135,13 @@ type ClubEditCardProps = {
   years: Readonly<Year[]>
   tags: Readonly<Tag[]>
   categories: Readonly<Category[]>
+  classifications: Readonly<Classification[]>
   eligibilities: Readonly<Eligibility[]>
+  types: Readonly<Type[]>
+  statuses: Readonly<Status[]>
   club: Partial<Club>
   isEdit: boolean
+
   onSubmit?: (data: {
     message: ReactElement<any> | string | null
     club?: Club
@@ -237,9 +243,13 @@ export default function ClubEditCard({
   years,
   tags,
   categories,
+  classifications,
   eligibilities,
+  types,
+  statuses,
   club,
   isEdit,
+
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
   const { settings: queueSettings } = useRegistrationQueueSettings()
@@ -538,6 +548,31 @@ export default function ClubEditCard({
           help: `This text will be shown next to your ${OBJECT_NAME_SINGULAR} name in list and card views. Enter a one sentence description of your ${OBJECT_NAME_SINGULAR}.`,
         },
         {
+          name: 'category',
+          type: 'select',
+          label: 'Category',
+          required: true,
+          help: 'Select the category that best describes your organization.',
+          choices: categories,
+        },
+        {
+          name: 'classification',
+          type: 'select',
+          label: 'Classification',
+          required: true,
+          help: 'Select the classification that applies to your organization.',
+          choices: classifications,
+        },
+        {
+          name: 'tags',
+          type: 'multiselect',
+          label: 'Tags',
+          help: 'Select tags that describe your organization. These are optional and permit multiple choices.',
+          required: true,
+          placeholder: 'Select tags...',
+          choices: tags,
+        },
+        {
           name: 'terms',
           type: 'creatableMultiSelect',
           label: 'Keywords',
@@ -562,22 +597,6 @@ export default function ClubEditCard({
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
           hidden: queueSettings?.reapproval_queue_open !== true,
-        },
-        {
-          name: 'tags',
-          type: 'multiselect',
-          required: true,
-          help: `${FORM_TAG_DESCRIPTION}`,
-          placeholder: `Select tags relevant to your ${OBJECT_NAME_SINGULAR}!`,
-          choices: tags,
-        },
-        {
-          name: 'category',
-          type: 'select',
-          required: true,
-          label: 'Category',
-          help: "Select the primary category that best describes your club's mission and activities.",
-          choices: categories,
         },
         {
           name: 'image',
@@ -928,9 +947,30 @@ export default function ClubEditCard({
             ),
             fields: [
               {
+                name: 'status',
+                type: 'select',
+                label: 'Status',
+                required: true,
+                help: 'Select the current status of this organization.',
+                choices: statuses,
+                placeholder: 'Select a status...',
+                adminOnly: true,
+              },
+              {
+                name: 'type',
+                type: 'select',
+                label: 'Type',
+                required: true,
+                help: 'Select the type that best describes this organization.',
+                choices: types,
+                placeholder: 'Select a type...',
+                adminOnly: true,
+              },
+              {
                 name: 'eligibility',
                 type: 'multiselect',
                 label: 'Eligibility',
+                required: true,
                 help: 'Select the eligibility categories that apply to this club for funding and other administrative purposes.',
                 placeholder: 'Select eligibility categories...',
                 choices: eligibilities,

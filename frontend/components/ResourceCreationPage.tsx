@@ -10,12 +10,15 @@ import {
 } from '../constants'
 import {
   Category,
+  Classification,
   Club,
   Eligibility,
   Major,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   Year,
 } from '../types'
 import { doApiRequest } from '../utils'
@@ -57,7 +60,10 @@ type ResourceCreationPageProps = {
   tags: Tag[]
   studentTypes: StudentType[]
   categories: Category[]
+  classifications: Classification[]
   eligibilities: Eligibility[]
+  types: Type[]
+  statuses: Status[]
 }
 
 type TabItem = {
@@ -76,7 +82,10 @@ const ResourceCreationPage = ({
   tags,
   studentTypes,
   categories,
+  classifications,
   eligibilities,
+  types,
+  statuses,
 }: ResourceCreationPageProps): ReactElement<any> => {
   const isResuming = initialClub != null
   const metadata = (
@@ -185,24 +194,27 @@ const ResourceCreationPage = ({
       ),
     },
     {
-      name: 'Basic',
+      name: 'Organizational Profile',
       content: (): ReactElement<any> => (
         <>
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Information</Title>
           <Text>
-            Use the form below to fill out basic information about your{' '}
-            {OBJECT_NAME_SINGULAR}.
+            Use the form below to fill out organizational profile information
+            about your {OBJECT_NAME_SINGULAR}.
           </Text>
           <ClubEditCard
             isEdit={club !== null}
             eligibilities={eligibilities}
             categories={categories}
+            classifications={classifications}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
               if (club) {

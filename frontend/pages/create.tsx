@@ -22,6 +22,9 @@ Create.getInitialProps = async (ctx: NextPageContext) => {
       ['studentTypes', 'student_types'],
       'categories',
       'eligibilities',
+      'types',
+      'classifications',
+      'statuses',
     ],
     ctx,
   )

@@ -8,7 +8,7 @@ type TagGroupProps = {
 }
 
 function isAffiliation(tag): tag is Affiliation {
-  return tag.label !== undefined || tag.color !== undefined
+  return tag?.label !== undefined || tag?.color !== undefined
 }
 
 export const TagGroup = ({
@@ -21,6 +21,7 @@ export const TagGroup = ({
   // when there's a tag and an affiliation with the same content, render the affiliation
 
   const uniqueTags = tags.reduce((acc, tag) => {
+    if (!tag) return acc
     const key = isAffiliation(tag) ? tag.label : tag.name
     if (!acc.has(key)) {
       acc.set(key, tag)

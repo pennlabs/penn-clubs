@@ -21,12 +21,15 @@ import {
 } from '../constants/routes'
 import {
   Category,
+  Classification,
   Club,
   Eligibility,
   Major,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   UserInfo,
   VisitType,
   Year,
@@ -72,12 +75,15 @@ type ClubFormProps = {
   clubId: string | undefined
   authenticated: boolean | null
   categories: Category[]
+  classifications: Classification[]
   eligibilities: Eligibility[]
   schools: School[]
   majors: Major[]
   years: Year[]
   tags: Tag[]
   studentTypes: StudentType[]
+  types: Type[]
+  statuses: Status[]
   tab?: string | null
   userInfo?: UserInfo
 }
@@ -85,12 +91,15 @@ type ClubFormProps = {
 const ClubForm = ({
   authenticated,
   categories,
+  classifications,
   eligibilities,
   schools,
   years,
   majors,
   tags,
   studentTypes,
+  types,
+  statuses,
   clubId,
   tab,
   userInfo,
@@ -238,11 +247,14 @@ const ClubForm = ({
             isEdit={isEdit}
             eligibilities={eligibilities}
             categories={categories}
+            classifications={classifications}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
             club={club}
             onSubmit={submit}
           />
@@ -453,6 +465,9 @@ const ClubForm = ({
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            classifications={classifications}
             onSubmit={submit}
           />
         </div>
