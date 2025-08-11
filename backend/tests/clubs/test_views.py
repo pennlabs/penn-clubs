@@ -43,6 +43,7 @@ from clubs.models import (
     QuestionAnswer,
     RegistrationQueueSettings,
     School,
+    Status,
     Tag,
     Testimonial,
     Type,
@@ -181,6 +182,12 @@ class ClubTestCase(TestCase):
 
         cls.category1 = Category.objects.create(name="Academic & Pre-Professional")
         cls.classification1 = Classification.objects.create(symbol="G", name="Graduate")
+
+        cls.status1 = Status.objects.create(name="Active")
+        cls.type1 = Type.objects.create(
+            name="Department-Sponsored Progam", symbol="DSP"
+        )
+        cls.eligibility1 = Eligibility.objects.create(name="Undergraduate")
 
         queue_settings = RegistrationQueueSettings.get()
         queue_settings.reapproval_queue_open = True
@@ -461,6 +468,9 @@ class ClubTestCase(TestCase):
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
                 "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -924,6 +934,9 @@ class ClubTestCase(TestCase):
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
                 "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1316,6 +1329,9 @@ class ClubTestCase(TestCase):
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
                 "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1345,6 +1361,9 @@ class ClubTestCase(TestCase):
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
                 "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1443,6 +1462,9 @@ class ClubTestCase(TestCase):
                 "/school/university-of-pennsylvania/",
                 "youtube": "https://youtu.be/dQw4w9WgXcQ",
                 "github": "https://github.com/pennlabs",
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1478,6 +1500,27 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(club_obj.badges.count(), 1)
         self.assertEqual(club_obj.badges.all()[0].label, badge1.label)
+
+    def test_club_create_non_superuser_no_admin_fields(self):
+        """Test that non-superusers cannot set admin-only fields"""
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            data={
+                "name": "Test Club Non-Admin",
+                "description": "A test club by non-superuser",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "youtube": "https://youtu.be/dQw4w9WgXcQ",
+                "github": "https://github.com/pennlabs",
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create_duplicate(self):
         """
@@ -4105,6 +4148,10 @@ class ClubTestCase(TestCase):
                 "email": "long@example.com",
                 "tags": [{"name": "Graduate"}],
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -4122,6 +4169,9 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "category": {"name": "Academic & Pre-Professional"},
                 "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )

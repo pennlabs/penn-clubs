@@ -399,18 +399,6 @@ export default function ClubEditCard({
       }
     }
 
-    // remove admin-only fields if they are null, undefined, or empty
-    const optionalAdminFields = ['status', 'type', 'eligibility']
-    optionalAdminFields.forEach((field) => {
-      if (
-        body[field] === null ||
-        body[field] === undefined ||
-        body[field] === ''
-      ) {
-        delete body[field]
-      }
-    })
-
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {
@@ -579,6 +567,7 @@ export default function ClubEditCard({
           type: 'multiselect',
           label: 'Tags',
           help: 'Select tags that describe your organization. These are optional and permit multiple choices.',
+          required: true,
           placeholder: 'Select tags...',
           choices: tags,
         },
@@ -960,6 +949,7 @@ export default function ClubEditCard({
                 name: 'status',
                 type: 'select',
                 label: 'Status',
+                required: true,
                 help: 'Select the current status of this organization.',
                 choices: statuses,
                 placeholder: 'Select a status...',
@@ -969,6 +959,7 @@ export default function ClubEditCard({
                 name: 'type',
                 type: 'select',
                 label: 'Type',
+                required: true,
                 help: 'Select the type that best describes this organization.',
                 choices: types,
                 placeholder: 'Select a type...',
@@ -978,6 +969,7 @@ export default function ClubEditCard({
                 name: 'eligibility',
                 type: 'multiselect',
                 label: 'Eligibility',
+                required: true,
                 help: 'Select the eligibility categories that apply to this club for funding and other administrative purposes.',
                 placeholder: 'Select eligibility categories...',
                 choices: eligibilities,

@@ -348,9 +348,7 @@ class Club(models.Model):
         related_name="clubs",
         null=True,
     )
-    eligibility = models.ManyToManyField(
-        "Eligibility", related_name="clubs", blank=True
-    )
+    eligibility = models.ManyToManyField("Eligibility", related_name="clubs")
 
     type = models.ForeignKey(
         "Type",

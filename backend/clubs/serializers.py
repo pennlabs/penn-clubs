@@ -1061,7 +1061,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     This is done for a quicker response.
     """
 
-    tags = TagSerializer(many=True, required=False)
+    tags = TagSerializer(many=True)
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
     membership_count = serializers.IntegerField(read_only=True)
@@ -1460,10 +1460,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
     category = CategorySerializer(required=False)
     classification = ClassificationSerializer(required=False)
-    status = StatusSerializer(required=False)
-    type = TypeSerializer(required=False)
-    designation = DesignationSerializer(required=False, read_only=True)
-    eligibility = EligibilitySerializer(many=True, required=False)
+    designation = DesignationSerializer(read_only=True)
+    status = StatusSerializer(read_only=True)
+    type = TypeSerializer(read_only=True)
+    eligibility = EligibilitySerializer(many=True, read_only=True)
 
     target_schools = serializers.SerializerMethodField("get_target_schools")
     target_majors = serializers.SerializerMethodField("get_target_majors")
@@ -2038,10 +2038,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "classification",
             "badges",
             "category",
-            "designation",
-            "eligibility",
-            "type",
-            "status",
             "target_schools",
             "student_types",
             "target_majors",
@@ -2620,6 +2616,42 @@ class AuthenticatedClubSerializer(ClubSerializer):
             "owners",
             "officers",
             "approved_on",
+        ]
+
+
+class AdminClubSerializer(AuthenticatedClubSerializer):
+    """
+    Serializer for Club objects when used by admins.
+    Makes admin-only fields (status, type, eligibility) required by default.
+    """
+
+    status = StatusSerializer(required=False)
+    type = TypeSerializer(required=False)
+    eligibility = EligibilitySerializer(many=True, required=False)
+
+    def validate(self, attrs):
+        """
+        require fields on creation
+        """
+        if self.instance is None:
+            missing = {}
+            for f in ("status", "type", "eligibility"):
+                if not attrs.get(f):
+                    missing[f] = "This field is required."
+            if missing:
+                raise serializers.ValidationError(missing)
+        return super().validate(attrs)
+
+    class Meta(AuthenticatedClubSerializer.Meta):
+        fields = AuthenticatedClubSerializer.Meta.fields + [
+            "status",
+            "type",
+            "eligibility",
+        ]
+        save_related_fields = AuthenticatedClubSerializer.Meta.save_related_fields + [
+            "status",
+            "type",
+            "eligibility",
         ]
 
 

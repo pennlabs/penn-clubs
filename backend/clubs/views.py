@@ -158,6 +158,7 @@ from clubs.permissions import (
     find_membership_helper,
 )
 from clubs.serializers import (
+    AdminClubSerializer,
     AdminNoteSerializer,
     AdvisorSerializer,
     ApplicationCycleSerializer,
@@ -2485,7 +2486,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 else:
                     return ClubSerializer
             return ClubListSerializer
+
         if self.request is not None and self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                return AdminClubSerializer
+
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
             manage_club = self.request.user.has_perm("clubs.manage_club")
             is_member = (
