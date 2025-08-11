@@ -439,6 +439,13 @@ class Club(models.Model):
     # cache club rankings
     rank = models.IntegerField(default=0, db_index=True)
 
+    # Group Activity Assessment field
+    group_activity_assessment = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of activities the club engages in",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

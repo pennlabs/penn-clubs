@@ -261,6 +261,7 @@ export interface Club {
   type: Type
   twitter: string
   website: string
+  group_activity_assessment: string[]
 }
 
 export interface ClubFair {

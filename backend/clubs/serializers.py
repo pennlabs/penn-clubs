@@ -2032,6 +2032,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "status",
             "eligibility",
             "classification",
+            "group_activity_assessment",
         ]
         save_related_fields = [
             "tags",

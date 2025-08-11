@@ -1,6 +1,7 @@
-import { Field, Form, Formik } from 'formik'
+import { Field, Form, Formik, useField, useFormikContext } from 'formik'
 import Link from 'next/link'
 import React, { ReactElement, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { BLACK } from '~/constants'
 import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
@@ -62,6 +63,87 @@ import {
   TextField,
 } from '../FormComponents'
 import { doFormikInitialValueFixes } from '../ModelForm'
+
+// Group Activity Assessment Field Component
+const GroupActivityAssessmentField: React.FC<{
+  name: string
+  label?: string
+  helpText?: string
+}> = ({ name, label = 'Group Activity Assessment', helpText }) => {
+  const [field, meta] = useField(name)
+  const { setFieldValue, setFieldTouched } = useFormikContext()
+
+  const currentValues = field.value || []
+
+  const handleCheckboxChange = (option: string, checked: boolean) => {
+    if (checked) {
+      // If "None of the above" is selected, clear all other selections
+      if (option === 'None of the above') {
+        setFieldValue(name, ['None of the above'])
+      } else {
+        // Remove "None of the above" if it was previously selected
+        const newValues = currentValues.filter(
+          (val: string) => val !== 'None of the above',
+        )
+        setFieldValue(name, [...newValues, option])
+      }
+    } else {
+      setFieldValue(
+        name,
+        currentValues.filter((val: string) => val !== option),
+      )
+    }
+    // Mark field as touched for validation
+    setFieldTouched(name, true, false)
+  }
+
+  const ACTIVITY_OPTIONS = [
+    'Physical activities (e.g., sports, fitness events)',
+    'Medical/health-related services (e.g., blood drives, doula support)',
+    'Working with minors or vulnerable populations',
+    'Off-campus travel (local or distant)',
+    'Handling of food or beverages',
+    'Use of specialized equipment or technology',
+    'Host large-scale events or activities with 500 or more attendees',
+    'None of the above',
+  ]
+
+  return (
+    <div className="field">
+      <label className="label">
+        {label}
+        <span style={{ color: 'red' }}>*</span>
+      </label>
+      <div className="control">
+        <div style={{ marginBottom: '1rem' }}>
+          {ACTIVITY_OPTIONS.map((option, index) => (
+            <div key={index} style={{ marginBottom: '0.5rem' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  style={{ marginRight: '0.5rem', transform: 'scale(1.2)' }}
+                  checked={currentValues.includes(option)}
+                  onChange={(e) =>
+                    handleCheckboxChange(option, e.target.checked)
+                  }
+                />
+                <span>{option}</span>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+      {helpText && <p className="help">{helpText}</p>}
+      {meta.error && <p className="help is-danger">{meta.error}</p>}
+    </div>
+  )
+}
 
 export const CLUB_APPLICATIONS = [
   {
@@ -622,6 +704,25 @@ export default function ClubEditCard({
       ].filter(({ name }) => isClubFieldShown(name)),
     },
     {
+      name: 'Group Activity Assessment',
+      type: 'group',
+      description: (
+        <Text>
+          Please indicate which activities your {OBJECT_NAME_SINGULAR} engages
+          in. This information helps us understand your group's activities and
+          ensure appropriate oversight.
+        </Text>
+      ),
+      fields: [
+        {
+          name: 'group_activity_assessment',
+          type: 'groupActivityAssessment',
+          required: true,
+          help: 'Select all activities that apply to your group. If none apply, select "None of the above".',
+        },
+      ],
+    },
+    {
       name: 'Contact',
       type: 'group',
       description: (
@@ -990,6 +1091,7 @@ export default function ClubEditCard({
     size: CLUB_SIZES[0].value,
     application_required: CLUB_APPLICATIONS[0].value,
     recruiting_cycle: CLUB_RECRUITMENT_CYCLES[0].value,
+    group_activity_assessment: [],
   }
 
   const editingFields = new Set<string>()
@@ -1013,10 +1115,22 @@ export default function ClubEditCard({
       }
       enableReinitialize
       validate={(values) => {
-        const errors: { email?: string } = {}
+        const errors: {
+          email?: string
+          group_activity_assessment?: string
+        } = {}
         if (values.email.includes('upenn.edu') && !emailModal) {
           showEmailModal(true)
           errors.email = 'Please confirm your email'
+        }
+        if (
+          !values.group_activity_assessment ||
+          values.group_activity_assessment.length === 0
+        ) {
+          const errorMessage =
+            'Group Activity Assessment is required. Please select at least one activity or "None of the above"'
+          errors.group_activity_assessment = errorMessage
+          toast.error(errorMessage)
         }
         return errors
       }}
@@ -1119,6 +1233,8 @@ export default function ClubEditCard({
                               checkboxText: CheckboxTextField,
                               creatableMultiSelect:
                                 CreatableMultipleSelectField,
+                              groupActivityAssessment:
+                                GroupActivityAssessmentField,
                             }[props.type] ?? TextField
                           }
                           {...other}
