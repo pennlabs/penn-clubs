@@ -24,6 +24,7 @@ from clubs.models import (
     Badge,
     Cart,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -31,10 +32,12 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -48,6 +51,7 @@ from clubs.models import (
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -59,6 +63,7 @@ from clubs.models import (
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
+    Type,
     Year,
     ZoomMeetingVisit,
 )
@@ -186,7 +191,15 @@ class ClubChildrenInline(TabularInline):
 
 class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
     search_fields = ("name", "subtitle", "email", "code")
-    list_display = ("name", "email", "has_owner", "has_invite", "active", "approved")
+    list_display = (
+        "name",
+        "email",
+        "has_owner",
+        "has_invite",
+        "active",
+        "approved",
+        "get_designation",
+    )
     list_filter = (
         "size",
         "application_required",
@@ -223,6 +236,11 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
         return obj.has_owner
 
     has_owner.boolean = True
+
+    def get_designation(self, obj):
+        return obj.designation.name if obj.designation else "None"
+
+    get_designation.short_description = "Designation"
 
 
 class ClubFairAdmin(admin.ModelAdmin):
@@ -396,6 +414,14 @@ class TagAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class ClassificationAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "symbol", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
 class BadgeAdmin(admin.ModelAdmin):
     def club_count(self, obj):
         return obj.club_set.count()
@@ -419,13 +445,38 @@ class BadgeAdmin(admin.ModelAdmin):
 
 class CategoryAdmin(admin.ModelAdmin):
     search_fields = ("name",)
-    list_display = ("name", "club_count")
+    list_display = ("name", "designation", "club_count")
+    list_filter = ("designation",)
 
     def club_count(self, obj):
         return obj.clubs.count()
 
 
 class EligibilityAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class DesignationAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "categories")
+
+    def categories(self, obj):
+        return ", ".join(obj.categories.values_list("name", flat=True))
+
+
+class TypeAdmin(admin.ModelAdmin):
+    search_fields = ("name", "symbol")
+    list_display = ("name", "symbol", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class StatusAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     list_display = ("name", "club_count")
 
@@ -467,6 +518,16 @@ class ApplicationSubmissionAdmin(admin.ModelAdmin):
 
 class ClubApprovalResponseTemplateAdmin(admin.ModelAdmin):
     search_fields = ("title", "content")
+
+
+class GroupActivityOptionAdmin(admin.ModelAdmin):
+    list_display = ["text", "is_active", "order", "created_at"]
+    list_editable = ["is_active", "order"]
+    list_filter = ["is_active", "created_at"]
+    search_fields = ["text", "description"]
+    ordering = ["order", "text"]
+
+    fieldsets = ((None, {"fields": ("text", "is_active", "order")}),)
 
 
 admin.site.register(Asset)
@@ -518,4 +579,9 @@ admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAd
 admin.site.register(RegistrationQueueSettings)
 admin.site.register(EventShowing)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(Designation, DesignationAdmin)
 admin.site.register(Eligibility, EligibilityAdmin)
+admin.site.register(Type, TypeAdmin)
+admin.site.register(Status, StatusAdmin)
+admin.site.register(Classification, ClassificationAdmin)
+admin.site.register(GroupActivityOption, GroupActivityOptionAdmin)

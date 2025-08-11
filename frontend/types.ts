@@ -180,6 +180,35 @@ export interface Eligibility {
   name: string
 }
 
+export interface Classification {
+  id: number
+  name: string
+  symbol: string
+}
+
+export interface Type {
+  id: number
+  name: string
+  symbol: string
+}
+
+export interface Designation {
+  id: number
+  name: string
+}
+
+export interface Status {
+  id: number
+  name: string
+}
+
+export interface GroupActivityOption {
+  id: number
+  text: string
+  is_active: boolean
+  order: number
+}
+
 export interface Club {
   accepting_members: boolean
   active: boolean
@@ -192,9 +221,11 @@ export interface Club {
   approved_comment: string | null
   available_virtually: boolean
   category: Category
+  classification: Classification
   beta: boolean
   code: string
   description: string
+  designation?: Designation
   eligibility: Eligibility[]
   email: string
   enables_subscription: boolean
@@ -226,6 +257,7 @@ export interface Club {
   recruiting_cycle: ClubRecruitingCycle
   signature_events: string
   size: ClubSize
+  status: Status
   student_types: StudentType[]
   subtitle: string
   tags: Tag[]
@@ -233,8 +265,10 @@ export interface Club {
   target_schools: School[]
   target_years: Year[]
   testimonials: Testimonial[]
+  type: Type
   twitter: string
   website: string
+  group_activity_assessment: number[]
 }
 
 export interface ClubFair {

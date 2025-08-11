@@ -17,10 +17,12 @@ from clubs.models import (
     Badge,
     Cart,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubFair,
     ClubFairRegistration,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
@@ -29,10 +31,12 @@ from clubs.models import (
     Profile,
     QuestionAnswer,
     School,
+    Status,
     StudentType,
     Tag,
     Testimonial,
     Ticket,
+    Type,
     Year,
 )
 
@@ -330,25 +334,34 @@ class Command(BaseCommand):
             ]
         ]
 
-        # create categories
-        [
-            Category.objects.get_or_create(name=category)
-            for category in [
-                "Academic & Pre-Professional",
-                "Arts & Performance",
-                "Civic Engagement & Community Service",
-                "Cultural & International",
-                "Greek Life",
-                "Instructional & Competitive (Non Sports-Related)",
-                "Media & Publication",
-                "Peer Education & Support",
-                "Political & Advocacy",
-                "Religious & Spiritual",
-                "Special Interest",
-                "Sports & Recreational",
-                "Student Governance",
-            ]
-        ]
+        # create designations first
+        amp, _ = Designation.objects.get_or_create(name="AMP")
+        bridge, _ = Designation.objects.get_or_create(name="BRIDGE")
+        circle, _ = Designation.objects.get_or_create(name="CIRCLE")
+        dash, _ = Designation.objects.get_or_create(name="DASH")
+
+        # create categories with their corresponding designations
+        category_designation_mapping = {
+            "Arts & Performance": amp,
+            "Instructional & Competitive (Non Sports-Related)": amp,
+            "Academic & Pre-Professional": bridge,
+            "Civic Engagement & Community Service": bridge,
+            "Media & Publication": bridge,
+            "Peer Education & Support": bridge,
+            "Political & Advocacy": bridge,
+            "Religious & Spiritual": bridge,
+            "Cultural & International": circle,
+            "Special Interest": circle,
+            "Sports & Recreational": dash,
+            # Categories without specific designations
+            "Greek Life": None,
+            "Student Governance": None,
+        }
+
+        for category_name, designation in category_designation_mapping.items():
+            Category.objects.get_or_create(
+                name=category_name, defaults={"designation": designation}
+            )
 
         # create eligibility options
         [
@@ -362,6 +375,94 @@ class Command(BaseCommand):
                 "NOT ELIGIBLE",
             ]
         ]
+
+        # create classifications
+        [
+            Classification.objects.get_or_create(symbol=symbol, defaults={"name": name})
+            for symbol, name in [
+                ("G", "GRADUATE"),
+                ("Go", "GRADUATE OPEN"),
+                ("UG", "UNDERGRADUATE"),
+                ("UGo", "UNDERGRADUATE OPEN"),
+            ]
+        ]
+
+        # create types
+        [
+            Type.objects.get_or_create(symbol=symbol, defaults={"name": name})
+            for symbol, name in [
+                ("DSP", "Department-Sponsored Program"),
+                ("SDP", "Student-Led Department Program"),
+                ("SRO", "Student-Run Organization"),
+                ("UAO", "University-Affiliated Organization"),
+                ("UAS", "University-Supported Student Service"),
+            ]
+        ]
+
+        # create statuses
+        [
+            Status.objects.get_or_create(name=status)
+            for status in [
+                "Preliminary",
+                "Provisional",
+                "Full",
+                "Inactive",
+                "Suspended",
+                "Defunct",
+            ]
+        ]
+
+        # create group activity assessment options
+        from clubs.models import GroupActivityOption
+
+        group_activity_options = [
+            {
+                "text": "Physical activities (e.g., sports, fitness events)",
+                "order": 1,
+            },
+            {
+                "text": (
+                    "Medical/health-related services (e.g., blood drives, "
+                    "doula support)"
+                ),
+                "order": 2,
+            },
+            {
+                "text": "Working with minors or vulnerable populations",
+                "order": 3,
+            },
+            {
+                "text": "Off-campus travel (local or distant)",
+                "order": 4,
+            },
+            {
+                "text": "Handling of food or beverages",
+                "order": 5,
+            },
+            {
+                "text": "Use of specialized equipment or technology",
+                "order": 6,
+            },
+            {
+                "text": (
+                    "Host large-scale events or activities with 500 or more attendees"
+                ),
+                "order": 7,
+            },
+            {
+                "text": "None of the above",
+                "order": 8,
+            },
+        ]
+
+        for option_data in group_activity_options:
+            GroupActivityOption.objects.get_or_create(
+                text=option_data["text"],
+                defaults={
+                    "order": option_data["order"],
+                    "is_active": True,
+                },
+            )
 
         image_cache = {}
 

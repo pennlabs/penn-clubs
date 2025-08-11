@@ -11,17 +11,22 @@ import { DARK_GRAY, GREEN, MEDIUM_GRAY } from 'constants/colors'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
+import { toast, TypeOptions } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import {
   Category,
+  Classification,
   Club,
   Eligibility,
+  GroupActivityOption,
   Major,
   MembershipRank,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   Year,
 } from 'types'
 import {
@@ -53,6 +58,10 @@ type InitialRenewPageProps = {
   studentTypes: StudentType[]
   categories: Category[]
   eligibilities: Eligibility[]
+  types: Type[]
+  classifications: Classification[]
+  statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
 }
 
 type RenewPageProps = InitialRenewPageProps & {
@@ -109,21 +118,97 @@ const PolicyBox = ({
       name: 'Nondiscrimination',
       content: (
         <div>
-          Student organizations must fully comply with the University of
-          Pennsylvania's Nondiscrimination Statement. The University of
-          Pennsylvania seeks talented students, faculty, and staff with a wide
-          variety of backgrounds, experiences, and perspectives. The University
-          of Pennsylvania does not discriminate on the basis of race, color,
-          sex, sexual orientation, religion, creed, national origin (including
-          shared ancestry or ethnic characteristics), citizenship status, age,
-          disability, veteran status or any other class protected under
-          applicable federal, state, or local law in the administration of its
-          admissions, financial aid, educational or athletic programs, or other
-          University-administered programs or in its employment practices.
-          Questions or complaints regarding this policy should be directed to
-          the executive director of the Office of Equal Opportunity Programs;
-          Franklin Building, 3451 Walnut Street, Suite 421, Philadelphia, PA
-          19104-6106; or (215) 898-6993.
+          In alignment with the University of Pennsylvania's Nondiscrimination
+          Statement, student-run organizations are expected to uphold a
+          commitment to non-discrimination. For more information, please visit{' '}
+          <a href="https://oeop.upenn.edu/resources/policies-handbooks-procedures">
+            Policies, Handbooks & Procedures | Office of Equal Opportunity
+          </a>{' '}
+          ("EO Policy"). It is essential for student organizations to recognize
+          the University's dedication to providing academic, social, and
+          recreational programs and services that are equally accessible to all,
+          and as such, all student-run organizations are required to conduct
+          themselves and their activities in accordance with this commitment.
+          <br />
+          Student organizations must uphold principles of nondiscrimination and
+          equal opportunity in all aspects of their operations, including
+          recruitment, membership, leadership selection, and event promotion and
+          programming. The following guidelines shall apply to all student
+          organizations:
+          <br />
+          <br />
+          <strong>1. Recruitment, Membership and Events</strong>
+          <br />
+          All student organizations must be open to all persons without regard
+          to any legally protected civil rights class status, as described in
+          the{' '}
+          <a href="https://oeop.upenn.edu/resources/policies-handbooks-procedures">
+            EO Policy
+          </a>
+          .
+          <br />
+          All selection processes for student organizations must be demonstrably
+          neutral, inclusive, and consistent with the EO Policy. Organizations
+          are responsible for ensuring that all eligibility criteria, practices,
+          and communications are neutral, inclusive, and do not create
+          barriers—intentionally or unintentionally—based on identity. This
+          guideline applies to:
+          <ul
+            className="pl-6 space-y-1 marker:text-gray-700"
+            style={{ listStyleType: 'disc' }}
+          >
+            <li>Recruitment and outreach efforts</li>
+            <li>Membership decisions</li>
+            <li>Selection of officers or leadership slates</li>
+            <li>Event invitations, promotion and participation</li>
+            <li>Any other organizational practices</li>
+          </ul>
+          <br />
+          <strong>
+            2. Student Organizations Missions, Events and Activities
+          </strong>
+          <br />
+          Student organizations may focus their missions, programming, or
+          activities around issues related to a protected class (e.g., "Women in
+          Investing") provided that no individual or group is excluded from
+          membership or participation based on their actual or perceived
+          membership in that class.
+          <br />
+          All invitations, recruitment and promotional materials, websites, and
+          other organizational communications must clearly state that all
+          students are welcome to participate, regardless of identity.
+          Organizations may require participants to demonstrate a genuine
+          interest in the subject matter (e.g., ensuring attendees are engaged
+          or supportive of the event's topic/theme). However, interest must not
+          be used as a proxy to exclude individuals based on their identity or
+          membership in a protected class.
+          <br />
+          <br />
+          <strong>3. No Indirect Discrimination</strong>
+          <br />
+          Student organizations must not use indirect or proxy methods to
+          exclude or discourage individuals from membership or event
+          participation based on any protected class. Prohibited practices
+          include, but are not limited to:
+          <ul
+            className="pl-6 space-y-1 marker:text-gray-700"
+            style={{ listStyleType: 'disc' }}
+          >
+            <li>
+              Asking questions or gathering information with the intent or
+              effect of inferring an individual's identity or membership in a
+              protected class
+            </li>
+            <li>
+              Requiring affiliation with external organizations that restrict
+              membership based on a protected class
+            </li>
+            <li>
+              Imposing membership or event attendance requirements that, in
+              practice or effect, result in discrimination based on any
+              protected class under applicable federal, state, or local law
+            </li>
+          </ul>
         </div>
       ),
     },
@@ -201,6 +286,10 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     studentTypes,
     categories,
     eligibilities,
+    types,
+    classifications,
+    statuses,
+    groupActivityOptions,
   } = props
 
   const [club, setClub] = useState<Club>(initialClub)
@@ -215,6 +304,51 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 
   const hasPermission = apiCheckPermission(`clubs.manage_club:${club.code}`)
+
+  const notify = (
+    msg: string | ReactElement<any>,
+    type: TypeOptions = 'info',
+  ): void => {
+    toast[type](msg)
+  }
+
+  const requiredFields = [
+    { field: 'name', label: 'Club Name' },
+    { field: 'category', label: 'Category' },
+    { field: 'classification', label: 'Classification' },
+    { field: 'tags', label: 'Tags' },
+    { field: 'description', label: 'Club Mission' },
+    { field: 'email', label: 'Contact Email' },
+    { field: 'size', label: 'Club Size' },
+    { field: 'application_required', label: 'Membership Process' },
+    { field: 'recruiting_cycle', label: 'Recruiting Cycle' },
+  ]
+
+  const validateRequiredFields = (): Array<{
+    label: string
+    field: string
+  }> => {
+    const errors: Array<{
+      label: string
+      field: string
+    }> = []
+
+    requiredFields.forEach(({ field, label }) => {
+      const value = club[field as keyof Club]
+
+      if (
+        value === null ||
+        value === undefined ||
+        (typeof value === 'string' && !value.trim()) ||
+        (Array.isArray(value) && !value.length) ||
+        !value
+      ) {
+        errors.push({ label, field })
+      }
+    })
+
+    return errors
+  }
 
   if (authenticated === false) {
     return <AuthPrompt />
@@ -410,15 +544,24 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
             Please verify that your {OBJECT_NAME_SINGULAR} information is up to
             date. If you need to make any changes, change it in the form below
             and hit submit.
+            <div className="mt-3 notification is-info is-light">
+              <strong>Required Fields:</strong> All fields marked with an
+              asterisk (*) must be filled in before you can proceed to the next
+              step.
+            </div>
           </TextInfoBox>
           <ClubEditCard
             eligibilities={eligibilities}
             categories={categories}
+            classifications={classifications}
             schools={schools}
             majors={majors}
             years={years}
             tags={tags}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             club={club}
             isEdit={true}
             onSubmit={({ club, message }): Promise<void> => {
@@ -426,7 +569,11 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
                 setClub(club)
               }
               if (message !== undefined) {
-                setSubmitMessage(message)
+                if (typeof message === 'string') {
+                  notify(message, 'success')
+                } else {
+                  setSubmitMessage(message)
+                }
               }
               return Promise.resolve(undefined)
             }}
@@ -545,6 +692,27 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
   ]
 
   const nextStep = () => {
+    // only check for required fields on the Club Info step
+    if (step === 1) {
+      const errors = validateRequiredFields()
+      if (errors.length > 0) {
+        notify(
+          <>
+            <div>You must fill in all required fields before continuing:</div>
+            <ul className="mt-2">
+              {errors.map((error, index) => (
+                <li key={index}>
+                  <b>{error.label}</b> is required
+                </li>
+              ))}
+            </ul>
+          </>,
+          'error',
+        )
+        return
+      }
+    }
+
     const enterTab = steps[step + 1].onEnterTab
     if (enterTab !== undefined) {
       enterTab()
@@ -646,6 +814,11 @@ RenewPage.getInitialProps = async ({
     'student_types',
     'categories',
     'eligibilities',
+    'types',
+    'classifications',
+    'statuses',
+    'badges',
+    'group_activity_options',
   ]
   return Promise.all(
     endpoints.map(async (item) => {

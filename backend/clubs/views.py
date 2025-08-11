@@ -97,6 +97,7 @@ from clubs.models import (
     Badge,
     Cart,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -104,10 +105,12 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -119,6 +122,7 @@ from clubs.models import (
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -126,6 +130,7 @@ from clubs.models import (
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
+    Type,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -154,6 +159,7 @@ from clubs.permissions import (
     find_membership_helper,
 )
 from clubs.serializers import (
+    AdminClubSerializer,
     AdminNoteSerializer,
     AdvisorSerializer,
     ApplicationCycleSerializer,
@@ -169,6 +175,7 @@ from clubs.serializers import (
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
     CategorySerializer,
+    ClassificationSerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
@@ -179,6 +186,7 @@ from clubs.serializers import (
     ClubMembershipSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    DesignationSerializer,
     EligibilitySerializer,
     EventSerializer,
     EventShowingSerializer,
@@ -188,6 +196,7 @@ from clubs.serializers import (
     FavoriteSerializer,
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
+    GroupActivityOptionSerializer,
     MajorSerializer,
     ManagedClubApplicationSerializer,
     MembershipInviteSerializer,
@@ -202,12 +211,14 @@ from clubs.serializers import (
     ReportSerializer,
     SchoolSerializer,
     SearchQuerySerializer,
+    StatusSerializer,
     StudentTypeSerializer,
     SubscribeBookmarkSerializer,
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
     TicketSerializer,
+    TypeSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -2477,7 +2488,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 else:
                     return ClubSerializer
             return ClubListSerializer
+
         if self.request is not None and self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                return AdminClubSerializer
+
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
             manage_club = self.request.user.has_perm("clubs.manage_club")
             is_member = (
@@ -2489,6 +2504,38 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if see_pending or manage_club or is_member:
                 return AuthenticatedClubSerializer
         return ClubSerializer
+
+    @action(detail=False, methods=["get"])
+    def group_activity_options(self, request):
+        """
+        Get all active group activity assessment options.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    text:
+                                        type: string
+                                        description: The text content of the option
+                                    is_active:
+                                        type: boolean
+                                        description: Whether this option is
+                                            currently available
+                                    order:
+                                        type: integer
+                                        description: Display order for the frontend
+        ---
+        """
+        options = GroupActivityOption.objects.filter(is_active=True).order_by(
+            "order", "text"
+        )
+        serializer = GroupActivityOptionSerializer(options, many=True)
+        return Response(serializer.data)
 
 
 class SchoolViewSet(viewsets.ModelViewSet):
@@ -4789,6 +4836,19 @@ class TagViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
 
+class ClassificationViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of classifications.
+    """
+
+    queryset = Classification.objects.all()
+    serializer_class = ClassificationSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
 class BadgeViewSet(viewsets.ModelViewSet):
     """
     list:
@@ -4834,6 +4894,56 @@ class EligibilityViewSet(viewsets.ModelViewSet):
 
     queryset = Eligibility.objects.all()
     serializer_class = EligibilitySerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+
+
+class DesignationViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of designations.
+    """
+
+    queryset = Designation.objects.all()
+    serializer_class = DesignationSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class TypeViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of types.
+    """
+
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class StatusViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of statuses.
+    """
+
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class GroupActivityOptionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing group activity assessment options.
+    """
+
+    queryset = GroupActivityOption.objects.all()
+    serializer_class = GroupActivityOptionSerializer
     permission_classes = [ReadOnly | IsSuperuser]
     http_method_names = ["get"]
 

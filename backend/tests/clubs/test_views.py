@@ -24,11 +24,13 @@ from clubs.models import (
     Asset,
     Badge,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairRegistration,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
@@ -41,8 +43,10 @@ from clubs.models import (
     QuestionAnswer,
     RegistrationQueueSettings,
     School,
+    Status,
     Tag,
     Testimonial,
+    Type,
     ZoomMeetingVisit,
 )
 
@@ -176,7 +180,16 @@ class ClubTestCase(TestCase):
         Tag.objects.create(name="Graduate")
         Tag.objects.create(name="Undergraduate")
 
-        Category.objects.create(name="Academic & Pre-Professional")
+        cls.category1 = Category.objects.create(name="Academic & Pre-Professional")
+        cls.classification1, _ = Classification.objects.get_or_create(
+            symbol="G", defaults={"name": "Graduate"}
+        )
+
+        cls.status1 = Status.objects.create(name="Active")
+        cls.type1 = Type.objects.create(
+            name="Department-Sponsored Progam", symbol="DSP"
+        )
+        cls.eligibility1 = Eligibility.objects.create(name="Undergraduate")
 
         queue_settings = RegistrationQueueSettings.get()
         queue_settings.reapproval_queue_open = True
@@ -191,6 +204,8 @@ class ClubTestCase(TestCase):
         self.club1 = Club.objects.create(
             code="test-club",
             name="Test Club",
+            classification=self.classification1,
+            category=self.category1,
             approved=True,
             email="example@example.com",
         )
@@ -454,6 +469,10 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -916,6 +935,10 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1117,6 +1140,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
                 "facebook": "",
                 "twitter": "",
                 "instagram": "",
@@ -1169,6 +1193,7 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Undergraduate"}],
                 "email": "newclub@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1305,6 +1330,10 @@ class ClubTestCase(TestCase):
                 "description": test_good_string,
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1333,6 +1362,10 @@ class ClubTestCase(TestCase):
                 "description": test_bad_string,
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1421,6 +1454,7 @@ class ClubTestCase(TestCase):
                 "target_schools": [{"id": school1.id}],
                 "email": "example@example.com",
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",
                 "twitter": "https://twitter.com/Penn",
@@ -1430,6 +1464,9 @@ class ClubTestCase(TestCase):
                 "/school/university-of-pennsylvania/",
                 "youtube": "https://youtu.be/dQw4w9WgXcQ",
                 "github": "https://github.com/pennlabs",
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1465,6 +1502,27 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(club_obj.badges.count(), 1)
         self.assertEqual(club_obj.badges.all()[0].label, badge1.label)
+
+    def test_club_create_non_superuser_no_admin_fields(self):
+        """Test that non-superusers cannot set admin-only fields"""
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            data={
+                "name": "Test Club Non-Admin",
+                "description": "A test club by non-superuser",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "youtube": "https://youtu.be/dQw4w9WgXcQ",
+                "github": "https://github.com/pennlabs",
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
 
     def test_club_create_duplicate(self):
         """
@@ -3979,6 +4037,100 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 405)
 
+    def test_classification_viewset_permissions(self):
+        """Test basic permissions for ClassificationViewSet."""
+        classification = Classification.objects.create(
+            name="Test Classification", symbol="TEST"
+        )
+
+        # Test user can list classifications
+        resp = self.client.get(reverse("classifications-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific classification
+        resp = self.client.get(
+            reverse("classifications-detail", args=[classification.name])
+        )
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create classifications
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("classifications-list"),
+            {"name": "New Classification", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create classifications
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("classifications-list"),
+            {"name": "New Classification", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_designation_viewset_permissions(self):
+        """Test basic permissions for DesignationViewSet."""
+        designation = Designation.objects.create(name="Test Designation")
+
+        # Test user can list designations
+        resp = self.client.get(reverse("designations-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific designation
+        resp = self.client.get(reverse("designations-detail", args=[designation.name]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create designations
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("designations-list"),
+            {"name": "New Designation"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create designations
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("designations-list"),
+            {"name": "New Designation"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_type_viewset_permissions(self):
+        """Test basic permissions for TypeViewSet."""
+        type_obj = Type.objects.create(name="Test Type", symbol="TEST")
+
+        # Test user can list types
+        resp = self.client.get(reverse("types-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific type
+        resp = self.client.get(reverse("types-detail", args=[type_obj.name]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create types
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("types-list"),
+            {"name": "New Type", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create types
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("types-list"),
+            {"name": "New Type", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
     def test_club_description_word_limit(self):
         """
         Test that club descriptions cannot exceed 150 words on creation or update,
@@ -3998,6 +4150,10 @@ class ClubTestCase(TestCase):
                 "email": "long@example.com",
                 "tags": [{"name": "Graduate"}],
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -4014,6 +4170,10 @@ class ClubTestCase(TestCase):
                 "email": "short@example.com",
                 "tags": [{"name": "Graduate"}],
                 "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )

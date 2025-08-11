@@ -32,16 +32,19 @@ from clubs.models import (
     Asset,
     Badge,
     Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubVisit,
+    Designation,
     Eligibility,
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -55,6 +58,7 @@ from clubs.models import (
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -64,6 +68,7 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    Type,
     Year,
 )
 from clubs.utils import clean, html_to_text
@@ -149,9 +154,37 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
+class ClassificationSerializer(serializers.ModelSerializer):
+    symbol = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Classification
+        fields = ("id", "name", "symbol")
+
+
 class EligibilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Eligibility
+        fields = ("id", "name")
+
+
+class DesignationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Designation
+        fields = ("id", "name")
+
+
+class TypeSerializer(serializers.ModelSerializer):
+    symbol = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Type
+        fields = ("id", "name", "symbol")
+
+
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
         fields = ("id", "name")
 
 
@@ -1415,6 +1448,16 @@ class TargetStudentTypeSerializer(serializers.ModelSerializer):
         return obj.target_student_types.id
 
 
+class GroupActivityOptionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for group activity assessment options.
+    """
+
+    class Meta:
+        model = GroupActivityOption
+        fields = ["id", "text", "is_active", "order"]
+
+
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
@@ -1426,12 +1469,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
-    category = serializers.SlugRelatedField(
-        slug_field="name",
-        queryset=Category.objects.all(),
-        required=True,
-    )
-    eligibility = EligibilitySerializer(many=True, required=False)
+    category = CategorySerializer(required=False)
+    classification = ClassificationSerializer(required=False)
+    designation = DesignationSerializer(read_only=True)
+    status = StatusSerializer(read_only=True)
+    type = TypeSerializer(read_only=True)
+    eligibility = EligibilitySerializer(many=True, read_only=True)
 
     target_schools = serializers.SerializerMethodField("get_target_schools")
     target_majors = serializers.SerializerMethodField("get_target_majors")
@@ -1450,14 +1493,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
+    # Group Activity Assessment field - handle both IDs and full objects
+    group_activity_assessment = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=GroupActivityOption.objects.filter(is_active=True),
+        required=False,
+        allow_empty=True,
+    )
+
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
-
-    def to_internal_value(self, data):
-        if "category" in data and "name" in data["category"]:
-            data["category"] = data["category"]["name"]
-
-        return super().to_internal_value(data)
 
     def get_events(self, obj):
         now = timezone.now()
@@ -1565,24 +1610,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         return obj
 
     def validate_badges(self, value):
-        return value
-
-    def validate_tags(self, value):
-        """
-        Check for required tags before saving the club.
-        """
-        if settings.BRANDING == "clubs":
-            tag_names = [tag.get("name") for tag in value]
-            necessary_tags = {"Undergraduate", "Graduate"}
-            if not any(tag in necessary_tags for tag in tag_names):
-                if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(
-                    necessary_tags
-                ):
-                    raise serializers.ValidationError(
-                        "You must specify either the {} tag in this list.".format(
-                            " or ".join(f"'{tag}'" for tag in necessary_tags)
-                        )
-                    )
         return value
 
     def validate_target_years(self, value):
@@ -1745,6 +1772,18 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         raise serializers.ValidationError(
             "You do not have permissions to change the active status of the club."
         )
+
+    def validate(self, data):
+        """
+        Enforce presence of category and classification on creation.
+        """
+        if self.instance is None:
+            for field in ("category", "classification"):
+                if field not in data:
+                    raise serializers.ValidationError(
+                        {field: "This field is required."}
+                    )
+        return super().validate(data)
 
     def format_members_for_spreadsheet(self, value):
         """
@@ -1983,7 +2022,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "beta",
             "category",
+            "designation",
             "eligibility",
+            "type",
             "created_at",
             "description",
             "events",
@@ -2007,17 +2048,22 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "twitter",
             "website",
             "youtube",
+            "status",
+            "eligibility",
+            "classification",
+            "group_activity_assessment",
         ]
         save_related_fields = [
             "tags",
+            "classification",
             "badges",
             "category",
-            "eligibility",
             "target_schools",
             "student_types",
             "target_majors",
             "target_years",
             "advisor_set",
+            "group_activity_assessment",
         ]
 
 
@@ -2591,6 +2637,42 @@ class AuthenticatedClubSerializer(ClubSerializer):
             "owners",
             "officers",
             "approved_on",
+        ]
+
+
+class AdminClubSerializer(AuthenticatedClubSerializer):
+    """
+    Serializer for Club objects when used by admins.
+    Makes admin-only fields (status, type, eligibility) required by default.
+    """
+
+    status = StatusSerializer(required=False)
+    type = TypeSerializer(required=False)
+    eligibility = EligibilitySerializer(many=True, required=False)
+
+    def validate(self, attrs):
+        """
+        require fields on creation
+        """
+        if self.instance is None:
+            missing = {}
+            for f in ("status", "type", "eligibility"):
+                if not attrs.get(f):
+                    missing[f] = "This field is required."
+            if missing:
+                raise serializers.ValidationError(missing)
+        return super().validate(attrs)
+
+    class Meta(AuthenticatedClubSerializer.Meta):
+        fields = AuthenticatedClubSerializer.Meta.fields + [
+            "status",
+            "type",
+            "eligibility",
+        ]
+        save_related_fields = AuthenticatedClubSerializer.Meta.save_related_fields + [
+            "status",
+            "type",
+            "eligibility",
         ]
 
 
