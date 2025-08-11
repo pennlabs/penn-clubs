@@ -181,7 +181,9 @@ class ClubTestCase(TestCase):
         Tag.objects.create(name="Undergraduate")
 
         cls.category1 = Category.objects.create(name="Academic & Pre-Professional")
-        cls.classification1 = Classification.objects.create(symbol="G", name="Graduate")
+        cls.classification1, _ = Classification.objects.get_or_create(
+            symbol="G", defaults={"name": "Graduate"}
+        )
 
         cls.status1 = Status.objects.create(name="Active")
         cls.type1 = Type.objects.create(
