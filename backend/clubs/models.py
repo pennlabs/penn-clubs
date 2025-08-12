@@ -407,7 +407,7 @@ class Club(models.Model):
     image_small = models.ImageField(
         upload_to=get_club_small_file_name, null=True, blank=True
     )
-    tags = models.ManyToManyField("Tag")
+    tags = models.ManyToManyField("Tag", blank=True)
     classification = models.ForeignKey(
         "Classification",
         related_name="clubs",
