@@ -66,6 +66,7 @@ const sites = {
       'status',
       'type',
       'designation',
+      'group_activity_assessment',
     ],
     // enable showing members for each club
     SHOW_MEMBERS: false,
@@ -205,6 +206,7 @@ const sites = {
       'category',
       'eligibility',
       'status',
+      'group_activity_assessment',
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,

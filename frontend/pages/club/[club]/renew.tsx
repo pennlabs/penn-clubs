@@ -322,6 +322,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     { field: 'size', label: 'Club Size' },
     { field: 'application_required', label: 'Membership Process' },
     { field: 'recruiting_cycle', label: 'Recruiting Cycle' },
+    { field: 'group_activity_assessment', label: 'Group Activity Assessment' },
   ]
 
   const validateRequiredFields = (): Array<{
@@ -806,7 +807,7 @@ RenewPage.getInitialProps = async ({
     'clubs.see_pending_clubs',
   ]
 
-  const endpoints = [
+  const endpoints: (string | [string, string])[] = [
     'tags',
     'schools',
     'majors',
@@ -818,19 +819,21 @@ RenewPage.getInitialProps = async ({
     'classifications',
     'statuses',
     'badges',
-    'group_activity_options',
+    ['groupActivityOptions', 'group_activity_options'],
   ]
   return Promise.all(
     endpoints.map(async (item) => {
-      if (!isClubFieldShown(item)) {
-        return [item, []]
+      const endpoint = typeof item === 'string' ? item : item[1]
+      const name = typeof item === 'string' ? item : item[0]
+      if (!isClubFieldShown(endpoint)) {
+        return [name, []]
       }
-      const request = await doApiRequest(`/${item}/?format=json`, data)
+      const request = await doApiRequest(`/${endpoint}/?format=json`, data)
       const response = await request.json()
-      return [item, response]
+      return [name, response]
     }),
   ).then((values) => {
-    const output = { club: clubRes }
+    const output: any = { club: clubRes }
     values.forEach((item) => {
       output[item[0]] = item[1]
     })
