@@ -1062,7 +1062,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     This is done for a quicker response.
     """
 
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(many=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
     membership_count = serializers.IntegerField(read_only=True)
@@ -2646,22 +2646,22 @@ class AdminClubSerializer(AuthenticatedClubSerializer):
     Makes admin-only fields (status, type, eligibility) required by default.
     """
 
-    status = StatusSerializer(required=False)
-    type = TypeSerializer(required=False)
-    eligibility = EligibilitySerializer(many=True, required=False)
+    status = StatusSerializer(required=False, allow_null=True)
+    type = TypeSerializer(required=False, allow_null=True)
+    eligibility = EligibilitySerializer(many=True, required=False, allow_null=True)
 
-    def validate(self, attrs):
-        """
-        require fields on creation
-        """
-        if self.instance is None:
-            missing = {}
-            for f in ("status", "type", "eligibility"):
-                if not attrs.get(f):
-                    missing[f] = "This field is required."
-            if missing:
-                raise serializers.ValidationError(missing)
-        return super().validate(attrs)
+    # def validate(self, attrs):
+    #     """
+    #     require fields on creation
+    #     """
+    #     if self.instance is None:
+    #         missing = {}
+    #         for f in ("status", "type", "eligibility"):
+    #             if not attrs.get(f):
+    #                 missing[f] = "This field is required."
+    #         if missing:
+    #             raise serializers.ValidationError(missing)
+    #     return super().validate(attrs)
 
     class Meta(AuthenticatedClubSerializer.Meta):
         fields = AuthenticatedClubSerializer.Meta.fields + [

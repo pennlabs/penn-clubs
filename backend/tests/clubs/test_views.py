@@ -1516,13 +1516,20 @@ class ClubTestCase(TestCase):
                 "classification": {"name": "Graduate"},
                 "youtube": "https://youtu.be/dQw4w9WgXcQ",
                 "github": "https://github.com/pennlabs",
+                # admin fields
                 "status": {"name": self.status1.name},
                 "type": {"name": self.type1.name},
                 "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
-        self.assertIn(resp.status_code, [400, 403], resp.content)
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # admin fields aren't set
+        club = Club.objects.filter(name="Test Club Non-Admin").first()
+        self.assertIsNone(club.status)
+        self.assertIsNone(club.type)
+        self.assertEqual(club.eligibility.count(), 0)
 
     def test_club_create_duplicate(self):
         """

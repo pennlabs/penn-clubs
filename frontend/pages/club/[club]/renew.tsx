@@ -316,7 +316,7 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     { field: 'name', label: 'Club Name' },
     { field: 'category', label: 'Category' },
     { field: 'classification', label: 'Classification' },
-    { field: 'tags', label: 'Tags' },
+    // { field: 'tags', label: 'Tags' },
     { field: 'description', label: 'Club Mission' },
     { field: 'email', label: 'Contact Email' },
     { field: 'size', label: 'Club Size' },
