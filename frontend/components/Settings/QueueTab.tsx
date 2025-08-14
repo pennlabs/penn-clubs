@@ -333,7 +333,7 @@ const ClubTags = ({ code, name }: Club): ReactElement => {
         tagList.push(['Title', '#4198db'])
       }
       if (oldDescription.valueOf() !== newDescription.valueOf()) {
-        tagList.push(['Desc', '#ee4768'])
+        tagList.push(['Mission', '#ee4768'])
       }
       if (oldImage !== newImage) {
         tagList.push(['Image', '#4cc776'])
@@ -669,7 +669,7 @@ const QueueTab = (): ReactElement => {
         refetchClubs={refetchClubs}
         templates={templates}
       />
-      <>
+      {/* <>
         <SmallTitle>Pending Ownership Requests</SmallTitle>
         <div className="mt-3 mb-3">
           These are user-submitted requests to take ownership of inactive clubs.
@@ -727,7 +727,7 @@ const QueueTab = (): ReactElement => {
             </tbody>
           </table>
         )}
-      </>
+      </> */}
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {OBJECT_NAME_PLURAL} that have been
