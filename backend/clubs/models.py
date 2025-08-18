@@ -729,7 +729,10 @@ class Club(models.Model):
 
         context = {
             "name": self.name,
-            "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
+            "renew_url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
+            "transfer_url": (
+                f"{settings.EDIT_URL.format(domain=domain, club=self.code)}/member"
+            ),
             "queue_open_date": queue_open_date,
         }
 
