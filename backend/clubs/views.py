@@ -1156,6 +1156,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     to_attr="user_membership_set",
                 ),
                 "badges",
+                "group_activity_assessment",
+                "eligibility",
+            )
+            queryset = queryset.select_related(
+                "classification",
+                "category",
+                "category__designation",
+                "type",
+                "status",
             )
 
             if self.action in {"retrieve"}:
