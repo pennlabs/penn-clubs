@@ -1453,6 +1453,12 @@ class GroupActivityOptionSerializer(serializers.ModelSerializer):
     Serializer for group activity assessment options.
     """
 
+    # Allow writing by id when nested inside other serializers
+    id = serializers.IntegerField()
+    text = serializers.CharField(read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    order = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = GroupActivityOption
         fields = ["id", "text", "is_active", "order"]
@@ -1493,13 +1499,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    # Group Activity Assessment field - handle both IDs and full objects
-    group_activity_assessment = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=GroupActivityOption.objects.filter(is_active=True),
-        required=False,
-        allow_empty=True,
-    )
+    group_activity_assessment = GroupActivityOptionSerializer(many=True, required=False)
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
