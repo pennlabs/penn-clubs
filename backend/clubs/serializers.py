@@ -2755,7 +2755,21 @@ class ReportClubField(serializers.Field):
 class ReportClubSerializer(AuthenticatedClubSerializer):
     """
     Provides additional fields that can be used to generate club reports.
+
+    Notes for Excel/xlsx exports:
+    - Nested related fields are flattened to scalars so subfields are not
+      expanded into multiple columns. Specifically, these fields are emitted
+      as strings using their name.
     """
+
+    category = serializers.CharField(source="category.name", read_only=True)
+    classification = serializers.CharField(source="classification.name", read_only=True)
+    type = serializers.CharField(source="type.name", read_only=True)
+    status = serializers.CharField(source="status.name", read_only=True)
+    designation = serializers.SerializerMethodField("get_designation")
+
+    def get_designation(self, obj):
+        return obj.designation.name if getattr(obj, "designation", None) else None
 
     @staticmethod
     def get_additional_fields():
