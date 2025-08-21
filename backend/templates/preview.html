@@ -21,6 +21,11 @@
         {
             color: #15c;
         }
+        #email.error
+        {
+            border-color: red;
+            background-color: #ffe6e6;
+        }
         #text-email
         {
             font-family: monospace;
@@ -72,8 +77,8 @@
             <a href="?email={{template}}">{{template|title}}</a>
         {% endfor %}
         </div>
-        <div id="email">
-            {{email}}
+        <div id="email" {% if template_error %}class="error"{% endif %}>
+            {{email|safe}}
         </div>
         <div id="text-email">{{text_email}}</div>
         <div id="variables">

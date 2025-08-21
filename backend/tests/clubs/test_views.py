@@ -2924,6 +2924,24 @@ class ClubTestCase(TestCase):
         resp = self.client.get(reverse("email-preview"))
         self.assertEqual(resp.status_code, 200, resp.content)
 
+        # Test with a valid email template - should load without error and have content
+        resp = self.client.get(reverse("email-preview") + "?email=invite")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        content = resp.content.decode("utf-8")
+        self.assertIn('id="email"', content)
+        self.assertIn('id="text-email"', content)
+        self.assertIn("variables", content)
+        self.assertIn("Join", content)  # Content from the invite template
+        self.assertNotIn("Template Not Found", content)
+        self.assertNotIn('class="error"', content)  # Should not have error styling
+
+        # Test with a non-existent template - should show error gracefully
+        resp = self.client.get(reverse("email-preview") + "?email=nonexistent_template")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        content = resp.content.decode("utf-8")
+        self.assertIn("Template Not Found", content)
+        self.assertIn('class="error"', content)
+
     def test_list_email_invites(self):
         """
         Ensure that listing the email invitations endpoint works without any issues.

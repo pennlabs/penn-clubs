@@ -60,6 +60,7 @@ from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -8707,22 +8708,42 @@ def email_preview(request):
     email = None
     text_email = None
     initial_context = {}
+    template_error = False
 
     if "email" in request.GET:
         email_path = os.path.basename(request.GET.get("email"))
 
         # initial values
-        types = get_mail_type_annotation(email_path)
-        if types is not None:
-            initial_context = get_initial_context_from_types(types)
+        try:
+            types = get_mail_type_annotation(email_path)
+            if types is not None:
+                initial_context = get_initial_context_from_types(types)
+        except (FileNotFoundError, OSError):
+            # Template file doesn't exist, continue with empty context
+            types = None
 
         # set specified values
         variables = request.GET.get("variables")
         if variables is not None:
             initial_context.update(json.loads(variables))
 
-        email = render_to_string(f"{prefix}/{email_path}.html", initial_context)
-        text_email = html_to_text(email)
+        try:
+            email = render_to_string(f"{prefix}/{email_path}.html", initial_context)
+            text_email = html_to_text(email)
+        except TemplateDoesNotExist:
+            template_error = True
+            email = (
+                f'<div style="color: red; padding: 20px; border: 1px solid red; '
+                f'background-color: #ffe6e6; border-radius: 4px;">'
+                f"<strong>Template Not Found:</strong><br>"
+                f'The email template "{email_path}.html" does not exist in the '
+                f"{prefix} directory.<br><br>Please check that the template file "
+                f"exists and try again.</div>"
+            )
+            text_email = (
+                f"Template Not Found: The email template '{email_path}.html' "
+                f"does not exist in the {prefix} directory."
+            )
 
     return render(
         request,
@@ -8732,6 +8753,7 @@ def email_preview(request):
             "email": email,
             "text_email": text_email,
             "variables": json.dumps(initial_context, indent=4),
+            "template_error": template_error,
         },
     )
 
