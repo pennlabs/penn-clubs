@@ -1348,10 +1348,11 @@ def diff_calculator(latest_approved_description, latest_description):
     for ins_tag in soup.find_all("ins"):
         next_tag = ins_tag.find_next_sibling("del")
         if next_tag and next_tag.get_text() == ins_tag.get_text():
+            # Remove the redundant <del> tag, then style the <ins> tag and its children
             next_tag.decompose()
-            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
+            ins_tag["style"] = diff_regex_helper(ins_tag.get("style", ""))
             ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
-            for child in next_tag.find_all(True):
+            for child in ins_tag.find_all(True):
                 child["style"] = child.get("style", "") + " background-color: #fff2bd;"
     return str(soup)
 
