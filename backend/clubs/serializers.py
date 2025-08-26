@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -3275,6 +3275,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         return data
 
+    @transaction.atomic
     def save(self):
         application_obj = super().save()
         # manually create committee objects as Django does
