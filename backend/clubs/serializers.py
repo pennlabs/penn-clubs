@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -3316,10 +3316,14 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
             for name in committees:
                 if name not in prev_committee_names:
-                    ApplicationCommittee.objects.create(
-                        name=name,
-                        application=application_obj,
-                    )
+                    try:
+                        ApplicationCommittee.objects.get_or_create(
+                            name=name,
+                            application=application_obj,
+                        )
+                    except IntegrityError:
+                        # TODO: PENN-CLUBS-MN - investigate why this is happening
+                        pass
             cache.delete(f"clubapplication:{application_obj.id}")
 
         return application_obj
