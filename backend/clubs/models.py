@@ -39,62 +39,6 @@ subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
 types_regex = re.compile(r"\s*<!--\s*TYPES:\s*(.*?)\s*-->", re.DOTALL)
 
 
-class RankingWeights(models.Model):
-    """Singleton storing weighting factors for club ranking."""
-
-    SINGLETON_PK = 1
-
-    # core weights (defaults mirror historical constants)
-    inactive_penalty = models.FloatField(default=-1000)
-    favorites_per = models.FloatField(default=1 / 25)
-    tags_good = models.FloatField(default=15)
-    tags_many = models.FloatField(default=7)
-    officer_bonus = models.FloatField(default=15)
-    member_base = models.FloatField(default=10)
-    member_per = models.FloatField(default=0.1)  # 1/10
-    logo_bonus = models.FloatField(default=15)
-    subtitle_bad = models.FloatField(default=-10)
-    subtitle_good = models.FloatField(default=5)
-    images_bonus = models.FloatField(default=3)
-    desc_short = models.FloatField(default=25)
-    desc_med = models.FloatField(default=10)
-    desc_long = models.FloatField(default=10)
-    fair_bonus = models.FloatField(default=10)
-    application_bonus = models.FloatField(default=25)
-    today_event_base = models.FloatField(default=10)
-    today_event_good = models.FloatField(default=10)
-    week_event_base = models.FloatField(default=5)
-    week_event_good = models.FloatField(default=5)
-    email_bonus = models.FloatField(default=10)
-    social_bonus = models.FloatField(default=10)
-    howto_penalty = models.FloatField(default=-30)
-    outdated_penalty = models.FloatField(default=-10)
-    testimonial_one = models.FloatField(default=10)
-    testimonial_three = models.FloatField(default=5)
-    random_scale = models.FloatField(default=25)
-
-    updated_at = models.DateTimeField(auto_now=True)
-    updated_by = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="modified_ranking_weights",
-    )
-
-    def save(self, *args, **kwargs):
-        self.pk = self.SINGLETON_PK
-        super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        raise ValueError("Cannot delete singleton instance")
-
-    @classmethod
-    def get(cls):
-        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
-        return obj
-
-
 def get_mail_type_annotation(name):
     """
     Given a template name, return the type annotation metadata.
@@ -2375,5 +2319,61 @@ class RegistrationQueueSettings(models.Model):
         """
         if cls.objects.count() > 1:
             raise ValueError("Multiple instances of RegistrationQueueSettings found")
+        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+        return obj
+
+
+class RankingWeights(models.Model):
+    """Singleton storing weighting factors for club ranking."""
+
+    SINGLETON_PK = 1
+
+    # core weights (defaults mirror historical constants)
+    inactive_penalty = models.FloatField(default=-1000)
+    favorites_per = models.FloatField(default=1 / 25)
+    tags_good = models.FloatField(default=15)
+    tags_many = models.FloatField(default=7)
+    officer_bonus = models.FloatField(default=15)
+    member_base = models.FloatField(default=10)
+    member_per = models.FloatField(default=0.1)  # 1/10
+    logo_bonus = models.FloatField(default=15)
+    subtitle_bad = models.FloatField(default=-10)
+    subtitle_good = models.FloatField(default=5)
+    images_bonus = models.FloatField(default=3)
+    desc_short = models.FloatField(default=25)
+    desc_med = models.FloatField(default=10)
+    desc_long = models.FloatField(default=10)
+    fair_bonus = models.FloatField(default=10)
+    application_bonus = models.FloatField(default=25)
+    today_event_base = models.FloatField(default=10)
+    today_event_good = models.FloatField(default=10)
+    week_event_base = models.FloatField(default=5)
+    week_event_good = models.FloatField(default=5)
+    email_bonus = models.FloatField(default=10)
+    social_bonus = models.FloatField(default=10)
+    howto_penalty = models.FloatField(default=-30)
+    outdated_penalty = models.FloatField(default=-10)
+    testimonial_one = models.FloatField(default=10)
+    testimonial_three = models.FloatField(default=5)
+    random_scale = models.FloatField(default=25)
+
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="modified_ranking_weights",
+    )
+
+    def save(self, *args, **kwargs):
+        self.pk = self.SINGLETON_PK
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("Cannot delete singleton instance")
+
+    @classmethod
+    def get(cls):
         obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
         return obj

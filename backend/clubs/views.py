@@ -119,6 +119,7 @@ from clubs.models import (
     Note,
     OwnershipRequest,
     QuestionAnswer,
+    RankingWeights,
     RegistrationQueueSettings,
     Report,
     School,
@@ -207,6 +208,7 @@ from clubs.serializers import (
     NoteSerializer,
     OwnershipRequestSerializer,
     QuestionAnswerSerializer,
+    RankingWeightsSerializer,
     RegistrationQueueSettingsSerializer,
     ReportClubSerializer,
     ReportSerializer,
@@ -8847,5 +8849,245 @@ class RegistrationQueueSettingsView(APIView):
         if serializer.is_valid():
             queue_setting = serializer.save(updated_by=request.user)
             return Response(RegistrationQueueSettingsSerializer(queue_setting).data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RankingWeightsView(APIView):
+    """
+    View to get and update ranking weights settings.
+    Only superusers can read and update settings.
+    """
+
+    def get_permissions(self):
+        """
+        Only superusers can read and update ranking weights settings.
+        """
+        return [IsSuperuser()]
+
+    def get(self, request):
+        """
+        Return the current ranking weights.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                inactive_penalty:
+                                    type: number
+                                favorites_per:
+                                    type: number
+                                tags_good:
+                                    type: number
+                                tags_many:
+                                    type: number
+                                officer_bonus:
+                                    type: number
+                                member_base:
+                                    type: number
+                                member_per:
+                                    type: number
+                                logo_bonus:
+                                    type: number
+                                subtitle_bad:
+                                    type: number
+                                subtitle_good:
+                                    type: number
+                                images_bonus:
+                                    type: number
+                                desc_short:
+                                    type: number
+                                desc_med:
+                                    type: number
+                                desc_long:
+                                    type: number
+                                fair_bonus:
+                                    type: number
+                                application_bonus:
+                                    type: number
+                                today_event_base:
+                                    type: number
+                                today_event_good:
+                                    type: number
+                                week_event_base:
+                                    type: number
+                                week_event_good:
+                                    type: number
+                                email_bonus:
+                                    type: number
+                                social_bonus:
+                                    type: number
+                                howto_penalty:
+                                    type: number
+                                outdated_penalty:
+                                    type: number
+                                testimonial_one:
+                                    type: number
+                                testimonial_three:
+                                    type: number
+                                random_scale:
+                                    type: number
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+        ---
+        """
+        ranking_weights = RankingWeights.get()
+        serializer = RankingWeightsSerializer(ranking_weights)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        """
+        Update the ranking weights.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            inactive_penalty:
+                                type: number
+                            favorites_per:
+                                type: number
+                            tags_good:
+                                type: number
+                            tags_many:
+                                type: number
+                            officer_bonus:
+                                type: number
+                            member_base:
+                                type: number
+                            member_per:
+                                type: number
+                            logo_bonus:
+                                type: number
+                            subtitle_bad:
+                                type: number
+                            subtitle_good:
+                                type: number
+                            images_bonus:
+                                type: number
+                            desc_short:
+                                type: number
+                            desc_med:
+                                type: number
+                            desc_long:
+                                type: number
+                            fair_bonus:
+                                type: number
+                            application_bonus:
+                                type: number
+                            today_event_base:
+                                type: number
+                            today_event_good:
+                                type: number
+                            week_event_base:
+                                type: number
+                            week_event_good:
+                                type: number
+                            email_bonus:
+                                type: number
+                            social_bonus:
+                                type: number
+                            howto_penalty:
+                                type: number
+                            outdated_penalty:
+                                type: number
+                            testimonial_one:
+                                type: number
+                            testimonial_three:
+                                type: number
+                            random_scale:
+                                type: number
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                inactive_penalty:
+                                    type: number
+                                favorites_per:
+                                    type: number
+                                tags_good:
+                                    type: number
+                                tags_many:
+                                    type: number
+                                officer_bonus:
+                                    type: number
+                                member_base:
+                                    type: number
+                                member_per:
+                                    type: number
+                                logo_bonus:
+                                    type: number
+                                subtitle_bad:
+                                    type: number
+                                subtitle_good:
+                                    type: number
+                                images_bonus:
+                                    type: number
+                                desc_short:
+                                    type: number
+                                desc_med:
+                                    type: number
+                                desc_long:
+                                    type: number
+                                fair_bonus:
+                                    type: number
+                                application_bonus:
+                                    type: number
+                                today_event_base:
+                                    type: number
+                                today_event_good:
+                                    type: number
+                                week_event_base:
+                                    type: number
+                                week_event_good:
+                                    type: number
+                                email_bonus:
+                                    type: number
+                                social_bonus:
+                                    type: number
+                                howto_penalty:
+                                    type: number
+                                outdated_penalty:
+                                    type: number
+                                testimonial_one:
+                                    type: number
+                                testimonial_three:
+                                    type: number
+                                random_scale:
+                                    type: number
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+        ---
+        """
+        ranking_weights = RankingWeights.get()
+        serializer = RankingWeightsSerializer(
+            ranking_weights, data=request.data, partial=True
+        )
+
+        if serializer.is_valid():
+            ranking_weights = serializer.save(updated_by=request.user)
+            return Response(RankingWeightsSerializer(ranking_weights).data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

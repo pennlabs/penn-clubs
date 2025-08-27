@@ -54,6 +54,7 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RankingWeights,
     RegistrationQueueSettings,
     Report,
     School,
@@ -3505,6 +3506,48 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "reapproval_queue_open",
             "new_approval_queue_open",
+            "updated_at",
+            "updated_by",
+        ]
+        read_only_fields = ["updated_at", "updated_by"]
+
+    def get_updated_by(self, obj):
+        return obj.updated_by.get_full_name() if obj.updated_by else "N/A"
+
+
+class RankingWeightsSerializer(serializers.ModelSerializer):
+    updated_by = serializers.SerializerMethodField("get_updated_by")
+
+    class Meta:
+        model = RankingWeights
+        fields = [
+            "inactive_penalty",
+            "favorites_per",
+            "tags_good",
+            "tags_many",
+            "officer_bonus",
+            "member_base",
+            "member_per",
+            "logo_bonus",
+            "subtitle_bad",
+            "subtitle_good",
+            "images_bonus",
+            "desc_short",
+            "desc_med",
+            "desc_long",
+            "fair_bonus",
+            "application_bonus",
+            "today_event_base",
+            "today_event_good",
+            "week_event_base",
+            "week_event_good",
+            "email_bonus",
+            "social_bonus",
+            "howto_penalty",
+            "outdated_penalty",
+            "testimonial_one",
+            "testimonial_three",
+            "random_scale",
             "updated_at",
             "updated_by",
         ]
