@@ -19,6 +19,7 @@ from ics import Calendar
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
     ApplicationQuestion,
     ApplicationSubmission,
     Asset,
@@ -4549,3 +4550,113 @@ class EventShowingTestCase(TestCase):
         self.assertIn(
             "event start time must be before the end time", str(response.data).lower()
         )
+
+
+class NormalizeCommitteesTestCase(TestCase):
+    def setUp(self):
+        self.club = Club.objects.create(code="club-a", name="Club A")
+
+        now = timezone.now()
+        self.app = ClubApplication.objects.create(
+            name="Original App",
+            club=self.club,
+            application_start_time=now + timezone.timedelta(days=1),
+            application_end_time=now + timezone.timedelta(days=2),
+            result_release_time=now + timezone.timedelta(days=3),
+        )
+
+        # Simulate post-clone duplicate committees that would have suffixes
+        self.design = ApplicationCommittee.objects.create(
+            application=self.app, name="Design"
+        )
+        self.design_copy = ApplicationCommittee.objects.create(
+            application=self.app, name="Design copy 1"
+        )
+
+        self.pm = ApplicationCommittee.objects.create(application=self.app, name="PM")
+        self.pm_copy = ApplicationCommittee.objects.create(
+            application=self.app, name="PM copy 1"
+        )
+
+        # Questions linking to the duplicate committee entries
+        self.q1 = ApplicationQuestion.objects.create(application=self.app, prompt="Q1")
+        self.q1.committees.add(self.design_copy)
+
+        self.q2 = ApplicationQuestion.objects.create(application=self.app, prompt="Q2")
+        self.q2.committees.add(self.design, self.pm_copy)
+
+        # Submission that references a duplicate committee
+        self.user = get_user_model().objects.create_user(
+            username="alice", email="alice@example.com", password="test"
+        )
+        self.sub = ApplicationSubmission.objects.create(
+            user=self.user,
+            application=self.app,
+            committee=self.pm_copy,
+        )
+
+    def test_normalize_committees_deduplicates_and_relinks(self):
+        # Assert both original and copy committees exist before normalization
+        original_names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(original_names, {"Design", "Design copy 1", "PM", "PM copy 1"})
+
+        # Act
+        self.app.normalize_committees()
+
+        # Assert committees have been deduplicated by base name
+        names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(names, {"Design", "PM"})
+
+        # Questions should link only to canonical committees
+        q1_committees = set(self.q1.committees.values_list("name", flat=True))
+        q2_committees = set(self.q2.committees.values_list("name", flat=True))
+        self.assertEqual(q1_committees, {"Design"})
+        self.assertEqual(q2_committees, {"Design", "PM"})
+
+        # Submission should be re-pointed to the canonical committee
+        self.sub.refresh_from_db()
+        self.assertIn(self.sub.committee.name, {"PM"})
+
+    def test_normalize_committees_renames_copies_when_no_canonical_exists(self):
+        # Delete the original committees, leaving only the copies
+        self.design.delete()
+        self.pm.delete()
+
+        # Verify only copy committees remain
+        remaining_names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(remaining_names, {"Design copy 1", "PM copy 1"})
+
+        # Act
+        self.app.normalize_committees()
+
+        # Assert committees have been renamed to canonical names
+        names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(names, {"Design", "PM"})
+
+        # Questions should still link to the renamed committees
+        q1_committees = set(self.q1.committees.values_list("name", flat=True))
+        q2_committees = set(self.q2.committees.values_list("name", flat=True))
+        self.assertEqual(q1_committees, {"Design"})  # q1 was linked to design_copy
+        self.assertEqual(
+            q2_committees, {"PM"}
+        )  # q2 was linked to pm_copy (design was deleted)
+
+        # Submission should be re-pointed to the renamed committee
+        self.sub.refresh_from_db()
+        self.assertEqual(self.sub.committee.name, "PM")

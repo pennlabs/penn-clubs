@@ -7350,6 +7350,10 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         clone.external_url = (
             f"https://pennclubs.com/club/{clone.club.code}/application/{clone.pk}"
         )
+        # django-clone may create duplicate committees with "copy 1"
+        # suffixes due to double-cloning (app O2M + question M2M),
+        # so normalize them
+        clone.normalize_committees()
         clone.save()
         return Response([])
 
@@ -7523,6 +7527,10 @@ class WhartonCyclesView(viewsets.ModelViewSet):
                     f"https://pennclubs.com/club/{club.code}/"
                     f"application/{application.pk}"
                 )
+                # django-clone may create duplicate committees with "copy 1"
+                # suffixes due to double-cloning (app O2M + question M2M),
+                # so normalize them
+                application.normalize_committees()
                 application.save()
             else:
                 # Otherwise, start afresh

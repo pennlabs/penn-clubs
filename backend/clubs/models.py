@@ -1843,6 +1843,76 @@ class ClubApplication(CloneModel):
         tokens = meta.find_undeclared_variables(j2_template)
         return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
 
+    def normalize_committees(self):
+        """
+        After cloning an application, ensure that committees are not duplicated
+        due to deep-clone behavior (e.g., "{name} copy 1").
+
+        This method consolidates committees that share the same logical base name
+        (stripping a trailing "copy N" suffix), re-links any references from
+        questions and submissions to a single canonical committee, and deletes
+        the redundant duplicates.
+        """
+        from django.db import transaction
+
+        # Local import-safe references (models are in the same module)
+        ApplicationCommitteeRef = ApplicationCommittee
+        ApplicationQuestionRef = ApplicationQuestion
+        ApplicationSubmissionRef = ApplicationSubmission
+
+        copy_suffix_regex = re.compile(r"^(?P<base>.+?)\s+copy\s+\d+$", re.IGNORECASE)
+
+        def get_base_name(name):
+            if not name:
+                return name
+            match = copy_suffix_regex.match(name.strip())
+            return match.group("base").strip() if match else name.strip()
+
+        with transaction.atomic():
+            committees = list(ApplicationCommitteeRef.objects.filter(application=self))
+            if not committees:
+                return
+
+            # Group committees by base name (e.g., "Design",
+            # "Design copy 1" => "Design")
+            base_to_items = {}
+            for committee in committees:
+                base = get_base_name(committee.name)
+                base_to_items.setdefault(base, []).append(committee)
+
+            for base, items in base_to_items.items():
+                # Choose canonical: prefer exact-match (no suffix),
+                # else lowest copy number
+                canonical = next(
+                    (c for c in items if (c.name or "").strip() == base), None
+                )
+                if canonical is None:
+                    # If no exact match, rename the lowest copy number to be canonical
+                    canonical = min(items, key=lambda c: c.pk)
+                    canonical.name = base
+                    canonical.save(update_fields=["name"])
+
+                for c in items:
+                    if c.pk == canonical.pk:
+                        continue
+
+                    # Re-link questions from duplicate committee to canonical committee
+                    linked_questions = ApplicationQuestionRef.objects.filter(
+                        application=self, committees=c
+                    )
+                    for q in linked_questions:
+                        q.committees.add(canonical)
+                        q.committees.remove(c)
+
+                    # Re-link submissions if any exist (defensive;
+                    # typically none at clone time)
+                    ApplicationSubmissionRef.objects.filter(
+                        application=self, committee=c
+                    ).update(committee=canonical)
+
+                    # Remove the duplicate committee
+                    c.delete()
+
 
 class ApplicationExtension(models.Model):
     """
