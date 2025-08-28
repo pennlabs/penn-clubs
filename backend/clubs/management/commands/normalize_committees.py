@@ -13,9 +13,11 @@ from clubs.models import Club, ClubApplication
 
 class Command(BaseCommand):
     help = (
-        "Normalize committees across all club applications by removing "
-        'duplicates with "copy 1" suffixes and consolidating references.'
+        "Normalize committees across each club's latest application by removing "
+        'duplicates with "copy X" suffixes (where X is any number) and '
+        "consolidating references to canonical committees."
     )
+    web_execute = True
 
     def add_arguments(self, parser):
         parser.add_argument(
