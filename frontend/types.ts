@@ -509,3 +509,35 @@ export type OwnershipRequest = {
   username: string
   created_at: string
 }
+
+export type RankingWeights = {
+  inactive_penalty: number
+  favorites_per: number
+  tags_good: number
+  tags_many: number
+  officer_bonus: number
+  member_base: number
+  member_per: number
+  logo_bonus: number
+  subtitle_bad: number
+  subtitle_good: number
+  images_bonus: number
+  desc_short: number
+  desc_med: number
+  desc_long: number
+  fair_bonus: number
+  application_bonus: number
+  today_event_base: number
+  today_event_good: number
+  week_event_base: number
+  week_event_good: number
+  email_bonus: number
+  social_bonus: number
+  howto_penalty: number
+  outdated_penalty: number
+  testimonial_one: number
+  testimonial_three: number
+  random_scale: number
+  updated_at: string
+  updated_by: string
+}
