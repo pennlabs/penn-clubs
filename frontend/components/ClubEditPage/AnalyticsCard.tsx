@@ -3,15 +3,17 @@ import { ReactElement, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import Select from 'react-select'
 import {
-  ChartLabel,
-  DiscreteColorLegend,
-  LineMarkSeries,
-  makeWidthFlexible,
-  RadialChart,
+  Cell,
+  Label,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
   XAxis,
-  XYPlot,
   YAxis,
-} from 'react-vis'
+} from 'recharts'
 
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
@@ -34,8 +36,6 @@ type PieChartData = {
 
 type LineData = { x: Date; y: number }[]
 type PieData = { angle: number; label: string; color?: string }[]
-
-const FlexibleXYPlot = makeWidthFlexible(XYPlot)
 
 enum Metric {
   Bookmark = 'favorite',
@@ -239,6 +239,21 @@ export default function AnalyticsCard({
     },
   ]
 
+  const toTicks = (date: number) => {
+    if (group.value === Group.Hour) {
+      return moment(date).format('H')
+    } else if (group.value === Group.Day) {
+      return moment(date).format('D')
+    } else if (group.value === Group.Week) {
+      // We need to round down for Week values
+      return moment(date).add(-1, 'weeks').format('MM/DD')
+    } else if (group.value === Group.Month) {
+      // We need to round down for Month values
+      return moment(date).add(-1, 'months').format('MM/DD')
+    }
+    return moment(date).format('MM/DD')
+  }
+
   return (
     <>
       <BaseCard title="Time Series Analytics">
@@ -286,45 +301,54 @@ export default function AnalyticsCard({
           <Loading />
         ) : (
           <>
-            <DiscreteColorLegend
-              items={legendItems}
-              orientation="vertical"
-              style={{ display: 'flex' }}
-            />
-            <FlexibleXYPlot
-              xType="time"
-              xDomain={[date, endDate]}
-              yDomain={[0, max]}
-              height={350}
-              margin={{ bottom: 60 }}
-            >
-              <XAxis
-                tickValues={visits.map((visit) => visit.x)}
-                tickFormat={(date) => {
-                  if (group.value === Group.Hour) {
-                    return moment(date).format('H')
-                  } else if (group.value === Group.Day) {
-                    return moment(date).format('D')
-                  } else if (group.value === Group.Week) {
-                    // We need to round down for Week values
-                    return moment(date).add(-1, 'weeks').format('MM/DD')
-                  } else if (group.value === Group.Month) {
-                    // We need to round down for Month values
-                    return moment(date).add(-1, 'months').format('MM/DD')
-                  }
-                }}
-              />
-              <YAxis />
-              <ChartLabel
-                text={`Time (${group.label})`}
-                includeMargin={true}
-                xPercent={0.5}
-                yPercent={0.85}
-              />
-              <LineMarkSeries size={1} data={visits} />
-              <LineMarkSeries size={1} data={favorites} />
-              <LineMarkSeries size={1} data={subscriptions} />
-            </FlexibleXYPlot>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart
+                // No single chart-level data since we're giving data per <Line>
+                margin={{ bottom: 60, left: 10, right: 10, top: 10 }}
+              >
+                <XAxis
+                  dataKey="x"
+                  type="number"
+                  scale="time"
+                  domain={[date.getTime(), endDate.getTime()]}
+                  tickFormatter={toTicks}
+                  // If you need explicit ticks like react-vis tickValues:
+                  // ticks={[...visits.map(v => toTs(v.x))]}
+                ></XAxis>
+                <Label
+                  value={`Time (${group.label})`}
+                  position="insideBottom"
+                  offset={-40}
+                />
+                <YAxis domain={[0, max]} />
+                <Legend
+                  layout="vertical"
+                  align="right"
+                  verticalAlign="middle"
+                />
+                <Line
+                  name="Visits"
+                  data={visits}
+                  dataKey="y"
+                  isAnimationActive={false}
+                  stroke="red"
+                />
+                <Line
+                  name="Favorites"
+                  data={favorites}
+                  dataKey="y"
+                  isAnimationActive={false}
+                  stroke="green"
+                />
+                <Line
+                  name="Subscriptions"
+                  data={subscriptions}
+                  dataKey="y"
+                  isAnimationActive={false}
+                  stroke="blue"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </>
         )}
       </BaseCard>
@@ -358,6 +382,8 @@ export default function AnalyticsCard({
         <br></br>
         {pieChartData == null ? (
           <Loading />
+        ) : pieChartData.content.length === 0 ? (
+          <div>No data to display </div>
         ) : (
           <>
             <div className="is-clearfix">
@@ -366,24 +392,29 @@ export default function AnalyticsCard({
                   <b>
                     {category.label} by {metric.label}
                   </b>
-                  <DiscreteColorLegend
-                    items={parsePie(pieChartData.content).map((item) => ({
-                      title:
-                        item.label !== 'None'
-                          ? `${item.label} (${item.angle})`
-                          : `Other (${item.angle})`,
-                      strokeWidth: 6,
-                      color: item.color,
-                    }))}
-                  />
-                </div>
-                <div className="column is-8">
-                  <RadialChart
-                    data={parsePie(pieChartData.content)}
-                    width={400}
-                    height={400}
-                    colorType="literal"
-                  />
+
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={parsePie(pieChartData.content)}
+                        dataKey="angle"
+                        nameKey="label"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={160}
+                        labelLine={false}
+                      >
+                        {parsePie(pieChartData.content).map((d) => (
+                          <Cell key={d.label} fill={d.color} />
+                        ))}
+                      </Pie>
+                      <Legend
+                        layout="vertical"
+                        align="right"
+                        verticalAlign="middle"
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
