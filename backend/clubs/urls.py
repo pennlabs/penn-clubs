@@ -46,6 +46,7 @@ from clubs.views import (
     OwnershipRequestManagementViewSet,
     OwnershipRequestViewSet,
     QuestionAnswerViewSet,
+    RankingWeightsView,
     RegistrationQueueSettingsView,
     ReportViewSet,
     SchoolViewSet,
@@ -223,6 +224,11 @@ urlpatterns = [
         "settings/queue/",
         RegistrationQueueSettingsView.as_view(),
         name="queue-settings",
+    ),
+    path(
+        "settings/ranking-weights/",
+        RankingWeightsView.as_view(),
+        name="ranking-weights",
     ),
 ]
 

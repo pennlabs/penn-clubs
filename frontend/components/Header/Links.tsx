@@ -118,14 +118,6 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement<any> => {
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
           Events
         </StyledLink>
-        <StyledLink
-          href="https://penncfa.com/"
-          onClick={() => logEvent('cfa redirect', 'click')}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Funding
-        </StyledLink>
         <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
           FAQ
         </StyledLink>

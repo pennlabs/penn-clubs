@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -54,6 +54,7 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RankingWeights,
     RegistrationQueueSettings,
     Report,
     School,
@@ -1348,10 +1349,11 @@ def diff_calculator(latest_approved_description, latest_description):
     for ins_tag in soup.find_all("ins"):
         next_tag = ins_tag.find_next_sibling("del")
         if next_tag and next_tag.get_text() == ins_tag.get_text():
+            # Remove the redundant <del> tag, then style the <ins> tag and its children
             next_tag.decompose()
-            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
+            ins_tag["style"] = diff_regex_helper(ins_tag.get("style", ""))
             ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
-            for child in next_tag.find_all(True):
+            for child in ins_tag.find_all(True):
                 child["style"] = child.get("style", "") + " background-color: #fff2bd;"
     return str(soup)
 
@@ -1453,6 +1455,12 @@ class GroupActivityOptionSerializer(serializers.ModelSerializer):
     Serializer for group activity assessment options.
     """
 
+    # Allow writing by id when nested inside other serializers
+    id = serializers.IntegerField()
+    text = serializers.CharField(read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    order = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = GroupActivityOption
         fields = ["id", "text", "is_active", "order"]
@@ -1493,13 +1501,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    # Group Activity Assessment field - handle both IDs and full objects
-    group_activity_assessment = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=GroupActivityOption.objects.filter(is_active=True),
-        required=False,
-        allow_empty=True,
-    )
+    group_activity_assessment = GroupActivityOptionSerializer(many=True, required=False)
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
@@ -2755,7 +2757,21 @@ class ReportClubField(serializers.Field):
 class ReportClubSerializer(AuthenticatedClubSerializer):
     """
     Provides additional fields that can be used to generate club reports.
+
+    Notes for Excel/xlsx exports:
+    - Nested related fields are flattened to scalars so subfields are not
+      expanded into multiple columns. Specifically, these fields are emitted
+      as strings using their name.
     """
+
+    category = serializers.CharField(source="category.name", read_only=True)
+    classification = serializers.CharField(source="classification.name", read_only=True)
+    type = serializers.CharField(source="type.name", read_only=True)
+    status = serializers.CharField(source="status.name", read_only=True)
+    designation = serializers.SerializerMethodField("get_designation")
+
+    def get_designation(self, obj):
+        return obj.designation.name if getattr(obj, "designation", None) else None
 
     @staticmethod
     def get_additional_fields():
@@ -3260,6 +3276,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         return data
 
+    @transaction.atomic
     def save(self):
         application_obj = super().save()
         # manually create committee objects as Django does
@@ -3300,10 +3317,14 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
             for name in committees:
                 if name not in prev_committee_names:
-                    ApplicationCommittee.objects.create(
-                        name=name,
-                        application=application_obj,
-                    )
+                    try:
+                        ApplicationCommittee.objects.get_or_create(
+                            name=name,
+                            application=application_obj,
+                        )
+                    except IntegrityError:
+                        # TODO: PENN-CLUBS-MN - investigate why this is happening
+                        pass
             cache.delete(f"clubapplication:{application_obj.id}")
 
         return application_obj
@@ -3485,6 +3506,48 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "reapproval_queue_open",
             "new_approval_queue_open",
+            "updated_at",
+            "updated_by",
+        ]
+        read_only_fields = ["updated_at", "updated_by"]
+
+    def get_updated_by(self, obj):
+        return obj.updated_by.get_full_name() if obj.updated_by else "N/A"
+
+
+class RankingWeightsSerializer(serializers.ModelSerializer):
+    updated_by = serializers.SerializerMethodField("get_updated_by")
+
+    class Meta:
+        model = RankingWeights
+        fields = [
+            "inactive_penalty",
+            "favorites_per",
+            "tags_good",
+            "tags_many",
+            "officer_bonus",
+            "member_base",
+            "member_per",
+            "logo_bonus",
+            "subtitle_bad",
+            "subtitle_good",
+            "images_bonus",
+            "desc_short",
+            "desc_med",
+            "desc_long",
+            "fair_bonus",
+            "application_bonus",
+            "today_event_base",
+            "today_event_good",
+            "week_event_base",
+            "week_event_good",
+            "email_bonus",
+            "social_bonus",
+            "howto_penalty",
+            "outdated_penalty",
+            "testimonial_one",
+            "testimonial_three",
+            "random_scale",
             "updated_at",
             "updated_by",
         ]

@@ -7,6 +7,9 @@
 		{
 			"name": "Backend",
 			"path": "backend"
+		},
+		{
+			"path": "k8s"
 		}
 	],
 	"settings": {

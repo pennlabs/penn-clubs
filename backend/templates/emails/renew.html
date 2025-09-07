@@ -1,7 +1,9 @@
 <!-- TYPES:
 name:
     type: string
-url:
+renew_url:
+    type: string
+transfer_url:
     type: string
 -->
 {% extends 'emails/base.html' %}
@@ -28,10 +30,9 @@ url:
     </p>
 
     <p style="font-size: 1.2em">
-        If you have already graduated, <b>PLEASE FORWARD THIS EMAIL</b> to the current leadership of
-        the group so that they may complete the registration process and sign up for the SAC Fair. If 
-        they are not currently listed as an officer for your club on Penn Clubs, they will need to 
-        email <b>contact@pennclubs.com</b> with their <b>name, PennKey, and club name</b>. 
+        If you have already graduated, <b>PLEASE FORWARD THIS EMAIL</b> to the current leadership of
+        the group so that they may complete the registration process. If 
+        they are not currently listed as an officer for your club on Penn Clubs, you will need to transfer ownership to them via following <a href="{{ transfer_url }}">the link below</a> and sending a member invitation to them with the appropriate rank.
     </p>
 
     <p style="font-size: 1.2em">
@@ -45,7 +46,8 @@ url:
         should be designated to register the group. 
     </p>
     
-    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ url }}">Renew Club</a>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: green; border-radius: 3px; font-weight: bold" href="{{ renew_url }}">Renew Club</a>
+    <a style="text-decoration: none; padding: 5px 20px; font-size: 1.5em; margin-top: 25px; color: white; background-color: #007bff; border-radius: 3px; font-weight: bold; margin-left: 10px;" href="{{ transfer_url }}">Transfer Ownership</a>
     <p style="font-size: 1.2em">
         If you have any questions, feel free to respond to this email.
     </p>

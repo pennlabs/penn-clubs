@@ -47,6 +47,7 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RankingWeights,
     RegistrationQueueSettings,
     Report,
     School,
@@ -530,6 +531,112 @@ class GroupActivityOptionAdmin(admin.ModelAdmin):
     fieldsets = ((None, {"fields": ("text", "is_active", "order")}),)
 
 
+class RankingWeightsAdmin(admin.ModelAdmin):
+    """
+    Admin interface for managing club ranking weights.
+    This is a singleton model, so only one instance should exist.
+    """
+
+    list_display = (
+        "inactive_penalty",
+        "favorites_per",
+        "tags_good",
+        "officer_bonus",
+        "member_base",
+        "logo_bonus",
+        "fair_bonus",
+        "application_bonus",
+        "updated_at",
+        "updated_by",
+    )
+
+    readonly_fields = ("updated_at", "updated_by")
+
+    fieldsets = (
+        (
+            "Core Weights",
+            {
+                "fields": (
+                    "inactive_penalty",
+                    "favorites_per",
+                    "tags_good",
+                    "tags_many",
+                    "officer_bonus",
+                    "member_base",
+                    "member_per",
+                    "logo_bonus",
+                )
+            },
+        ),
+        (
+            "Content Quality",
+            {
+                "fields": (
+                    "subtitle_bad",
+                    "subtitle_good",
+                    "images_bonus",
+                    "desc_short",
+                    "desc_med",
+                    "desc_long",
+                )
+            },
+        ),
+        (
+            "Events & Activities",
+            {
+                "fields": (
+                    "fair_bonus",
+                    "application_bonus",
+                    "today_event_base",
+                    "today_event_good",
+                    "week_event_base",
+                    "week_event_good",
+                )
+            },
+        ),
+        (
+            "Communication & Engagement",
+            {
+                "fields": (
+                    "email_bonus",
+                    "social_bonus",
+                    "howto_penalty",
+                    "outdated_penalty",
+                    "testimonial_one",
+                    "testimonial_three",
+                )
+            },
+        ),
+        ("Randomization", {"fields": ("random_scale",)}),
+        (
+            "Metadata",
+            {"fields": ("updated_at", "updated_by"), "classes": ("collapse",)},
+        ),
+    )
+
+    def has_add_permission(self, request):
+        """Prevent adding new instances since this is a singleton."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion since this is a singleton."""
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        """Override changelist to redirect to the singleton instance."""
+        from clubs.models import RankingWeights
+
+        ranking_weights = RankingWeights.get()
+        return self.change_view(request, str(ranking_weights.pk), extra_context)
+
+    def get_queryset(self, request):
+        """Only show the singleton instance."""
+        from clubs.models import RankingWeights
+
+        ranking_weights = RankingWeights.get()
+        return super().get_queryset(request).filter(pk=ranking_weights.pk)
+
+
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
 admin.site.register(ApplicationExtension)
@@ -577,6 +684,7 @@ admin.site.register(Cart)
 admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
 admin.site.register(RegistrationQueueSettings)
+admin.site.register(RankingWeights, RankingWeightsAdmin)
 admin.site.register(EventShowing)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Designation, DesignationAdmin)

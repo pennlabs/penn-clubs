@@ -16,16 +16,21 @@ type Entity = {
 }
 
 const MediaComponent = (props): ReactElement<any> => {
-  const data = props.contentState
-    .getEntity(props.block.getEntityAt(0))
-    .getData()
-
-  return (
-    <iframe
-      src={data.src ?? 'about:blank'}
-      style={{ width: data.width ?? '100%', height: data.height }}
-    />
-  )
+  try {
+    const entityKey = props?.block?.getEntityAt?.(0)
+    if (!entityKey) return <></>
+    const entity = props?.contentState?.getEntity?.(entityKey)
+    const data = entity?.getData?.() ?? {}
+    return (
+      <iframe
+        src={data.src ?? 'about:blank'}
+        style={{ width: data.width ?? '100%', height: data.height }}
+      />
+    )
+  } catch {
+    // Gracefully no-op if entity lookup fails for any reason
+    return <></>
+  }
 }
 
 export const htmlToEntity = (
@@ -65,13 +70,23 @@ export const blockRendererFunction = (
   | { component: (props: any) => ReactElement<any>; editable: boolean }
   | undefined => {
   if (block.getType() === 'atomic') {
-    const contentState = config.getEditorState().getCurrentContent()
-    const entity = contentState.getEntity(block.getEntityAt(0))
-    if (entity && entity.type === 'EMBED') {
-      return {
-        component: MediaComponent,
-        editable: false,
+    const editorState = config?.getEditorState?.()
+    if (!editorState) return
+    const contentState = editorState.getCurrentContent()
+    const entityKey = block.getEntityAt(0)
+    if (!entityKey) return
+    try {
+      const entity = contentState.getEntity(entityKey)
+      const type =
+        typeof entity.getType === 'function' ? entity.getType() : entity?.type
+      if (type === 'EMBED') {
+        return {
+          component: MediaComponent,
+          editable: false,
+        }
       }
+    } catch {
+      // Invalid/missing entity key; fall back to default rendering
     }
   }
 }

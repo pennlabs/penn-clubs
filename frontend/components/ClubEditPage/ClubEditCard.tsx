@@ -76,9 +76,12 @@ const GroupActivityAssessmentField: React.FC<{
   const { setFieldValue, setFieldTouched } = useFormikContext()
 
   const currentValues = field.value || []
+  const selectedIds: number[] = currentValues.map((v) =>
+    typeof v === 'object' && v !== null ? v.id : v,
+  )
   const noneOption = options.find((opt) => opt.text === 'None of the above')
   const isNoneSelected = noneOption
-    ? currentValues.includes(noneOption.id)
+    ? selectedIds.includes(noneOption.id)
     : false
 
   const handleCheckboxChange = (
@@ -88,26 +91,34 @@ const GroupActivityAssessmentField: React.FC<{
     if (checked) {
       if (option.text === 'None of the above') {
         // Selecting "None of the above" clears all other selections
-        setFieldValue(name, [option.id])
+        setFieldValue(name, [option])
       } else {
         // Selecting any other option removes "None of the above" and adds the option
         const valuesWithoutNone = currentValues.filter(
-          (val: number) => val !== noneOption?.id,
+          (val) => (typeof val === 'object' ? val.id : val) !== noneOption?.id,
         )
-        setFieldValue(name, [...valuesWithoutNone, option.id])
+        // Avoid duplicates
+        const exists = valuesWithoutNone.some(
+          (val) => (typeof val === 'object' ? val.id : val) === option.id,
+        )
+        setFieldValue(
+          name,
+          exists ? valuesWithoutNone : [...valuesWithoutNone, option],
+        )
       }
     } else {
       // Unchecking removes the option
       setFieldValue(
         name,
-        currentValues.filter((val: number) => val !== option.id),
+        currentValues.filter(
+          (val) => (typeof val === 'object' ? val.id : val) !== option.id,
+        ),
       )
     }
     setFieldTouched(name, true, false)
   }
 
-  const isOptionSelected = (optionId: number) =>
-    currentValues.includes(optionId)
+  const isOptionSelected = (optionId: number) => selectedIds.includes(optionId)
 
   return (
     <div className="field">
