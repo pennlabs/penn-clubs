@@ -2,8 +2,6 @@ import { Field, Form, Formik } from 'formik'
 import { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { WHITE } from '~/constants'
-
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
 import { Contact, Icon, Text } from '../common'
@@ -31,9 +29,7 @@ export default function EventsImportCard({
         onFetchEvents && onFetchEvents()
       })
       .catch(() => {
-        toast.error('Failed to fetch events, an unknown error occured.', {
-          style: { color: WHITE },
-        })
+        toast.error('Failed to fetch events, an unknown error occured.')
       })
       .finally(() => setFetching(false))
   }

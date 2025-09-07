@@ -1,14 +1,14 @@
 import { ReactElement } from 'react'
 
-import { Badge, Tag } from '../../types'
+import { Affiliation, Tag } from '../../types'
 import { BlueTag, Tag as DefaultTag } from './Tags'
 
 type TagGroupProps = {
-  tags?: (Tag | Badge)[]
+  tags?: (Tag | Affiliation)[]
 }
 
-function isBadge(tag): tag is Badge {
-  return tag.label !== undefined || tag.color !== undefined
+function isAffiliation(tag): tag is Affiliation {
+  return tag?.label !== undefined || tag?.color !== undefined
 }
 
 export const TagGroup = ({
@@ -16,15 +16,16 @@ export const TagGroup = ({
 }: TagGroupProps): ReactElement<any> | null => {
   if (!tags || !tags.length) return null
 
-  // sometimes there will be duplicate badges, or a badge will end up with the same content as a tag
-  // when there are duplicate badges, choose one arbitrarily
-  // when there's a tag and a badge with the same content, render the badge
+  // sometimes there will be duplicate affiliations, or an affiliation will end up with the same content as a tag
+  // when there are duplicate affiliations, choose one arbitrarily
+  // when there's a tag and an affiliation with the same content, render the affiliation
 
   const uniqueTags = tags.reduce((acc, tag) => {
-    const key = isBadge(tag) ? tag.label : tag.name
+    if (!tag) return acc
+    const key = isAffiliation(tag) ? tag.label : tag.name
     if (!acc.has(key)) {
       acc.set(key, tag)
-    } else if (isBadge(tag)) {
+    } else if (isAffiliation(tag)) {
       acc.set(key, tag)
     }
     return acc
@@ -32,20 +33,20 @@ export const TagGroup = ({
 
   return (
     <>
-      {Array.from(uniqueTags.values()) // display badges after tags
+      {Array.from(uniqueTags.values()) // display affiliations after tags
         .sort((a, b) => {
-          if (isBadge(a) && !isBadge(b)) return 1
-          if (!isBadge(a) && isBadge(b)) return -1
-          if (isBadge(a) && isBadge(b)) {
-            // badges should be sorted by color
+          if (isAffiliation(a) && !isAffiliation(b)) return 1
+          if (!isAffiliation(a) && isAffiliation(b)) return -1
+          if (isAffiliation(a) && isAffiliation(b)) {
+            // affiliations should be sorted by color
             return a.color.localeCompare(b.color)
           }
           return 0
         })
         .map((tag) =>
-          isBadge(tag) ? (
+          isAffiliation(tag) ? (
             <DefaultTag
-              key={`${tag.id}-badge`}
+              key={`${tag.id}-affiliation`}
               color={tag.color}
               className="tag is-rounded"
             >

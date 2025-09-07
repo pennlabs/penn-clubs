@@ -48,8 +48,10 @@ from django.db.models import (
     F,
     Max,
     Min,
+    OuterRef,
     Prefetch,
     Q,
+    Subquery,
     TextField,
     Value,
     When,
@@ -58,6 +60,7 @@ from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -94,6 +97,8 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -101,9 +106,12 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Designation,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -111,10 +119,12 @@ from clubs.models import (
     Note,
     OwnershipRequest,
     QuestionAnswer,
+    RankingWeights,
     RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -122,6 +132,7 @@ from clubs.models import (
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
+    Type,
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
@@ -150,6 +161,7 @@ from clubs.permissions import (
     find_membership_helper,
 )
 from clubs.serializers import (
+    AdminClubSerializer,
     AdminNoteSerializer,
     AdvisorSerializer,
     ApplicationCycleSerializer,
@@ -164,15 +176,20 @@ from clubs.serializers import (
     AuthenticatedClubSerializer,
     AuthenticatedMembershipSerializer,
     BadgeSerializer,
+    CategorySerializer,
+    ClassificationSerializer,
     ClubApplicationSerializer,
     ClubApprovalResponseTemplateSerializer,
     ClubBoothSerializer,
     ClubConstitutionSerializer,
+    ClubDiffSerializer,
     ClubFairSerializer,
     ClubListSerializer,
     ClubMembershipSerializer,
     ClubMinimalSerializer,
     ClubSerializer,
+    DesignationSerializer,
+    EligibilitySerializer,
     EventSerializer,
     EventShowingSerializer,
     EventShowingWriteSerializer,
@@ -181,6 +198,7 @@ from clubs.serializers import (
     FavoriteSerializer,
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
+    GroupActivityOptionSerializer,
     MajorSerializer,
     ManagedClubApplicationSerializer,
     MembershipInviteSerializer,
@@ -190,17 +208,20 @@ from clubs.serializers import (
     NoteSerializer,
     OwnershipRequestSerializer,
     QuestionAnswerSerializer,
+    RankingWeightsSerializer,
     RegistrationQueueSettingsSerializer,
     ReportClubSerializer,
     ReportSerializer,
     SchoolSerializer,
     SearchQuerySerializer,
+    StatusSerializer,
     StudentTypeSerializer,
     SubscribeBookmarkSerializer,
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
     TicketSerializer,
+    TypeSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -1138,6 +1159,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     to_attr="user_membership_set",
                 ),
                 "badges",
+                "group_activity_assessment",
+                "eligibility",
+            )
+            queryset = queryset.select_related(
+                "classification",
+                "category",
+                "category__designation",
+                "type",
+                "status",
             )
 
             if self.action in {"retrieve"}:
@@ -1240,6 +1270,18 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         club = self.get_object()
         cache.delete(f"clubs:{club.id}-authed")
         cache.delete(f"clubs:{club.id}-anon")
+
+        # check if reapproval queue is open
+        queue_settings = RegistrationQueueSettings.get()
+        relevant_queue_open = (
+            queue_settings.reapproval_queue_open
+            if club.image is not None
+            else queue_settings.approval_queue_open
+        )
+        if not request.user.has_perm("clubs.approve_club") and not relevant_queue_open:
+            raise PermissionDenied(
+                "The approval queue is not currently open for editing club images."
+            )
 
         # reset approval status after upload
         resp = upload_endpoint_helper(request, club, "file", "image", save=False)
@@ -2094,6 +2136,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         if (
             cached_object
             and not self.request.user.groups.filter(name="Approvers").exists()
+            and not self.request.user.has_perm("clubs.approve_club")
         ):
             return Response(cached_object)
 
@@ -2168,6 +2211,110 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             context=context,
             reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
         )
+
+    def _get_club_diff_queryset(self):
+        """
+        Returns a queryset of clubs annotated with the latest and latest approved values
+        for specific fields (name, description, image) from their historical records.
+
+        The annotations include:
+        - `latest_<field>`: The most recent value of the field.
+        - `latest_approved_<field>`: The most recent approved value of the field.
+        """
+        latest_version_qs = Club.history.filter(code=OuterRef("code")).order_by(
+            "-history_date"
+        )
+
+        latest_approved_version_qs = Club.history.filter(
+            code=OuterRef("code"), approved=True
+        ).order_by("-history_date")
+
+        qs = Club.objects.annotate(
+            latest_name=Subquery(latest_version_qs.values("name")[:1]),
+            latest_description=Subquery(latest_version_qs.values("description")[:1]),
+            latest_image=Subquery(latest_version_qs.values("image")[:1]),
+            latest_approved_name=Subquery(
+                latest_approved_version_qs.values("name")[:1]
+            ),
+            latest_approved_description=Subquery(
+                latest_approved_version_qs.values("description")[:1]
+            ),
+            latest_approved_image=Subquery(
+                latest_approved_version_qs.values("image")[:1]
+            ),
+        )
+
+        return qs
+
+    @action(detail=True, methods=["GET"])
+    def club_detail_diff(self, request, *args, **kwargs):
+        """
+        Return old and new data for a club that is pending approval.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                club_code:
+                                    type: object
+                                    description: club code
+                                    properties:
+                                        name:
+                                            type: object
+                                            description: Changes in the name field
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old name of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New name of the club
+                                                diff:
+                                                    type: string
+                                                    description: >
+                                                        Diffed name of the club
+                                        description:
+                                            type: object
+                                            description: >
+                                                Changes in the club description
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old description of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New description of the club
+                                                diff:
+                                                    type: string
+                                                    description: >
+                                                        Diffed description of the club
+                                        image:
+                                            type: object
+                                            description: >
+                                                Changes in the image of the club
+                                            properties:
+                                                old:
+                                                    type: string
+                                                    description: >
+                                                        Old image URL of the club
+                                                new:
+                                                    type: string
+                                                    description: >
+                                                        New image URL of the club
+        ---
+        """
+        club = self.get_object()
+
+        club = self._get_club_diff_queryset().get(pk=club.pk)
+        serializer = ClubDiffSerializer(club)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["GET"])
     def fields(self, request, *args, **kwargs):
@@ -2353,7 +2500,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 else:
                     return ClubSerializer
             return ClubListSerializer
+
         if self.request is not None and self.request.user.is_authenticated:
+            if self.request.user.is_superuser:
+                return AdminClubSerializer
+
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
             manage_club = self.request.user.has_perm("clubs.manage_club")
             is_member = (
@@ -2365,6 +2516,38 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if see_pending or manage_club or is_member:
                 return AuthenticatedClubSerializer
         return ClubSerializer
+
+    @action(detail=False, methods=["get"])
+    def group_activity_options(self, request):
+        """
+        Get all active group activity assessment options.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            items:
+                                type: object
+                                properties:
+                                    text:
+                                        type: string
+                                        description: The text content of the option
+                                    is_active:
+                                        type: boolean
+                                        description: Whether this option is
+                                            currently available
+                                    order:
+                                        type: integer
+                                        description: Display order for the frontend
+        ---
+        """
+        options = GroupActivityOption.objects.filter(is_active=True).order_by(
+            "order", "text"
+        )
+        serializer = GroupActivityOptionSerializer(options, many=True)
+        return Response(serializer.data)
 
 
 class SchoolViewSet(viewsets.ModelViewSet):
@@ -4691,6 +4874,19 @@ class TagViewSet(viewsets.ModelViewSet):
     lookup_field = "name"
 
 
+class ClassificationViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of classifications.
+    """
+
+    queryset = Classification.objects.all()
+    serializer_class = ClassificationSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
 class BadgeViewSet(viewsets.ModelViewSet):
     """
     list:
@@ -4714,6 +4910,80 @@ class BadgeViewSet(viewsets.ModelViewSet):
             return Badge.objects.filter(fair__id=fair)
 
         return Badge.objects.filter(visible=True)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of categories.
+    """
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+
+
+class EligibilityViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of eligibilities.
+    """
+
+    queryset = Eligibility.objects.all()
+    serializer_class = EligibilitySerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+
+
+class DesignationViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of designations.
+    """
+
+    queryset = Designation.objects.all()
+    serializer_class = DesignationSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class TypeViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of types.
+    """
+
+    queryset = Type.objects.all()
+    serializer_class = TypeSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class StatusViewSet(viewsets.ModelViewSet):
+    """
+    list:
+    Return a list of statuses.
+    """
+
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
+    lookup_field = "name"
+
+
+class GroupActivityOptionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing group activity assessment options.
+    """
+
+    queryset = GroupActivityOption.objects.all()
+    serializer_class = GroupActivityOptionSerializer
+    permission_classes = [ReadOnly | IsSuperuser]
+    http_method_names = ["get"]
 
 
 def parse_boolean(inpt):
@@ -6707,8 +6977,25 @@ class UserViewSet(viewsets.ModelViewSet):
                     submissions page""",
                 }
             )
+
+        # check if user profile is complete before creating a submission
+        user = self.request.user
+        if (
+            not user.profile.graduation_year
+            or not user.profile.school.exists()
+            or not user.profile.major.exists()
+        ):
+            return Response(
+                {
+                    "success": False,
+                    "detail": """You need to set your graduation year, major, and
+                    school before you can apply to a club!""",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         submission, _ = ApplicationSubmission.objects.get_or_create(
-            user=self.request.user,
+            user=user,
             application=application,
             committee=committee,
         )
@@ -6946,7 +7233,7 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         email_type = self.request.data.get("email_type")["id"]
 
         subject = f"Application Update for {app.name}"
-        n, skip = 0, 0
+        n, skip = 0, collections.defaultdict(int)
 
         allow_resend = self.request.data.get("allow_resend")
 
@@ -6956,12 +7243,14 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         mass_emails = []
         invitee_emails = []
         for submission in submissions:
-            if (
-                (not allow_resend and submission.notified)
-                or submission.status == ApplicationSubmission.PENDING
-                or not (submission.reason and submission.user.email)
-            ):
-                skip += 1
+            if not allow_resend and submission.notified:
+                skip["already_notified"] += 1
+                continue
+            elif submission.status == ApplicationSubmission.PENDING:
+                skip["pending"] += 1
+                continue
+            elif not (submission.reason and submission.user.email):
+                skip["no_reason"] += 1
                 continue
             elif (
                 submission.status == ApplicationSubmission.ACCEPTED
@@ -7028,10 +7317,17 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
                 invite.send_mail(self.request)
 
         dry_run_msg = "Would have sent" if dry_run else "Sent"
+        skip_msg = []
+        if skip["already_notified"]:
+            skip_msg.append(f" {skip['already_notified']} already notified")
+        if skip["pending"]:
+            skip_msg.append(f" {skip['pending']} still marked as pending")
+        if skip["no_reason"]:
+            skip_msg.append(f" {skip['no_reason']} have no reason provided")
         return Response(
             {
-                "detail": f"{dry_run_msg} emails to {n} people, "
-                f"skipping {skip} due to one of (already notified, no reason, no email)"
+                "detail": f"{dry_run_msg} emails to {n} people"
+                f"{(': ' + ', '.join(skip_msg)) if len(skip_msg) > 0 else ''}",
             }
         )
 
@@ -7080,6 +7376,10 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         clone.external_url = (
             f"https://pennclubs.com/club/{clone.club.code}/application/{clone.pk}"
         )
+        # django-clone may create duplicate committees with "copy 1"
+        # suffixes due to double-cloning (app O2M + question M2M),
+        # so normalize them
+        clone.normalize_committees()
         clone.save()
         return Response([])
 
@@ -7253,6 +7553,10 @@ class WhartonCyclesView(viewsets.ModelViewSet):
                     f"https://pennclubs.com/club/{club.code}/"
                     f"application/{application.pk}"
                 )
+                # django-clone may create duplicate committees with "copy 1"
+                # suffixes due to double-cloning (app O2M + question M2M),
+                # so normalize them
+                application.normalize_committees()
                 application.save()
             else:
                 # Otherwise, start afresh
@@ -8440,22 +8744,42 @@ def email_preview(request):
     email = None
     text_email = None
     initial_context = {}
+    template_error = False
 
     if "email" in request.GET:
         email_path = os.path.basename(request.GET.get("email"))
 
         # initial values
-        types = get_mail_type_annotation(email_path)
-        if types is not None:
-            initial_context = get_initial_context_from_types(types)
+        try:
+            types = get_mail_type_annotation(email_path)
+            if types is not None:
+                initial_context = get_initial_context_from_types(types)
+        except (FileNotFoundError, OSError):
+            # Template file doesn't exist, continue with empty context
+            types = None
 
         # set specified values
         variables = request.GET.get("variables")
         if variables is not None:
             initial_context.update(json.loads(variables))
 
-        email = render_to_string(f"{prefix}/{email_path}.html", initial_context)
-        text_email = html_to_text(email)
+        try:
+            email = render_to_string(f"{prefix}/{email_path}.html", initial_context)
+            text_email = html_to_text(email)
+        except TemplateDoesNotExist:
+            template_error = True
+            email = (
+                f'<div style="color: red; padding: 20px; border: 1px solid red; '
+                f'background-color: #ffe6e6; border-radius: 4px;">'
+                f"<strong>Template Not Found:</strong><br>"
+                f'The email template "{email_path}.html" does not exist in the '
+                f"{prefix} directory.<br><br>Please check that the template file "
+                f"exists and try again.</div>"
+            )
+            text_email = (
+                f"Template Not Found: The email template '{email_path}.html' "
+                f"does not exist in the {prefix} directory."
+            )
 
     return render(
         request,
@@ -8465,6 +8789,7 @@ def email_preview(request):
             "email": email,
             "text_email": text_email,
             "variables": json.dumps(initial_context, indent=4),
+            "template_error": template_error,
         },
     )
 
@@ -8475,7 +8800,14 @@ class RegistrationQueueSettingsView(APIView):
     Only superusers can update settings.
     """
 
-    permission_classes = [IsSuperuser]
+    def get_permissions(self):
+        """
+        Allow any authenticated user to read settings,
+        but only superusers can update them.
+        """
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        return [IsSuperuser()]
 
     def get(self, request):
         """
@@ -8551,5 +8883,245 @@ class RegistrationQueueSettingsView(APIView):
         if serializer.is_valid():
             queue_setting = serializer.save(updated_by=request.user)
             return Response(RegistrationQueueSettingsSerializer(queue_setting).data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RankingWeightsView(APIView):
+    """
+    View to get and update ranking weights settings.
+    Only superusers can read and update settings.
+    """
+
+    def get_permissions(self):
+        """
+        Only superusers can read and update ranking weights settings.
+        """
+        return [IsSuperuser()]
+
+    def get(self, request):
+        """
+        Return the current ranking weights.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                inactive_penalty:
+                                    type: number
+                                favorites_per:
+                                    type: number
+                                tags_good:
+                                    type: number
+                                tags_many:
+                                    type: number
+                                officer_bonus:
+                                    type: number
+                                member_base:
+                                    type: number
+                                member_per:
+                                    type: number
+                                logo_bonus:
+                                    type: number
+                                subtitle_bad:
+                                    type: number
+                                subtitle_good:
+                                    type: number
+                                images_bonus:
+                                    type: number
+                                desc_short:
+                                    type: number
+                                desc_med:
+                                    type: number
+                                desc_long:
+                                    type: number
+                                fair_bonus:
+                                    type: number
+                                application_bonus:
+                                    type: number
+                                today_event_base:
+                                    type: number
+                                today_event_good:
+                                    type: number
+                                week_event_base:
+                                    type: number
+                                week_event_good:
+                                    type: number
+                                email_bonus:
+                                    type: number
+                                social_bonus:
+                                    type: number
+                                howto_penalty:
+                                    type: number
+                                outdated_penalty:
+                                    type: number
+                                testimonial_one:
+                                    type: number
+                                testimonial_three:
+                                    type: number
+                                random_scale:
+                                    type: number
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+        ---
+        """
+        ranking_weights = RankingWeights.get()
+        serializer = RankingWeightsSerializer(ranking_weights)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        """
+        Update the ranking weights.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            inactive_penalty:
+                                type: number
+                            favorites_per:
+                                type: number
+                            tags_good:
+                                type: number
+                            tags_many:
+                                type: number
+                            officer_bonus:
+                                type: number
+                            member_base:
+                                type: number
+                            member_per:
+                                type: number
+                            logo_bonus:
+                                type: number
+                            subtitle_bad:
+                                type: number
+                            subtitle_good:
+                                type: number
+                            images_bonus:
+                                type: number
+                            desc_short:
+                                type: number
+                            desc_med:
+                                type: number
+                            desc_long:
+                                type: number
+                            fair_bonus:
+                                type: number
+                            application_bonus:
+                                type: number
+                            today_event_base:
+                                type: number
+                            today_event_good:
+                                type: number
+                            week_event_base:
+                                type: number
+                            week_event_good:
+                                type: number
+                            email_bonus:
+                                type: number
+                            social_bonus:
+                                type: number
+                            howto_penalty:
+                                type: number
+                            outdated_penalty:
+                                type: number
+                            testimonial_one:
+                                type: number
+                            testimonial_three:
+                                type: number
+                            random_scale:
+                                type: number
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                inactive_penalty:
+                                    type: number
+                                favorites_per:
+                                    type: number
+                                tags_good:
+                                    type: number
+                                tags_many:
+                                    type: number
+                                officer_bonus:
+                                    type: number
+                                member_base:
+                                    type: number
+                                member_per:
+                                    type: number
+                                logo_bonus:
+                                    type: number
+                                subtitle_bad:
+                                    type: number
+                                subtitle_good:
+                                    type: number
+                                images_bonus:
+                                    type: number
+                                desc_short:
+                                    type: number
+                                desc_med:
+                                    type: number
+                                desc_long:
+                                    type: number
+                                fair_bonus:
+                                    type: number
+                                application_bonus:
+                                    type: number
+                                today_event_base:
+                                    type: number
+                                today_event_good:
+                                    type: number
+                                week_event_base:
+                                    type: number
+                                week_event_good:
+                                    type: number
+                                email_bonus:
+                                    type: number
+                                social_bonus:
+                                    type: number
+                                howto_penalty:
+                                    type: number
+                                outdated_penalty:
+                                    type: number
+                                testimonial_one:
+                                    type: number
+                                testimonial_three:
+                                    type: number
+                                random_scale:
+                                    type: number
+                                updated_at:
+                                    type: string
+                                    format: date-time
+                                updated_by:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                error:
+                                    type: string
+        ---
+        """
+        ranking_weights = RankingWeights.get()
+        serializer = RankingWeightsSerializer(
+            ranking_weights, data=request.data, partial=True
+        )
+
+        if serializer.is_valid():
+            ranking_weights = serializer.save(updated_by=request.user)
+            return Response(RankingWeightsSerializer(ranking_weights).data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

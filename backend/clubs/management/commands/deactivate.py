@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from clubs.models import Club
+from clubs.models import Club, RegistrationQueueSettings
 
 
 class Command(BaseCommand):
@@ -17,7 +17,8 @@ class Command(BaseCommand):
             "--force",
             dest="force",
             action="store_true",
-            help="Do not prompt for confirmation, just start the club renewal process.",
+            help="Do not prompt for confirmation, just start the club renewal process. "
+            "Necessary if running via web interface.",
         )
         parser.add_argument(
             "--clubs",
@@ -26,23 +27,33 @@ class Command(BaseCommand):
             help="If this parameter is specified, then only trigger renewal for the "
             "comma separated list of club codes specified by this argument.",
         )
-
         parser.add_argument(
-            "action",
-            default="all",
-            choices=["deactivate", "emails", "all", "remind"],
+            "--queue-open-date",
+            dest="queue_open_date",
             type=str,
-            help="Specify the actions that you want to take, "
-            "either only deactivating the clubs, only sending the reminder emails, "
-            "or performing both actions.",
+            help="If this parameter is specified, then the approval queue is not "
+            "currently open and clubs will be notified of the specified open date "
+            "in plain text (e.g. put the string 'August 24, 2025'). The approval queue "
+            "must be already open if the parameter is not specified.",
+        )
+        parser.add_argument(
+            "--email",
+            dest="email",
+            action="store_true",
+            help="If set, then notification emails will be sent out to affected clubs "
+            "in addition to deactivating them. Please use the email blast command "
+            "if you wish to solely send out reminders without deactivating clubs.",
         )
 
     def handle(self, *args, **kwargs):
-        action = kwargs["action"]
+        send_emails = kwargs["email"]
 
-        deactivate_clubs = action in {"deactivate", "all"}
-        send_emails = action in {"emails", "all"}
-        send_remind_emails = action in {"remind"}
+        # if queue open date is specified but queue is already open, error
+        queue_settings = RegistrationQueueSettings.get()
+        if kwargs["queue_open_date"] and queue_settings.reapproval_queue_open:
+            raise CommandError("The re-approval queue is already open!")
+        elif not kwargs["queue_open_date"] and not queue_settings.reapproval_queue_open:
+            raise CommandError("The re-approval queue is not open yet!")
 
         # warn if we're resetting all clubs and force flag is not specified
         if not kwargs["force"] and not kwargs["club"]:
@@ -75,50 +86,33 @@ class Command(BaseCommand):
             clubs = Club.objects.filter(code__in=kwargs["club"].strip().split(","))
 
         # deactivate all clubs
-        if deactivate_clubs:
-            num_ghosted = 0
+        num_ghosted = 0
 
-            with transaction.atomic():
-                for club in clubs:
-                    club.active = False
-                    club.approved = None
-                    club.approved_by = None
+        with transaction.atomic():
+            for club in clubs:
+                club.active = False
+                club.approved = None
+                club.approved_by = None
 
-                    # allow existing approved version to stay on website for now
-                    if club.history.filter(approved=True).exists():
-                        club.ghost = True
-                        club._change_reason = (
-                            "Mark pending approval (yearly renewal process)"
-                        )
-                        num_ghosted += 1
+                # allow existing approved version to stay on website for now
+                if club.history.filter(approved=True).exists():
+                    club.ghost = True
+                    club._change_reason = (
+                        "Mark pending approval (yearly renewal process)"
+                    )
+                    num_ghosted += 1
 
-                    club.save()
-                    cache.delete(f"clubs:{club.id}-authed")  # clear cache
-                    cache.delete(f"clubs:{club.id}-anon")
+                club.save()
+                cache.delete(f"clubs:{club.id}-authed")  # clear cache
+                cache.delete(f"clubs:{club.id}-anon")
 
-            self.stdout.write(
-                f"{clubs.count()} clubs deactivated! {num_ghosted} clubs ghosted!"
-            )
+        self.stdout.write(
+            f"{clubs.count()} clubs deactivated! {num_ghosted} clubs ghosted!"
+        )
 
         # send out renewal emails to all clubs
         if send_emails:
             for club in clubs:
-                club.send_renewal_email()
+                club.send_renewal_email(queue_open_date=kwargs["queue_open_date"])
 
             self.stdout.write(f"All {clubs.count()} emails sent out!")
-
-        # send out reminder emails to all clubs
-        if send_remind_emails:
-            pending_clubs = clubs.filter(active=False)
-            for club in pending_clubs:
-                club.send_renewal_reminder_email()
-
-            self.stdout.write(f"All {pending_clubs.count()} reminder emails sent out!")
-
-            rejected_clubs = clubs.filter(approved=False)
-            for club in rejected_clubs:
-                club.send_approval_email()
-
-            self.stdout.write(
-                f"All {rejected_clubs.count()} rejection emails sent out!"
-            )

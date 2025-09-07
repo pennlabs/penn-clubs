@@ -8,7 +8,20 @@ import {
   RED,
   SNOW,
 } from '../constants'
-import { Club, Major, School, StudentType, Tag, Year } from '../types'
+import {
+  Category,
+  Classification,
+  Club,
+  Eligibility,
+  GroupActivityOption,
+  Major,
+  School,
+  Status,
+  StudentType,
+  Tag,
+  Type,
+  Year,
+} from '../types'
 import { doApiRequest } from '../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -47,6 +60,12 @@ type ResourceCreationPageProps = {
   majors: Major[]
   tags: Tag[]
   studentTypes: StudentType[]
+  categories: Category[]
+  classifications: Classification[]
+  eligibilities: Eligibility[]
+  types: Type[]
+  statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
 }
 
 type TabItem = {
@@ -64,6 +83,12 @@ const ResourceCreationPage = ({
   majors,
   tags,
   studentTypes,
+  categories,
+  classifications,
+  eligibilities,
+  types,
+  statuses,
+  groupActivityOptions,
 }: ResourceCreationPageProps): ReactElement<any> => {
   const isResuming = initialClub != null
   const metadata = (
@@ -172,22 +197,28 @@ const ResourceCreationPage = ({
       ),
     },
     {
-      name: 'Basic',
+      name: 'Organizational Profile',
       content: (): ReactElement<any> => (
         <>
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Information</Title>
           <Text>
-            Use the form below to fill out basic information about your{' '}
-            {OBJECT_NAME_SINGULAR}.
+            Use the form below to fill out organizational profile information
+            about your {OBJECT_NAME_SINGULAR}.
           </Text>
           <ClubEditCard
             isEdit={club !== null}
+            eligibilities={eligibilities}
+            categories={categories}
+            classifications={classifications}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
               if (club) {

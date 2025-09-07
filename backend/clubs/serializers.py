@@ -4,15 +4,17 @@ from collections import OrderedDict
 from urllib.parse import parse_qs, urlparse
 
 import bleach
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import URLValidator
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from html_diff import diff
 from rest_framework import serializers, validators
 from simple_history.utils import update_change_reason
 
@@ -29,15 +31,20 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairBooth,
     ClubVisit,
+    Designation,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -47,10 +54,12 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
+    RankingWeights,
     RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -60,9 +69,10 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    Type,
     Year,
 )
-from clubs.utils import clean
+from clubs.utils import clean, html_to_text
 
 
 ALL_TAGS_SELECTED_ERROR_MESSAGE = (
@@ -137,6 +147,46 @@ class BadgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Badge
         fields = ("id", "purpose", "label", "color", "description", "message")
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ("id", "name")
+
+
+class ClassificationSerializer(serializers.ModelSerializer):
+    symbol = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Classification
+        fields = ("id", "name", "symbol")
+
+
+class EligibilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Eligibility
+        fields = ("id", "name")
+
+
+class DesignationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Designation
+        fields = ("id", "name")
+
+
+class TypeSerializer(serializers.ModelSerializer):
+    symbol = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Type
+        fields = ("id", "name", "symbol")
+
+
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = ("id", "name")
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -967,6 +1017,43 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
 
 
+class ClubDiffSerializer(serializers.ModelSerializer):
+    diff = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Club
+        fields = ["code"]
+
+    def to_representation(self, instance):
+        fields = ["name", "description", "image"]
+        diff = {}
+        is_same = True
+        for field in fields:
+            diff[field] = {
+                "old": getattr(instance, f"latest_approved_{field}", None),
+                "new": getattr(instance, f"latest_{field}", None),
+            }
+            if diff[field]["old"] != diff[field]["new"]:
+                is_same = False
+
+        latest_approved_description = diff["description"]["old"] or ""
+        latest_description = diff["description"]["new"] or ""
+        latest_approved_title = diff["name"]["old"] or ""
+        latest_title = diff["name"]["new"] or ""
+        diff["description"]["diff"] = diff_calculator(
+            latest_approved_description, latest_description
+        )
+        diff["name"]["diff"] = diff_calculator(latest_approved_title, latest_title)
+
+        if is_same:
+            return {
+                instance.code: "No changes that require approval made"
+                + " since last approval"
+            }
+
+        return {instance.code: diff}
+
+
 class ClubListSerializer(serializers.ModelSerializer):
     """
     The club list serializer returns a subset of the information that the full
@@ -976,7 +1063,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     This is done for a quicker response.
     """
 
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(many=True, required=False)
     image_url = serializers.SerializerMethodField("get_image_url")
     favorite_count = serializers.IntegerField(read_only=True)
     membership_count = serializers.IntegerField(read_only=True)
@@ -1194,6 +1281,87 @@ class StudentTypeSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
+def diff_calculator(latest_approved_description, latest_description):
+    """
+    Calculates difference between two HTML strings and
+      returns a diff string visualizing them
+    """
+
+    if latest_approved_description == latest_description:
+        return latest_description
+
+    """
+    Retrieve the difference between the two HTML strings
+    """
+    html_text = diff(latest_approved_description, latest_description)
+    soup = BeautifulSoup(html_text, "html.parser")
+
+    """
+    Strip original background from all elements and apply diff highlighting
+    """
+    for tag in soup.find_all(style=True):
+        tag["style"] = diff_regex_helper(tag["style"])
+    for tag in soup.find_all(["del", "ins"]):
+        bg_color = "#ffbdbd" if tag.name == "del" else "#dafdd5"
+        for child in tag.find_all(True):
+            child["style"] = (
+                child.get("style", "") + f"; background-color: {bg_color};"
+            ).strip("; ")
+
+    """
+    Unwrap nested <del> tags inside <ins> and vice versa
+    """
+    for del_tag in soup.find_all("del"):
+        for nested_ins in del_tag.find_all("ins"):
+            nested_ins.unwrap()
+    for ins_tag in soup.find_all("ins"):
+        for nested_del in ins_tag.find_all("del"):
+            nested_del.unwrap()
+
+    """
+    Highlight and style the del and ins tags
+    """
+    for tag in soup.find_all(["del", "ins"]):
+        if tag.name == "del":
+            tag["style"] = (
+                "text-decoration: none; background-color: #ffbdbd; opacity: 0.8;"
+            )
+        elif tag.name == "ins":
+            tag["style"] = (
+                "text-decoration: none; background-color: #dafdd5; opacity: 1;"
+            )
+
+    """
+    Color new content with a green highlight
+    Color removed content with a red highlight
+    Color resized content with a yellow highlight
+    """
+    for del_tag in soup.find_all("del"):
+        next_tag = del_tag.find_next_sibling("ins")
+        if next_tag and next_tag.get_text() == del_tag.get_text():
+            del_tag.decompose()
+            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
+            next_tag["style"] = (
+                next_tag.get("style", "") + " background-color: #fff2bd;"
+            )
+            for child in next_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+    for ins_tag in soup.find_all("ins"):
+        next_tag = ins_tag.find_next_sibling("del")
+        if next_tag and next_tag.get_text() == ins_tag.get_text():
+            # Remove the redundant <del> tag, then style the <ins> tag and its children
+            next_tag.decompose()
+            ins_tag["style"] = diff_regex_helper(ins_tag.get("style", ""))
+            ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
+            for child in ins_tag.find_all(True):
+                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+    return str(soup)
+
+
+def diff_regex_helper(text):
+    return re.sub(r"background-color:\s*[^;]+;?\s*", "", text)
+
+
 def social_validation_helper(value, domain, prefix="", at_prefix=None):
     """
     Help format and validate social URLs.
@@ -1282,6 +1450,22 @@ class TargetStudentTypeSerializer(serializers.ModelSerializer):
         return obj.target_student_types.id
 
 
+class GroupActivityOptionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for group activity assessment options.
+    """
+
+    # Allow writing by id when nested inside other serializers
+    id = serializers.IntegerField()
+    text = serializers.CharField(read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+    order = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = GroupActivityOption
+        fields = ["id", "text", "is_active", "order"]
+
+
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
@@ -1293,6 +1477,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     approved_comment = serializers.CharField(required=False, allow_blank=True)
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
+    category = CategorySerializer(required=False)
+    classification = ClassificationSerializer(required=False)
+    designation = DesignationSerializer(read_only=True)
+    status = StatusSerializer(read_only=True)
+    type = TypeSerializer(read_only=True)
+    eligibility = EligibilitySerializer(many=True, read_only=True)
 
     target_schools = serializers.SerializerMethodField("get_target_schools")
     target_majors = serializers.SerializerMethodField("get_target_majors")
@@ -1310,6 +1500,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     linkedin = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     github = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    group_activity_assessment = GroupActivityOptionSerializer(many=True, required=False)
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
@@ -1422,24 +1614,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def validate_badges(self, value):
         return value
 
-    def validate_tags(self, value):
-        """
-        Check for required tags before saving the club.
-        """
-        if settings.BRANDING == "clubs":
-            tag_names = [tag.get("name") for tag in value]
-            necessary_tags = {"Undergraduate", "Graduate"}
-            if not any(tag in necessary_tags for tag in tag_names):
-                if Tag.objects.filter(name__in=list(necessary_tags)).count() >= len(
-                    necessary_tags
-                ):
-                    raise serializers.ValidationError(
-                        "You must specify either the {} tag in this list.".format(
-                            " or ".join(f"'{tag}'" for tag in necessary_tags)
-                        )
-                    )
-        return value
-
     def validate_target_years(self, value):
         """
         Ensure that the user does not select all of the target years.
@@ -1475,12 +1649,19 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     def validate_description(self, value):
         """
         Allow the description to have HTML tags that come from a allowlist.
-        The description must exist and not be extremely short.
+        The description must exist and not be extremely short or long.
         """
         out = clean(value).strip()
         if len(out) <= 10:
             raise serializers.ValidationError(
                 "You must enter a valid description for your organization."
+            )
+        text_content = html_to_text(out)
+        word_count = len(text_content.split())
+        if word_count > 150:
+            raise serializers.ValidationError(
+                "Club mission cannot exceed 150 words. "
+                f"It currently has {word_count} words."
             )
         return out
 
@@ -1594,6 +1775,18 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "You do not have permissions to change the active status of the club."
         )
 
+    def validate(self, data):
+        """
+        Enforce presence of category and classification on creation.
+        """
+        if self.instance is None:
+            for field in ("category", "classification"):
+                if field not in data:
+                    raise serializers.ValidationError(
+                        {field: "This field is required."}
+                    )
+        return super().validate(data)
+
     def format_members_for_spreadsheet(self, value):
         """
         Specify the spreadsheet format for the membership ManyToMany field.
@@ -1636,6 +1829,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if (
             "approved" in self.validated_data
             and self.validated_data["approved"] is None
+        ):
+            needs_reapproval = True
+        elif (
+            # if setting club to be active and not already approved,
+            # then it constitutes a re-approval
+            "active" in self.validated_data
+            and self.validated_data["active"] is True
+            and self.instance
+            and self.instance.active is False
+            and self.instance.approved is not True
         ):
             needs_reapproval = True
 
@@ -1820,6 +2023,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "approved_comment",
             "badges",
             "beta",
+            "category",
+            "designation",
+            "eligibility",
+            "type",
             "created_at",
             "description",
             "events",
@@ -1843,15 +2050,22 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "twitter",
             "website",
             "youtube",
+            "status",
+            "eligibility",
+            "classification",
+            "group_activity_assessment",
         ]
         save_related_fields = [
             "tags",
+            "classification",
             "badges",
+            "category",
             "target_schools",
             "student_types",
             "target_majors",
             "target_years",
             "advisor_set",
+            "group_activity_assessment",
         ]
 
 
@@ -2111,6 +2325,7 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
 
     requester = serializers.HiddenField(default=serializers.CurrentUserDefault())
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    club_name = serializers.CharField(source="club.name", read_only=True)
     name = serializers.SerializerMethodField("get_full_name")
     username = serializers.CharField(source="requester.username", read_only=True)
     email = serializers.EmailField(source="requester.email", read_only=True)
@@ -2130,6 +2345,7 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
         model = OwnershipRequest
         fields = (
             "club",
+            "club_name",
             "created_at",
             "email",
             "graduation_year",
@@ -2151,9 +2367,24 @@ class UserOwnershipRequestSerializer(serializers.ModelSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     club_name = serializers.CharField(source="club.name", read_only=True)
 
+    name = serializers.SerializerMethodField()
+    username = serializers.CharField(source="requester.username", read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+
+    def get_name(self, obj):
+        return obj.requester.get_full_name()
+
     class Meta:
         model = OwnershipRequest
-        fields = ("club", "club_name", "requester")
+        fields = (
+            "id",
+            "club",
+            "club_name",
+            "requester",
+            "name",
+            "username",
+            "created_at",
+        )
 
 
 class MinimalUserProfileSerializer(serializers.ModelSerializer):
@@ -2412,6 +2643,42 @@ class AuthenticatedClubSerializer(ClubSerializer):
         ]
 
 
+class AdminClubSerializer(AuthenticatedClubSerializer):
+    """
+    Serializer for Club objects when used by admins.
+    Makes admin-only fields (status, type, eligibility) required by default.
+    """
+
+    status = StatusSerializer(required=False, allow_null=True)
+    type = TypeSerializer(required=False, allow_null=True)
+    eligibility = EligibilitySerializer(many=True, required=False, allow_null=True)
+
+    # def validate(self, attrs):
+    #     """
+    #     require fields on creation
+    #     """
+    #     if self.instance is None:
+    #         missing = {}
+    #         for f in ("status", "type", "eligibility"):
+    #             if not attrs.get(f):
+    #                 missing[f] = "This field is required."
+    #         if missing:
+    #             raise serializers.ValidationError(missing)
+    #     return super().validate(attrs)
+
+    class Meta(AuthenticatedClubSerializer.Meta):
+        fields = AuthenticatedClubSerializer.Meta.fields + [
+            "status",
+            "type",
+            "eligibility",
+        ]
+        save_related_fields = AuthenticatedClubSerializer.Meta.save_related_fields + [
+            "status",
+            "type",
+            "eligibility",
+        ]
+
+
 class ReportClubField(serializers.Field):
     """
     A custom field used when generating club reports.
@@ -2491,7 +2758,21 @@ class ReportClubField(serializers.Field):
 class ReportClubSerializer(AuthenticatedClubSerializer):
     """
     Provides additional fields that can be used to generate club reports.
+
+    Notes for Excel/xlsx exports:
+    - Nested related fields are flattened to scalars so subfields are not
+      expanded into multiple columns. Specifically, these fields are emitted
+      as strings using their name.
     """
+
+    category = serializers.CharField(source="category.name", read_only=True)
+    classification = serializers.CharField(source="classification.name", read_only=True)
+    type = serializers.CharField(source="type.name", read_only=True)
+    status = serializers.CharField(source="status.name", read_only=True)
+    designation = serializers.SerializerMethodField("get_designation")
+
+    def get_designation(self, obj):
+        return obj.designation.name if getattr(obj, "designation", None) else None
 
     @staticmethod
     def get_additional_fields():
@@ -2996,6 +3277,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         return data
 
+    @transaction.atomic
     def save(self):
         application_obj = super().save()
         # manually create committee objects as Django does
@@ -3015,6 +3297,14 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
                 )
             )
         )
+
+        # Check that committee names are unique
+        normalized_committees = [name.strip().lower() for name in committees]
+        if len(set(normalized_committees)) != len(normalized_committees):
+            raise serializers.ValidationError("Committee names must be unique")
+
+        committees = [name.strip() for name in committees]
+
         if prev_committee_names != committees:
             if application_obj.application_start_time < now:
                 raise serializers.ValidationError(
@@ -3028,10 +3318,14 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
             for name in committees:
                 if name not in prev_committee_names:
-                    ApplicationCommittee.objects.create(
-                        name=name,
-                        application=application_obj,
-                    )
+                    try:
+                        ApplicationCommittee.objects.get_or_create(
+                            name=name,
+                            application=application_obj,
+                        )
+                    except IntegrityError:
+                        # TODO: PENN-CLUBS-MN - investigate why this is happening
+                        pass
             cache.delete(f"clubapplication:{application_obj.id}")
 
         return application_obj
@@ -3213,6 +3507,48 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "reapproval_queue_open",
             "new_approval_queue_open",
+            "updated_at",
+            "updated_by",
+        ]
+        read_only_fields = ["updated_at", "updated_by"]
+
+    def get_updated_by(self, obj):
+        return obj.updated_by.get_full_name() if obj.updated_by else "N/A"
+
+
+class RankingWeightsSerializer(serializers.ModelSerializer):
+    updated_by = serializers.SerializerMethodField("get_updated_by")
+
+    class Meta:
+        model = RankingWeights
+        fields = [
+            "inactive_penalty",
+            "favorites_per",
+            "tags_good",
+            "tags_many",
+            "officer_bonus",
+            "member_base",
+            "member_per",
+            "logo_bonus",
+            "subtitle_bad",
+            "subtitle_good",
+            "images_bonus",
+            "desc_short",
+            "desc_med",
+            "desc_long",
+            "fair_bonus",
+            "application_bonus",
+            "today_event_base",
+            "today_event_good",
+            "week_event_base",
+            "week_event_good",
+            "email_bonus",
+            "social_bonus",
+            "howto_penalty",
+            "outdated_penalty",
+            "testimonial_one",
+            "testimonial_three",
+            "random_scale",
             "updated_at",
             "updated_by",
         ]

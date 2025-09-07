@@ -353,7 +353,6 @@ const EventPage: React.FC<EventPageProps> = ({ baseProps, club, event }) => {
           err instanceof Error
             ? err.message
             : 'An error occurred while adding tickets to cart.',
-          { style: { color: WHITE } },
         )
       })
   }
@@ -466,9 +465,12 @@ const EventPage: React.FC<EventPageProps> = ({ baseProps, club, event }) => {
                 )}
               </Subtitle>
               <div>
-                {event.badges?.map((badge) => (
-                  <Tag key={badge.id} style={{ backgroundColor: badge.color }}>
-                    {badge.label}
+                {event.affiliations?.map((affiliation) => (
+                  <Tag
+                    key={affiliation.id}
+                    style={{ backgroundColor: affiliation.color }}
+                  >
+                    {affiliation.label}
                   </Tag>
                 ))}
               </div>

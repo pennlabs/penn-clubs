@@ -51,7 +51,7 @@ export enum ClubEventType {
 
 export interface ClubEvent {
   showings?: EventShowing[]
-  badges: Badge[]
+  affiliations: Affiliation[]
   club: string | null
   club_name: string | null
   description: string
@@ -140,7 +140,7 @@ export interface Tag {
   clubs?: number
 }
 
-export interface Badge {
+export interface Affiliation {
   id: number
   label: string
   color: string
@@ -170,20 +170,63 @@ export interface Advisor {
   visibility: AdvisorVisibilityType
 }
 
+export interface Category {
+  id: number
+  name: string
+}
+
+export interface Eligibility {
+  id: number
+  name: string
+}
+
+export interface Classification {
+  id: number
+  name: string
+  symbol: string
+}
+
+export interface Type {
+  id: number
+  name: string
+  symbol: string
+}
+
+export interface Designation {
+  id: number
+  name: string
+}
+
+export interface Status {
+  id: number
+  name: string
+}
+
+export interface GroupActivityOption {
+  id: number
+  text: string
+  is_active: boolean
+  order: number
+}
+
 export interface Club {
   accepting_members: boolean
   active: boolean
   advisor_set: Advisor[]
+  affiliations: Affiliation[]
   application_required: ClubApplicationRequired
   appointment_needed: boolean
   approved: boolean | null
   approved_by: string | null
   approved_comment: string | null
   available_virtually: boolean
-  badges: Badge[]
+  category: Category
+  classification: Classification
   beta: boolean
   code: string
   description: string
+  designation?: Designation
+  eligibility: Eligibility[]
   email: string
   enables_subscription: boolean
   events: ClubEvent[]
@@ -214,6 +257,7 @@ export interface Club {
   recruiting_cycle: ClubRecruitingCycle
   signature_events: string
   size: ClubSize
+  status: Status
   student_types: StudentType[]
   subtitle: string
   tags: Tag[]
@@ -221,8 +265,10 @@ export interface Club {
   target_schools: School[]
   target_years: Year[]
   testimonials: Testimonial[]
+  type: Type
   twitter: string
   website: string
+  group_activity_assessment: GroupActivityOption[]
 }
 
 export interface ClubFair {
@@ -451,6 +497,47 @@ export type Template = {
 export type RegistrationQueueSettings = {
   reapproval_queue_open: boolean
   new_approval_queue_open: boolean
+  updated_at: string
+  updated_by: string
+}
+
+export type OwnershipRequest = {
+  id: number
+  club: string
+  club_name: string
+  name: string
+  username: string
+  created_at: string
+}
+
+export type RankingWeights = {
+  inactive_penalty: number
+  favorites_per: number
+  tags_good: number
+  tags_many: number
+  officer_bonus: number
+  member_base: number
+  member_per: number
+  logo_bonus: number
+  subtitle_bad: number
+  subtitle_good: number
+  images_bonus: number
+  desc_short: number
+  desc_med: number
+  desc_long: number
+  fair_bonus: number
+  application_bonus: number
+  today_event_base: number
+  today_event_good: number
+  week_event_base: number
+  week_event_good: number
+  email_bonus: number
+  social_bonus: number
+  howto_penalty: number
+  outdated_penalty: number
+  testimonial_one: number
+  testimonial_three: number
+  random_scale: number
   updated_at: string
   updated_by: string
 }

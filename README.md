@@ -32,24 +32,21 @@ To run the server, `cd` to the folder where you cloned `penn-clubs`. Then run:
 
 - `cd backend`
 
-Setting up `psycopg2` (this is necessary if you want to be able to modify
+Setting up `psycopg2` on Mac (this is necessary if you want to be able to modify
 dependencies, you can revisit later if not)
 
-- Mac
-  - `$ brew install postgresql`
-  - `$ brew install openssl`
-  - `$ brew unlink openssl && brew link openssl --force`
-  - `$ echo 'export PATH="/usr/local/opt/openssl@3/bin:$PATH"' >> ~/.zshrc`
-  - `$ export LDFLAGS="-L/usr/local/opt/openssl@3/lib"`
-  - `$ export CPPFLAGS="-I/usr/local/opt/openssl@3/include"`
-- Linux/WSL
-  - `$ apt-get install gcc python3-dev libpq-dev`
+- `$ brew install postgresql`
+- `$ brew install openssl`
+- `$ brew unlink openssl && brew link openssl --force`
+- `$ echo 'export PATH="/usr/local/opt/openssl@3/bin:$PATH"' >> ~/.zshrc`
+- `$ export LDFLAGS="-L/usr/local/opt/openssl@3/lib"`
+- `$ export CPPFLAGS="-I/usr/local/opt/openssl@3/include"`
 
 Now, you can run
 
+- `$ sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt-get update && sudo apt-get install gcc python3.13-dev libpq-dev` for necessary Python package build dependencies (Linux only)
 - `$ uv sync` to install Python dependencies. This may take a few
-  minutes. Include the `--dev` argument if you are installing locally
-  for development. If you skipped installing `psycopg2` earlier, you might see
+  minutes. If you skipped installing `psycopg2` earlier, you might see
   an error with locking -- this is expected!
 - `$ uv run pre-commit install`
 - `$ uv run ./manage.py migrate`

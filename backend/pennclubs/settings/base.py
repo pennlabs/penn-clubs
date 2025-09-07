@@ -36,7 +36,6 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "daphne",
-    "channels",
     "model_clone",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -82,8 +81,6 @@ TEMPLATES = [
         },
     }
 ]
-
-WSGI_APPLICATION = "pennclubs.wsgi.application"
 
 
 # Database
@@ -220,8 +217,7 @@ SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True
 
 # Django Channels settings
 
-ASGI_APPLICATION = "pennclubs.routing.application"
-
+ASGI_APPLICATION = "pennclubs.asgi.application"
 
 # Social Auth settings
 

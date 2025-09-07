@@ -23,7 +23,15 @@ import {
 } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
+import {
+  Affiliation,
+  Club,
+  School,
+  StudentType,
+  Tag,
+  UserInfo,
+  Year,
+} from './types'
 import {
   cache,
   doApiRequest,
@@ -54,6 +62,11 @@ export const ToastStyle = styled.div`
 
   & .Toastify__toast--info {
     background-color: ${BULMA_INFO};
+    color: white;
+    --toastify-icon-color-info: white;
+    .Toastify__close-button {
+      color: white;
+    }
   }
 
   & .Toastify__toast--warning {
@@ -67,7 +80,13 @@ export const ToastStyle = styled.div`
 
   & .Toastify__toast--error {
     background-color: ${BULMA_DANGER};
+    color: white;
+    --toastify-icon-color-error: white;
+    .Toastify__close-button {
+      color: white;
+    }
   }
+}
 `
 
 export const Wrapper = styled.div`
@@ -383,7 +402,7 @@ export type PaginatedClubPage = {
 }
 
 type ListPageProps = {
-  badges: Badge[]
+  affiliations: Affiliation[]
   clubs: PaginatedClubPage
   schools: School[]
   studentTypes: StudentType[]
@@ -407,7 +426,7 @@ const getPublicCachedContent = async () => {
     async () => {
       const [
         tagsRequest,
-        badgesRequest,
+        affiliationsRequest,
         schoolRequest,
         yearRequest,
         studentTypesRequest,
@@ -423,13 +442,13 @@ const getPublicCachedContent = async () => {
 
       const [
         tagsResponse,
-        badgesResponse,
+        affiliationsResponse,
         schoolResponse,
         yearResponse,
         studentTypesResponse,
       ] = await Promise.all([
         tagsRequest.json(),
-        badgesRequest.json(),
+        affiliationsRequest.json(),
         schoolRequest.json(),
         yearRequest.json(),
         studentTypesRequest != null
@@ -438,7 +457,7 @@ const getPublicCachedContent = async () => {
       ])
 
       return {
-        badges: badgesResponse as Badge[],
+        affiliations: affiliationsResponse as Affiliation[],
         schools: schoolResponse as School[],
         studentTypes: studentTypesResponse as StudentType[],
         tags: tagsResponse as Tag[],

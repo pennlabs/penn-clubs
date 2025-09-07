@@ -106,7 +106,9 @@ export const doFormikInitialValueFixes = (currentObject: {
         prev[otherKey] = val
       }
     }
+
     prev[key] = val
+
     return prev
   }, {})
 }

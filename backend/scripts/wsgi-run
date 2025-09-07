@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# Django Migrate
-uv run /app/manage.py migrate --noinput
-
-# Switch to project folder
-cd /app/
-
-uv run uwsgi --ini ./setup.cfg --listen 1000

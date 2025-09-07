@@ -6,5 +6,6 @@ uv run /app/manage.py migrate --noinput
 # Switch to project folder
 cd /app/
 
-# Run Daphne
-uv run gunicorn -b 0.0.0.0:80 -w 4 -k uvicorn.workers.UvicornWorker pennclubs.asgi:application
+# Run Uvicorn as Gunicorn workers
+# Assume 4 logical cores, use 2n + 1 magical number
+uv run gunicorn -b 0.0.0.0:80 -w 9 -k uvicorn.workers.UvicornWorker pennclubs.asgi:application

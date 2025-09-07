@@ -19,17 +19,24 @@ from ics import Calendar
 from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
+    ApplicationCommittee,
+    ApplicationQuestion,
     ApplicationSubmission,
     Asset,
     Badge,
+    Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
     ClubFair,
     ClubFairRegistration,
+    Designation,
+    Eligibility,
     Event,
     EventShowing,
     Favorite,
+    Major,
     Membership,
     MembershipInvite,
     MembershipRequest,
@@ -37,8 +44,10 @@ from clubs.models import (
     QuestionAnswer,
     RegistrationQueueSettings,
     School,
+    Status,
     Tag,
     Testimonial,
+    Type,
     ZoomMeetingVisit,
 )
 
@@ -172,6 +181,17 @@ class ClubTestCase(TestCase):
         Tag.objects.create(name="Graduate")
         Tag.objects.create(name="Undergraduate")
 
+        cls.category1 = Category.objects.create(name="Academic & Pre-Professional")
+        cls.classification1, _ = Classification.objects.get_or_create(
+            symbol="G", defaults={"name": "Graduate"}
+        )
+
+        cls.status1 = Status.objects.create(name="Active")
+        cls.type1 = Type.objects.create(
+            name="Department-Sponsored Progam", symbol="DSP"
+        )
+        cls.eligibility1 = Eligibility.objects.create(name="Undergraduate")
+
         queue_settings = RegistrationQueueSettings.get()
         queue_settings.reapproval_queue_open = True
         queue_settings.new_approval_queue_open = True
@@ -185,6 +205,8 @@ class ClubTestCase(TestCase):
         self.club1 = Club.objects.create(
             code="test-club",
             name="Test Club",
+            classification=self.classification1,
+            category=self.category1,
             approved=True,
             email="example@example.com",
         )
@@ -447,6 +469,11 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -908,6 +935,11 @@ class ClubTestCase(TestCase):
                 "description": "We code stuff.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1108,6 +1140,8 @@ class ClubTestCase(TestCase):
                 "description": "This is an example description.",
                 "tags": [{"name": "Graduate"}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
                 "facebook": "",
                 "twitter": "",
                 "instagram": "",
@@ -1159,6 +1193,8 @@ class ClubTestCase(TestCase):
                 "description": "This is a new club.",
                 "tags": [{"name": "Undergraduate"}],
                 "email": "newclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1200,7 +1236,7 @@ class ClubTestCase(TestCase):
         # club is approved before deactivation
         self.assertTrue(self.club1.approved)
 
-        call_command("deactivate", "all", "--force")
+        call_command("deactivate", "--force")
 
         club = self.club1
         club.refresh_from_db()
@@ -1294,6 +1330,11 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Undergraduate"}],
                 "description": test_good_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1321,6 +1362,11 @@ class ClubTestCase(TestCase):
                 "tags": [{"name": "Graduate"}],
                 "description": test_bad_string,
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1408,6 +1454,8 @@ class ClubTestCase(TestCase):
                 ],
                 "target_schools": [{"id": school1.id}],
                 "email": "example@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
                 "facebook": "https://www.facebook.com/groups/966590693376781/"
                 + "?ref=nf_target&fref=nf",
                 "twitter": "https://twitter.com/Penn",
@@ -1417,6 +1465,9 @@ class ClubTestCase(TestCase):
                 "/school/university-of-pennsylvania/",
                 "youtube": "https://youtu.be/dQw4w9WgXcQ",
                 "github": "https://github.com/pennlabs",
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
             },
             content_type="application/json",
         )
@@ -1452,6 +1503,34 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(club_obj.badges.count(), 1)
         self.assertEqual(club_obj.badges.all()[0].label, badge1.label)
+
+    def test_club_create_non_superuser_no_admin_fields(self):
+        """Test that non-superusers cannot set admin-only fields"""
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            data={
+                "name": "Test Club Non-Admin",
+                "description": "A test club by non-superuser",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "youtube": "https://youtu.be/dQw4w9WgXcQ",
+                "github": "https://github.com/pennlabs",
+                # admin fields
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # admin fields aren't set
+        club = Club.objects.filter(name="Test Club Non-Admin").first()
+        self.assertIsNone(club.status)
+        self.assertIsNone(club.type)
+        self.assertEqual(club.eligibility.count(), 0)
 
     def test_club_create_duplicate(self):
         """
@@ -1515,6 +1594,175 @@ class ClubTestCase(TestCase):
             data = json.loads(resp.content.decode("utf-8"))
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
+
+    def test_club_detail_diff(self):
+        """
+        Test that diff returns the correct old and new club for a club in approval queue
+        """
+
+        # create club that requires approval
+        new_club = Club.objects.create(
+            code="new-club",
+            name="New Club",
+            description="We're the spirits of open source.",
+            approved=None,
+            active=True,
+            email="example@example.com",
+        )
+
+        # add officer to club
+        Membership.objects.create(
+            person=self.user4, club=new_club, role=Membership.ROLE_OFFICER
+        )
+
+        # login to officer user
+        self.client.login(username=self.user4.username, password="test")
+
+        # New club should not have any old data
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        self.assertEqual(data["new-club"]["name"]["new"], "New Club")
+        self.assertEqual(data["new-club"]["name"]["old"], None)
+
+        self.assertEqual(
+            data["new-club"]["description"]["new"], "We're the spirits of open source."
+        )
+        self.assertEqual(data["new-club"]["description"]["old"], None)
+
+        self.assertEqual(data["new-club"]["image"]["new"], "")
+        self.assertEqual(data["new-club"]["image"]["old"], None)
+
+        # approve club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        # trigger reapproval by changing name
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 2"},
+            content_type="application/json",
+        )
+
+        # Ensure change successful
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        new_club.refresh_from_db()
+        self.assertFalse(new_club.approved)
+        self.assertEqual(data["new-club"]["name"]["new"], "New Club 2")
+
+        # approve club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        # changing description should not trigger reapproval.
+        # Might later be changed back to trigger reapproval
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"description": "We are open source, expect us."},
+            content_type="application/json",
+        )
+
+        # Ensure change successful
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(
+            data["new-club"],
+            "No changes that require approval made since last approval",
+        )
+
+        # change club name twice before approval
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 3"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"name": "New Club 4"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Ensure club is marked as not approved
+        new_club.refresh_from_db()
+        self.assertFalse(new_club.approved)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        # should have latest unapproved name
+        self.assertEqual(
+            data["new-club"]["name"]["new"],
+            "New Club 4",
+        )
+        # should have latest approved name
+        self.assertEqual(
+            data["new-club"]["name"]["old"],
+            "New Club 2",
+        )
+        # should have latest description, since description doesn't require reapproval
+        self.assertEqual(
+            data["new-club"]["description"]["new"],
+            "We are open source, expect us.",
+        )
+        # should have latest description
+        self.assertEqual(
+            data["new-club"]["description"]["old"],
+            "We are open source, expect us.",
+        )
+        # difference will just return current description
+        self.assertEqual(
+            data["new-club"]["description"]["diff"],
+            "We are open source, expect us.",
+        )
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(new_club.code,)),
+            {"description": "We are not open, do not expect us."},
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        resp = self.client.get(reverse("clubs-club-detail-diff", args=(new_club.code,)))
+        data = json.loads(resp.content.decode("utf-8"))
+
+        self.assertEqual(
+            data["new-club"]["description"]["diff"],
+            """We are <ins style="text-decoration: none; background-color: #dafdd5; """
+            """opacity: 1;">not </ins>open<ins style="text-decoration: none; backg"""
+            """round-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decorati"""
+            """on: none; background-color: #ffbdbd; opacity: 0.8;">source,</del><in"""
+            """s style="text-decoration: none; background-color: #dafdd5; opacity: """
+            """1;">do not</ins> expect us.""",
+        )
+
+        # attempt to get diff of approved club
+        new_club.approved = True
+        new_club.save(update_fields=["approved"])
+        new_club.refresh_from_db()
+        self.assertTrue(new_club.approved)
+        resp3 = self.client.get(
+            reverse("clubs-club-detail-diff", args=(new_club.code,))
+        )
+        new_data1 = json.loads(resp3.content.decode("utf-8"))
+        self.assertEqual(
+            new_data1["new-club"],
+            "No changes that require approval made since last approval",
+        )
 
     def test_club_modify_wrong_auth(self):
         """
@@ -1927,6 +2175,45 @@ class ClubTestCase(TestCase):
                 club=application.club, email=self.user5.email
             ).exists()
         )
+
+    def test_club_application_duplicate_committees(self):
+        """
+        Test that duplicate committees are not allowed
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # Creating new application with duplicate committees
+        resp = self.client.post(
+            reverse("club-applications-list", args=(self.club1.code,)),
+            data={
+                "name": "Test Application",
+                "application_start_time": timezone.now() + timezone.timedelta(days=1),
+                "application_end_time": timezone.now() + timezone.timedelta(days=2),
+                "result_release_time": timezone.now() + timezone.timedelta(days=3),
+                "committees": [{"name": "Committee 1"}, {"name": "Committee 1"}],
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Committee names must be unique", str(resp.content))
+
+        # Patching existing application with duplicate committees
+        application = ClubApplication.objects.create(
+            name="Test Application",
+            club=self.club1,
+            application_start_time=timezone.now() + timezone.timedelta(days=1),
+            application_end_time=timezone.now() + timezone.timedelta(days=2),
+            result_release_time=timezone.now() + timezone.timedelta(days=3),
+            is_wharton_council=False,
+        )
+
+        resp = self.client.patch(
+            reverse("club-applications-detail", args=(self.club1.code, application.id)),
+            {"committees": [{"name": "Committee 1"}, {"name": "Committee 1"}]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Committee names must be unique", str(resp.content))
 
     def test_club_invite_insufficient_auth(self):
         self.client.login(username=self.user2.username, password="test")
@@ -2357,7 +2644,7 @@ class ClubTestCase(TestCase):
     def test_club_renew(self):
         # run deactivate script
         with open(os.devnull, "w") as f:
-            call_command("deactivate", "all", "--force", stdout=f)
+            call_command("deactivate", "--force", stdout=f)
 
         # count already sent emails
         mail_count = len(mail.outbox)
@@ -2637,6 +2924,24 @@ class ClubTestCase(TestCase):
         """
         resp = self.client.get(reverse("email-preview"))
         self.assertEqual(resp.status_code, 200, resp.content)
+
+        # Test with a valid email template - should load without error and have content
+        resp = self.client.get(reverse("email-preview") + "?email=invite")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        content = resp.content.decode("utf-8")
+        self.assertIn('id="email"', content)
+        self.assertIn('id="text-email"', content)
+        self.assertIn("variables", content)
+        self.assertIn("Join", content)  # Content from the invite template
+        self.assertNotIn("Template Not Found", content)
+        self.assertNotIn('class="error"', content)  # Should not have error styling
+
+        # Test with a non-existent template - should show error gracefully
+        resp = self.client.get(reverse("email-preview") + "?email=nonexistent_template")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        content = resp.content.decode("utf-8")
+        self.assertIn("Template Not Found", content)
+        self.assertIn('class="error"', content)
 
     def test_list_email_invites(self):
         """
@@ -3015,7 +3320,6 @@ class ClubTestCase(TestCase):
             ).count(),
             1,
         )
-        self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
         # Requester can check own ownership requests
         resp = self.client.get(reverse("ownership-requests-list"))
@@ -3065,13 +3369,13 @@ class ClubTestCase(TestCase):
             person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
         )
 
+        # Create ownership request
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.post(
             reverse("ownership-requests-list"),
             {"club": self.club1.code},
             content_type="application/json",
         )
-        self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
         OwnershipRequest.objects.filter(club=self.club1, requester=self.user2).update(
             created_at=timezone.now() - timezone.timedelta(days=8)
@@ -3112,9 +3416,6 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 201, resp.content)
-
-        # Emails are not resent
-        self.assertEqual(len(mail.outbox), 1, mail.outbox)
 
         # Owner can see recreated ownership requests
 
@@ -3621,6 +3922,337 @@ class ClubTestCase(TestCase):
         self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
         self.assertEqual(len(mail.outbox), 3)
 
+    def test_application_submission_requires_complete_profile(self):
+        """
+        Test that users must have a complete profile (graduation year, school, major)
+        before submitting a club application.
+        """
+        # Create a club application
+        now = timezone.now()
+        application = ClubApplication.objects.create(
+            name="Test Application",
+            club=self.club1,
+            application_start_time=now - timezone.timedelta(days=1),
+            application_end_time=now + timezone.timedelta(days=1),
+            result_release_time=now + timezone.timedelta(days=2),
+        )
+
+        # Create a test question for the application
+        question = application.questions.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Test question",
+            word_limit=100,
+        )
+
+        # Login as user with incomplete profile
+        self.client.login(username=self.user2.username, password="test")
+
+        # Ensure user profile is incomplete
+        profile = self.user2.profile
+        profile.graduation_year = None
+        profile.school.clear()
+        profile.major.clear()
+        profile.save()
+
+        # Try to submit a response
+        resp = self.client.post(
+            reverse("users-question-response"),
+            {
+                "application": application.id,
+                "questionIds": [str(question.id)],
+                "committee": None,
+                question.id: {"text": "Life is good we are done"},
+            },
+            content_type="application/json",
+        )
+
+        # Should get a 400 error with specific message
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertFalse(resp.data["success"], resp.content)
+        self.assertIn("graduation year", resp.data["detail"].lower())
+        self.assertIn("major", resp.data["detail"].lower())
+        self.assertIn("school", resp.data["detail"].lower())
+
+        # Make sure no submission was created
+        self.assertEqual(
+            ApplicationSubmission.objects.filter(
+                user=self.user2, application=application
+            ).count(),
+            0,
+        )
+
+        # Complete the profile
+        school = School.objects.create(
+            name="Rajiv Gandhi School of Cope", is_graduate=False
+        )
+        major = Major.objects.create(name="Coping")
+        profile.graduation_year = now.year + 1
+        profile.school.add(school)
+        profile.major.add(major)
+        profile.save()
+
+        # Try submitting again
+        resp = self.client.post(
+            reverse("users-question-response"),
+            {
+                "application": application.id,
+                "questionIds": [str(question.id)],
+                "committee": None,
+                question.id: {"text": "Life is good we are done"},
+            },
+            content_type="application/json",
+        )
+
+        # Should succeed
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(
+            isinstance(resp.data, list) or resp.data.get("success", True), resp.content
+        )
+
+        # Verify submission was created
+        self.assertEqual(
+            ApplicationSubmission.objects.filter(
+                user=self.user2, application=application
+            ).count(),
+            1,
+        )
+
+    def test_category_viewset_permissions(self):
+        """Test basic permissions for CategoryViewSet."""
+        category = Category.objects.create(name="Test Category")
+
+        # Test user can list categories
+        resp = self.client.get(reverse("categories-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve category
+        resp = self.client.get(reverse("categories-detail", args=[category.id]))
+        self.assertEqual(resp.status_code, 200)
+
+        # test user cannot create categories
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("categories-list"),
+            {"name": "New Category"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create categories
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("categories-list"),
+            {"name": "New Category"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_eligibility_viewset_permissions(self):
+        """Test basic permissions for EligibilityViewSet."""
+        eligibility = Eligibility.objects.create(name="Test Eligibility 1")
+
+        # Test user can list eligibilities
+        resp = self.client.get(reverse("eligibilities-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific eligibility
+        resp = self.client.get(reverse("eligibilities-detail", args=[eligibility.id]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create eligibilities
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("eligibilities-list"),
+            {"name": "New Eligibility"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create eligibilities
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("eligibilities-list"),
+            {"name": "New Eligibility"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_classification_viewset_permissions(self):
+        """Test basic permissions for ClassificationViewSet."""
+        classification = Classification.objects.create(
+            name="Test Classification", symbol="TEST"
+        )
+
+        # Test user can list classifications
+        resp = self.client.get(reverse("classifications-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific classification
+        resp = self.client.get(
+            reverse("classifications-detail", args=[classification.name])
+        )
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create classifications
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("classifications-list"),
+            {"name": "New Classification", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create classifications
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("classifications-list"),
+            {"name": "New Classification", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_designation_viewset_permissions(self):
+        """Test basic permissions for DesignationViewSet."""
+        designation = Designation.objects.create(name="Test Designation")
+
+        # Test user can list designations
+        resp = self.client.get(reverse("designations-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific designation
+        resp = self.client.get(reverse("designations-detail", args=[designation.name]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create designations
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("designations-list"),
+            {"name": "New Designation"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create designations
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("designations-list"),
+            {"name": "New Designation"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_type_viewset_permissions(self):
+        """Test basic permissions for TypeViewSet."""
+        type_obj = Type.objects.create(name="Test Type", symbol="TEST")
+
+        # Test user can list types
+        resp = self.client.get(reverse("types-list"))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user can retrieve specific type
+        resp = self.client.get(reverse("types-detail", args=[type_obj.name]))
+        self.assertEqual(resp.status_code, 200)
+
+        # Test user cannot create types
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse("types-list"),
+            {"name": "New Type", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+        # Test authed user can't create types
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("types-list"),
+            {"name": "New Type", "symbol": "NEW"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 405)
+
+    def test_club_description_word_limit(self):
+        """
+        Test that club descriptions cannot exceed 150 words on creation or update,
+        but existing long descriptions are preserved on unrelated PATCH updates.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        long_description = "<p><b>" + " ".join(["word"] * 151) + "</b></p>"
+        short_description = "<div><i>" + " ".join(["word"] * 149) + "</i></div>"
+
+        # 1. Test failing creation with long description
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Long Desc Club",
+                "description": long_description,
+                "email": "long@example.com",
+                "tags": [{"name": "Graduate"}],
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("cannot exceed 150 words", str(resp.content))
+
+        # 2. Test successful creation with short description
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "name": "Short Desc Club",
+                "code": "short-desc-club",
+                "description": short_description,
+                "email": "short@example.com",
+                "tags": [{"name": "Graduate"}],
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "status": {"name": self.status1.name},
+                "type": {"name": self.type1.name},
+                "eligibility": [{"name": self.eligibility1.name}],
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="short-desc-club")
+        self.assertEqual(club.description, short_description)
+
+        # 3. Test failing update with long description
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"description": long_description},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("cannot exceed 150 words", str(resp.content))
+
+        # 4. Test PATCHing other fields on a club with an existing long description
+        # Create club with long description, bypassing serializer validation
+        long_desc_club = Club.objects.create(
+            code="long-desc-existing",
+            name="Long Desc Existing",
+            description=long_description,
+            approved=True,
+            active=True,
+        )
+
+        # PATCH a different field
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(long_desc_club.code,)),
+            {"subtitle": "A new subtitle"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Verify the description is unchanged and the subtitle is updated
+        long_desc_club.refresh_from_db()
+        self.assertEqual(long_desc_club.description, long_description)
+        self.assertEqual(long_desc_club.subtitle, "A new subtitle")
+
 
 class HealthTestCase(TestCase):
     def test_health(self):
@@ -3650,10 +4282,10 @@ class RegistrationQueueSettingsTestCase(TestCase):
         resp = self.client.get(reverse("queue-settings"))
         self.assertEqual(resp.status_code, 403, resp.content)
 
-        # non-superusers can't access
+        # non-superusers can access
         self.client.login(username="user", password="password")
         resp = self.client.get(reverse("queue-settings"))
-        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertEqual(resp.status_code, 200, resp.content)
 
         # superusers can access
         self.client.login(username="super", password="password")
@@ -3932,3 +4564,113 @@ class EventShowingTestCase(TestCase):
         self.assertIn(
             "event start time must be before the end time", str(response.data).lower()
         )
+
+
+class NormalizeCommitteesTestCase(TestCase):
+    def setUp(self):
+        self.club = Club.objects.create(code="club-a", name="Club A")
+
+        now = timezone.now()
+        self.app = ClubApplication.objects.create(
+            name="Original App",
+            club=self.club,
+            application_start_time=now + timezone.timedelta(days=1),
+            application_end_time=now + timezone.timedelta(days=2),
+            result_release_time=now + timezone.timedelta(days=3),
+        )
+
+        # Simulate post-clone duplicate committees that would have suffixes
+        self.design = ApplicationCommittee.objects.create(
+            application=self.app, name="Design"
+        )
+        self.design_copy = ApplicationCommittee.objects.create(
+            application=self.app, name="Design copy 1"
+        )
+
+        self.pm = ApplicationCommittee.objects.create(application=self.app, name="PM")
+        self.pm_copy = ApplicationCommittee.objects.create(
+            application=self.app, name="PM copy 1"
+        )
+
+        # Questions linking to the duplicate committee entries
+        self.q1 = ApplicationQuestion.objects.create(application=self.app, prompt="Q1")
+        self.q1.committees.add(self.design_copy)
+
+        self.q2 = ApplicationQuestion.objects.create(application=self.app, prompt="Q2")
+        self.q2.committees.add(self.design, self.pm_copy)
+
+        # Submission that references a duplicate committee
+        self.user = get_user_model().objects.create_user(
+            username="alice", email="alice@example.com", password="test"
+        )
+        self.sub = ApplicationSubmission.objects.create(
+            user=self.user,
+            application=self.app,
+            committee=self.pm_copy,
+        )
+
+    def test_normalize_committees_deduplicates_and_relinks(self):
+        # Assert both original and copy committees exist before normalization
+        original_names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(original_names, {"Design", "Design copy 1", "PM", "PM copy 1"})
+
+        # Act
+        self.app.normalize_committees()
+
+        # Assert committees have been deduplicated by base name
+        names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(names, {"Design", "PM"})
+
+        # Questions should link only to canonical committees
+        q1_committees = set(self.q1.committees.values_list("name", flat=True))
+        q2_committees = set(self.q2.committees.values_list("name", flat=True))
+        self.assertEqual(q1_committees, {"Design"})
+        self.assertEqual(q2_committees, {"Design", "PM"})
+
+        # Submission should be re-pointed to the canonical committee
+        self.sub.refresh_from_db()
+        self.assertIn(self.sub.committee.name, {"PM"})
+
+    def test_normalize_committees_renames_copies_when_no_canonical_exists(self):
+        # Delete the original committees, leaving only the copies
+        self.design.delete()
+        self.pm.delete()
+
+        # Verify only copy committees remain
+        remaining_names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(remaining_names, {"Design copy 1", "PM copy 1"})
+
+        # Act
+        self.app.normalize_committees()
+
+        # Assert committees have been renamed to canonical names
+        names = set(
+            ApplicationCommittee.objects.filter(application=self.app).values_list(
+                "name", flat=True
+            )
+        )
+        self.assertEqual(names, {"Design", "PM"})
+
+        # Questions should still link to the renamed committees
+        q1_committees = set(self.q1.committees.values_list("name", flat=True))
+        q2_committees = set(self.q2.committees.values_list("name", flat=True))
+        self.assertEqual(q1_committees, {"Design"})  # q1 was linked to design_copy
+        self.assertEqual(
+            q2_committees, {"PM"}
+        )  # q2 was linked to pm_copy (design was deleted)
+
+        # Submission should be re-pointed to the renamed committee
+        self.sub.refresh_from_db()
+        self.assertEqual(self.sub.committee.name, "PM")

@@ -2,9 +2,7 @@ import { Field, Form, Formik } from 'formik'
 import React, { ReactElement, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { WHITE } from '~/constants'
-
-import { Badge, ClubFair, Tag } from '../../types'
+import { Affiliation, ClubFair, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -66,10 +64,10 @@ const ClubNameLookup = (): ReactElement<any> => {
 export interface BulkEditTabProps {
   tags: Tag[]
   clubfairs: ClubFair[]
-  badges: Badge[]
+  affiliations: Affiliation[]
 }
 
-const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
+const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
   const bulkSubmit = async (data, { setSubmitting }) => {
     try {
       const resp = await doApiRequest('/clubs/bulk/?format=json', {
@@ -82,7 +80,6 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
       } else if (contents.error) {
         toast.error(contents.error, {
           hideProgressBar: true,
-          style: { color: WHITE },
         })
       }
     } finally {
@@ -164,8 +161,8 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
         <Text>
           You can use the form below to perform bulk editing on{' '}
           {OBJECT_NAME_PLURAL}. Specify the list of {OBJECT_NAME_SINGULAR} codes
-          below, which tags or badges you want to add or remove, and then press
-          the action that you desire.
+          below, which tags or affiliations you want to add or remove, and then
+          press the action that you desire.
         </Text>
         <Formik initialValues={{ action: 'add' }} onSubmit={bulkSubmit}>
           {({ setFieldValue, handleSubmit, isSubmitting }) => (
@@ -187,10 +184,10 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
                 helpText={`Add or remove all of the specified tags.`}
               />
               <Field
-                name="badges"
-                label="Badges"
+                name="affiliations"
+                label="Affiliations"
                 as={SelectField}
-                choices={badges}
+                choices={affiliations}
                 deserialize={({ id, label, description, purpose }) => ({
                   value: id,
                   label,
@@ -208,9 +205,9 @@ const BulkEditTab = ({ tags, clubfairs, badges }: BulkEditTabProps) => {
                     <span className="has-text-grey">{description}</span>
                   </>
                 )}
-                valueDeserialize={fixDeserialize(badges)}
+                valueDeserialize={fixDeserialize(affiliations)}
                 isMulti
-                helpText={`Add or remove all of the specified badges.`}
+                helpText={`Add or remove all of the specified affiliations.`}
               />
               <Field
                 name="fairs"

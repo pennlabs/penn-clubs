@@ -20,11 +20,17 @@ import {
   HOME_ROUTE,
 } from '../constants/routes'
 import {
+  Category,
+  Classification,
   Club,
+  Eligibility,
+  GroupActivityOption,
   Major,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   UserInfo,
   VisitType,
   Year,
@@ -69,22 +75,34 @@ import { BrowserTabView } from './TabView'
 type ClubFormProps = {
   clubId: string | undefined
   authenticated: boolean | null
+  categories: Category[]
+  classifications: Classification[]
+  eligibilities: Eligibility[]
   schools: School[]
   majors: Major[]
   years: Year[]
   tags: Tag[]
   studentTypes: StudentType[]
+  types: Type[]
+  statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
   tab?: string | null
   userInfo?: UserInfo
 }
 
 const ClubForm = ({
   authenticated,
+  categories,
+  classifications,
+  eligibilities,
   schools,
   years,
   majors,
   tags,
   studentTypes,
+  types,
+  statuses,
+  groupActivityOptions,
   clubId,
   tab,
   userInfo,
@@ -230,11 +248,17 @@ const ClubForm = ({
         content: (
           <ClubEditCard
             isEdit={isEdit}
+            eligibilities={eligibilities}
+            categories={categories}
+            classifications={classifications}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             club={club}
             onSubmit={submit}
           />
@@ -437,12 +461,18 @@ const ClubForm = ({
         <div style={{ marginTop: '1em' }}>
           <ClubEditCard
             isEdit={isEdit}
+            eligibilities={eligibilities}
+            categories={categories}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            classifications={classifications}
+            groupActivityOptions={groupActivityOptions}
             onSubmit={submit}
           />
         </div>

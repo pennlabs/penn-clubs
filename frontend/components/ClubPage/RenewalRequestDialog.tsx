@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { ReactElement } from 'react'
 
+import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
+
 import { CLUB_RENEW_ROUTE } from '../../constants/routes'
 import { Club, MembershipRank } from '../../types'
-import { apiCheckPermission, isSummer } from '../../utils'
+import { apiCheckPermission } from '../../utils'
 import {
   MEMBERSHIP_ROLE_NAMES,
   OBJECT_NAME_SINGULAR,
@@ -23,14 +25,23 @@ type RenewalRequestProps = {
 }
 
 const RenewalRequest = ({ club }: RenewalRequestProps): ReactElement<any> => {
+  const { settings: queueSettings } = useRegistrationQueueSettings()
+
   const canRenew =
-    apiCheckPermission(`clubs.manage_club:${club.code}`) && !isSummer()
+    apiCheckPermission(`clubs.manage_club:${club.code}`) &&
+    queueSettings?.reapproval_queue_open === true
   const textMapping = {
     clubs: {
       TITLE: (
         <>
-          <b>{club.name}</b> needs to be re-registered for the current academic
-          year.
+          {queueSettings?.reapproval_queue_open === true ? (
+            <>
+              <b>{club.name}</b> needs to be re-registered for the current
+              academic year.
+            </>
+          ) : (
+            <b>The club renewal process has not started yet.</b>
+          )}
         </>
       ),
       PROCESS_ACTION: 'start the renewal process',

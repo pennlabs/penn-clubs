@@ -217,6 +217,7 @@ const Ticket: React.FC<TicketProps> = ({
             <TicketCard
               key={i}
               event={event.id}
+              showing={eventShowing.id}
               ticket={ticket as Ticket}
               buyersPerm={buyers.buyers != null}
             />
@@ -256,10 +257,16 @@ type Ticket = {
 type TicketCardProps = {
   ticket: Ticket
   event: string
+  showing: string
   buyersPerm: boolean
 }
 
-const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
+const TicketCard = ({
+  ticket,
+  event,
+  showing,
+  buyersPerm,
+}: TicketCardProps) => {
   const [viewBuyers, setViewBuyers] = useState(false)
 
   // PennKeys to issue tickets to
@@ -269,7 +276,7 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
   async function handleIssueTickets(data, { setSubmitting }) {
     try {
       const resp = await doApiRequest(
-        `/events/${event}/issue_tickets/?format=json`,
+        `/events/${event}/showings/${showing}/issue_tickets/?format=json`,
         {
           method: 'POST',
           body: {
@@ -291,7 +298,6 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
           contents.detail ?? 'Something went wrong with issuing tickets',
           {
             hideProgressBar: true,
-            style: { color: WHITE },
           },
         )
       }
@@ -337,7 +343,7 @@ const TicketCard = ({ ticket, event, buyersPerm }: TicketCardProps) => {
                   <Form>
                     <Subtitle>Issue Tickets</Subtitle>
                     <HelperText>
-                      Issue Tickets by entering pennkeys below, separated by
+                      Issue tickets by entering pennkeys below, separated by
                       commas or spaces
                     </HelperText>
                     <CSVTagInput

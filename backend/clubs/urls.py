@@ -11,6 +11,8 @@ from clubs.views import (
     AssetViewSet,
     BadgeClubViewSet,
     BadgeViewSet,
+    CategoryViewSet,
+    ClassificationViewSet,
     ClubApplicationViewSet,
     ClubApprovalResponseTemplateViewSet,
     ClubBoothsViewSet,
@@ -19,6 +21,8 @@ from clubs.views import (
     ClubFairViewSet,
     ClubViewSet,
     ClubVisitViewSet,
+    DesignationViewSet,
+    EligibilityViewSet,
     EmailInvitesAPIView,
     EventShowingViewSet,
     EventViewSet,
@@ -26,6 +30,7 @@ from clubs.views import (
     FavoriteCalendarAPIView,
     FavoriteEventsAPIView,
     FavoriteViewSet,
+    GroupActivityOptionViewSet,
     HealthView,
     MajorViewSet,
     MassInviteAPIView,
@@ -41,16 +46,19 @@ from clubs.views import (
     OwnershipRequestManagementViewSet,
     OwnershipRequestViewSet,
     QuestionAnswerViewSet,
+    RankingWeightsView,
     RegistrationQueueSettingsView,
     ReportViewSet,
     SchoolViewSet,
     ScriptExecutionView,
     SearchQueryViewSet,
+    StatusViewSet,
     StudentTypeViewSet,
     SubscribeViewSet,
     TagViewSet,
     TestimonialViewSet,
     TicketViewSet,
+    TypeViewSet,
     UserGroupAPIView,
     UserPermissionAPIView,
     UserUpdateAPIView,
@@ -70,7 +78,11 @@ router.register(r"clubs", ClubViewSet, basename="clubs")
 router.register(r"clubfairs", ClubFairViewSet, basename="clubfairs")
 router.register(r"events", EventViewSet, basename="events")
 router.register(r"tags", TagViewSet, basename="tags")
+router.register(r"classifications", ClassificationViewSet, basename="classifications")
 router.register(r"badges", BadgeViewSet, basename="badges")
+router.register(r"categories", CategoryViewSet, basename="categories")
+router.register(r"designations", DesignationViewSet, basename="designations")
+router.register(r"eligibilities", EligibilityViewSet, basename="eligibilities")
 router.register(r"favorites", FavoriteViewSet, basename="favorites")
 router.register(r"subscriptions", SubscribeViewSet, basename="subscribes")
 router.register(r"clubvisits", ClubVisitViewSet, basename="clubvisits")
@@ -89,6 +101,13 @@ router.register(r"majors", MajorViewSet, basename="majors")
 router.register(r"student_types", StudentTypeViewSet, basename="student_types")
 router.register(r"reports", ReportViewSet, basename="reports")
 router.register(r"years", YearViewSet, basename="years")
+router.register(r"types", TypeViewSet, basename="types")
+router.register(r"statuses", StatusViewSet, basename="statuses")
+router.register(
+    r"group_activity_options",
+    GroupActivityOptionViewSet,
+    basename="group_activity_options",
+)
 router.register(r"users", UserViewSet, basename="users")
 router.register(
     r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
@@ -205,6 +224,11 @@ urlpatterns = [
         "settings/queue/",
         RegistrationQueueSettingsView.as_view(),
         name="queue-settings",
+    ),
+    path(
+        "settings/ranking-weights/",
+        RankingWeightsView.as_view(),
+        name="ranking-weights",
     ),
 ]
 

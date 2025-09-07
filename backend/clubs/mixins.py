@@ -30,6 +30,9 @@ class ManyToManySaveMixin(object):
     """
 
     def _lookup_item(self, model, field_name, item, mode=None):
+        if item is None:
+            return
+
         if mode == "create":
             obj, _ = model.objects.get_or_create(**item)
             return obj
@@ -83,17 +86,32 @@ class ManyToManySaveMixin(object):
                     ignore_fields.add(field_name)
                     continue
                 for item in items:
-                    m2m_lists[field_name].append(
-                        self._lookup_item(model, field_name, item, mode)
-                    )
+                    # skip none items
+                    if item is None:
+                        continue
+                    result = self._lookup_item(model, field_name, item, mode)
+                    if result is not None:
+                        m2m_lists[field_name].append(result)
             else:
                 m2m["many"] = False
                 if hasattr(field, "Meta"):
                     model = field.Meta.model
                     item = self.validated_data.pop(field_name, None)
-                    m2m_lists[field_name] = self._lookup_item(
-                        model, field_name, item, mode
-                    )
+
+                    # raise validation error if field is required and item is none
+                    if item is None and getattr(field, "required", True):
+                        raise serializers.ValidationError(
+                            {field_name: "This field is required."}
+                        )
+
+                    if item is not None:
+                        result = self._lookup_item(model, field_name, item, mode)
+                        if result is not None:
+                            m2m_lists[field_name] = result
+                        else:
+                            ignore_fields.add(field_name)
+                    else:
+                        ignore_fields.add(field_name)
                 else:
                     ignore_fields.add(field_name)
 

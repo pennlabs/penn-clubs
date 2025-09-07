@@ -13,7 +13,7 @@ import {
   Text,
 } from '~/components/common'
 import { CLUB_ROUTE } from '~/constants'
-import { Badge, Club } from '~/types'
+import { Affiliation, Club } from '~/types'
 import { doApiRequest } from '~/utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -60,87 +60,90 @@ type ClubManagementCardProps = {
 const ClubManagementCard = ({
   club,
 }: ClubManagementCardProps): ReactElement<any> => {
-  const [badges, setBadges] = useState<Badge[] | null>(null)
-  const [activeBadge, setActiveBadge] = useState<Badge | null>(null)
+  const [affiliations, setAffiliations] = useState<Affiliation[] | null>(null)
+  const [activeAffiliation, setActiveAffiliation] =
+    useState<Affiliation | null>(null)
   const [clubs, setClubs] = useState<Club[] | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
 
   const reloadOwned = () => {
     doApiRequest(`/clubs/${club.code}/owned_badges/?format=json`)
       .then((resp) => resp.json())
-      .then((badges) => {
-        setBadges(badges)
-        setActiveBadge(badges[0])
+      .then((affiliations) => {
+        setAffiliations(affiliations)
+        setActiveAffiliation(affiliations[0])
       })
   }
 
   useEffect(reloadOwned, [])
 
   useEffect(() => {
-    if (activeBadge != null) {
-      doApiRequest(`/badges/${activeBadge.id}/clubs/?format=json`)
+    if (activeAffiliation != null) {
+      doApiRequest(`/badges/${activeAffiliation.id}/clubs/?format=json`)
         .then((resp) => resp.json())
         .then(setClubs)
     } else {
       setClubs(null)
     }
-  }, [activeBadge])
+  }, [activeAffiliation])
 
   return (
     <>
       <Text>
         If {club.name} is an umbrella {OBJECT_NAME_SINGULAR}, you can use this
-        page to assign badges to {OBJECT_NAME_PLURAL} that are associated with
-        your {OBJECT_NAME_SINGULAR}. All of the badges you have access to are
-        shown below.
+        page to assign affiliations to {OBJECT_NAME_PLURAL} that are associated
+        with your {OBJECT_NAME_SINGULAR}. All of the affiliations you have
+        access to are shown below.
       </Text>
-      {badges != null ? (
+      {affiliations != null ? (
         <div className="columns">
           <div className="column is-one-third">
             <aside className="menu">
-              <p className="menu-label">Your Badges</p>
+              <p className="menu-label">Your Affiliations</p>
               <ul className="menu-list">
-                {badges.map((badge) => (
-                  <li key={badge.id}>
+                {affiliations.map((affiliation) => (
+                  <li key={affiliation.id}>
                     <a
                       className={
-                        badge.id === activeBadge?.id ? 'is-active' : undefined
+                        affiliation.id === activeAffiliation?.id
+                          ? 'is-active'
+                          : undefined
                       }
                       onClick={(e) => {
                         e.preventDefault()
-                        setActiveBadge(badge)
+                        setActiveAffiliation(affiliation)
                       }}
                     >
-                      {badge.label}
+                      {affiliation.label}
                     </a>
                   </li>
                 ))}
-                {badges.length <= 0 && <li>No Badges</li>}
+                {affiliations.length <= 0 && <li>No Affiliations</li>}
               </ul>
             </aside>
           </div>
           <div className="column">
-            {activeBadge != null ? (
+            {activeAffiliation != null ? (
               <>
                 <Subtitle>
                   <Tag
                     className="tag is-rounded mt-1"
                     color={
-                      activeBadge.color.length > 0
-                        ? activeBadge.color
+                      activeAffiliation.color.length > 0
+                        ? activeAffiliation.color
                         : 'd3d3d3'
                     }
                   >
-                    {activeBadge.label}
+                    {activeAffiliation.label}
                   </Tag>{' '}
-                  {activeBadge.description}
+                  {activeAffiliation.description}
                 </Subtitle>
                 {clubs != null ? (
                   <>
                     <Text>
                       There are {clubs.length} {OBJECT_NAME_PLURAL} with this
-                      badge. You can use the form below to add this badge to a{' '}
-                      {OBJECT_NAME_SINGULAR}.
+                      affiliation. You can use the form below to add this
+                      affiliation to a {OBJECT_NAME_SINGULAR}.
                     </Text>
                     <div className="mb-5">
                       <Formik
@@ -152,21 +155,25 @@ const ClubManagementCard = ({
                             toast.error(
                               <>
                                 You must specify a club to add the{' '}
-                                <b>{activeBadge.label}</b> badge to.
+                                <b>{activeAffiliation.label}</b> affiliation to.
                               </>,
                             )
                             setSubmitting(false)
                             return
                           }
-                          doApiRequest(`/badges/${activeBadge.id}/clubs/`, {
-                            method: 'POST',
-                            body: data,
-                          }).then(() => {
+                          doApiRequest(
+                            `/badges/${activeAffiliation.id}/clubs/`,
+                            {
+                              method: 'POST',
+                              body: data,
+                            },
+                          ).then(() => {
                             setSubmitting(false)
                             reloadOwned()
                             toast.success(
                               <>
-                                Added badge <b>{activeBadge.label}</b> to{' '}
+                                Added affiliation{' '}
+                                <b>{activeAffiliation.label}</b> to{' '}
                                 {OBJECT_NAME_SINGULAR} <b>{data.club}</b>.
                               </>,
                             )
@@ -183,7 +190,7 @@ const ClubManagementCard = ({
                                 className="button is-success is-small"
                                 disabled={isSubmitting}
                               >
-                                <Icon name="plus" /> Add Badge to{' '}
+                                <Icon name="plus" /> Add Affiliation to{' '}
                                 {OBJECT_NAME_TITLE_SINGULAR}
                               </button>
                             </FormStyle>
@@ -217,21 +224,21 @@ const ClubManagementCard = ({
                                 )
                                 setLoading(true)
                                 doApiRequest(
-                                  `/badges/${activeBadge.id}/clubs/${club.code}/?format=json`,
+                                  `/badges/${activeAffiliation.id}/clubs/${club.code}/?format=json`,
                                   { method: 'DELETE' },
                                 ).then(() => {
                                   toast.success(
                                     <>
-                                      Removed badge <b>{activeBadge.label}</b>{' '}
-                                      from {OBJECT_NAME_SINGULAR}{' '}
-                                      <b>{club.name}</b>.
+                                      Removed affiliation{' '}
+                                      <b>{activeAffiliation.label}</b> from{' '}
+                                      {OBJECT_NAME_SINGULAR} <b>{club.name}</b>.
                                     </>,
                                   )
                                   setLoading(false)
                                 })
                               }}
                             >
-                              Remove Badge
+                              Remove Affiliation
                             </button>
                           </div>
                         </div>
@@ -245,8 +252,8 @@ const ClubManagementCard = ({
             ) : (
               <Text>
                 It does not look like your {OBJECT_NAME_PLURAL} has access to
-                any badges. If you believe this is a mistake, please contact{' '}
-                <Contact />.
+                any affiliations. If you believe this is a mistake, please
+                contact <Contact />.
               </Text>
             )}
           </div>
