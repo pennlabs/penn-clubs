@@ -26,12 +26,10 @@ type AnalyticsCardProps = {
 }
 
 type PieChartData = {
-  [key: string]: {
-    content: {
-      person__profile__graduation_year: number | null
-      count: number
-    }[]
-  }
+  content: {
+    person__profile__graduation_year: number | null
+    count: number
+  }[]
 }
 
 type LineData = { x: Date; y: number }[]
