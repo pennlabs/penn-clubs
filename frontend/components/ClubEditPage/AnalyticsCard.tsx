@@ -191,6 +191,18 @@ export default function AnalyticsCard({
 
   const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
 
+  const chooseGroup = () => {
+    const interval = moment(endDate).diff(moment(date), 'days')
+    if (interval <= 1) {
+      return [GROUPS[0]] // Hour
+    } else if (interval <= 7) {
+      return [GROUPS[1]] // Day
+    } else if (interval <= 31) {
+      return [GROUPS[1], GROUPS[2]]
+    }
+    return [GROUPS[2], GROUPS[3]]
+  }
+
   useEffect(() => {
     setLoading(true)
     doApiRequest(
@@ -288,7 +300,7 @@ export default function AnalyticsCard({
               <label>Group By</label>
               <br />
               <Select
-                options={GROUPS}
+                options={chooseGroup()}
                 value={group}
                 onChange={(v) => v != null && setGroup(v)}
               />
