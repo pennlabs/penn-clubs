@@ -198,9 +198,9 @@ export default function AnalyticsCard({
     } else if (interval <= 7) {
       return [GROUPS[1]] // Day
     } else if (interval <= 31) {
-      return [GROUPS[1], GROUPS[2]]
+      return [GROUPS[1], GROUPS[2]] // Day, Week
     }
-    return [GROUPS[2], GROUPS[3]]
+    return [GROUPS[2], GROUPS[3]] // Week, Month
   }
 
   useEffect(() => {
@@ -314,18 +314,13 @@ export default function AnalyticsCard({
         ) : (
           <>
             <ResponsiveContainer width="100%" height={350}>
-              <LineChart
-                // No single chart-level data since we're giving data per <Line>
-                margin={{ bottom: 60, left: 10, right: 10, top: 10 }}
-              >
+              <LineChart margin={{ bottom: 60, left: 10, right: 10, top: 10 }}>
                 <XAxis
                   dataKey="x"
                   type="number"
                   scale="time"
-                  domain={[date.getTime(), endDate.getTime()]}
+                  domain={[toTicks(date.getTime()), toTicks(endDate.getTime())]}
                   tickFormatter={toTicks}
-                  // If you need explicit ticks like react-vis tickValues:
-                  // ticks={[...visits.map(v => toTs(v.x))]}
                 ></XAxis>
                 <Label
                   value={`Time (${group.label})`}
