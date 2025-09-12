@@ -32,7 +32,7 @@ export class MyChart extends PennLabsChart {
       deployment: {
         image: backendImage,
         cmd: ['/usr/local/bin/asgi-run'],
-        replicas: 3,
+        replicas: 9,
         secret: clubsSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
@@ -46,7 +46,7 @@ export class MyChart extends PennLabsChart {
     new ReactApplication(this, 'react', {
       deployment: {
         image: frontendImage,
-        replicas: 2,
+        replicas: 4,
       },
       domain: { host: clubsDomain, paths: ['/'] },
       port: 80,
