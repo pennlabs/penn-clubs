@@ -2,7 +2,7 @@ import Color from 'color'
 import { NextPageContext } from 'next'
 import React, { Component, ReactElement } from 'react'
 import { ToastContainer } from 'react-toastify'
-import styled, { createGlobalStyle } from 'styled-components'
+import styled from 'styled-components'
 
 import { Loading } from './components/common'
 import { AuthCheckContext } from './components/contexts'
@@ -10,9 +10,7 @@ import Footer from './components/Footer'
 import Header from './components/Header'
 import LoginModal from './components/LoginModal'
 import {
-  BULMA_A,
   BULMA_DANGER,
-  BULMA_GREY,
   BULMA_INFO,
   BULMA_LINK,
   BULMA_PRIMARY,
@@ -92,16 +90,6 @@ export const ToastStyle = styled.div`
 export const Wrapper = styled.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
   background: ${SNOW};
-`
-
-export const GlobalStyle = createGlobalStyle`
-  a {
-    color: ${BULMA_A};
-  }
-
-  .has-text-grey {
-    color: ${BULMA_GREY} !important;
-  }
 `
 
 /**
@@ -246,7 +234,6 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
                 hideProgressBar={true}
               />
             </ToastStyle>
-            <GlobalStyle />
           </>
         )
       } catch (ex) {
