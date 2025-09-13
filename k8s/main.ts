@@ -32,7 +32,7 @@ export class MyChart extends PennLabsChart {
       deployment: {
         image: backendImage,
         cmd: ['/usr/local/bin/asgi-run'],
-        replicas: 9,
+        replicas: 7,
         secret: clubsSecret,
         env: [
           { name: 'REDIS_HOST', value: 'penn-clubs-redis' },
