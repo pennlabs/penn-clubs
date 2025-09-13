@@ -46,7 +46,7 @@ export class MyChart extends PennLabsChart {
     new ReactApplication(this, 'react', {
       deployment: {
         image: frontendImage,
-        replicas: 4,
+        replicas: 5,
       },
       domain: { host: clubsDomain, paths: ['/'] },
       port: 80,
