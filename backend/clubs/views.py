@@ -4563,10 +4563,13 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        If a withdrawn ownership request object already exists, reuse it.
-
-        If a request has been accepted or denied, we do not recreate it.
+        Implement 6-month cooldown rule for ownership requests:
+        - If no request was made within the past 6 months, allow new request
+        - If withdrawn request was made within the past 6 months, allow resubmission
+        - If pending/accepted/denied request was made within the past 6 months,
+          deny new request
         """
+
         club = request.data.get("club", None)
         club_instance = Club.objects.filter(code=club).first()
         if club_instance is None:
@@ -4574,31 +4577,28 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
                 {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        request_instance = OwnershipRequest.objects.filter(
-            club__code=club, requester=request.user
-        ).first()
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(request.user, club_instance)
+        )
 
-        if request_instance is None:
+        if not can_request:
+            return Response(
+                {"detail": reason},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if recent_request is None:
+            # No request within 6 months, create new one
             request_instance = OwnershipRequest.objects.create(
                 club=club_instance,
                 requester=request.user,
                 status=OwnershipRequest.PENDING,
             )
-            request_instance.send_request(request)
-        elif request_instance.status == OwnershipRequest.WITHDRAWN:
-            request_instance.status = OwnershipRequest.PENDING
-            request_instance.created_at = timezone.now()
-            request_instance.save()
-        elif request_instance.status == OwnershipRequest.PENDING:
-            return Response(
-                {"detail": "Ownership request to this club has already been sent"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         else:
-            return Response(
-                {"detail": "Request has already been handled"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            # Withdrawn request within 6 months, reuse it
+            recent_request.status = OwnershipRequest.PENDING
+            recent_request.save()
+            request_instance = recent_request
 
         serializer = self.get_serializer(request_instance, many=False)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -4611,6 +4611,12 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
+
+        if obj.status != OwnershipRequest.PENDING:
+            return Response(
+                {"detail": "Cannot withdraw a request that has already been handled"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         obj.status = OwnershipRequest.WITHDRAWN
         obj.save(update_fields=["status"])
@@ -4685,12 +4691,44 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
 
         request_object.status = OwnershipRequest.ACCEPTED
         request_object.save(update_fields=["status"])
+
+        club_name = request_object.club.name
+        full_name = request_object.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "full_name": full_name,
+        }
+
+        send_mail_helper(
+            name="ownership_request_accepted",
+            subject=f"Ownership Request Accepted for {club_name}",
+            emails=[request_object.requester.email],
+            context=context,
+        )
+
         return Response({"success": True})
 
     def destroy(self, request, *args, **kwargs):
         obj = self.get_object()
         obj.status = OwnershipRequest.DENIED
         obj.save(update_fields=["status"])
+
+        club_name = obj.club.name
+        full_name = obj.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "full_name": full_name,
+        }
+
+        send_mail_helper(
+            name="ownership_request_denied",
+            subject=f"Ownership Request Denied for {club_name}",
+            emails=[obj.requester.email],
+            context=context,
+        )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
