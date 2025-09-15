@@ -1,0 +1,13 @@
+<!-- TYPES:
+club_name:
+    type: string
+full_name:
+    type: string
+-->
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Ownership Request Denied for <b>{{ club_name }}</b></h2>
+    <p style="font-size: 1.2em">Hello <b>{{ full_name }}</b>, your request for ownership of <b>{{ club_name }}</b> has been denied.</p>
+    <p>If you have any questions about this decision, please contact the club administrators or the Penn Clubs support team.</p>
+{% endblock %}
