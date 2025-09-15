@@ -3276,6 +3276,12 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
         return data
 
+    def validate_description(self, value):
+        """
+        Sanitize application description HTML with an allowlist and linkify URLs.
+        """
+        return clean(bleach.linkify(value))
+
     @transaction.atomic
     def save(self):
         application_obj = super().save()
@@ -3474,6 +3480,12 @@ class AdminNoteSerializer(ClubRouteMixin, serializers.ModelSerializer):
 
 class WritableClubFairSerializer(ClubFairSerializer):
     time = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_information(self, value):
+        return clean(bleach.linkify(value))
+
+    def validate_registration_information(self, value):
+        return clean(bleach.linkify(value))
 
     class Meta(ClubFairSerializer.Meta):
         pass
