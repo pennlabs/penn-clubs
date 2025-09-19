@@ -5,12 +5,17 @@ from django.db import migrations, models
 
 def set_status_field(apps, schema_editor):
     OwnershipRequest = apps.get_model('clubs', 'OwnershipRequest')
-    for request in OwnershipRequest.objects.all():
-        if request.withdrawn:
-            request.status = OwnershipRequest.WITHDRAWN
-        else:
-            request.status = OwnershipRequest.PENDING
-        request.save()
+
+    OwnershipRequest.objects.filter(withdrawn=True).update(status=2)
+    OwnershipRequest.objects.filter(withdrawn=False).update(status=1)
+
+def reverse_status_field(apps, schema_editor):
+    OwnershipRequest = apps.get_model('clubs', 'OwnershipRequest')
+
+    OwnershipRequest.objects.filter(status=1).update(withdrawn=False)
+    OwnershipRequest.objects.filter(status=2).update(withdrawn=True)
+    OwnershipRequest.objects.filter(status=3).delete()
+    OwnershipRequest.objects.filter(status=4).delete()
 
 class Migration(migrations.Migration):
 
@@ -28,7 +33,7 @@ class Migration(migrations.Migration):
             name='status',
             field=models.IntegerField(choices=[(1, 'Pending'), (2, 'Withdrawn'), (3, 'Denied'), (4, 'Accepted')], default=1),
         ),
-        migrations.RunPython(set_status_field),
+        migrations.RunPython(set_status_field, reverse_status_field),
         migrations.RemoveField(
             model_name='ownershiprequest',
             name='withdrawn',
