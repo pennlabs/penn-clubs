@@ -55,7 +55,7 @@
     "react-tooltip": "^5.28.0",
     "react-vis": "^1.12.1",
     "showdown": "^2.1.0",
-    "styled-components": "^6.1.16",
+    "styled-components": "npm:@sanity/css-in-js",
     "swiper": "^11.2.6",
     "use-places-autocomplete": "^4.0.1"
   },
