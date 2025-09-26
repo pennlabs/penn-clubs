@@ -2,7 +2,6 @@
 
 from django.db import migrations, models
 
-# Status constants (copied from model choices at time of migration)
 STATUS_PENDING = 1
 STATUS_WITHDRAWN = 2
 STATUS_DENIED = 3
