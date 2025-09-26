@@ -2,20 +2,25 @@
 
 from django.db import migrations, models
 
+# Status constants (copied from model choices at time of migration)
+STATUS_PENDING = 1
+STATUS_WITHDRAWN = 2
+STATUS_DENIED = 3
+STATUS_ACCEPTED = 4
 
 def set_status_field(apps, schema_editor):
     OwnershipRequest = apps.get_model('clubs', 'OwnershipRequest')
 
-    OwnershipRequest.objects.filter(withdrawn=True).update(status=2)
-    OwnershipRequest.objects.filter(withdrawn=False).update(status=1)
+    OwnershipRequest.objects.filter(withdrawn=True).update(status=STATUS_WITHDRAWN)
+    OwnershipRequest.objects.filter(withdrawn=False).update(status=STATUS_PENDING)
 
 def reverse_status_field(apps, schema_editor):
     OwnershipRequest = apps.get_model('clubs', 'OwnershipRequest')
 
-    OwnershipRequest.objects.filter(status=1).update(withdrawn=False)
-    OwnershipRequest.objects.filter(status=2).update(withdrawn=True)
-    OwnershipRequest.objects.filter(status=3).delete()
-    OwnershipRequest.objects.filter(status=4).delete()
+    OwnershipRequest.objects.filter(status=STATUS_PENDING).update(withdrawn=False)
+    OwnershipRequest.objects.filter(status=STATUS_WITHDRAWN).update(withdrawn=True)
+    OwnershipRequest.objects.filter(status=STATUS_DENIED).delete()
+    OwnershipRequest.objects.filter(status=STATUS_ACCEPTED).delete()
 
 class Migration(migrations.Migration):
 
