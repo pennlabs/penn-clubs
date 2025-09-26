@@ -13,6 +13,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
+  SHOW_OWNERSHIP_REQUESTS,
   SITE_NAME,
 } from '../../utils/branding'
 import { ModalContent } from '../ClubPage/Actions'
@@ -669,65 +670,67 @@ const QueueTab = (): ReactElement => {
         refetchClubs={refetchClubs}
         templates={templates}
       />
-      {/* <>
-        <SmallTitle>Pending Ownership Requests</SmallTitle>
-        <div className="mt-3 mb-3">
-          These are user-submitted requests to take ownership of inactive clubs.
-          You can approve or reject each request individually.
-        </div>
-
-        {ownershipRequests.length === 0 ? (
-          <div className="has-text-info">
-            There are no ownership requests at this time.
+      {SHOW_OWNERSHIP_REQUESTS && (
+        <>
+          <SmallTitle>Pending Ownership Requests</SmallTitle>
+          <div className="mt-3 mb-3">
+            These are user-submitted requests to take ownership of inactive
+            clubs. You can approve or reject each request individually.
           </div>
-        ) : (
-          <table className="table is-fullwidth is-striped">
-            <thead>
-              <tr>
-                <th>Club</th>
-                <th>Requester</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ownershipRequests.map((req) => (
-                <tr key={req.id}>
-                  <td>
-                    <Link href={`/club/${req.club}`} target="_blank">
-                      {req.club_name}
-                    </Link>
-                  </td>
-                  <td>{req.name || 'Unknown User'}</td>
-                  <td>
-                    {req.created_at
-                      ? new Date(req.created_at).toLocaleDateString()
-                      : 'Invalid Date'}
-                  </td>
-                  <td>
-                    <button
-                      className="button is-small is-success mr-2"
-                      onClick={() =>
-                        handleOwnershipDecision(req.club, req.username, true)
-                      }
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="button is-small is-danger"
-                      onClick={() =>
-                        handleOwnershipDecision(req.club, req.username, false)
-                      }
-                    >
-                      Reject
-                    </button>
-                  </td>
+
+          {ownershipRequests.length === 0 ? (
+            <div className="has-text-info">
+              There are no ownership requests at this time.
+            </div>
+          ) : (
+            <table className="table is-fullwidth is-striped">
+              <thead>
+                <tr>
+                  <th>Club</th>
+                  <th>Requester</th>
+                  <th>Date</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </> */}
+              </thead>
+              <tbody>
+                {ownershipRequests.map((req) => (
+                  <tr key={req.id}>
+                    <td>
+                      <Link href={`/club/${req.club}`} target="_blank">
+                        {req.club_name}
+                      </Link>
+                    </td>
+                    <td>{req.name || 'Unknown User'}</td>
+                    <td>
+                      {req.created_at
+                        ? new Date(req.created_at).toLocaleDateString()
+                        : 'Invalid Date'}
+                    </td>
+                    <td>
+                      <button
+                        className="button is-small is-success mr-2"
+                        onClick={() =>
+                          handleOwnershipDecision(req.club, req.username, true)
+                        }
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="button is-small is-danger"
+                        onClick={() =>
+                          handleOwnershipDecision(req.club, req.username, false)
+                        }
+                      >
+                        Reject
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
       <SmallTitle>Other Clubs</SmallTitle>
       <div className="mt-3 mb-3">
         The table below shows a list of {OBJECT_NAME_PLURAL} that have been

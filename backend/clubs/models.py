@@ -1159,8 +1159,6 @@ class JoinRequest(models.Model):
     )
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="%(class)ss")
 
-    withdrawn = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1173,6 +1171,8 @@ class MembershipRequest(JoinRequest):
     """
     Used when users are not in the club but request membership from the owner
     """
+
+    withdrawn = models.BooleanField(default=False)
 
     def __str__(self):
         return f"<MembershipRequest: {self.requester.username} for {self.club.code}>"
@@ -1205,8 +1205,55 @@ class OwnershipRequest(JoinRequest):
     Represents a user's request to take ownership of a club
     """
 
+    PENDING = 1
+    WITHDRAWN = 2
+    DENIED = 3
+    ACCEPTED = 4
+    STATUS_TYPES = (
+        (PENDING, "Pending"),
+        (WITHDRAWN, "Withdrawn"),
+        (DENIED, "Denied"),
+        (ACCEPTED, "Accepted"),
+    )
+    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
+
+    class Meta:
+        unique_together = ()
+
     def __str__(self):
         return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"
+
+    @classmethod
+    def get_recent_request(cls, user, club):
+        """
+        Get the most recent ownership request for a user and club within 6 months.
+        """
+        six_months_ago = timezone.now() - datetime.timedelta(days=180)
+        return (
+            cls.objects.filter(
+                club=club, requester=user, created_at__gte=six_months_ago
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+    @classmethod
+    def can_user_request_ownership(cls, user, club):
+        """
+        Check if a user can make a new ownership request for a club.
+        Returns (can_request: bool, reason: str,
+                 recent_request: OwnershipRequest or None)
+        """
+        recent_request = cls.get_recent_request(user, club)
+
+        if recent_request is None:
+            return True, "No recent request found", None
+        elif recent_request.status == cls.WITHDRAWN:
+            return True, "Previous request was withdrawn", recent_request
+        elif recent_request.status == cls.PENDING:
+            return False, "Request already pending", recent_request
+        else:  # ACCEPTED or DENIED
+            return False, "Request already handled within 6 months", recent_request
 
     def send_request(self, request=None):
         domain = get_domain(request)
