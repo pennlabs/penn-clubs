@@ -320,6 +320,45 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
         self.assertEqual(len(resp.data), 3)
 
+    def test_club_membership_visibility(self):
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user1,
+            role=Membership.ROLE_OWNER,
+            public=True,
+        )
+        Membership.objects.create(
+            club=self.club1,
+            person=self.user2,
+            role=Membership.ROLE_MEMBER,
+            public=False,
+        )
+
+        self.client.logout()
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(data.get("members", []), [])
+
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        usernames = [member.get("username") for member in data.get("members", [])]
+        self.assertEqual(usernames, [self.user1.username])
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(len(data.get("members", [])), 2)
+
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertEqual(len(data.get("members", [])), 2)
+
     def test_club_upload(self):
         """
         Test uploading a club logo.

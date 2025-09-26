@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import include, path
 from rest_framework_nested import routers
 
@@ -109,9 +110,10 @@ router.register(
     basename="group_activity_options",
 )
 router.register(r"users", UserViewSet, basename="users")
-router.register(
-    r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
-)
+if getattr(settings, "ENABLE_EXTERNAL_MEMBER_API", False):
+    router.register(
+        r"external/members/(?P<code>.+)", ExternalMemberListViewSet, basename="external"
+    )
 router.register(
     r"cycles",
     WhartonCyclesView,
