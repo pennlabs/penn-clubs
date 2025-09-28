@@ -173,12 +173,12 @@ export default function AnalyticsCard({
   const [startDate, setStartDate] = useState<Date>(() => {
     const startDate = new Date()
     startDate.setHours(0, 0, 0, 0)
-    return startDate
+    return new Date(startDate.getTime() - 7 * 24 * 60 * 60 * 1000) // Default to a week ago
   })
   const [endDate, setEndDate] = useState<Date>(() => {
     const end = new Date()
     end.setHours(0, 0, 0, 0)
-    return new Date(end.getTime() + 24 * 60 * 60 * 1000) // Default to midnight tomorrow
+    return new Date(end.getTime() + 24 * 60 * 60 * 1000) // Default to today - Days end at midnight.
   })
   const [max, setMax] = useState<number>(1)
   const [isLoading, setLoading] = useState<boolean>(false)
