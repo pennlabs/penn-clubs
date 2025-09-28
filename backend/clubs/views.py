@@ -2807,9 +2807,6 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
         return resp
 
-    @LabsAnalytics.record_api_function(
-        FuncEntry("email_blast_to_club_active_members"),
-    )
     def create(self, request, *args, **kwargs):
         """
         Has the option to create a recurring event by specifying an offset and an
