@@ -513,7 +513,7 @@ wheels = [
 
 [[package]]
 name = "django-labs-accounts"
-version = "1.0.2"
+version = "1.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -523,10 +523,10 @@ dependencies = [
     { name = "requests-oauthlib" },
     { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6c/e3/f645303335414356134c644eafed764419a607cb5cc719f64c8d38fccf8e/django_labs_accounts-1.0.2.tar.gz", hash = "sha256:4ce724ea155d815f0f2146e0fb034235c935b04bb554139b6e8cf33013617bc7", size = 20662, upload-time = "2025-02-23T19:26:15.871Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/31/76/587565d6fbb3fcada3595118d74d9b13020e05006c6ae73fede3b729b0d5/django_labs_accounts-1.0.2-py3-none-any.whl", hash = "sha256:fc955e33fef6eb8685c9a318122beab9d1ab0058707c286238a8a6becb89dfbf", size = 24541, upload-time = "2025-02-23T19:26:14.909Z" },
-]
+
+sdist = {url = "https://files.pythonhosted.org/packages/a3/87/a3872e9fca882ea3886cb371d4c48b1087f03a1199e37d17cdfd15ac20b6bdaa/django_labs_accounts-1.0.4.tar.gz", hash = "sha256:ebc27bd7b1f714cae9ba91ad4400feccfdf456766eb5910fc6cf34e45156976e", size = 20700, upload-time = "2025-09-19T00:00:00Z"}
+
+wheels = [{url = "https://files.pythonhosted.org/packages/73/78/7378fde2562a0e6f4973fb76977153775083f84cd99695aa791fd9221ff3e65c/django_labs_accounts-1.0.4-py3-none-any.whl", hash = "sha256:a0d704c0ded5c518c39b5111f5efc0575626b24d1d80750a6184057364b393e4", size = 24500, upload-time = "2025-09-19T00:00:00Z"},]
 
 [[package]]
 name = "django-phonenumber-field"
