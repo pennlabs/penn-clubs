@@ -190,10 +190,10 @@ export default function AnalyticsCard({
   const chooseGroup = () => {
     const interval = moment(endDate).diff(moment(startDate), 'days')
     if (interval <= 1) {
-      setGroup(GROUPS[0])
+      if (group.value !== Group.Hour) setGroup(GROUPS[0])
       return [GROUPS[0]] // Hour
     } else if (interval <= 7) {
-      setGroup(GROUPS[1])
+      if (group.value !== Group.Day) setGroup(GROUPS[1])
       return [GROUPS[1]] // Day
     } else if (interval <= 31) {
       if (group.value === Group.Hour) {
@@ -241,21 +241,6 @@ export default function AnalyticsCard({
         setPieChartData(resp)
       })
   }, [metric, category])
-
-  const legendItems = [
-    {
-      title: 'Page visits',
-      strokeWidth: 6,
-    },
-    {
-      title: 'New favorites',
-      strokeWidth: 6,
-    },
-    {
-      title: 'New subscriptions',
-      strokeWidth: 6,
-    },
-  ]
 
   const toTicks = (date: number) => {
     if (group.value === Group.Hour) {
