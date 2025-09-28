@@ -10,6 +10,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from clubs.models import Club, Event, EventShowing
+from clubs.utils import clean
 
 
 class Command(BaseCommand):
@@ -43,7 +44,7 @@ class Command(BaseCommand):
                     ev.type = Event.OTHER
                     ev.code = event["slug"]
                     ev.name = unescape(event["title"]["rendered"])
-                    ev.description = unescape(event["excerpt"])
+                    ev.description = clean(unescape(event["excerpt"]))
                     ev.url = event["link"]
                     ev.save()
 

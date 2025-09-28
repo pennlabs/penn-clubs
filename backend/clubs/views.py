@@ -1171,6 +1171,29 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             )
 
             if self.action in {"retrieve"}:
+                membership_queryset = (
+                    Membership.objects.filter(active=True)
+                    .order_by("role", "person__first_name", "person__last_name")
+                    .select_related("person")
+                )
+
+                user = getattr(self.request, "user", None)
+                if not (user and user.is_authenticated):
+                    membership_queryset = membership_queryset.none()
+                else:
+                    is_admin = user.has_perm("clubs.manage_club")
+                    club_code = self.kwargs.get(self.lookup_field)
+                    is_member = False
+                    if club_code and not is_admin:
+                        is_member = Membership.objects.filter(
+                            person=user, club__code=club_code
+                        ).exists()
+                    if not (is_admin or is_member):
+                        membership_queryset = membership_queryset.filter(public=True)
+                    membership_queryset = membership_queryset.prefetch_related(
+                        "person__profile"
+                    )
+
                 queryset = queryset.prefetch_related(
                     "asset_set",
                     "student_types",
@@ -1178,12 +1201,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "target_schools",
                     "target_years",
                     "testimonials",
-                    Prefetch(
-                        "membership_set",
-                        queryset=Membership.objects.filter(active=True)
-                        .order_by("role", "person__first_name", "person__last_name")
-                        .prefetch_related("person__profile"),
-                    ),
+                    Prefetch("membership_set", queryset=membership_queryset),
                 )
 
         # if there is a search query made by a signed-in user, save it to the database

@@ -110,6 +110,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_URLS_REGEX = r"^/api/external/.*"
 CORS_ALLOW_METHODS = ["GET"]
 
+
+ENABLE_EXTERNAL_MEMBER_API = False
+
 # Authentication Backends
 
 AUTHENTICATION_BACKENDS = (
