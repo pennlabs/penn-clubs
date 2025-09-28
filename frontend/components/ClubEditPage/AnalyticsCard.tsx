@@ -170,15 +170,15 @@ export default function AnalyticsCard({
   const [visits, setVisits] = useState<LineData>([])
   const [favorites, setFavorites] = useState<LineData>([])
   const [subscriptions, setSubscriptions] = useState<LineData>([])
-  const [date, setDate] = useState<Date>(() => {
+  const [startDate, setStartDate] = useState<Date>(() => {
     const startDate = new Date()
     startDate.setHours(0, 0, 0, 0)
     return startDate
   })
-  const [endRange, setEndRange] = useState<Date>(() => {
-    const endDate = new Date()
-    endDate.setHours(0, 0, 0, 0)
-    return endDate
+  const [endDate, setEndDate] = useState<Date>(() => {
+    const end = new Date()
+    end.setHours(0, 0, 0, 0)
+    return new Date(end.getTime() + 24 * 60 * 60 * 1000) // Default to midnight tomorrow
   })
   const [max, setMax] = useState<number>(1)
   const [isLoading, setLoading] = useState<boolean>(false)
@@ -187,16 +187,24 @@ export default function AnalyticsCard({
   const [category, setCategory] = useState(CATEGORIES[0])
   const [group, setGroup] = useState(GROUPS[0])
 
-  const endDate = new Date(endRange.getTime() + 24 * 60 * 60 * 1000)
-
   const chooseGroup = () => {
-    const interval = moment(endDate).diff(moment(date), 'days')
+    const interval = moment(endDate).diff(moment(startDate), 'days')
     if (interval <= 1) {
+      setGroup(GROUPS[0])
       return [GROUPS[0]] // Hour
     } else if (interval <= 7) {
+      setGroup(GROUPS[1])
       return [GROUPS[1]] // Day
     } else if (interval <= 31) {
+      if (group.value === Group.Hour) {
+        setGroup(GROUPS[1])
+      } else if (group.value === Group.Month) {
+        setGroup(GROUPS[2])
+      }
       return [GROUPS[1], GROUPS[2]] // Day, Week
+    }
+    if (group.value === Group.Hour || group.value === Group.Day) {
+      setGroup(GROUPS[2])
     }
     return [GROUPS[2], GROUPS[3]] // Week, Month
   }
@@ -205,24 +213,24 @@ export default function AnalyticsCard({
     setLoading(true)
     doApiRequest(
       `/clubs/${club.code}/analytics?format=json&start=${moment(
-        date,
+        startDate,
       ).toISOString()}&end=${moment(endDate).toISOString()}&group=${
         group.value
       }`,
     )
       .then((request) => request.json())
       .then((response) => {
-        setVisits(parse(response.visits, date, endDate, group.value))
-        setFavorites(parse(response.favorites, date, endDate, group.value))
+        setVisits(parse(response.visits, startDate, endDate, group.value))
+        setFavorites(parse(response.favorites, startDate, endDate, group.value))
         setSubscriptions(
-          parse(response.subscriptions, date, endDate, group.value),
+          parse(response.subscriptions, startDate, endDate, group.value),
         )
         if (response.max > 1) {
           setMax(response.max)
         }
         setLoading(false)
       })
-  }, [date, endRange, group])
+  }, [startDate, endDate, group])
 
   useEffect(() => {
     doApiRequest(
@@ -280,8 +288,8 @@ export default function AnalyticsCard({
               <DatePicker
                 className="input"
                 format="MM'/'dd'/'y"
-                selected={date}
-                onChange={setDate}
+                selected={startDate}
+                onChange={setStartDate}
               />
             </div>
             <div className="column is-2">
@@ -290,8 +298,8 @@ export default function AnalyticsCard({
               <DatePicker
                 className="input"
                 format="MM'/'dd'/'y"
-                selected={endRange}
-                onChange={setEndRange}
+                selected={endDate}
+                onChange={setEndDate}
               />
             </div>
             <div className="column is-8">
@@ -317,7 +325,10 @@ export default function AnalyticsCard({
                   dataKey="x"
                   type="number"
                   scale="time"
-                  domain={[toTicks(date.getTime()), toTicks(endDate.getTime())]}
+                  domain={[
+                    toTicks(startDate.getTime()),
+                    toTicks(endDate.getTime()),
+                  ]}
                   tickFormatter={toTicks}
                 ></XAxis>
                 <Label

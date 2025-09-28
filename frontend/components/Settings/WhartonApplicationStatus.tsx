@@ -61,7 +61,6 @@ function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
   Object.keys(applicationCommittees).forEach((club) => {
     Object.keys(applicationCommittees[club]).forEach((committee) => {
       const obj = applicationCommittees[club][committee]
-
       const total: number = (Object.values(obj) as number[]).reduce(
         (acc: number, curr: number) => acc + curr,
         0,
