@@ -418,7 +418,7 @@ class Club(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # signifies the existence of a previous instance within history with approved=True
-    ghost = models.BooleanField(default=False, db_index=True)
+    ghost = models.BooleanField(default=False)
     history = HistoricalRecords(cascade_delete_history=True)
 
     def __str__(self):
@@ -783,7 +783,6 @@ class Club(models.Model):
         ]
         indexes = [
             models.Index(fields=["approved", "archived"]),
-            models.Index(fields=["approved", "ghost"]),
         ]
 
 
@@ -841,7 +840,7 @@ class QuestionAnswer(models.Model):
         get_user_model(), on_delete=models.SET_NULL, null=True, related_name="answers"
     )
 
-    approved = models.BooleanField(default=False, db_index=True)
+    approved = models.BooleanField(default=False)
     is_anonymous = models.BooleanField(default=False)
 
     question = models.TextField()
@@ -998,7 +997,7 @@ class Event(models.Model):
     )
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4, db_index=True)
-    is_ics_event = models.BooleanField(default=False, blank=True, db_index=True)
+    is_ics_event = models.BooleanField(default=False, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -1050,7 +1049,6 @@ class EventShowing(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["event", "start_time"]),
             models.Index(fields=["start_time", "end_time"]),
         ]
 
@@ -1071,9 +1069,6 @@ class Favorite(models.Model):
 
     class Meta:
         unique_together = (("person", "club"),)
-        indexes = [
-            models.Index(fields=["club", "created_at"]),
-        ]
 
 
 class Subscribe(models.Model):
@@ -1095,9 +1090,6 @@ class Subscribe(models.Model):
 
     class Meta:
         unique_together = (("person", "club"),)
-        indexes = [
-            models.Index(fields=["club", "created_at"]),
-        ]
 
 
 class ClubVisit(models.Model):
@@ -1136,7 +1128,6 @@ class ClubVisit(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["club", "visit_type", "created_at"]),
-            models.Index(fields=["club", "created_at"]),
         ]
 
 
@@ -1162,11 +1153,6 @@ class ZoomMeetingVisit(models.Model):
             self.person.username if self.person is not None else self.participant_id,
             self.meeting_id,
         )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["event", "leave_time"]),
-        ]
 
 
 class SearchQuery(models.Model):
@@ -1418,7 +1404,7 @@ class Membership(models.Model):
         (ROLE_MEMBER, "Member"),
     )
 
-    active = models.BooleanField(default=True, db_index=True)
+    active = models.BooleanField(default=True)
     public = models.BooleanField(default=True)
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -1441,8 +1427,7 @@ class Membership(models.Model):
     class Meta:
         unique_together = (("club", "person"),)
         indexes = [
-            models.Index(fields=["club", "role", "active"]),
-            models.Index(fields=["person", "role", "active"]),
+            models.Index(fields=["person", "club", "role"]),
         ]
 
 
@@ -1467,7 +1452,7 @@ class MembershipInvite(models.Model):
     """
 
     id = models.CharField(max_length=8, primary_key=True, default=get_invite_id)
-    active = models.BooleanField(default=True, db_index=True)
+    active = models.BooleanField(default=True)
     auto = models.BooleanField(default=False)
     creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
 
@@ -1600,7 +1585,7 @@ class Badge(models.Model):
 
     PURPOSE_CHOICES = [("fair", "Fair"), ("org", "Organization")]
 
-    label = models.CharField(max_length=255, db_index=True)
+    label = models.CharField(max_length=255)
     purpose = models.CharField(max_length=255, choices=PURPOSE_CHOICES, db_index=True)
     description = models.TextField(blank=True)
 
@@ -1615,7 +1600,7 @@ class Badge(models.Model):
     fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE, blank=True, null=True)
 
     # whether or not users can view and filter by this badge
-    visible = models.BooleanField(default=False, db_index=True)
+    visible = models.BooleanField(default=False)
 
     # optional message to display on club pages with the badge
     message = models.TextField(null=True, blank=True)
@@ -1842,7 +1827,7 @@ class ClubApplication(CloneModel):
         ApplicationCycle, on_delete=models.SET_NULL, null=True
     )
     external_url = models.URLField(blank=True)
-    is_active = models.BooleanField(default=False, blank=True, db_index=True)
+    is_active = models.BooleanField(default=False, blank=True)
     is_wharton_council = models.BooleanField(default=False, blank=True)
     acceptance_email = models.TextField(blank=True)
     rejection_email = models.TextField(blank=True)
@@ -2083,7 +2068,7 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    notified = models.BooleanField(default=False, db_index=True)
+    notified = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -2212,7 +2197,7 @@ class Ticket(models.Model):
     transferable = models.BooleanField(default=True)
     attended = models.BooleanField(default=False)
     # TODO: change to enum between All, Club, None
-    buyable = models.BooleanField(default=True, db_index=True)
+    buyable = models.BooleanField(default=True)
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
@@ -2224,10 +2209,9 @@ class Ticket(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["showing", "type", "owner", "holder"]),
+            models.Index(fields=["showing", "type"]),
             models.Index(fields=["showing", "owner"]),
             models.Index(fields=["showing", "holder"]),
-            models.Index(fields=["owner", "showing"]),
         ]
 
     def delete(self, *args, **kwargs):
