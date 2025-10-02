@@ -295,7 +295,7 @@ class Club(models.Model):
         (APPLICATION_AND_INTERVIEW, "Application and Interview Required"),
     )
 
-    approved = models.BooleanField(null=True, default=None)
+    approved = models.BooleanField(null=True, default=None, db_index=True)
     approved_by = models.ForeignKey(
         get_user_model(),
         null=True,
@@ -306,7 +306,7 @@ class Club(models.Model):
     approved_comment = models.TextField(null=True, blank=True)
     approved_on = models.DateTimeField(null=True, blank=True, db_index=True)
 
-    archived = models.BooleanField(default=False)
+    archived = models.BooleanField(default=False, db_index=True)
     archived_by = models.ForeignKey(
         get_user_model(),
         null=True,
@@ -418,7 +418,7 @@ class Club(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # signifies the existence of a previous instance within history with approved=True
-    ghost = models.BooleanField(default=False)
+    ghost = models.BooleanField(default=False, db_index=True)
     history = HistoricalRecords(cascade_delete_history=True)
 
     def __str__(self):
@@ -781,6 +781,10 @@ class Club(models.Model):
             ),
             ("manage_club", "Manipulate club object and related objects"),
         ]
+        indexes = [
+            models.Index(fields=["approved", "archived"]),
+            models.Index(fields=["approved", "ghost"]),
+        ]
 
 
 class TargetStudentType(models.Model):
@@ -837,7 +841,7 @@ class QuestionAnswer(models.Model):
         get_user_model(), on_delete=models.SET_NULL, null=True, related_name="answers"
     )
 
-    approved = models.BooleanField(default=False)
+    approved = models.BooleanField(default=False, db_index=True)
     is_anonymous = models.BooleanField(default=False)
 
     question = models.TextField()
@@ -900,8 +904,8 @@ class ClubFair(models.Model):
     information = models.TextField(blank=True)
     registration_information = models.TextField(blank=True)
 
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    start_time = models.DateTimeField(db_index=True)
+    end_time = models.DateTimeField(db_index=True)
 
     registration_start_time = models.DateTimeField(null=True, blank=True)
     registration_end_time = models.DateTimeField()
@@ -993,8 +997,8 @@ class Event(models.Model):
         upload_to=get_event_small_file_name, null=True, blank=True
     )
     description = models.TextField(blank=True)  # rich html
-    ics_uuid = models.UUIDField(default=uuid.uuid4)
-    is_ics_event = models.BooleanField(default=False, blank=True)
+    ics_uuid = models.UUIDField(default=uuid.uuid4, db_index=True)
+    is_ics_event = models.BooleanField(default=False, blank=True, db_index=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -1013,7 +1017,7 @@ class Event(models.Model):
         (CAREER, "Career"),
     )
 
-    type = models.IntegerField(choices=TYPES, default=RECRUITMENT)
+    type = models.IntegerField(choices=TYPES, default=RECRUITMENT, db_index=True)
     pinned = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1032,8 +1036,8 @@ class EventShowing(models.Model):
     """
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    start_time = models.DateTimeField(db_index=True)
+    end_time = models.DateTimeField(db_index=True)
     location = models.CharField(max_length=255, null=True, blank=True)
     ticket_order_limit = models.IntegerField(default=10)
     ticket_drop_time = models.DateTimeField(null=True, blank=True)
@@ -1043,6 +1047,12 @@ class EventShowing(models.Model):
 
     def __str__(self):
         return f"{self.event.name} showing at {self.start_time}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["event", "start_time"]),
+            models.Index(fields=["start_time", "end_time"]),
+        ]
 
 
 class Favorite(models.Model):
@@ -1061,6 +1071,9 @@ class Favorite(models.Model):
 
     class Meta:
         unique_together = (("person", "club"),)
+        indexes = [
+            models.Index(fields=["club", "created_at"]),
+        ]
 
 
 class Subscribe(models.Model):
@@ -1082,6 +1095,9 @@ class Subscribe(models.Model):
 
     class Meta:
         unique_together = (("person", "club"),)
+        indexes = [
+            models.Index(fields=["club", "created_at"]),
+        ]
 
 
 class ClubVisit(models.Model):
@@ -1107,13 +1123,21 @@ class ClubVisit(models.Model):
         (MANAGE_PAGE, "Manage Page Visit"),
         (FAIR_PAGE, "Fair Page Visit"),
     )
-    visit_type = models.IntegerField(choices=VISIT_TYPES, default=CLUB_PAGE)
+    visit_type = models.IntegerField(
+        choices=VISIT_TYPES, default=CLUB_PAGE, db_index=True
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return "<Visit: {} visited {}>".format(self.person.username, self.club.code)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["club", "visit_type", "created_at"]),
+            models.Index(fields=["club", "created_at"]),
+        ]
 
 
 class ZoomMeetingVisit(models.Model):
@@ -1138,6 +1162,11 @@ class ZoomMeetingVisit(models.Model):
             self.person.username if self.person is not None else self.participant_id,
             self.meeting_id,
         )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["event", "leave_time"]),
+        ]
 
 
 class SearchQuery(models.Model):
@@ -1389,13 +1418,13 @@ class Membership(models.Model):
         (ROLE_MEMBER, "Member"),
     )
 
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=True, db_index=True)
     public = models.BooleanField(default=True)
 
     person = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="Member")
-    role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    role = models.IntegerField(choices=ROLE_CHOICES, default=ROLE_MEMBER, db_index=True)
     description = models.TextField(max_length=1000, blank=True)
     image = models.ImageField(
         upload_to=get_membership_image_file_name, null=True, blank=True
@@ -1411,6 +1440,10 @@ class Membership(models.Model):
 
     class Meta:
         unique_together = (("club", "person"),)
+        indexes = [
+            models.Index(fields=["club", "role", "active"]),
+            models.Index(fields=["person", "role", "active"]),
+        ]
 
 
 def get_token():
@@ -1434,7 +1467,7 @@ class MembershipInvite(models.Model):
     """
 
     id = models.CharField(max_length=8, primary_key=True, default=get_invite_id)
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=True, db_index=True)
     auto = models.BooleanField(default=False)
     creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
 
@@ -1567,8 +1600,8 @@ class Badge(models.Model):
 
     PURPOSE_CHOICES = [("fair", "Fair"), ("org", "Organization")]
 
-    label = models.CharField(max_length=255)
-    purpose = models.CharField(max_length=255, choices=PURPOSE_CHOICES)
+    label = models.CharField(max_length=255, db_index=True)
+    purpose = models.CharField(max_length=255, choices=PURPOSE_CHOICES, db_index=True)
     description = models.TextField(blank=True)
 
     # The color of the badge to be displayed on the frontend.
@@ -1582,7 +1615,7 @@ class Badge(models.Model):
     fair = models.ForeignKey(ClubFair, on_delete=models.CASCADE, blank=True, null=True)
 
     # whether or not users can view and filter by this badge
-    visible = models.BooleanField(default=False)
+    visible = models.BooleanField(default=False, db_index=True)
 
     # optional message to display on club pages with the badge
     message = models.TextField(null=True, blank=True)
@@ -1800,16 +1833,16 @@ class ClubApplication(CloneModel):
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
-    application_start_time = models.DateTimeField()
-    application_end_time = models.DateTimeField()
+    application_start_time = models.DateTimeField(db_index=True)
+    application_end_time = models.DateTimeField(db_index=True)
     application_end_time_exception = models.BooleanField(default=False, blank=True)
     name = models.TextField(blank=True)
-    result_release_time = models.DateTimeField()
+    result_release_time = models.DateTimeField(db_index=True)
     application_cycle = models.ForeignKey(
         ApplicationCycle, on_delete=models.SET_NULL, null=True
     )
     external_url = models.URLField(blank=True)
-    is_active = models.BooleanField(default=False, blank=True)
+    is_active = models.BooleanField(default=False, blank=True, db_index=True)
     is_wharton_council = models.BooleanField(default=False, blank=True)
     acceptance_email = models.TextField(blank=True)
     rejection_email = models.TextField(blank=True)
@@ -2035,7 +2068,7 @@ class ApplicationSubmission(models.Model):
         (REJECTED_AFTER_INTERVIEW, "Rejected after interview(s)"),
         (ACCEPTED, "Accepted"),
     )
-    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
+    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING, db_index=True)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=False)
     reason = models.TextField(blank=True)
     application = models.ForeignKey(
@@ -2050,7 +2083,7 @@ class ApplicationSubmission(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    notified = models.BooleanField(default=False)
+    notified = models.BooleanField(default=False, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -2151,7 +2184,7 @@ class Ticket(models.Model):
         null=True,
         blank=True,
     )
-    type = models.CharField(max_length=100)
+    type = models.CharField(max_length=100, db_index=True)
     owner = models.ForeignKey(
         get_user_model(),
         related_name="owned_tickets",
@@ -2179,7 +2212,7 @@ class Ticket(models.Model):
     transferable = models.BooleanField(default=True)
     attended = models.BooleanField(default=False)
     # TODO: change to enum between All, Club, None
-    buyable = models.BooleanField(default=True)
+    buyable = models.BooleanField(default=True, db_index=True)
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
@@ -2188,6 +2221,14 @@ class Ticket(models.Model):
         null=True,
     )
     objects = TicketManager()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["showing", "type", "owner", "holder"]),
+            models.Index(fields=["showing", "owner"]),
+            models.Index(fields=["showing", "holder"]),
+            models.Index(fields=["owner", "showing"]),
+        ]
 
     def delete(self, *args, **kwargs):
         if self.transaction_record:
