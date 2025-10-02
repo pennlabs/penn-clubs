@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.db.models.deletion import ProtectedError
 from django.dispatch import receiver
 from django.template.loader import render_to_string
@@ -295,7 +295,7 @@ class Club(models.Model):
         (APPLICATION_AND_INTERVIEW, "Application and Interview Required"),
     )
 
-    approved = models.BooleanField(null=True, default=None, db_index=True)
+    approved = models.BooleanField(null=True, default=None)
     approved_by = models.ForeignKey(
         get_user_model(),
         null=True,
@@ -957,6 +957,11 @@ class ClubFair(models.Model):
             f"({self.start_time.strftime(fmt)} - {self.end_time.strftime(fmt)})"
         )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["end_time", "start_time"], name="fair_time_idx"),
+        ]
+
 
 class ClubFairRegistration(models.Model):
     """
@@ -1035,7 +1040,7 @@ class EventShowing(models.Model):
     """
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    start_time = models.DateTimeField(db_index=True)
+    start_time = models.DateTimeField()
     end_time = models.DateTimeField(db_index=True)
     location = models.CharField(max_length=255, null=True, blank=True)
     ticket_order_limit = models.IntegerField(default=10)
@@ -1050,6 +1055,7 @@ class EventShowing(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["start_time", "end_time"]),
+            models.Index(fields=["event", "start_time"], name="event_start_idx"),
         ]
 
 
@@ -1115,9 +1121,7 @@ class ClubVisit(models.Model):
         (MANAGE_PAGE, "Manage Page Visit"),
         (FAIR_PAGE, "Fair Page Visit"),
     )
-    visit_type = models.IntegerField(
-        choices=VISIT_TYPES, default=CLUB_PAGE, db_index=True
-    )
+    visit_type = models.IntegerField(choices=VISIT_TYPES, default=CLUB_PAGE)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1426,9 +1430,6 @@ class Membership(models.Model):
 
     class Meta:
         unique_together = (("club", "person"),)
-        indexes = [
-            models.Index(fields=["person", "club", "role"]),
-        ]
 
 
 def get_token():
@@ -2212,6 +2213,12 @@ class Ticket(models.Model):
             models.Index(fields=["showing", "type"]),
             models.Index(fields=["showing", "owner"]),
             models.Index(fields=["showing", "holder"]),
+            # Speed up available ticket lookups for add-to-cart
+            models.Index(
+                fields=["showing", "type"],
+                name="ticket_available_idx",
+                condition=Q(owner__isnull=True, holder__isnull=True, buyable=True),
+            ),
         ]
 
     def delete(self, *args, **kwargs):
