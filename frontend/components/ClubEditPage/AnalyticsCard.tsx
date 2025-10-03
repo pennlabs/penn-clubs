@@ -315,6 +315,7 @@ export default function AnalyticsCard({
                     toTicks(endDate.getTime()),
                   ]}
                   tickFormatter={toTicks}
+                  tickCount={10}
                 ></XAxis>
                 <Label
                   value={`Time (${group.label})`}
