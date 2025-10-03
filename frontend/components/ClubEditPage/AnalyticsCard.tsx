@@ -203,10 +203,10 @@ export default function AnalyticsCard({
       }
       return [GROUPS[1], GROUPS[2]] // Day, Week
     }
-    if (group.value === Group.Hour || group.value === Group.Day) {
-      setGroup(GROUPS[2])
+    if (group.value === Group.Hour) {
+      setGroup(GROUPS[1])
     }
-    return [GROUPS[2], GROUPS[3]] // Week, Month
+    return [GROUPS[1], GROUPS[2], GROUPS[3]] // Week, Month
   }
 
   useEffect(() => {
@@ -246,7 +246,7 @@ export default function AnalyticsCard({
     if (group.value === Group.Hour) {
       return moment(date).format('H')
     } else if (group.value === Group.Day) {
-      return moment(date).format('D')
+      return moment(date).format('MM/DD')
     } else if (group.value === Group.Week) {
       // We need to round down for Week values
       return moment(date).add(-1, 'weeks').format('MM/DD')
@@ -315,12 +315,14 @@ export default function AnalyticsCard({
                     toTicks(endDate.getTime()),
                   ]}
                   tickFormatter={toTicks}
-                  tickCount={10}
+                  interval="preserveStartEnd"
+                  angle={group.value === Group.Hour ? 0 : -45}
+                  dy={15}
                 ></XAxis>
                 <Label
                   value={`Time (${group.label})`}
                   position="insideBottom"
-                  offset={-40}
+                  offset={group.value === Group.Hour ? -60 : -80}
                 />
                 <YAxis domain={[0, max]} />
                 <Legend
