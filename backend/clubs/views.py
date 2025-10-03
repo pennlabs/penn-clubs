@@ -4569,9 +4569,9 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
     """
     list: Return a list of clubs that the logged in user has sent ownership request to.
 
-    create: Sent ownership request to a club.
+    create: Send ownership request to a club.
 
-    destroy: Deleted a ownership request from a club.
+    destroy: Delete a ownership request from a club.
     """
 
     serializer_class = UserOwnershipRequestSerializer
@@ -4581,8 +4581,13 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        If a ownership request object already exists, reuse it.
+        Implement 6-month cooldown rule for ownership requests:
+        - If no request was made within the past 6 months, allow new request
+        - If withdrawn request was made within the past 6 months, allow resubmission
+        - If pending/accepted/denied request was made within the past 6 months,
+          deny new request
         """
+
         club = request.data.get("club", None)
         club_instance = Club.objects.filter(code=club).first()
         if club_instance is None:
@@ -4590,17 +4595,30 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
                 {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        create_defaults = {"club": club_instance, "requester": request.user}
-
-        obj, created = OwnershipRequest.objects.update_or_create(
-            club__code=club,
-            requester=request.user,
-            defaults={"withdrawn": False, "created_at": timezone.now()},
-            create_defaults=create_defaults,
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(request.user, club_instance)
         )
 
-        serializer = self.get_serializer(obj, many=False)
+        if not can_request:
+            return Response(
+                {"detail": reason},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        if recent_request is None:
+            # No request within 6 months, create new one
+            request_instance = OwnershipRequest.objects.create(
+                club=club_instance,
+                requester=request.user,
+                status=OwnershipRequest.PENDING,
+            )
+        else:
+            # Withdrawn request within 6 months, reuse it
+            recent_request.status = OwnershipRequest.PENDING
+            recent_request.save()
+            request_instance = recent_request
+
+        serializer = self.get_serializer(request_instance, many=False)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
@@ -4611,15 +4629,22 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
-        obj.withdrawn = True
-        obj.save(update_fields=["withdrawn"])
+
+        if obj.status != OwnershipRequest.PENDING:
+            return Response(
+                {"detail": "Cannot withdraw a request that has already been handled"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        obj.status = OwnershipRequest.WITHDRAWN
+        obj.save(update_fields=["status"])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return OwnershipRequest.objects.filter(
             requester=self.request.user,
-            withdrawn=False,
+            status=OwnershipRequest.PENDING,
             club__archived=False,
         )
 
@@ -4636,7 +4661,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     Accept an ownership request as a club owner.
 
     all:
-    Return a list of ownership requests older than a week. Used by Superusers.
+    Return a list of ownership requests. Used by Superusers.
     """
 
     serializer_class = OwnershipRequestSerializer
@@ -4648,12 +4673,12 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action != "all":
             return OwnershipRequest.objects.filter(
-                club__code=self.kwargs["club_code"], withdrawn=False
+                status=OwnershipRequest.PENDING, club__code=self.kwargs["club_code"]
             )
         else:
-            return OwnershipRequest.objects.filter(withdrawn=False).order_by(
-                "created_at"
-            )
+            return OwnershipRequest.objects.filter(
+                status=OwnershipRequest.PENDING
+            ).order_by("created_at")
 
     @action(detail=True, methods=["post"])
     def accept(self, request, *args, **kwargs):
@@ -4682,8 +4707,47 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
             defaults={"role": Membership.ROLE_OWNER},
         )
 
-        request_object.delete()
+        request_object.status = OwnershipRequest.ACCEPTED
+        request_object.save(update_fields=["status"])
+
+        club_name = request_object.club.name
+        full_name = request_object.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "full_name": full_name,
+        }
+
+        send_mail_helper(
+            name="ownership_request_accepted",
+            subject=f"Ownership Request Accepted for {club_name}",
+            emails=[request_object.requester.email],
+            context=context,
+        )
+
         return Response({"success": True})
+
+    def destroy(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.status = OwnershipRequest.DENIED
+        obj.save(update_fields=["status"])
+
+        club_name = obj.club.name
+        full_name = obj.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "full_name": full_name,
+        }
+
+        send_mail_helper(
+            name="ownership_request_denied",
+            subject=f"Ownership Request Denied for {club_name}",
+            emails=[obj.requester.email],
+            context=context,
+        )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
     def all(self, request, *args, **kwargs):
