@@ -1218,6 +1218,7 @@ class OwnershipRequest(JoinRequest):
     status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
 
     class Meta:
+        # Remove unique constraint on requester and club
         unique_together = ()
 
     def __str__(self):
@@ -1247,13 +1248,18 @@ class OwnershipRequest(JoinRequest):
         recent_request = cls.get_recent_request(user, club)
 
         if recent_request is None:
-            return True, "No recent request found", None
+            can_request = True
+            reason = "No recent request found"
         elif recent_request.status == cls.WITHDRAWN:
-            return True, "Previous request was withdrawn", recent_request
+            can_request = True
+            reason = "Previous request was withdrawn"
         elif recent_request.status == cls.PENDING:
-            return False, "Request already pending", recent_request
+            can_request = False
+            reason = "Request already pending"
         else:  # ACCEPTED or DENIED
-            return False, "Request already handled within 6 months", recent_request
+            can_request = False
+            reason = "Request already handled within 6 months"
+        return can_request, reason, recent_request
 
     def send_request(self, request=None):
         domain = get_domain(request)
