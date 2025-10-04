@@ -2423,6 +2423,10 @@ def profile_delete_cleanup(sender, instance, **kwargs):
         instance.image.delete(save=False)
 
 
+def thirty_days_from_now():  # placeholder default value for now
+    return timezone.now().date() + datetime.timedelta(days=30)
+
+
 class RegistrationQueueSettings(models.Model):
     """
     Singleton model to store registration queue settings.
@@ -2438,6 +2442,15 @@ class RegistrationQueueSettings(models.Model):
     new_approval_queue_open = models.BooleanField(
         default=True, help_text="Controls whether new clubs can submit for approval"
     )
+    reapproval_date_of_next_flip = models.DateField(
+        default=thirty_days_from_now,  # (yuzhiliu8): Get approval for default value
+        help_text="Date when reapproval queue will next flip state",
+    )
+    new_approval_date_of_next_flip = models.DateField(
+        default=thirty_days_from_now,
+        help_text="Date when new approval queue will next flip state",
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         get_user_model(),
