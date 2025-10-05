@@ -2336,8 +2336,14 @@ def profile_delete_cleanup(sender, instance, **kwargs):
         instance.image.delete(save=False)
 
 
-def thirty_days_from_now():  # placeholder default value for now
-    return timezone.now().date() + datetime.timedelta(days=30)
+def default_queue_flip_datetime():
+    """Return a timezone-aware datetime 30 days in the future.
+
+    This is a module-level callable so Django migrations can serialize it.
+    """
+    return timezone.now() + datetime.timedelta(
+        days=30
+    )  # get approval on default time value
 
 
 class RegistrationQueueSettings(models.Model):
@@ -2355,12 +2361,12 @@ class RegistrationQueueSettings(models.Model):
     new_approval_queue_open = models.BooleanField(
         default=True, help_text="Controls whether new clubs can submit for approval"
     )
-    reapproval_date_of_next_flip = models.DateField(
-        default=thirty_days_from_now,  # (yuzhiliu8): Get approval for default value
+    reapproval_date_of_next_flip = models.DateTimeField(
+        default=default_queue_flip_datetime,
         help_text="Date when reapproval queue will next flip state",
     )
-    new_approval_date_of_next_flip = models.DateField(
-        default=thirty_days_from_now,
+    new_approval_date_of_next_flip = models.DateTimeField(
+        default=default_queue_flip_datetime,
         help_text="Date when new approval queue will next flip state",
     )
 
