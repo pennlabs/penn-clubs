@@ -453,6 +453,22 @@ const QueueSettingsButton = ({
   }
 }
 
+type QueueSchedulerModalProps = {
+  show: boolean
+  closeModal: () => void
+}
+
+const QueueSchedulerModal = ({
+  show,
+  closeModal,
+}: QueueSchedulerModalProps): ReactElement => {
+  return (
+    <Modal show={show} closeModal={closeModal}>
+      <ModalContent>QueueSchedulerModal</ModalContent>
+    </Modal>
+  )
+}
+
 const QueueTab = (): ReactElement => {
   const [ownershipRequests, setOwnershipRequests] = useState<
     OwnershipRequest[]
@@ -466,6 +482,7 @@ const QueueTab = (): ReactElement => {
   const [registrationQueueSettings, setRegistrationQueueSettings] =
     useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
+  const [showQSModal, setShowQSModal] = useState<boolean>(false)
 
   function refetchClubs() {
     doApiRequest('/clubs/?active=true&approved=none&format=json')
@@ -650,6 +667,20 @@ const QueueTab = (): ReactElement => {
                   reapproval_queue_open: open,
                 })
               }
+            />
+            <button
+              onClick={() => {
+                setShowQSModal(true)
+              }}
+            >
+              {' '}
+              test{' '}
+            </button>
+            <QueueSchedulerModal
+              show={showQSModal}
+              closeModal={() => {
+                setShowQSModal(false)
+              }}
             />
             <QueueSettingsButton
               open={registrationQueueSettings.new_approval_queue_open}
