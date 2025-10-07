@@ -513,7 +513,7 @@ wheels = [
 
 [[package]]
 name = "django-labs-accounts"
-version = "1.0.4"
+version = "1.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -523,9 +523,9 @@ dependencies = [
     { name = "requests-oauthlib" },
     { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/87/2e9fca882ea3886cb371d4c48b1087f03a1199e37d17cdfd15ac20b6bdaa/django_labs_accounts-1.0.4.tar.gz", hash = "sha256:ebc27bd7b1f714cae9ba91ad4400feccfdf456766eb5910fc6cf34e45156976e", size = 20695 }
+sdist = { url = "https://files.pythonhosted.org/packages/5b/05/446538a35c8257fa2a16a8bb59cccce8482f2b20d447dd7532926fea9e78/django_labs_accounts-1.0.5.tar.gz", hash = "sha256:029ee39eb220eba9cd355250c59a58a10e9536a05fa62697ef1510907e5c115f", size = 20705 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/78/fde2562a0e6f4973fb76977153775083f84cd99695aa791fd9221ff3e65c/django_labs_accounts-1.0.4-py3-none-any.whl", hash = "sha256:a0d704c0ded5c518c39b5111f5efc0575626b24d1d80750a6184057364b393e4", size = 24599 },
+    { url = "https://files.pythonhosted.org/packages/70/ac/3ad9d29374fc8113d65c2e683a94a9e9fd907719a4788a56d09f09070a24/django_labs_accounts-1.0.5-py3-none-any.whl", hash = "sha256:04023616420fdf32b3270f87b617a20b13b19b716184f7c6d359ba55e4627f69", size = 24613 },
 ]
 
 [[package]]
