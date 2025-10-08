@@ -7879,6 +7879,9 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
 class WhartonApplicationStatusAPIView(generics.ListAPIView):
     """
     get: Return aggregate status for Wharton application submissions
+
+    Query parameters:
+    - cycle: (optional) Filter by application cycle ID
     """
 
     permission_class = [WhartonApplicationPermission | IsSuperuser]
@@ -7888,18 +7891,30 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
         return "List statuses for Wharton application submissions"
 
     def get_queryset(self):
+        queryset = ApplicationSubmission.objects.filter(
+            application__is_wharton_council=True
+        )
+
+        # Optional cycle filtering
+        cycle_id = self.request.query_params.get("cycle")
+        if cycle_id:
+            queryset = queryset.filter(application__application_cycle_id=cycle_id)
+
         return (
-            ApplicationSubmission.objects.filter(application__is_wharton_council=True)
-            .annotate(
+            queryset.annotate(
                 annotated_name=F("application__name"),
                 annotated_committee=F("committee__name"),
                 annotated_club=F("application__club__name"),
+                annotated_cycle_id=F("application__application_cycle_id"),
+                annotated_cycle_name=F("application__application_cycle__name"),
             )
             .values(
                 "annotated_name",
                 "application",
                 "annotated_committee",
                 "annotated_club",
+                "annotated_cycle_id",
+                "annotated_cycle_name",
                 "status",
             )
             .annotate(count=Count("status"))

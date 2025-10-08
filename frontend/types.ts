@@ -402,6 +402,8 @@ export type ApplicationStatus = {
   name: string
   status: string
   count: number
+  cycle_id: number | null
+  cycle_name: string | null
 }
 
 export enum ApplicationQuestionType {

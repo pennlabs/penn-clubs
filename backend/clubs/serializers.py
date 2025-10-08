@@ -3087,6 +3087,8 @@ class WhartonApplicationStatusSerializer(serializers.Serializer):
     name = serializers.CharField(source="annotated_name")
     count = serializers.IntegerField()
     status = serializers.SerializerMethodField("get_status")
+    cycle_id = serializers.IntegerField(source="annotated_cycle_id", allow_null=True)
+    cycle_name = serializers.CharField(source="annotated_cycle_name", allow_null=True)
 
     def get_status(self, obj):
         """
@@ -3100,7 +3102,16 @@ class WhartonApplicationStatusSerializer(serializers.Serializer):
 
     class Meta:
         model = ApplicationSubmission
-        fields = ("club", "application", "committee", "name", "status", "count")
+        fields = (
+            "club",
+            "application",
+            "committee",
+            "name",
+            "status",
+            "count",
+            "cycle_id",
+            "cycle_name",
+        )
 
 
 class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
