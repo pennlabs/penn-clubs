@@ -2929,7 +2929,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     def get_queryset(self):
-        qs = Event.objects.all()
+        qs = Event.objects.filter(start_time__gte=timezone.now())
         is_club_specific = self.kwargs.get("club_code") is not None
         if is_club_specific:
             qs = qs.filter(club__code=self.kwargs["club_code"])
