@@ -18,6 +18,7 @@ import pandas as pd
 import pytz
 import qrcode
 import requests
+from analytics.entries import FuncEntry
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from CyberSource import (
@@ -239,6 +240,7 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
+from pennclubs.analytics import LabsAnalytics
 
 
 def update_holds(func):
@@ -942,6 +944,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(FuncEntry(name="register_club_fair"))
     def register(self, request, *args, **kwargs):
         """
         Register a club for this club fair.
@@ -1327,6 +1330,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return resp
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(FuncEntry(name="club_upload_file"))
     def upload_file(self, request, *args, **kwargs):
         """
         Upload a file for the club.
@@ -2395,6 +2399,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return Response(fields)
 
     @action(detail=False, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry("email_blast_to_club_active_members"),
+    )
     def email_blast(self, request, *args, **kwargs):
         """
         Send email blast to targeted (active) club members.
@@ -3349,6 +3356,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     @transaction.atomic
     @update_holds
+    @LabsAnalytics.record_api_function(FuncEntry(name="add_to_cart"))
     def add_to_cart(self, request, *args, **kwargs):
         """
         Add tickets from this showing to cart
@@ -4033,6 +4041,11 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="email_blast_to_all_ticket_holders",
+        )
+    )
     def email_blast(self, request, *args, **kwargs):
         """
         Send an email blast to all users holding tickets.
@@ -4201,6 +4214,14 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="question_answer_like",
+            get_value_with_args=lambda self, request: request.resolver_match.kwargs.get(
+                "club_code"
+            ),
+        ),
+    )
     def like(self, request, *args, **kwargs):
         """
         Endpoint used to like a question answer.
@@ -4222,6 +4243,14 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         return Response({})
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="question_answer_unlike",
+            get_value_with_args=lambda self, request: request.resolver_match.kwargs.get(
+                "club_code"
+            ),
+        ),
+    )
     def unlike(self, request, *args, **kwargs):
         """
         Endpoint used to unlike a question answer.
@@ -4471,6 +4500,12 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
     lookup_field = "club__code"
     http_method_names = ["get", "post", "delete"]
 
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="create_membership_request",
+            get_value_with_args=lambda self, request: request.data.get("club", None),
+        )
+    )
     def create(self, request, *args, **kwargs):
         """
         If a membership request object already exists, reuse it.
@@ -4539,6 +4574,14 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="accept_membership_request",
+            get_value_with_args=lambda self, request: self.kwargs.get(
+                "club_code", None
+            ),
+        )
+    )
     def accept(self, request, *ages, **kwargs):
         """
         Accept a membership request as a club officer.
@@ -4681,6 +4724,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
             ).order_by("created_at")
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(FuncEntry(name="accept_ownership_request"))
     def accept(self, request, *args, **kwargs):
         """
         Accept an ownership request as a club owner.
@@ -5763,6 +5807,9 @@ class MeetingZoomAPIView(APIView):
                 }
             )
 
+    @LabsAnalytics.record_api_function(
+        FuncEntry(name="create_or_fix_event_zoom_meeting")
+    )
     def post(self, request):
         """
         Create a new Zoom meeting for this event
@@ -6358,6 +6405,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     @update_holds
     @transaction.atomic
+    @LabsAnalytics.record_api_function(FuncEntry(name="checkout_initiated"))
     def initiate_checkout(self, request, *args, **kwargs):
         """
         Checkout all tickets in cart and create a Cybersource capture context
@@ -6529,6 +6577,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     @update_holds
     @transaction.atomic
+    @LabsAnalytics.record_api_function(FuncEntry(name="complete_checkout"))
     def complete_checkout(self, request, *args, **kwargs):
         """
         Complete the checkout after the user has entered their payment details
@@ -6677,6 +6726,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
+    @LabsAnalytics.record_api_function(FuncEntry(name="transfer_ticket"))
     def transfer(self, request, *args, **kwargs):
         """
         Transfer a ticket to another user
@@ -8353,6 +8403,12 @@ class MassInviteAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="mass_invite_to_club",
+            get_value=lambda args, res: res.data.get("sent", 0),
+        ),
+    )
     def post(self, request, *args, **kwargs):
         club = get_object_or_404(Club, code=kwargs["club_code"])
 
