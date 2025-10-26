@@ -32,7 +32,7 @@ type AddressProps = {
 const AddressTypeaheadField = ({
   changeAddress,
   addressValue,
-}: AddressProps): ReactElement => {
+}: AddressProps): ReactElement<any> => {
   const {
     suggestions: { data },
     setValue,
@@ -91,7 +91,7 @@ const LIBRARIES: Libraries = ['places']
 const AddressField = ({
   changeAddress,
   addressValue,
-}: AddressProps): ReactElement => {
+}: AddressProps): ReactElement<any> => {
   const apiKey: string = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? ''
 
   if (apiKey.length <= 0) {

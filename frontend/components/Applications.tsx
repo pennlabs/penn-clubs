@@ -94,7 +94,7 @@ const AppsContainer = styled.div`
   min-height: 60vh;
 `
 
-function ApplicationsPage({ whartonApplications }): ReactElement {
+function ApplicationsPage({ whartonApplications }): ReactElement<any> {
   if ('detail' in whartonApplications) {
     return <Text>{whartonApplications.detail}</Text>
   }
@@ -105,7 +105,8 @@ function ApplicationsPage({ whartonApplications }): ReactElement {
         {whartonApplications != null && whartonApplications.length > 0 ? (
           <div>
             <Text>
-              Note: only current Wharton applications are displayed on this page{' '}
+              Note: only current Wharton applications are displayed on this
+              page{' '}
             </Text>
             {whartonApplications.map((application) => (
               <CardWrapper className={'column is-half-desktop'}>

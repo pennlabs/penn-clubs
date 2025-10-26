@@ -41,21 +41,21 @@ const clipLink = (s: string) => (s.length > 32 ? `${s.slice(0, 35)}...` : s)
 
 const EventCard = (props: {
   event: ClubEvent & { clubPublic?: boolean }
-}): ReactElement => {
+  start_time: string
+  end_time: string
+}): ReactElement<any> => {
   const {
     image_url: imageUrl,
     club_name: clubName,
     clubPublic,
-    start_time,
-    end_time,
     name,
     url,
     ticketed,
   } = props.event
 
   const now = new Date()
-  const startDate = new Date(start_time)
-  const endDate = new Date(end_time)
+  const startDate = new Date(props.start_time)
+  const endDate = new Date(props.end_time)
   const isHappening = now >= startDate && now <= endDate
   const hoursBetween =
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)

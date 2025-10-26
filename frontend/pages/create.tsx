@@ -14,9 +14,22 @@ const Create = (props) =>
 
 Create.getInitialProps = async (ctx: NextPageContext) => {
   return doBulkLookup(
-    ['tags', 'schools', 'majors', 'years', ['studentTypes', 'student_types']],
+    [
+      'tags',
+      'schools',
+      'majors',
+      'years',
+      ['studentTypes', 'student_types'],
+      'categories',
+      'eligibilities',
+      'types',
+      'classifications',
+      'statuses',
+      ['groupActivityOptions', 'group_activity_options'],
+    ],
     ctx,
   )
 }
+Create.permissions = ['clubs.approve_club', 'clubs.see_pending_clubs']
 
 export default renderPage(Create)

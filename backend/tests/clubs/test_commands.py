@@ -6,6 +6,7 @@ These management commands can be executed with "./manage.py <command>".
 import csv
 import datetime
 import io
+import json
 import os
 import tempfile
 import uuid
@@ -18,21 +19,25 @@ from django.core import mail
 from django.core.cache import caches
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from ics import Calendar
 from ics import Event as ICSEvent
 
+from clubs.management.commands.rank import DEFAULT_WEIGHTS
 from clubs.models import (
     Club,
     ClubApplication,
     ClubFair,
     Event,
+    EventShowing,
     Favorite,
     Membership,
     MembershipInvite,
+    RankingWeights,
+    RegistrationQueueSettings,
     Subscribe,
     Tag,
     get_mail_type_annotation,
@@ -126,7 +131,11 @@ class ImportCalendarTestCase(TestCase):
 
         call_command("import_calendar_events")
 
-        self.assertGreaterEqual(self.club1.events.count(), 25)
+        event_count = self.club1.events.count()
+        self.assertGreaterEqual(event_count, 25)
+
+        showing_count = EventShowing.objects.filter(event__club=self.club1).count()
+        self.assertEqual(showing_count, event_count)
 
     def test_import_nonstandard_ics(self):
         """
@@ -143,6 +152,9 @@ class ImportCalendarTestCase(TestCase):
         self.assertIsNotNone(ev)
         self.assertEqual(ev.name, "Just a Test")
 
+        showing = EventShowing.objects.filter(event=ev).first()
+        self.assertIsNotNone(showing)
+
     def test_import_calendar_events(self):
         """
         Test importing a standard ICS file generated from the ICS python library.
@@ -155,6 +167,7 @@ class ImportCalendarTestCase(TestCase):
             m.assert_called_with(self.club1.ics_import_url)
 
         desired = self.club1.events.first()
+        showing = EventShowing.objects.filter(event=desired).first()
 
         # ensure event exists with right values
         self.assertIsNotNone(desired)
@@ -164,10 +177,10 @@ class ImportCalendarTestCase(TestCase):
         # ensure difference between calendar date and imported date is
         # less than one second
         self.assertLessEqual(
-            abs(desired.start_time - now), datetime.timedelta(seconds=1)
+            abs(showing.start_time - now), datetime.timedelta(seconds=1)
         )
         self.assertLessEqual(
-            desired.end_time - (now + datetime.timedelta(minutes=60)),
+            showing.end_time - (now + datetime.timedelta(minutes=60)),
             datetime.timedelta(seconds=1),
         )
 
@@ -376,11 +389,16 @@ class SendInvitesTestCase(TestCase):
             "django.utils.timezone.now",
             return_value=now,
         ):
-            with mock.patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", False):
-                call_command("daily_notifications", stderr=errors)
+            queue_settings = RegistrationQueueSettings.get()
+            queue_settings.reapproval_queue_open = False
+            queue_settings.save()
+            call_command("daily_notifications", stderr=errors)
             self.assertFalse(any(m.to == [self.user1.email] for m in mail.outbox))
-            with mock.patch("django.conf.settings.REAPPROVAL_QUEUE_OPEN", True):
-                call_command("daily_notifications", stderr=errors)
+
+            queue_settings.reapproval_queue_open = True
+            queue_settings.save()
+            call_command("daily_notifications", stderr=errors)
+
         # ensure approval email was sent out
         self.assertTrue(any(m.to == [self.user1.email] for m in mail.outbox))
 
@@ -498,6 +516,53 @@ class PopulateTestCase(TestCase):
 
 
 class RankTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def _run_rank(self):
+        from unittest.mock import patch
+
+        with patch(
+            "clubs.management.commands.rank.np.random.standard_exponential",
+            return_value=0,
+        ):
+            call_command("rank", verbosity=0)
+
+    def test_custom_inactive_weight(self):
+        # create inactive club
+        club = Club.objects.create(code="inactive", name="Inactive Club", active=False)
+        # default run (should combine inactive + logo + how-to penalties/bonuses)
+        self._run_rank()
+        club.refresh_from_db()
+        weights = RankingWeights.get()
+        expected_default = (
+            weights.inactive_penalty + weights.logo_bonus + weights.howto_penalty
+        )
+        self.assertEqual(club.rank, expected_default)
+
+        # modify weight
+        weights = RankingWeights.get()
+        weights.inactive_penalty = -500
+        weights.save()
+
+        self._run_rank()
+        club.refresh_from_db()
+        expected_modified = (
+            weights.inactive_penalty + weights.logo_bonus + weights.howto_penalty
+        )
+        self.assertEqual(club.rank, expected_modified)
+
+        # reset to defaults
+        weights.inactive_penalty = DEFAULT_WEIGHTS["inactive_penalty"]  # type: ignore
+        weights.save()
+
+        self._run_rank()
+        club.refresh_from_db()
+        expected_reset = (
+            weights.inactive_penalty + weights.logo_bonus + weights.howto_penalty
+        )
+        self.assertEqual(club.rank, expected_reset)
+
     def test_rank(self):
         # create some clubs
         Club.objects.bulk_create(
@@ -526,14 +591,18 @@ class RankTestCase(TestCase):
 
         now = timezone.now()
 
-        # add an event
-        Event.objects.create(
+        # add an event and correpsonding showing
+        event = Event.objects.create(
             code="test-event-1",
             name="Test Event 1",
             club=Club.objects.first(),
+            description="This is a test event!",
+        )
+
+        EventShowing.objects.create(
+            event=event,
             start_time=now,
             end_time=now + datetime.timedelta(hours=2),
-            description="This is a test event!",
         )
 
         # run the rank command
@@ -541,6 +610,68 @@ class RankTestCase(TestCase):
 
         for club in Club.objects.all():
             self.assertGreater(club.rank, 0)
+
+    def test_ranking_weights_view_integration(self):
+        """
+        Test that the RankingWeightsView can be used to modify ranking weights
+        and that these changes affect the ranking results.
+        """
+        # Create a superuser for API access
+        get_user_model().objects.create_user(
+            "admin", "admin@example.com", "test", is_superuser=True
+        )
+        self.client.login(username="admin", password="test")
+
+        # Create a test club
+        club = Club.objects.create(
+            code="test-view",
+            name="Test View Club",
+            active=True,
+            image="test.png",  # Give it a logo bonus
+        )
+
+        # Initial ranking run
+        self._run_rank()
+        club.refresh_from_db()
+        initial_rank = club.rank
+
+        # Get current weights via API
+        response = self.client.get(reverse("ranking-weights"))
+        self.assertEqual(response.status_code, 200)
+        original_weights = response.json()
+
+        # Modify a weight via API (increase logo bonus)
+        new_weights = original_weights.copy()
+        new_weights["logo_bonus"] = original_weights["logo_bonus"] + 50
+
+        response = self.client.patch(
+            reverse("ranking-weights"),
+            json.dumps(new_weights),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # Verify the change was persisted
+        response = self.client.get(reverse("ranking-weights"))
+        self.assertEqual(response.status_code, 200)
+        updated_weights = response.json()
+        self.assertEqual(updated_weights["logo_bonus"], new_weights["logo_bonus"])
+
+        # Run ranking again and verify club got better rank due to increased logo bonus
+        self._run_rank()
+        club.refresh_from_db()
+        new_rank = club.rank
+
+        # Club should have higher rank due to increased logo bonus
+        self.assertGreater(new_rank, initial_rank)
+
+        # Reset weights to original values
+        response = self.client.patch(
+            reverse("ranking-weights"),
+            json.dumps(original_weights),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
 
 
 class RenewalTestCase(TestCase):
@@ -550,7 +681,7 @@ class RenewalTestCase(TestCase):
             call_command("populate", stdout=f)
 
         # run deactivate script
-        call_command("deactivate", "all", "--force")
+        call_command("deactivate", "--force", "--email")
 
         # ensure all clubs are deactivated
         active_statuses = Club.objects.all().values_list("active", flat=True)
@@ -589,12 +720,43 @@ class RenewalTestCase(TestCase):
                 "but did not exist!"
             )
 
-        # send out reminder emails
+        # do not send out any emails
         current_email_count = len(mail.outbox)
 
-        call_command("deactivate", "remind", "--force")
+        call_command("deactivate", "--force")
 
-        self.assertGreater(len(mail.outbox), current_email_count)
+        self.assertEqual(len(mail.outbox), current_email_count)
+
+    def test_deactivate_failure_modes(self):
+        # Deactivate clubs when queue is not open without queue_open_date
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = False
+        queue_settings.save()
+        with self.assertRaises(CommandError):
+            call_command("deactivate", "--force")
+        # No raise sanity check
+        call_command("deactivate", "--force", "--queue-open-date", "July 3, 2025")
+
+        # Deactivate clubs when queue is open with queue_open_date
+        queue_settings.reapproval_queue_open = True
+        queue_settings.save()
+        with self.assertRaises(CommandError):
+            call_command("deactivate", "--force", "--queue-open-date", "July 3, 2025")
+        call_command("deactivate", "--force")
+
+    def test_deactivate_specific_clubs(self):
+        # Create some clubs
+        Club.objects.create(code="one", name="Club One", active=True)
+        Club.objects.create(code="two", name="Club Two", active=True)
+        Club.objects.create(code="three", name="Club Three", active=True)
+
+        # Deactivate only certain clubs
+        call_command("deactivate", "--force", "--clubs", "one,three")
+
+        # Check that only the specified clubs are deactivated
+        self.assertFalse(Club.objects.get(code="one").active)
+        self.assertTrue(Club.objects.get(code="two").active)
+        self.assertFalse(Club.objects.get(code="three").active)
 
     @override_settings(
         CACHES={  # don't want to clear prod cache while testing
@@ -619,7 +781,7 @@ class RenewalTestCase(TestCase):
         cache_key = f"clubs:{club.id}-anon"
         self.assertIsNotNone(caches["default"].get(cache_key))
 
-        call_command("deactivate", "all", "--force")
+        call_command("deactivate", "--force")
 
         # club should no longer be cached
         self.assertIsNone(caches["default"].get(cache_key))

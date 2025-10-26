@@ -1,5 +1,6 @@
 import { Container, InfoPageTitle, Metadata } from 'components/common'
 import { NextPageContext } from 'next'
+import Link from 'next/link'
 import { ReactElement } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
@@ -34,7 +35,7 @@ const DirectoryList = styled.ul`
   }
 `
 
-const Directory = ({ clubs }: Props): ReactElement => {
+const Directory = ({ clubs }: Props): ReactElement<any> => {
   return (
     <>
       <Container fullHeight background={SNOW}>
@@ -51,7 +52,11 @@ const Directory = ({ clubs }: Props): ReactElement => {
               key={club.code}
               className={!club.approved ? 'has-text-grey' : undefined}
             >
-              {club.name}
+              <Link href={`/club/${club.code}`} passHref legacyBehavior>
+                <a style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {club.name}
+                </a>
+              </Link>
             </li>
           ))}
         </DirectoryList>

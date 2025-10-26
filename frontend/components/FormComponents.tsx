@@ -68,7 +68,7 @@ const FormFieldClassContext = React.createContext<string>('')
 export const FormStyle = ({
   children,
   isHorizontal,
-}: React.PropsWithChildren<{ isHorizontal?: boolean }>): ReactElement => {
+}: React.PropsWithChildren<{ isHorizontal?: boolean }>): ReactElement<any> => {
   if (!isHorizontal) {
     return <>{children}</>
   }
@@ -89,8 +89,8 @@ type FieldWrapperProps = BasicFormField & { isError?: boolean }
  */
 function useFieldWrapper<T extends FieldWrapperProps>(
   Element: React.ComponentType<Omit<T, 'label' | 'noLabel' | 'helpText'>>,
-): (props: T) => ReactElement {
-  return (props: T) => {
+): (props: T) => ReactElement<any> {
+  return (props: any) => {
     const { label, noLabel, helpText, ...other } = props
     const { status } = useFormikContext()
     const actualLabel = label ?? titleize(props.name)
@@ -141,7 +141,7 @@ function useFieldWrapper<T extends FieldWrapperProps>(
  * Disable them for server side rendering or errors will be thrown.
  */
 let htmlToDraft: any = null
-let Editor: ((props: any) => ReactElement) | null = null
+let Editor: ((props: any) => ReactElement<any>) | null = null
 if (process.browser) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   htmlToDraft = require('html-to-draftjs').default
@@ -153,7 +153,7 @@ if (process.browser) {
  * A rich text editor that accepts and outputs HTML.
  */
 export const RichTextField = useFieldWrapper(
-  (props: BasicFormField & AnyHack): ReactElement => {
+  (props: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
     const textValue = useRef<string | null>(null)
 
@@ -226,7 +226,7 @@ export const RichTextField = useFieldWrapper(
  * A rich text editor that accepts and outputs HTML as well as basic templating features.
  */
 export const ApplicationUpdateTextField = useFieldWrapper(
-  (props: BasicFormField & AnyHack): ReactElement => {
+  (props: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
     const textValue = useRef<string | null>(null)
 
@@ -309,7 +309,7 @@ const DatePickerWrapper = styled.span`
  * A datetime field that allows the user to choose a date and a time.
  */
 export const DateTimeField = useFieldWrapper(
-  (props: BasicFormField & AnyHack): ReactElement => {
+  (props: BasicFormField & AnyHack): ReactElement<any> => {
     const { name, value, placeholder, ...other } = props
     const { setFieldValue } = useFormikContext()
 
@@ -336,7 +336,7 @@ export const DateTimeField = useFieldWrapper(
  */
 
 export const CreatableMultipleSelectField = useFieldWrapper(
-  (props: BasicFormField & AnyHack): ReactElement => {
+  (props: BasicFormField & AnyHack): ReactElement<any> => {
     const {
       name,
       value,
@@ -388,7 +388,7 @@ export const CreatableMultipleSelectField = useFieldWrapper(
 /**
  * A field that allows the user to enter an arbitrary line of text.
  */
-const TextEditField = ({ field, setField }): ReactElement => {
+const TextEditField = ({ field, setField }): ReactElement<any> => {
   return (
     <div className="mb-3 box">
       <div className="mb-2">
@@ -425,7 +425,7 @@ const TextEditField = ({ field, setField }): ReactElement => {
 /**
  * A field that allows the user to specify a radio input field.
  */
-const RadioEditField = ({ field, setField }): ReactElement => {
+const RadioEditField = ({ field, setField }): ReactElement<any> => {
   return (
     <div className="mb-3 box">
       <div className="mb-2">
@@ -501,7 +501,7 @@ const RadioEditField = ({ field, setField }): ReactElement => {
  * Accepts and returns form fields in a serialized JSON format.
  */
 export const DynamicQuestionField = useFieldWrapper(
-  ({ name, value }: BasicFormField & AnyHack): ReactElement => {
+  ({ name, value }: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
 
     const values: DynamicQuestion[] =
@@ -561,7 +561,7 @@ export const DynamicQuestionField = useFieldWrapper(
  * @param type This can be used to override the type of the text input (for example, you can specify "email" or "date"). If you specify "textarea", a textarea will be rendered instead.
  */
 export const TextField = useFieldWrapper(
-  (props: BasicFormField & AnyHack): ReactElement => {
+  (props: BasicFormField & AnyHack): ReactElement<any> => {
     const {
       type = 'text',
       isError,
@@ -585,6 +585,7 @@ export const TextField = useFieldWrapper(
       return (
         <textarea
           value={value ?? ''}
+          required={props.required}
           {...other}
           className={`textarea ${isError ? 'is-danger' : ''}`}
           readOnly={readOnly ?? false}
@@ -644,7 +645,7 @@ export const FileField = useFieldWrapper(
     isImage = false,
     canDelete = false,
     disabled = false,
-  }: BasicFormField & AnyHack): ReactElement => {
+  }: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
 
     const [imageUrl, setImageUrl] = useState<string | null>(null)
@@ -735,7 +736,7 @@ export const FileField = useFieldWrapper(
  * If no Google API key is set, this will fall back to a text field.
  */
 export const FormikAddressField = useFieldWrapper(
-  (props: BasicFormField & AnyHack): ReactElement => {
+  (props: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
     return (
       <AddressField
@@ -759,7 +760,7 @@ type SelectFieldProps<T> = {
   ) => typeof inpt extends Array<T>
     ? { value: string; label: string }[]
     : { value: string; label: string }
-  formatOptionLabel: (inpt: any) => string | ReactElement
+  formatOptionLabel: (inpt: any) => string | ReactElement<any>
   isMulti?: boolean
   creatable?: boolean
   customHandleChange?: (updated: any) => void
@@ -787,7 +788,7 @@ export const SelectField = useFieldWrapper(
   }: BasicFormField &
     SelectFieldProps<
       { [key: string]: string | number } | string
-    >): ReactElement => {
+    >): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
 
     /**
@@ -843,7 +844,7 @@ export const SelectField = useFieldWrapper(
         value={(valueDeserialize ?? actualDeserialize)(value)}
         options={
           actualDeserialize(choices) as {
-            label: string | ReactElement
+            label: string | ReactElement<any>
             value: string
           }[]
         }
@@ -866,7 +867,7 @@ export const SelectField = useFieldWrapper(
  */
 export const CheckboxField = (
   props: BasicFormField & AnyHack,
-): ReactElement => {
+): ReactElement<any> => {
   const { label, value, onChange, helpText, ...other } = props
   const { status, setFieldValue } = useFormikContext()
   const errorMessage = status && status[props.name]

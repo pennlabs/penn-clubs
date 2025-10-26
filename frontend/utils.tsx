@@ -75,7 +75,20 @@ export function useSetting(key: string): string | number | boolean | null {
   return value
 }
 
+export function getCurrentOrigin(): string {
+  return window.location.hostname + ':' + window.location.port
+}
+
 export function getCurrentRelativePath(): string {
+  // if in development, use the local path
+  if (isDevelopment()) {
+    return (
+      getCurrentOrigin() +
+      window.location.pathname +
+      window.location.search +
+      window.location.hash
+    )
+  }
   return (
     window.location.pathname + window.location.search + window.location.hash
   )
@@ -174,6 +187,15 @@ export function apiCheckPermission(
 
   // in production, return false and hope for the best
   return false
+}
+
+/**
+ * Check if the user has admin permissions to see hidden admin fields.
+ */
+export function hasAdminPermissions(): boolean {
+  const perms = useContext(PermissionsContext)
+
+  return !!(perms['clubs.approve_club'] || perms['clubs.see_pending_clubs'])
 }
 
 const chooseEndpoint = (input: [string, string] | string) => {
@@ -325,7 +347,7 @@ export function titleize(str: string): string {
  */
 export function formatResponse(
   err: { [key: string]: string } | string,
-): ReactElement {
+): ReactElement<any> {
   if (typeof err === 'string') {
     return <>{err}</>
   }

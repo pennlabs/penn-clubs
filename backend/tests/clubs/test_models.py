@@ -9,15 +9,18 @@ from unittest import mock
 import pytz
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
 
 from clubs.models import (
     Advisor,
     Badge,
     Club,
     Event,
+    EventShowing,
     Favorite,
     Membership,
     Note,
+    OwnershipRequest,
     Tag,
     Year,
     send_mail_helper,
@@ -135,12 +138,26 @@ class EventTestCase(TestCase):
         self.club = Club.objects.create(
             code="a", name="a", subtitle="a", founded=date, description="a", size=1
         )
-        self.event = Event.objects.create(
-            name="a", club=self.club, start_time=date, end_time=date, description="a"
-        )
+        self.event = Event.objects.create(name="a", club=self.club, description="a")
 
     def test_str(self):
         self.assertEqual(str(self.event), self.event.name)
+
+
+class EventShowingTestCase(TestCase):
+    def setUp(self):
+        date = pytz.timezone("America/New_York").localize(datetime.datetime(2019, 1, 1))
+        self.club = Club.objects.create(
+            code="a", name="a", subtitle="a", founded=date, description="a", size=1
+        )
+        self.event = Event.objects.create(name="a", club=self.club, description="a")
+        self.showing = EventShowing.objects.create(
+            event=self.event, start_time=date, end_time=date
+        )
+
+    def test_str(self):
+        expected_str = f"{self.showing.event.name} showing at {self.showing.start_time}"
+        self.assertEqual(str(self.showing), expected_str)
 
 
 class FavoriteTestCase(TestCase):
@@ -269,3 +286,210 @@ class UtilsTestCase(TestCase):
                 )
 
             self.assertEqual(mocked_send.call_count, 3)
+
+
+class OwnershipRequestTestCase(TestCase):
+    """Test cases for OwnershipRequest model methods"""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = get_user_model().objects.create_user(
+            "user1", "user1@example.com", "test"
+        )
+        cls.user2 = get_user_model().objects.create_user(
+            "user2", "user2@example.com", "test"
+        )
+        cls.club1 = Club.objects.create(
+            code="club1", name="Club 1", active=True, approved=True
+        )
+
+    def test_can_user_request_ownership_no_previous_request(self):
+        """Test can_user_request_ownership with no previous request"""
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertTrue(can_request)
+        self.assertEqual(reason, "No recent request found")
+        self.assertIsNone(recent_request)
+
+    def test_can_user_request_ownership_pending_request(self):
+        """Test can_user_request_ownership with pending request"""
+        pending_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertFalse(can_request)
+        self.assertEqual(reason, "Request already pending")
+        self.assertEqual(recent_request, pending_request)
+
+    def test_can_user_request_ownership_withdrawn_request(self):
+        """Test can_user_request_ownership with withdrawn request"""
+        withdrawn_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.WITHDRAWN
+        )
+
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertTrue(can_request)
+        self.assertEqual(reason, "Previous request was withdrawn")
+        self.assertEqual(recent_request, withdrawn_request)
+
+    def test_can_user_request_ownership_accepted_request(self):
+        """Test can_user_request_ownership with accepted request"""
+        accepted_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.ACCEPTED
+        )
+
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertFalse(can_request)
+        self.assertEqual(reason, "Request already handled within 6 months")
+        self.assertEqual(recent_request, accepted_request)
+
+    def test_can_user_request_ownership_denied_request(self):
+        """Test can_user_request_ownership with denied request"""
+        denied_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.DENIED
+        )
+
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertFalse(can_request)
+        self.assertEqual(reason, "Request already handled within 6 months")
+        self.assertEqual(recent_request, denied_request)
+
+    def test_can_user_request_ownership_old_request(self):
+        """Test can_user_request_ownership with request older than 6 months"""
+        old_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.ACCEPTED
+        )
+        # Set created_at to 7 months ago
+        old_request.created_at = timezone.now() - datetime.timedelta(days=210)
+        old_request.save()
+
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertTrue(can_request)
+        self.assertEqual(reason, "No recent request found")
+        self.assertIsNone(recent_request)
+
+    def test_get_recent_request_within_6_months(self):
+        """Test get_recent_request finds request within 6 months"""
+        request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+
+        recent_request = OwnershipRequest.get_recent_request(self.user2, self.club1)
+        self.assertEqual(recent_request, request)
+
+    def test_get_recent_request_older_than_6_months(self):
+        """Test get_recent_request ignores request older than 6 months"""
+        old_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+        # Set created_at to 7 months ago
+        old_request.created_at = timezone.now() - datetime.timedelta(days=210)
+        old_request.save()
+
+        recent_request = OwnershipRequest.get_recent_request(self.user2, self.club1)
+        self.assertIsNone(recent_request)
+
+    def test_get_recent_request_multiple_requests(self):
+        """Test get_recent_request returns most recent request"""
+        # Create older request
+        old_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+        old_request.created_at = timezone.now() - datetime.timedelta(days=10)
+        old_request.save()
+
+        # Create newer request
+        new_request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+        new_request.created_at = timezone.now() - datetime.timedelta(days=5)
+        new_request.save()
+
+        recent_request = OwnershipRequest.get_recent_request(self.user2, self.club1)
+        self.assertEqual(recent_request, new_request)
+
+    def test_get_recent_request_no_requests(self):
+        """Test get_recent_request with no requests"""
+        recent_request = OwnershipRequest.get_recent_request(self.user2, self.club1)
+        self.assertIsNone(recent_request)
+
+    def test_ownership_request_str_representation(self):
+        """Test string representation of OwnershipRequest"""
+        request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+
+        expected_str = (
+            f"<OwnershipRequest: {self.user2.username} for {self.club1.code}>"
+        )
+        self.assertEqual(str(request), expected_str)
+
+    def test_ownership_request_default_status(self):
+        """Test that new requests default to PENDING status"""
+        request = OwnershipRequest.objects.create(club=self.club1, requester=self.user2)
+
+        self.assertEqual(request.status, OwnershipRequest.PENDING)
+
+    def test_ownership_request_multiple_requests_same_user_club(self):
+        """Test that multiple requests can exist for same user/club"""
+        # Create first request
+        request1 = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.ACCEPTED
+        )
+
+        # Create second request (should be allowed due to removed unique constraint)
+        request2 = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+
+        # Both requests should exist
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2
+            ).count(),
+            2,
+        )
+
+        # They should be different objects
+        self.assertNotEqual(request1.id, request2.id)
+
+    def test_ownership_request_6month_boundary(self):
+        """Test the exact 6-month boundary (180 days)"""
+        # Create request approximately 180 days ago
+        request = OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.ACCEPTED
+        )
+        request.created_at = timezone.now() - datetime.timedelta(
+            days=179, hours=23, minutes=59
+        )
+        request.save()
+
+        # Should still be considered "recent" (within 6 months)
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertFalse(can_request)
+        self.assertEqual(reason, "Request already handled within 6 months")
+
+        # Move it to 181 days ago
+        request.created_at = timezone.now() - datetime.timedelta(days=181)
+        request.save()
+
+        # Should now be considered "old" (outside 6 months)
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(self.user2, self.club1)
+        )
+        self.assertTrue(can_request)
+        self.assertEqual(reason, "No recent request found")

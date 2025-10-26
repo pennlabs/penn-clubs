@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { Checkbox, CheckboxLabel, Icon, Text } from '../../components/common'
 import { CLUBS_GREY } from '../../constants/colors'
-import { Badge, Report, Tag } from '../../types'
+import { Affiliation, Report, Tag } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { CheckboxField, SelectField, TextField } from '../FormComponents'
@@ -27,7 +27,9 @@ const GroupLabel = styled.h4`
 const ReportBox = ({
   children,
   title,
-}: React.PropsWithChildren<{ title: ReactElement | string }>): ReactElement => {
+}: React.PropsWithChildren<{
+  title: ReactElement<any> | string
+}>): ReactElement<any> => {
   return (
     <div className="box">
       <h3 className="title is-4">{title}</h3>
@@ -39,7 +41,7 @@ const ReportBox = ({
 type Props = {
   fields: [string, [string, string][]][]
   initial?: Report
-  badges: Badge[]
+  affiliations: Affiliation[]
   tags: Tag[]
   onSubmit: (report: Report) => void
 }
@@ -74,15 +76,15 @@ const ReportForm = ({
   fields,
   onSubmit,
   initial,
-  badges,
+  affiliations,
   tags,
-}: Props): ReactElement => {
+}: Props): ReactElement<any> => {
   const generateCheckboxGroup = (
     groupName: string,
     fields: [string, string][],
     setFieldValue: (field: string, value: string[]) => void,
     initialValues: string[] = [],
-  ): ReactElement => {
+  ): ReactElement<any> => {
     const fieldsInGroup = fields.map((field) => field[1])
 
     return (
@@ -261,12 +263,12 @@ const ReportForm = ({
               />
               <Field
                 name="badges__in"
-                label="Badges"
+                label="Affiliations"
                 as={SelectField}
-                choices={badges}
-                valueDeserialize={fixDeserialize(badges)}
+                choices={affiliations}
+                valueDeserialize={fixDeserialize(affiliations)}
                 isMulti
-                helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified badges.`}
+                helpText={`Select only ${OBJECT_NAME_PLURAL} with all of the specified affiliations.`}
               />
             </ReportBox>
             <ReportBox title="Included Fields">

@@ -12,7 +12,7 @@ type TicketTransferModalProps = {
 const TicketTransferModal = ({
   id,
   onSuccessfulTransfer,
-}: TicketTransferModalProps): ReactElement => {
+}: TicketTransferModalProps): ReactElement<any> => {
   const [recipient, setRecipient] = useState<string | undefined>()
   const [recipientError, setRecipientError] = useState<string | undefined>()
 

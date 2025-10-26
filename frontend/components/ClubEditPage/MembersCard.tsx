@@ -32,7 +32,9 @@ type MembersCardProps = {
   club: Club
 }
 
-export default function MembersCard({ club }: MembersCardProps): ReactElement {
+export default function MembersCard({
+  club,
+}: MembersCardProps): ReactElement<any> {
   return (
     <BaseCard title={OBJECT_MEMBERSHIP_LABEL}>
       <ModelForm

@@ -11,7 +11,7 @@ import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
 import React, { ReactElement } from 'react'
 import renderPage from 'renderPage'
-import { Badge, ClubFair, Report, Tag, Template } from 'types'
+import { Affiliation, ClubFair, Report, Tag, Template } from 'types'
 import { apiCheckPermission, doBulkLookup } from 'utils'
 
 import TemplatesTab from '~/components/Settings/TemplatesTab'
@@ -20,13 +20,13 @@ import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
 function AdminPage({
   userInfo,
   tags,
-  badges,
+  affiliations,
   templates,
   clubfairs,
   scripts,
   fair,
   reports,
-}): ReactElement {
+}): ReactElement<any> {
   if (!userInfo) {
     return <AuthPrompt />
   } else if (
@@ -45,9 +45,13 @@ function AdminPage({
   const tabs = [
     {
       name: 'bulk',
-      label: 'Bulk Editing',
+      label: 'Club Management',
       content: () => (
-        <BulkEditTab badges={badges} clubfairs={clubfairs} tags={tags} />
+        <BulkEditTab
+          affiliations={affiliations}
+          clubfairs={clubfairs}
+          tags={tags}
+        />
       ),
     },
     {
@@ -105,7 +109,7 @@ function AdminPage({
 
 type BulkResp = {
   tags: Tag[]
-  badges: Badge[]
+  affiliations: Affiliation[]
   templates: Template[]
   clubfairs: ClubFair[]
   scripts: any[]
@@ -116,7 +120,7 @@ AdminPage.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
     [
       'tags',
-      ['badges', '/badges/?all=true&format=json'],
+      ['affiliations', '/badges/?all=true&format=json'],
       'templates',
       'clubfairs',
       'scripts',

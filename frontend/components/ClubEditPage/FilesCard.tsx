@@ -20,7 +20,7 @@ type FilesCardProps = {
 /**
  * A card that allows club officers to view, download, delete, and add files to the club.
  */
-export default function FilesCard({ club }: FilesCardProps): ReactElement {
+export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
   const [files, setFiles] = useState<File[]>(club.files)
 
   const reloadFiles = async (): Promise<void> => {

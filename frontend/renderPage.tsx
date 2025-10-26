@@ -2,7 +2,7 @@ import Color from 'color'
 import { NextPageContext } from 'next'
 import React, { Component, ReactElement } from 'react'
 import { ToastContainer } from 'react-toastify'
-import styled, { createGlobalStyle } from 'styled-components'
+import styled from 'styled-components'
 
 import { Loading } from './components/common'
 import { AuthCheckContext } from './components/contexts'
@@ -10,9 +10,7 @@ import Footer from './components/Footer'
 import Header from './components/Header'
 import LoginModal from './components/LoginModal'
 import {
-  BULMA_A,
   BULMA_DANGER,
-  BULMA_GREY,
   BULMA_INFO,
   BULMA_LINK,
   BULMA_PRIMARY,
@@ -23,15 +21,26 @@ import {
 } from './constants/colors'
 import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
-import { Badge, Club, School, StudentType, Tag, UserInfo, Year } from './types'
+import {
+  Affiliation,
+  Club,
+  School,
+  StudentType,
+  Tag,
+  UserInfo,
+  Year,
+} from './types'
 import {
   cache,
   doApiRequest,
+  getCurrentRelativePath,
   isClubFieldShown,
+  isDevelopment,
+  LOGIN_URL,
   OptionsContext,
   PermissionsContext,
 } from './utils'
-import { SITE_ID } from './utils/branding'
+import { LOGIN_REQUIRED_ALL, SITE_ID } from './utils/branding'
 import { logException } from './utils/sentry'
 
 export const ToastStyle = styled.div`
@@ -51,6 +60,11 @@ export const ToastStyle = styled.div`
 
   & .Toastify__toast--info {
     background-color: ${BULMA_INFO};
+    color: white;
+    --toastify-icon-color-info: white;
+    .Toastify__close-button {
+      color: white;
+    }
   }
 
   & .Toastify__toast--warning {
@@ -64,22 +78,18 @@ export const ToastStyle = styled.div`
 
   & .Toastify__toast--error {
     background-color: ${BULMA_DANGER};
+    color: white;
+    --toastify-icon-color-error: white;
+    .Toastify__close-button {
+      color: white;
+    }
   }
+}
 `
 
 export const Wrapper = styled.div`
   min-height: calc(100vh - ${NAV_HEIGHT});
   background: ${SNOW};
-`
-
-export const GlobalStyle = createGlobalStyle`
-  a {
-    color: ${BULMA_A};
-  }
-
-  .has-text-grey {
-    color: ${BULMA_GREY} !important;
-  }
 `
 
 /**
@@ -197,6 +207,9 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
         const { props, state, closeModal } = this
         const { modal } = state
         const { authenticated, userInfo } = props
+        if (LOGIN_REQUIRED_ALL && !isDevelopment() && !authenticated) {
+          window.location.href = `${LOGIN_URL}?next=${getCurrentRelativePath()}`
+        }
         return (
           <>
             <OptionsContext.Provider value={this.props.options}>
@@ -206,7 +219,7 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
                     <LoginModal show={modal} closeModal={closeModal} />
                     <Header authenticated={authenticated} userInfo={userInfo} />
                     <Wrapper>
-                      <Page {...props} {...state} />
+                      <Page {...(props as any)} {...state} />
                     </Wrapper>
                     <Footer />
                   </RenderPageWrapper>
@@ -221,7 +234,6 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
                 hideProgressBar={true}
               />
             </ToastStyle>
-            <GlobalStyle />
           </>
         )
       } catch (ex) {
@@ -377,7 +389,7 @@ export type PaginatedClubPage = {
 }
 
 type ListPageProps = {
-  badges: Badge[]
+  affiliations: Affiliation[]
   clubs: PaginatedClubPage
   schools: School[]
   studentTypes: StudentType[]
@@ -401,7 +413,7 @@ const getPublicCachedContent = async () => {
     async () => {
       const [
         tagsRequest,
-        badgesRequest,
+        affiliationsRequest,
         schoolRequest,
         yearRequest,
         studentTypesRequest,
@@ -417,13 +429,13 @@ const getPublicCachedContent = async () => {
 
       const [
         tagsResponse,
-        badgesResponse,
+        affiliationsResponse,
         schoolResponse,
         yearResponse,
         studentTypesResponse,
       ] = await Promise.all([
         tagsRequest.json(),
-        badgesRequest.json(),
+        affiliationsRequest.json(),
         schoolRequest.json(),
         yearRequest.json(),
         studentTypesRequest != null
@@ -432,7 +444,7 @@ const getPublicCachedContent = async () => {
       ])
 
       return {
-        badges: badgesResponse as Badge[],
+        affiliations: affiliationsResponse as Affiliation[],
         schools: schoolResponse as School[],
         studentTypes: studentTypesResponse as StudentType[],
         tags: tagsResponse as Tag[],
@@ -458,14 +470,14 @@ export function renderListPage<T>(
     static permissions?: string[]
     static getAdditionalPermissions?: (ctx: NextPageContext) => string[]
 
-    render(): ReactElement {
+    render(): ReactElement<any> {
       const { authenticated } = this.props
 
       if (authenticated === null) {
         return <Loading />
       }
 
-      return <Page {...this.props} />
+      return <Page {...(this.props as any)} />
     }
   }
 

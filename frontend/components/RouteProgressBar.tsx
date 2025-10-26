@@ -2,7 +2,6 @@ import { useRouter } from 'next/router'
 import React, { ReactElement, ReactPortal, useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
 import styled, { keyframes } from 'styled-components'
-import { Keyframes } from 'styled-components/dist/types'
 
 import { CLUBS_BLUE, CLUBS_RED, LONG_ANIMATION_DURATION } from '~/constants'
 
@@ -12,7 +11,7 @@ enum RouteProgressState {
   ROUTE_CHANGE_ERROR = 'ERROR',
 }
 
-const keyframeForState = (state: RouteProgressState): Keyframes => {
+const keyframeForState = (state: RouteProgressState) => {
   switch (state) {
     case RouteProgressState.ROUTE_CHANGE_START:
       return keyframes`
@@ -93,7 +92,7 @@ type RouterState =
 
 const RouteProgressBar = ({
   fireThreshold = 250,
-}: RouteProgressBarProps): ReactPortal | ReactElement => {
+}: RouteProgressBarProps): ReactPortal | ReactElement<any> => {
   const container =
     typeof window !== 'undefined'
       ? document.querySelector("nav[aria-label='main navigation']")

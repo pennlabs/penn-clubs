@@ -36,7 +36,6 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "daphne",
-    "channels",
     "model_clone",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -83,8 +82,6 @@ TEMPLATES = [
     }
 ]
 
-WSGI_APPLICATION = "pennclubs.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -112,6 +109,9 @@ AUTH_PASSWORD_VALIDATORS = [
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_URLS_REGEX = r"^/api/external/.*"
 CORS_ALLOW_METHODS = ["GET"]
+
+
+ENABLE_EXTERNAL_MEMBER_API = False
 
 # Authentication Backends
 
@@ -205,11 +205,6 @@ APPLY_URL = "https://{domain}/club/{club}/apply"
 OSA_EMAILS = ["vpul-orgs@pobox.upenn.edu"]
 
 
-# Controls whether existing clubs can submit for reapproval
-REAPPROVAL_QUEUE_OPEN = True
-# Controls whether new clubs can submit for initial approval
-NEW_APPROVAL_QUEUE_OPEN = True
-
 # File upload settings
 
 MEDIA_URL = "/api/media/"
@@ -225,8 +220,7 @@ SIMPLE_HISTORY_FILEFIELD_TO_CHARFIELD = True
 
 # Django Channels settings
 
-ASGI_APPLICATION = "pennclubs.routing.application"
-
+ASGI_APPLICATION = "pennclubs.asgi.application"
 
 # Social Auth settings
 

@@ -31,7 +31,7 @@ export const VISIBILITY_TYPES = [
 export default function AdvisorCard({
   club,
   validateAdvisors,
-}: Props): ReactElement {
+}: Props): ReactElement<any> {
   const [advisorsCount, setAdvisorsCount] = useState<number>(
     club.advisor_set.length || 0,
   )

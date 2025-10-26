@@ -2,7 +2,7 @@ import React, { ReactElement, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
-import { CLUBS_GREY, CLUBS_NAVY, WHITE } from '../../constants'
+import { CLUBS_GREY, CLUBS_NAVY } from '../../constants'
 import { Club } from '../../types'
 import { doApiRequest, intersperse } from '../../utils'
 import {
@@ -29,7 +29,7 @@ const Subtitle = styled.div`
   font-weight: bold;
 `
 
-const SyncModal = (): ReactElement | null => {
+const SyncModal = (): ReactElement<any> | null => {
   const [subscriptions, setSubscriptions] = useState<{ club: Club }[] | null>(
     null,
   )
@@ -80,9 +80,6 @@ const SyncModal = (): ReactElement | null => {
                 } catch (error) {
                   toast.error(
                     'Failed to copy! You need to manually copy the URL.',
-                    {
-                      style: { color: WHITE },
-                    },
                   )
                 }
               }}

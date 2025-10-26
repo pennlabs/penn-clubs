@@ -155,9 +155,7 @@ const useCheckout = (paid: boolean) => {
     const data = await res.json()
     if (!data.success) {
       // TODO: handle free ticket case
-      toast.error(data.detail, {
-        style: { color: WHITE },
-      })
+      toast.error(data.detail)
     } else if (data.sold_free_tickets) {
       onModalClose(true)
       toast.success('Free tickets purchased successfully!')
@@ -214,10 +212,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
         (ticket) => {
           toast.error(
             `${ticket.event.name} - ${ticket.type} is no longer available and ${ticket.count} ticket${ticket.count && ticket.count > 1 ? 's have' : ' has'} been removed from your cart.`,
-            {
-              style: { color: WHITE },
-              autoClose: false,
-            },
+            { autoClose: false },
           )
         },
         [soldOut],
@@ -251,20 +246,23 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
     }
     flipPendingEdit(true)
     if (newCount && newCount > ticket.count) {
-      reqPromise = doApiRequest(`/events/${ticket.event.id}/add_to_cart/`, {
-        method: 'POST',
-        body: {
-          quantities: [
-            {
-              type: ticket.type,
-              count: newCount - ticket.count,
-            },
-          ],
+      reqPromise = doApiRequest(
+        `/events/${ticket.event.id}/showings/${ticket.showing.id}/add_to_cart/`,
+        {
+          method: 'POST',
+          body: {
+            quantities: [
+              {
+                type: ticket.type,
+                count: newCount - ticket.count,
+              },
+            ],
+          },
         },
-      })
+      )
     } else {
       reqPromise = doApiRequest(
-        `/events/${ticket.event.id}/remove_from_cart/`,
+        `/events/${ticket.event.id}/showings/${ticket.showing.id}/remove_from_cart/`,
         {
           method: 'POST',
           body: {
@@ -283,10 +281,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
       .then((resp) => resp.json())
       .then((res) => {
         if (!res.success) {
-          // eslint-disable-next-line no-console
-          toast.error(res.detail, {
-            style: { color: WHITE },
-          })
+          toast.error(res.detail)
           propogateCount?.(ticket.count ?? 0)
           flipPendingEdit(false)
           return
@@ -348,7 +343,6 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
       </div>
     )
   }
-
   return (
     <>
       <div>

@@ -117,7 +117,7 @@ def send_mail_helper(
                 )
         else:  # assumes attachment is an image
             image = MIMEImage(attachment["content"], _subtype=attachment["mimetype"])
-            image.add_header("Content-ID", f'<{context["cid"]}>')
+            image.add_header("Content-ID", f"<{context['cid']}>")
             image.add_header(
                 "Content-Disposition", "inline", filename=attachment["filename"]
             )
@@ -230,6 +230,30 @@ def create_thumbnail_helper(self, request, height):
     return True
 
 
+class GroupActivityOption(models.Model):
+    """
+    Configurable options for group activity assessment.
+    Allows administrators to modify the available options without code changes.
+    """
+
+    text = models.CharField(max_length=255, unique=True)
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this option is currently available for selection",
+    )
+    order = models.PositiveIntegerField(
+        default=0, help_text="Display order for the frontend"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "text"]
+
+    def __str__(self):
+        return self.text
+
+
 class Club(models.Model):
     """
     Represents a club at the University of Pennsylvania.
@@ -298,7 +322,7 @@ class Club(models.Model):
     name = models.CharField(max_length=255)
     subtitle = models.CharField(blank=True, max_length=255)
     terms = models.CharField(blank=True, max_length=1024)
-    description = models.TextField(blank=True)  # rich html
+    description = models.TextField()  # rich html
     address = models.TextField(blank=True)
     founded = models.DateField(blank=True, null=True)
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
@@ -327,7 +351,13 @@ class Club(models.Model):
     image_small = models.ImageField(
         upload_to=get_club_small_file_name, null=True, blank=True
     )
-    tags = models.ManyToManyField("Tag")
+    tags = models.ManyToManyField("Tag", blank=True)
+    classification = models.ForeignKey(
+        "Classification",
+        related_name="clubs",
+        on_delete=models.PROTECT,
+        null=True,
+    )
     members = models.ManyToManyField(get_user_model(), through="Membership")
     # Represents which organizations this club is directly under in the org structure.
     # For example, SAC is a parent of PAC, which is a parent of TAC-E which is a parent
@@ -336,6 +366,21 @@ class Club(models.Model):
         "Club", related_name="children_orgs", blank=True
     )
     badges = models.ManyToManyField("Badge", blank=True)
+    category = models.ForeignKey(
+        "Category",
+        on_delete=models.PROTECT,
+        related_name="clubs",
+        null=True,
+    )
+    eligibility = models.ManyToManyField("Eligibility", related_name="clubs")
+
+    type = models.ForeignKey(
+        "Type",
+        related_name="clubs",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
 
     target_years = models.ManyToManyField("Year", through="TargetYear")
     target_schools = models.ManyToManyField("School", through="TargetSchool")
@@ -346,11 +391,28 @@ class Club(models.Model):
     appointment_needed = models.BooleanField(default=False)
     signature_events = models.TextField(blank=True)  # html
 
+    # Club registration status
+    status = models.ForeignKey(
+        "Status",
+        related_name="clubs",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Indicates a clubs's current registration status.",
+    )
+
     # cache club aggregation counts
     favorite_count = models.IntegerField(default=0)
     membership_count = models.IntegerField(default=0)
     # cache club rankings
     rank = models.IntegerField(default=0, db_index=True)
+
+    # Group Activity Assessment field
+    group_activity_assessment = models.ManyToManyField(
+        "GroupActivityOption",
+        blank=True,
+        help_text="List of activities the club engages in",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -361,6 +423,14 @@ class Club(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def designation(self):
+        """
+        Get the designation through the category relationship.
+        Returns None if the club has no category or the category has no designation.
+        """
+        return self.category.designation if self.category else None
 
     def create_thumbnail(self, request=None):
         return create_thumbnail_helper(self, request, 200)
@@ -384,23 +454,29 @@ class Club(models.Model):
             calendar = Calendar(requests.get(url).text)
             event_list = Event.objects.filter(is_ics_event=True, club=self)
             modified_events = []
-            for event in calendar.events:
+            for ics_event in calendar.events:
                 tries = [
                     Event.objects.filter(
                         club=self,
-                        start_time=event.begin.datetime,
-                        end_time=event.end.datetime,
-                    ).first(),
+                        is_ics_event=True,
+                    )
+                    .filter(
+                        eventshowing__start_time=ics_event.begin.datetime,
+                        eventshowing__end_time=ics_event.end.datetime,
+                    )
+                    .first(),
                     Event(),
                 ]
 
                 # try matching using uuid if it is valid
-                if event.uid:
+                if ics_event.uid:
                     try:
-                        event_uuid = uuid.UUID(event.uid[:36])
+                        event_uuid = uuid.UUID(ics_event.uid[:36])
                     except ValueError:
                         # generate uuid from malformed/invalid uuids
-                        event_uuid = uuid.uuid5(ics_import_uuid_namespace, event.uid)
+                        event_uuid = uuid.uuid5(
+                            ics_import_uuid_namespace, ics_event.uid
+                        )
 
                     tries.insert(0, Event.objects.filter(ics_uuid=event_uuid).first())
                 else:
@@ -409,11 +485,8 @@ class Club(models.Model):
                 for ev in tries:
                     if ev:
                         ev.club = self
-                        ev.name = event.name.strip()
-                        ev.start_time = event.begin.datetime
-                        ev.end_time = event.end.datetime
-                        ev.description = clean(event.description.strip())
-                        ev.location = event.location
+                        ev.name = ics_event.name.strip()
+                        ev.description = clean(ics_event.description.strip())
                         ev.is_ics_event = True
 
                         # very simple type detection, only perform on first time
@@ -447,12 +520,8 @@ class Club(models.Model):
                                 ev.url = urls[0]
 
                         # extract url from url or location
-                        if event.url:
-                            ev.url = event.url
-                        elif ev.location:
-                            location_urls = extractor.find_urls(ev.location)
-                            if location_urls:
-                                ev.url = location_urls[0]
+                        if ics_event.url:
+                            ev.url = ics_event.url
 
                         # format url properly with schema
                         if ev.url:
@@ -468,8 +537,6 @@ class Club(models.Model):
                             ev.ics_uuid = event_uuid
 
                         # ensure length limits are met before saving
-                        if ev.location:
-                            ev.location = ev.location[:255]
                         if ev.name:
                             ev.name = ev.name[:255]
                         if ev.code:
@@ -478,6 +545,25 @@ class Club(models.Model):
                             ev.url = ev.url[:2048]
 
                         ev.save()
+
+                        # Update corresponding showing (one per event)
+                        showing, created = EventShowing.objects.get_or_create(
+                            event=ev,
+                            start_time=ics_event.begin.datetime,
+                            end_time=ics_event.end.datetime,
+                            defaults={
+                                "location": ics_event.location[:255]
+                                if ics_event.location
+                                else None,
+                            },
+                        )
+
+                        if not created:
+                            showing.location = (
+                                ics_event.location[:255] if ics_event.location else None
+                            )
+                            showing.save()
+
                         modified_events.append(ev)
                         break
 
@@ -508,24 +594,37 @@ class Club(models.Model):
 
         eastern = pytz.timezone("America/New_York")
 
-        events = self.events.filter(
+        fair_events = Event.objects.filter(
+            club=self,
+            type=Event.FAIR,
+        )
+
+        event_showings = EventShowing.objects.filter(
+            event__in=fair_events,
             start_time__gte=fair.start_time,
             end_time__lte=fair.end_time,
-            type=Event.FAIR,
         ).order_by("start_time")
-        event = events.first()
+
+        first_event_showing = event_showings.first()
+        first_event = first_event_showing.event if first_event_showing else None
+
         fstr = "%B %d, %Y %I:%M %p"
         events = [
             {
-                "time": f"{timezone.localtime(start, eastern).strftime(fstr)} - "
-                f"{timezone.localtime(end, eastern).strftime(fstr)} ET"
+                "time": (
+                    f"{timezone.localtime(showing.start_time, eastern).strftime(fstr)} "
+                    f"- {timezone.localtime(showing.end_time, eastern).strftime(fstr)} "
+                    "ET"
+                )
             }
-            for start, end in events.values_list("start_time", "end_time")
+            for showing in event_showings
         ]
 
         prefix = (
             "ACTION REQUIRED"
-            if event is None or not event.url or "zoom.us" not in event.url
+            if first_event is None
+            or not first_event.url
+            or "zoom.us" not in first_event.url
             else "REMINDER"
         )
 
@@ -565,16 +664,20 @@ class Club(models.Model):
             )
         return False
 
-    def send_renewal_email(self, request=None):
+    def send_renewal_email(self, request=None, queue_open_date=None):
         """
         Send an email notifying all club officers about renewing their approval with the
-        Office of Student Affairs and registering for the SAC fair.
+        Office of Student Affairs.
         """
         domain = get_domain(request)
 
         context = {
             "name": self.name,
-            "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
+            "renew_url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
+            "transfer_url": (
+                f"{settings.EDIT_URL.format(domain=domain, club=self.code)}/member"
+            ),
+            "queue_open_date": queue_open_date,
         }
 
         emails = self.get_officer_emails()
@@ -582,35 +685,7 @@ class Club(models.Model):
         if emails:
             send_mail_helper(
                 name="renew",
-                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(
-                    self.name
-                ),
-                emails=emails,
-                context=context,
-                reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
-            )
-
-    def send_renewal_reminder_email(self, request=None):
-        """
-        Send a reminder email to clubs about renewing their approval
-        with the approval authority and registering for activities fairs.
-        """
-        domain = get_domain(request)
-
-        context = {
-            "name": self.name,
-            "url": settings.RENEWAL_URL.format(domain=domain, club=self.code),
-            "year": timezone.now().year,
-        }
-
-        emails = self.get_officer_emails()
-
-        if emails:
-            send_mail_helper(
-                name="renewal_reminder",
-                subject="[ACTION REQUIRED] Renew {} and SAC Fair Registration".format(
-                    self.name
-                ),
+                subject="[ACTION REQUIRED] Renew {}".format(self.name),
                 emails=emails,
                 context=context,
                 reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
@@ -855,17 +930,21 @@ class ClubFair(models.Model):
         events = []
         with transaction.atomic():
             for club in club_query:
-                obj, _ = Event.objects.get_or_create(
+                event, _ = Event.objects.get_or_create(
                     code=f"fair-{club.code}-{self.id}-{suffix}",
                     club=club,
                     type=Event.FAIR,
                     defaults={
                         "name": self.name,
-                        "start_time": start_time,
-                        "end_time": end_time,
                     },
                 )
-                events.append(obj)
+
+                showing, _ = EventShowing.objects.get_or_create(
+                    event=event, start_time=start_time, end_time=end_time
+                )
+
+                events.append(event)
+
         return events
 
     def __str__(self):
@@ -896,25 +975,6 @@ class ClubFairRegistration(models.Model):
         return f"{self.club.name} registration for {self.fair.name}"
 
 
-class RecurringEvent(models.Model):
-    """
-    Represents a recurring event hosted by a club.
-    """
-
-    def __str__(self):
-        events = self.event_set.all()
-        if events.exists():
-            first_event = events.first()
-            last_event = events.last()
-            name = first_event.name
-            return (
-                f"{name}: "
-                f"{first_event.start_time} - {last_event.end_time} "
-                f"({events.count()} times)"
-            )
-        return "empty recurring event object"
-
-
 class Event(models.Model):
     """
     Represents an event hosted by a club.
@@ -927,9 +987,6 @@ class Event(models.Model):
     club = models.ForeignKey(
         Club, on_delete=models.CASCADE, related_name="events", null=True
     )
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    location = models.CharField(max_length=255, null=True, blank=True)
     url = models.URLField(max_length=2048, null=True, blank=True)
     image = models.ImageField(upload_to=get_event_file_name, null=True, blank=True)
     image_small = models.ImageField(
@@ -938,11 +995,6 @@ class Event(models.Model):
     description = models.TextField(blank=True)  # rich html
     ics_uuid = models.UUIDField(default=uuid.uuid4)
     is_ics_event = models.BooleanField(default=False, blank=True)
-    parent_recurring_event = models.ForeignKey(
-        RecurringEvent, on_delete=models.CASCADE, blank=True, null=True
-    )
-    ticket_order_limit = models.IntegerField(default=10)
-    ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
     OTHER = 0
     RECRUITMENT = 1
@@ -972,6 +1024,25 @@ class Event(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class EventShowing(models.Model):
+    """
+    Represents a showing of an event.
+    """
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    location = models.CharField(max_length=255, null=True, blank=True)
+    ticket_order_limit = models.IntegerField(default=10)
+    ticket_drop_time = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.event.name} showing at {self.start_time}"
 
 
 class Favorite(models.Model):
@@ -1088,8 +1159,6 @@ class JoinRequest(models.Model):
     )
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="%(class)ss")
 
-    withdrawn = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1102,6 +1171,8 @@ class MembershipRequest(JoinRequest):
     """
     Used when users are not in the club but request membership from the owner
     """
+
+    withdrawn = models.BooleanField(default=False)
 
     def __str__(self):
         return f"<MembershipRequest: {self.requester.username} for {self.club.code}>"
@@ -1134,8 +1205,61 @@ class OwnershipRequest(JoinRequest):
     Represents a user's request to take ownership of a club
     """
 
+    PENDING = 1
+    WITHDRAWN = 2
+    DENIED = 3
+    ACCEPTED = 4
+    STATUS_TYPES = (
+        (PENDING, "Pending"),
+        (WITHDRAWN, "Withdrawn"),
+        (DENIED, "Denied"),
+        (ACCEPTED, "Accepted"),
+    )
+    status = models.IntegerField(choices=STATUS_TYPES, default=PENDING)
+
+    class Meta:
+        # Remove unique constraint on requester and club
+        unique_together = ()
+
     def __str__(self):
         return f"<OwnershipRequest: {self.requester.username} for {self.club.code}>"
+
+    @classmethod
+    def get_recent_request(cls, user, club):
+        """
+        Get the most recent ownership request for a user and club within 6 months.
+        """
+        six_months_ago = timezone.now() - datetime.timedelta(days=180)
+        return (
+            cls.objects.filter(
+                club=club, requester=user, created_at__gte=six_months_ago
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+    @classmethod
+    def can_user_request_ownership(cls, user, club):
+        """
+        Check if a user can make a new ownership request for a club.
+        Returns (can_request: bool, reason: str,
+                 recent_request: OwnershipRequest or None)
+        """
+        recent_request = cls.get_recent_request(user, club)
+
+        if recent_request is None:
+            can_request = True
+            reason = "No recent request found"
+        elif recent_request.status == cls.WITHDRAWN:
+            can_request = True
+            reason = "Previous request was withdrawn"
+        elif recent_request.status == cls.PENDING:
+            can_request = False
+            reason = "Request already pending"
+        else:  # ACCEPTED or DENIED
+            can_request = False
+            reason = "Request already handled within 6 months"
+        return can_request, reason, recent_request
 
     def send_request(self, request=None):
         domain = get_domain(request)
@@ -1468,6 +1592,22 @@ class Tag(models.Model):
         return self.name
 
 
+class Classification(models.Model):
+    """
+    Indicates the student membership requirement to join the group, based on enrollment
+    status (undergraduate or graduate/professional).
+    """
+
+    name = models.CharField(max_length=255)
+    symbol = models.CharField(max_length=10, null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Classifications"
+
+    def __str__(self):
+        return f"{self.symbol} ({self.name})"
+
+
 class Badge(models.Model):
     """
     Represents a category that a club could fall under.
@@ -1506,6 +1646,88 @@ class Badge(models.Model):
 
     def __str__(self):
         return self.label
+
+
+class Category(models.Model):
+    """
+    Indicates the primary group category determined by the club's mission.
+    """
+
+    name = models.CharField(max_length=255)
+    designation = models.ForeignKey(
+        "Designation",
+        on_delete=models.PROTECT,
+        related_name="categories",
+        null=True,
+        blank=True,
+        help_text="""The SAC funding designation automatically assigned to clubs
+        in this category.""",
+    )
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
+
+class Eligibility(models.Model):
+    """
+    Indicates the group's ability to request funding based on its classification,
+    registration status and type of organization.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Eligibilities"
+
+    def __str__(self):
+        return self.name
+
+
+class Designation(models.Model):
+    """
+    Indicates a club's SAC funding designation based on their group category.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Designations"
+
+    def __str__(self):
+        return self.name
+
+
+class Type(models.Model):
+    """
+    Indicates the type of student organization based on how the group is managed or
+    supported.
+    """
+
+    name = models.CharField(max_length=255)
+    symbol = models.CharField(max_length=10)
+
+    class Meta:
+        verbose_name_plural = "Types"
+
+    def __str__(self):
+        return f"{self.symbol} ({self.name})"
+
+
+class Status(models.Model):
+    """
+    Indicates the current registration status of a club.
+    """
+
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Statuses"
+
+    def __str__(self):
+        return self.name
 
 
 class Asset(models.Model):
@@ -1678,6 +1900,76 @@ class ClubApplication(CloneModel):
         tokens = meta.find_undeclared_variables(j2_template)
         return all(t in cls.VALID_TEMPLATE_TOKENS for t in tokens)
 
+    def normalize_committees(self):
+        """
+        After cloning an application, ensure that committees are not duplicated
+        due to deep-clone behavior (e.g., "{name} copy 1").
+
+        This method consolidates committees that share the same logical base name
+        (stripping a trailing "copy N" suffix), re-links any references from
+        questions and submissions to a single canonical committee, and deletes
+        the redundant duplicates.
+        """
+        from django.db import transaction
+
+        # Local import-safe references (models are in the same module)
+        ApplicationCommitteeRef = ApplicationCommittee
+        ApplicationQuestionRef = ApplicationQuestion
+        ApplicationSubmissionRef = ApplicationSubmission
+
+        copy_suffix_regex = re.compile(r"^(?P<base>.+?)\s+copy\s+\d+$", re.IGNORECASE)
+
+        def get_base_name(name):
+            if not name:
+                return name
+            match = copy_suffix_regex.match(name.strip())
+            return match.group("base").strip() if match else name.strip()
+
+        with transaction.atomic():
+            committees = list(ApplicationCommitteeRef.objects.filter(application=self))
+            if not committees:
+                return
+
+            # Group committees by base name (e.g., "Design",
+            # "Design copy 1" => "Design")
+            base_to_items = {}
+            for committee in committees:
+                base = get_base_name(committee.name)
+                base_to_items.setdefault(base, []).append(committee)
+
+            for base, items in base_to_items.items():
+                # Choose canonical: prefer exact-match (no suffix),
+                # else lowest copy number
+                canonical = next(
+                    (c for c in items if (c.name or "").strip() == base), None
+                )
+                if canonical is None:
+                    # If no exact match, rename the lowest copy number to be canonical
+                    canonical = min(items, key=lambda c: c.pk)
+                    canonical.name = base
+                    canonical.save(update_fields=["name"])
+
+                for c in items:
+                    if c.pk == canonical.pk:
+                        continue
+
+                    # Re-link questions from duplicate committee to canonical committee
+                    linked_questions = ApplicationQuestionRef.objects.filter(
+                        application=self, committees=c
+                    )
+                    for q in linked_questions:
+                        q.committees.add(canonical)
+                        q.committees.remove(c)
+
+                    # Re-link submissions if any exist (defensive;
+                    # typically none at clone time)
+                    ApplicationSubmissionRef.objects.filter(
+                        application=self, committee=c
+                    ).update(committee=canonical)
+
+                    # Remove the duplicate committee
+                    c.delete()
+
 
 class ApplicationExtension(models.Model):
     """
@@ -1734,6 +2026,9 @@ class ApplicationCommittee(models.Model):
 
     def __str__(self):
         return "<ApplicationCommittee: {} in {}>".format(self.name, self.application.pk)
+
+    class Meta:
+        unique_together = (("application", "name"),)
 
 
 class ApplicationQuestion(CloneModel):
@@ -1906,8 +2201,12 @@ class Ticket(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    event = models.ForeignKey(
-        Event, related_name="tickets", on_delete=models.DO_NOTHING
+    showing = models.ForeignKey(
+        EventShowing,
+        related_name="tickets",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
     type = models.CharField(max_length=100)
     owner = models.ForeignKey(
@@ -1975,10 +2274,10 @@ class Ticket(models.Model):
 
         context = {
             "first_name": self.owner.first_name,
-            "name": self.event.name,
+            "name": self.showing.event.name,
             "type": self.type,
-            "start_time": self.event.start_time,
-            "end_time": self.event.end_time,
+            "start_time": self.showing.start_time,
+            "end_time": self.showing.end_time,
             "cid": "qr_code",
             "ticket_url": f"https://{settings.DOMAINS[0]}/settings#Tickets",
         }
@@ -1987,7 +2286,7 @@ class Ticket(models.Model):
             send_mail_helper(
                 name="ticket_confirmation",
                 subject=f"Ticket confirmation for {self.owner.get_full_name()}"
-                f" to {self.event.name}",
+                f" to {self.showing.event.name}",
                 emails=[self.owner.email],
                 context=context,
                 attachment={
@@ -2030,13 +2329,15 @@ class TicketTransferRecord(models.Model):
             "sender_first_name": self.sender.first_name,
             "receiver_first_name": self.receiver.first_name,
             "receiver_username": self.receiver.username,
-            "event_name": self.ticket.event.name,
+            "event_name": self.ticket.showing.event.name,
             "type": self.ticket.type,
         }
 
         send_mail_helper(
             name="ticket_transfer",
-            subject=f"Ticket transfer confirmation for {self.ticket.event.name}",
+            subject=(
+                f"Ticket transfer confirmation for {self.ticket.showing.event.name}"
+            ),
             emails=[self.sender.email, self.receiver.email],
             context=context,
         )
@@ -2090,3 +2391,116 @@ def user_create(sender, instance, created, **kwargs):
 def profile_delete_cleanup(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+
+
+class RegistrationQueueSettings(models.Model):
+    """
+    Singleton model to store registration queue settings.
+    Only one instance of this model should exist.
+    """
+
+    SINGLETON_PK = 1
+
+    reapproval_queue_open = models.BooleanField(
+        default=True,
+        help_text="Controls whether existing clubs can submit for reapproval",
+    )
+    new_approval_queue_open = models.BooleanField(
+        default=True, help_text="Controls whether new clubs can submit for approval"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="modified_queue_settings",
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to ensure this is a singleton.
+        """
+        if self.pk and self.pk != self.SINGLETON_PK:
+            raise ValueError("Use get() to retrieve singleton instance")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """
+        Prevent deletion of singleton instance.
+        """
+        if self.pk and self.pk == self.SINGLETON_PK:
+            raise ValueError("Cannot delete singleton instance")
+
+    @classmethod
+    def create(cls, **kwargs):
+        """
+        Prevent creation of new singleton instance.
+        """
+        raise ValueError("Use get() to retrieve singleton instance")
+
+    @classmethod
+    def get(cls):
+        """
+        Get or create singleton instance of QueueSettings.
+        """
+        if cls.objects.count() > 1:
+            raise ValueError("Multiple instances of RegistrationQueueSettings found")
+        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+        return obj
+
+
+class RankingWeights(models.Model):
+    """Singleton storing weighting factors for club ranking."""
+
+    SINGLETON_PK = 1
+
+    # core weights (defaults mirror historical constants)
+    inactive_penalty = models.FloatField(default=-1000)
+    favorites_per = models.FloatField(default=1 / 25)
+    tags_good = models.FloatField(default=15)
+    tags_many = models.FloatField(default=7)
+    officer_bonus = models.FloatField(default=15)
+    member_base = models.FloatField(default=10)
+    member_per = models.FloatField(default=0.1)  # 1/10
+    logo_bonus = models.FloatField(default=15)
+    subtitle_bad = models.FloatField(default=-10)
+    subtitle_good = models.FloatField(default=5)
+    images_bonus = models.FloatField(default=3)
+    desc_short = models.FloatField(default=25)
+    desc_med = models.FloatField(default=10)
+    desc_long = models.FloatField(default=10)
+    fair_bonus = models.FloatField(default=10)
+    application_bonus = models.FloatField(default=25)
+    today_event_base = models.FloatField(default=10)
+    today_event_good = models.FloatField(default=10)
+    week_event_base = models.FloatField(default=5)
+    week_event_good = models.FloatField(default=5)
+    email_bonus = models.FloatField(default=10)
+    social_bonus = models.FloatField(default=10)
+    howto_penalty = models.FloatField(default=-30)
+    outdated_penalty = models.FloatField(default=-10)
+    testimonial_one = models.FloatField(default=10)
+    testimonial_three = models.FloatField(default=5)
+    random_scale = models.FloatField(default=25)
+
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="modified_ranking_weights",
+    )
+
+    def save(self, *args, **kwargs):
+        self.pk = self.SINGLETON_PK
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("Cannot delete singleton instance")
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+        return obj

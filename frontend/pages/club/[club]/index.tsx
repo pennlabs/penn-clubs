@@ -103,13 +103,33 @@ const ClubPage = ({
   club: initialClub,
   questions,
   userInfo,
-}: ClubPageProps): ReactElement => {
+}: ClubPageProps): ReactElement<any> => {
   const [club, setClub] = useState<Club>(initialClub)
   const [questionSortBy, setQuestionSortBy] = useState<string>('id')
   const scrollToRef = (ref) =>
     window.scrollTo({ top: ref.current.offsetTop - 100, behavior: 'smooth' })
   const questionsScrollRef = useRef(null)
   const scrollToQuestions = () => scrollToRef(questionsScrollRef)
+
+  const handleOwnershipRequest = async () => {
+    const csrftoken = document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+    const res = await fetch('/api/requests/ownership/?format=json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken || '',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ club: club.code }),
+    })
+
+    if (res.ok) {
+      alert('Ownership request submitted!')
+    } else {
+      const err = await res.json()
+      alert(`Error: ${err.detail || 'Something went wrong'}`)
+    }
+  }
 
   const updateRequests = async (code: string): Promise<void> => {
     const newClub = { ...club }
@@ -184,13 +204,17 @@ const ClubPage = ({
       {userInfo != null && (
         <ClubApprovalDialog club={club} userInfo={userInfo} />
       )}
-      {club.badges.length > 0 &&
-        club.badges
-          .filter((badge) => badge.message && badge.message.length > 0)
-          .map((badge) => (
-            <div className="notification is-info is-light" key={badge.id}>
+      {club.affiliations &&
+        club.affiliations.length > 0 &&
+        club.affiliations
+          .filter(
+            (affiliation) =>
+              affiliation.message && affiliation.message.length > 0,
+          )
+          .map((affiliation) => (
+            <div className="notification is-info is-light" key={affiliation.id}>
               <Icon name="alert-circle" style={{ marginTop: '-3px' }} />{' '}
-              {badge.message}
+              {affiliation.message}
             </div>
           ))}
       <div className="columns">
@@ -203,6 +227,19 @@ const ClubPage = ({
               }}
             >
               <RenewalRequest club={club} />
+              {!club.is_member && userInfo && (
+                <div className="mt-4">
+                  <p style={{ color: 'white' }}>
+                    If you want to take over this club, click the button below:
+                  </p>
+                  <button
+                    className="button is-warning is-light mt-2"
+                    onClick={handleOwnershipRequest}
+                  >
+                    Request Ownership
+                  </button>
+                </div>
+              )}
             </InactiveCard>
           )}
 
@@ -273,7 +310,7 @@ const ClubPage = ({
               <MemberList club={club} />
             </>
           )}
-          {events.length > 0 && <EventCarousel data={events} />}
+          {events.length > 0 && <EventCarousel events={events} />}
         </div>
         <div className="column is-one-third">
           <DesktopActions

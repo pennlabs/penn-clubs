@@ -25,7 +25,15 @@ import {
 } from 'react'
 import { PaginatedClubPage, renderListPage } from 'renderPage'
 import styled from 'styled-components'
-import { Badge, Maybe, School, StudentType, Tag, UserInfo, Year } from 'types'
+import {
+  Affiliation,
+  Maybe,
+  School,
+  StudentType,
+  Tag,
+  UserInfo,
+  Year,
+} from 'types'
 import { doApiRequest, doBulkLookup, isClubFieldShown, useSetting } from 'utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -84,14 +92,14 @@ type SplashProps = {
   userInfo: UserInfo
   clubs: PaginatedClubPage
   tags: Tag[]
-  badges: Badge[]
+  affiliations: Affiliation[]
   schools: School[]
   years: Year[]
   studentTypes: StudentType[]
   clubCount: number
 }
 
-export const ListLoadIndicator = (): ReactElement => {
+export const ListLoadIndicator = (): ReactElement<any> => {
   return (
     <progress className="progress is-small" max={100}>
       Loading...
@@ -103,7 +111,7 @@ const SearchTags = ({
   searchInput,
   setSearchInput,
   optionMapping,
-}): ReactElement => {
+}): ReactElement<any> => {
   const tags = Object.keys(optionMapping)
     .map((param) => {
       return (searchInput[param] ?? '')
@@ -190,7 +198,7 @@ const SearchTags = ({
 /**
  * The top bar search input, used for Hub@Penn.
  */
-const TopSearchBar = ({ onChange }): ReactElement => {
+const TopSearchBar = ({ onChange }): ReactElement<any> => {
   const searchTimeout = useRef<number | null>(null)
   const [searchValue, setSearchValue] = useState<string>('')
 
@@ -232,7 +240,7 @@ const TopSearchBar = ({ onChange }): ReactElement => {
 /**
  * A scroll to top button at the bottom right corner of the page.
  */
-const ScrollTopButton = (): ReactElement | null => {
+const ScrollTopButton = (): ReactElement<any> | null => {
   const [isTop, setIsTop] = useState<boolean>(true)
 
   useEffect(() => {
@@ -276,7 +284,7 @@ const searchIsEmpty = (input: SearchInput): boolean => {
   return (!search || !search.length) && !Object.entries(rest).length
 }
 
-const Splash = (props: SplashProps): ReactElement => {
+const Splash = (props: SplashProps): ReactElement<any> => {
   const fairIsOpen = useSetting('FAIR_OPEN')
   const fairIsVirtual = useSetting('FAIR_VIRTUAL')
   const preFair = useSetting('PRE_FAIR')
@@ -367,15 +375,15 @@ const Splash = (props: SplashProps): ReactElement => {
     [props.tags],
   )
 
-  const badgeOptions = useMemo<FuseTag[]>(
+  const affiliationOptions = useMemo<FuseTag[]>(
     () =>
-      props.badges.map(({ id, label, color, description }) => ({
+      props.affiliations.map(({ id, label, color, description }) => ({
         value: id,
         label,
         color,
         description,
       })),
-    [props.badges],
+    [props.affiliations],
   )
 
   const applicationRequiredOptions = [
@@ -448,11 +456,11 @@ const Splash = (props: SplashProps): ReactElement => {
             label="Tags"
             options={tagOptions}
           />
-          {isClubFieldShown('badges') && (
+          {isClubFieldShown('affiliations') && (
             <SearchBarTagItem
               param="badges__in"
-              label="Filters"
-              options={badgeOptions}
+              label="Affiliations"
+              options={affiliationOptions}
             />
           )}
           <SearchBarOptionItem param="ordering" label="Ordering" />
@@ -585,7 +593,7 @@ const Splash = (props: SplashProps): ReactElement => {
               setSearchInput={setSearchInput}
               optionMapping={{
                 tags__in: tagOptions,
-                badges__in: badgeOptions,
+                badges__in: affiliationOptions,
                 application_required__in: applicationRequiredOptions,
                 size__in: sizeOptions,
                 target_schools__in: schoolOptions,

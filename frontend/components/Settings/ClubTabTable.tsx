@@ -32,7 +32,7 @@ type ClubTabTableProps = {
   leaveClub: (club: Club) => void
 }
 
-export const ColumnTooltip = ({ tip }: { tip: string }): ReactElement => (
+export const ColumnTooltip = ({ tip }: { tip: string }): ReactElement<any> => (
   <>
     <Icon
       data-tip={tip}
@@ -52,7 +52,7 @@ const ClubTabTable = ({
   togglePublic,
   toggleActive,
   leaveClub,
-}: ClubTabTableProps): ReactElement => (
+}: ClubTabTableProps): ReactElement<any> => (
   <Table className={`table is-fullwidth ${className}`}>
     <thead>
       <tr>

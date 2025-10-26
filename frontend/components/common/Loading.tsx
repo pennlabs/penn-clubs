@@ -43,7 +43,7 @@ type LoadingProps = { title?: string; delay?: number }
 export const Loading = ({
   title = 'Loading...',
   delay = 200,
-}: LoadingProps): ReactElement => {
+}: LoadingProps): ReactElement<any> => {
   const [hidden, toggleHidden] = useState(delay > 0)
 
   useEffect(() => {

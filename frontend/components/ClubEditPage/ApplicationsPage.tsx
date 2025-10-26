@@ -135,7 +135,7 @@ const SubmissionModal = (props: {
   application: Application | null
   submission: ApplicationSubmission | null
   onLinkClicked?: () => void
-}): ReactElement => {
+}): ReactElement<any> => {
   const { submission } = props
   const initialValues = {}
   const wordCounts = {}
@@ -211,11 +211,11 @@ const NotificationModal = (props: {
   club: string
   application: Application | null
   updateSubmissions: (arr: Array<ApplicationSubmission>) => void
-}): ReactElement => {
+}): ReactElement<any> => {
   const { submissions, club, application, updateSubmissions } = props
   const initialValues = { dry_run: true }
   const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement | null
+    string | ReactElement<any> | null
   >(null)
   const options = [
     { value: 'acceptance', label: 'Acceptance' },
@@ -261,7 +261,7 @@ const NotificationModal = (props: {
         {(props) => (
           <Form>
             <StyledHeader style={{ marginBottom: '2px' }}>
-              Send application update
+              Send application updates
             </StyledHeader>
             <Text>
               Send acceptance or rejection emails. This may take a while...
@@ -288,13 +288,14 @@ const NotificationModal = (props: {
               onClick={(e) => {
                 if (e.target.checked) {
                   toast.warning(
-                    'Resending emails will send emails to all applicants, even if they have already been notified.',
+                    'Resending emails will send emails to applicants who have already received update emails. Please proceed with caution.',
                   )
                 }
               }}
               helpText={
-                <strong>
-                  If selected, will resend notifications to all applicants
+                <strong className="has-text-danger">
+                  If selected, will resend notifications to all applicants,
+                  including those who have already been notified.
                 </strong>
               }
             />
@@ -319,10 +320,10 @@ const ReasonModal = (props: {
   club: string
   application: Application | null
   updateSubmissions: (s: { name: string }) => void
-}): ReactElement => {
+}): ReactElement<any> => {
   const { submissions, club, application, updateSubmissions } = props
   const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement | null
+    string | ReactElement<any> | null
   >(null)
   const initialValues = {}
   return (
@@ -391,7 +392,7 @@ export default function ApplicationsPage({
   club,
 }: {
   club: Club
-}): ReactElement {
+}): ReactElement<any> {
   const [applications, setApplications] = useState<Array<Application>>([])
   const [currentApplication, setCurrentApplication] =
     useState<Application | null>(null)
@@ -441,9 +442,10 @@ export default function ApplicationsPage({
               return {
                 ...response,
                 committee: response.committee?.name ?? 'General Member',
-                status: APPLICATION_STATUS_TYPES.find(
-                  (status) => status.value === response.status,
-                )?.label,
+                status:
+                  APPLICATION_STATUS_TYPES.find(
+                    (status) => status.value === response.status,
+                  )?.label + (response.notified ? ' (notified)' : ''),
                 created_at: moment(response.created_at)
                   .tz('America/New_York')
                   .format('LLL'),
@@ -463,7 +465,7 @@ export default function ApplicationsPage({
   )
 
   const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement | null
+    string | ReactElement<any> | null
   >(null)
 
   const [status, setStatus] = useState<ApplicationStatusType>(
@@ -620,6 +622,11 @@ export default function ApplicationsPage({
                   <button
                     className="button is-link mr-3"
                     onClick={(event) => {
+                      if (selectedSubmissions.length > 0) {
+                        toast.warning(
+                          'This will send emails to all applicants, including those not selected!',
+                        )
+                      }
                       setShowNotifModal(true)
                     }}
                   >

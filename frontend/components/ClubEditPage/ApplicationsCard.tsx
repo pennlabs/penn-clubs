@@ -55,7 +55,7 @@ const ApplicationModal = (props: {
   showDetailsButton?: boolean
   onLinkClicked?: () => void
   committeeChoices: Array<{ label: string; value: string }>
-}): ReactElement => {
+}): ReactElement<any> => {
   const {
     clubCode,
     applicationName,
@@ -195,7 +195,7 @@ const ApplicationModal = (props: {
   )
 }
 
-export default function ApplicationsCard({ club }: Props): ReactElement {
+export default function ApplicationsCard({ club }: Props): ReactElement<any> {
   const [show, setShow] = useState(false)
   const showModal = () => setShow(true)
   const hideModal = () => setShow(false)

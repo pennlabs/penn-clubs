@@ -25,10 +25,10 @@ type FairEvent = {
   name: string
   approved: boolean
   meetings: string[]
-  badges: string[]
+  affiliations: string[]
 }
 
-const BoolIndicator = ({ value }: { value: boolean }): ReactElement => {
+const BoolIndicator = ({ value }: { value: boolean }): ReactElement<any> => {
   return (
     <span className={value ? 'has-text-success' : 'has-text-danger'}>
       <Icon name={value ? 'check' : 'x'} />
@@ -39,13 +39,13 @@ const BoolIndicator = ({ value }: { value: boolean }): ReactElement => {
 const FairEventsTab = ({
   fairs: initialFairs,
   fair: initialSelection,
-}: Props): ReactElement => {
+}: Props): ReactElement<any> => {
   const [fairs, setFairs] = useState<ClubFair[] | { detail: string } | null>(
     initialFairs ?? null,
   )
   const [selectedFair, setSelectedFair] = useState<number | null>(
     fairs != null && !('detail' in fairs) && fairs.length > 0
-      ? initialSelection ?? fairs[0].id
+      ? (initialSelection ?? fairs[0].id)
       : null,
   )
   const [fairEvents, setFairEvents] = useState<
@@ -170,7 +170,8 @@ const FairEventsTab = ({
                       </Link>
                     </td>
                     <td>
-                      {event.badges.join(', ') || (
+                      {(event.affiliations &&
+                        event.affiliations.join(', ')) || (
                         <span className="has-text-danger">None</span>
                       )}
                     </td>

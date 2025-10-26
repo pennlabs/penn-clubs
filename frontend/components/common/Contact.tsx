@@ -1,23 +1,31 @@
 import { ReactElement } from 'react'
 
-import { CONTACT_EMAIL, SITE_ID } from '../../utils/branding'
+import {
+  CONTACT_EMAIL,
+  OSA_EMAIL,
+  SAC_EMAIL,
+  SITE_ID,
+  SUPPORT_EMAIL,
+} from '../../utils/branding'
 
 type ContactProps = {
   email?: string
-  point?: 'pennclubs' | 'osa' | 'sac'
+  point?: 'pennclubs' | 'osa' | 'sac' | 'support'
 }
 
 export function Contact({
   email,
   point = 'pennclubs',
-}: ContactProps): ReactElement {
+}: ContactProps): ReactElement<any> {
   let finalEmail = email || CONTACT_EMAIL
 
   if (SITE_ID === 'clubs') {
     if (point === 'osa') {
-      finalEmail = 'vpul-pennosa@pobox.upenn.edu'
+      finalEmail = OSA_EMAIL
     } else if (point === 'sac') {
-      finalEmail = 'sac@sacfunded.net'
+      finalEmail = SAC_EMAIL
+    } else if (point === 'support') {
+      finalEmail = SUPPORT_EMAIL
     }
   }
 

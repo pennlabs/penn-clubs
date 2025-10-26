@@ -5,20 +5,26 @@ name:
 {% extends 'emails/base.html' %}
 
 {% block content %}
-    <h2>Welcome to Penn Clubs!</h2>
+    <h2>Registration Request in Process</h2>
     <p style="font-size: 1.2em">
     	Dear <b>{{ name }}</b> officers,
     </p>
     <p style="font-size: 1.2em">
-        Thank you for registering your club on Penn Clubs! The {{ name }} page is currently under review by the Office of Student Affairs. Once approved, your resource will be listed on the 
-        front page of Penn Clubs and will be searchable for students on the site. 
+        Thank you for submitting your registration request. The {{ name }} page is now in the queue for review by the Office of Student Affairs. Once reviewed, your group will receive an update on its status. Groups approved for registration will appear on the PennClubs homepage and be searchable for students exploring involvement opportunities.
     </p>
 
     <p style="font-size: 1.2em">
-        You will receive an email within the next few days regarding the status of the review.
+        This year’s registration process includes several new components to support Penn’s updated student group funding model. These enhancements will help ensure more accurate and comprehensive group profiles, but they may also extend review times during this high-volume period. We appreciate your patience as we work through requests as efficiently as possible.
     </p>
     
     <p style="font-size: 1.2em">
-        If you have any questions, feel free to respond to this email.
+        If you have any questions in the meantime, please contact our office at vpul-pennosa@pobox.upenn.edu.
+    </p>
+
+    <p style="font-size: 1.2em">
+        Best regards,
+    </p>
+    <p style="font-size: 1.2em">
+        Office of Student Affairs
     </p>
 {% endblock %}

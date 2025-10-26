@@ -11,25 +11,33 @@ from options.models import Option
 from clubs.models import (
     Advisor,
     ApplicationCommittee,
+    ApplicationCycle,
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationSubmission,
     Badge,
     Cart,
+    Category,
+    Classification,
     Club,
     ClubApplication,
     ClubFair,
     ClubFairRegistration,
+    Designation,
+    Eligibility,
     Event,
+    EventShowing,
     Major,
     Membership,
     Profile,
     QuestionAnswer,
     School,
+    Status,
     StudentType,
     Tag,
     Testimonial,
     Ticket,
+    Type,
     Year,
 )
 
@@ -133,8 +141,8 @@ sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</i>""",
     {
         "code": "harvard-rejects",
         "name": "Harvard Rejects Club",
-        "description": """We’re Penn’s largest club with over 20,000 active members!
-We’re always looking for enthusiastic students to join our organization,
+        "description": """We're Penn's largest club with over 20,000 active members!
+We're always looking for enthusiastic students to join our organization,
 so please feel free to reach out to us at upenn.edu/harvard to join!""",
         "image": "https://i.imgur.com/IxgjBmA.png",
         "active": True,
@@ -326,6 +334,136 @@ class Command(BaseCommand):
                 "International Student",
             ]
         ]
+
+        # create designations first
+        amp, _ = Designation.objects.get_or_create(name="AMP")
+        bridge, _ = Designation.objects.get_or_create(name="BRIDGE")
+        circle, _ = Designation.objects.get_or_create(name="CIRCLE")
+        dash, _ = Designation.objects.get_or_create(name="DASH")
+
+        # create categories with their corresponding designations
+        category_designation_mapping = {
+            "Arts & Performance": amp,
+            "Instructional & Competitive (Non Sports-Related)": amp,
+            "Academic & Pre-Professional": bridge,
+            "Civic Engagement & Community Service": bridge,
+            "Media & Publication": bridge,
+            "Peer Education & Support": bridge,
+            "Political & Advocacy": bridge,
+            "Religious & Spiritual": bridge,
+            "Cultural & International": circle,
+            "Special Interest": circle,
+            "Sports & Recreational": dash,
+            # Categories without specific designations
+            "Greek Life": None,
+            "Student Governance": None,
+        }
+
+        for category_name, designation in category_designation_mapping.items():
+            Category.objects.get_or_create(
+                name=category_name, defaults={"designation": designation}
+            )
+
+        # create eligibility options
+        [
+            Eligibility.objects.get_or_create(name=eligibility)
+            for eligibility in [
+                "ALTERNATIVE",
+                "GAPSA",
+                "SAC",
+                "SCHOOL-SPECIFIC",
+                "UA",
+                "NOT ELIGIBLE",
+            ]
+        ]
+
+        # create classifications
+        [
+            Classification.objects.get_or_create(symbol=symbol, defaults={"name": name})
+            for symbol, name in [
+                ("G", "GRADUATE"),
+                ("Go", "GRADUATE OPEN"),
+                ("UG", "UNDERGRADUATE"),
+                ("UGo", "UNDERGRADUATE OPEN"),
+            ]
+        ]
+
+        # create types
+        [
+            Type.objects.get_or_create(symbol=symbol, defaults={"name": name})
+            for symbol, name in [
+                ("DSP", "Department-Sponsored Program"),
+                ("SDP", "Student-Led Department Program"),
+                ("SRO", "Student-Run Organization"),
+                ("UAO", "University-Affiliated Organization"),
+                ("UAS", "University-Supported Student Service"),
+            ]
+        ]
+
+        # create statuses
+        [
+            Status.objects.get_or_create(name=status)
+            for status in [
+                "Preliminary",
+                "Provisional",
+                "Full",
+                "Inactive",
+                "Suspended",
+                "Defunct",
+            ]
+        ]
+
+        # create group activity assessment options
+        from clubs.models import GroupActivityOption
+
+        group_activity_options = [
+            {
+                "text": "Physical activities (e.g., sports, fitness events)",
+                "order": 1,
+            },
+            {
+                "text": (
+                    "Medical/health-related services (e.g., blood drives, "
+                    "doula support)"
+                ),
+                "order": 2,
+            },
+            {
+                "text": "Working with minors or vulnerable populations",
+                "order": 3,
+            },
+            {
+                "text": "Off-campus travel (local or distant)",
+                "order": 4,
+            },
+            {
+                "text": "Handling of food or beverages",
+                "order": 5,
+            },
+            {
+                "text": "Use of specialized equipment or technology",
+                "order": 6,
+            },
+            {
+                "text": (
+                    "Host large-scale events or activities with 500 or more attendees"
+                ),
+                "order": 7,
+            },
+            {
+                "text": "None of the above",
+                "order": 8,
+            },
+        ]
+
+        for option_data in group_activity_options:
+            GroupActivityOption.objects.get_or_create(
+                text=option_data["text"],
+                defaults={
+                    "order": option_data["order"],
+                    "is_active": True,
+                },
+            )
 
         image_cache = {}
 
@@ -519,13 +657,20 @@ class Command(BaseCommand):
                 "creator": ben,
                 "name": f"Test Event now for {live_event_club.name}",
                 "description": "This is the description for this event.",
+            },
+        )
+
+        # Create a showing for the event
+        EventShowing.objects.get_or_create(
+            event=event,
+            defaults={
                 "start_time": now,
                 "end_time": now + datetime.timedelta(hours=1),
             },
         )
 
         # create a global event for testing
-        Event.objects.get_or_create(
+        global_event, _ = Event.objects.get_or_create(
             club=None,
             code="test-global-event",
             defaults={
@@ -533,6 +678,13 @@ class Command(BaseCommand):
                 "name": "Test Global Event",
                 "description": "This is a global event that "
                 "does not belong to any club.",
+            },
+        )
+
+        # Create a showing for the global event
+        EventShowing.objects.get_or_create(
+            event=global_event,
+            defaults={
                 "start_time": now + datetime.timedelta(days=1),
                 "end_time": now
                 + datetime.timedelta(days=1)
@@ -587,6 +739,29 @@ class Command(BaseCommand):
 
         fair.create_events()
 
+        # Create a special event with multiple showings
+        multi_showing_club = Club.objects.get(code="pppjo")
+        multi_showing_event, _ = Event.objects.get_or_create(
+            club=multi_showing_club,
+            code="multi-showing-event",
+            defaults={
+                "creator": ben,
+                "name": "Multi-Showing Event",
+                "description": "This event has multiple showings.",
+            },
+        )
+
+        # Create multiple showings for the event on consecutive days
+        for i in range(3):
+            EventShowing.objects.get_or_create(
+                event=multi_showing_event,
+                start_time=now + datetime.timedelta(days=i),
+                defaults={
+                    "end_time": now + datetime.timedelta(days=i, hours=2),
+                    "location": f"Location {i + 1}",
+                },
+            )
+
         if created:
             contents = get_image(event_image_url)
             event.image.save("image.png", ContentFile(contents))
@@ -617,6 +792,25 @@ class Command(BaseCommand):
 
         # create club applications that are wharton common app
         eastern = pytz.timezone("America/New_York")
+
+        # Create application cycles
+        fall_cycle, _ = ApplicationCycle.objects.get_or_create(
+            name="Fall 2024",
+            defaults={
+                "start_date": datetime.datetime(2024, 9, 1, 0, 0, tzinfo=eastern),
+                "end_date": datetime.datetime(2024, 11, 30, 23, 59, tzinfo=eastern),
+                "release_date": datetime.datetime(2024, 12, 15, 0, 0, tzinfo=eastern),
+            },
+        )
+        spring_cycle, _ = ApplicationCycle.objects.get_or_create(
+            name="Spring 2025",
+            defaults={
+                "start_date": datetime.datetime(2025, 1, 15, 0, 0, tzinfo=eastern),
+                "end_date": datetime.datetime(2025, 3, 31, 23, 59, tzinfo=eastern),
+                "release_date": datetime.datetime(2025, 4, 15, 0, 0, tzinfo=eastern),
+            },
+        )
+
         application_start_time = datetime.datetime(2021, 9, 4, 0, 0, tzinfo=eastern)
         application_end_time = datetime.datetime(2021, 11, 20, 2, 0, tzinfo=eastern)
         result_release_time = datetime.datetime(2021, 12, 4, 0, 0, tzinfo=eastern)
@@ -625,7 +819,9 @@ class Command(BaseCommand):
         )
         prompt_two = "Tell us about a time you faced a challenge and how you solved it"
         prompt_three = "Tell us about a time you collaborated well in a team"
-        for code in ["pppjo", "harvard-rejects", "penn-memes"]:
+
+        # Create applications for pppjo and harvard-rejects
+        for code in ["pppjo", "harvard-rejects"]:
             club = Club.objects.get(code=code)
             name = f"{club.name} Application"
             application = ClubApplication.objects.create(
@@ -635,6 +831,7 @@ class Command(BaseCommand):
                 application_end_time=application_end_time,
                 result_release_time=result_release_time,
                 is_wharton_council=True,
+                application_cycle=fall_cycle,
             )
             link = (
                 f"http://localhost:3000/club/{club.code}/application/{application.pk}"
@@ -663,11 +860,69 @@ class Command(BaseCommand):
                 application=application,
             )
 
-        application = ClubApplication.objects.last()
-        ApplicationCommittee.objects.create(name="one", application=application)
-        ApplicationCommittee.objects.create(name="two", application=application)
-        ApplicationCommittee.objects.create(name="three", application=application)
-        ApplicationCommittee.objects.create(name="four", application=application)
+        # Create two applications for penn-memes with different cycles
+        club = Club.objects.get(code="penn-memes")
+        penn_memes_fall_app = None
+        penn_memes_spring_app = None
+        for cycle, cycle_name in [(fall_cycle, "Fall"), (spring_cycle, "Spring")]:
+            name = f"{club.name} Application ({cycle_name})"
+            application = ClubApplication.objects.create(
+                name=name,
+                club=club,
+                application_start_time=application_start_time,
+                application_end_time=application_end_time,
+                result_release_time=result_release_time,
+                is_wharton_council=True,
+                application_cycle=cycle,
+            )
+            link = (
+                f"http://localhost:3000/club/{club.code}/application/{application.pk}"
+            )
+            application.external_url = link
+            application.save()
+            prompt = "Choose one of the following prompts for your personal statement"
+            prompt_question = ApplicationQuestion.objects.create(
+                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                application=application,
+                prompt=prompt,
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_one, question=prompt_question
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_two, question=prompt_question
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_three, question=prompt_question
+            )
+            ApplicationQuestion.objects.create(
+                question_type=ApplicationQuestion.FREE_RESPONSE,
+                prompt="Answer the prompt you selected",
+                word_limit=150,
+                application=application,
+            )
+
+            # Store references to the applications
+            if cycle == fall_cycle:
+                penn_memes_fall_app = application
+            else:
+                penn_memes_spring_app = application
+
+        # Add committees to Spring application
+        ApplicationCommittee.objects.create(
+            name="Redditors", application=penn_memes_spring_app
+        )
+        ApplicationCommittee.objects.create(
+            name="Sidechat", application=penn_memes_spring_app
+        )
+        ApplicationCommittee.objects.create(
+            name="M&T", application=penn_memes_spring_app
+        )
+        ApplicationCommittee.objects.create(
+            name="Twitter", application=penn_memes_spring_app
+        )
+
+        # Create submissions for Spring application with various statuses
         status_counter = 0
         for user in get_user_model().objects.all():
             status = ApplicationSubmission.STATUS_TYPES[
@@ -676,17 +931,48 @@ class Command(BaseCommand):
             ApplicationSubmission.objects.create(
                 status=status,
                 user=user,
-                application=application,
+                application=penn_memes_spring_app,
                 committee=None,
             )
             status_counter += 1
-            for committee in application.committees.all():
+            for committee in penn_memes_spring_app.committees.all():
                 ApplicationSubmission.objects.create(
                     status=status,
                     user=user,
-                    application=application,
+                    application=penn_memes_spring_app,
                     committee=committee,
                 )
+
+        # Create application submissions for penn-memes Fall application (all rejected)
+        if penn_memes_fall_app:
+            ApplicationCommittee.objects.create(
+                name="Redditors", application=penn_memes_fall_app
+            )
+            ApplicationCommittee.objects.create(
+                name="Sidechat", application=penn_memes_fall_app
+            )
+            ApplicationCommittee.objects.create(
+                name="M&T", application=penn_memes_fall_app
+            )
+            ApplicationCommittee.objects.create(
+                name="Twitter", application=penn_memes_fall_app
+            )
+            # Create rejected submissions for all users
+            for user in get_user_model().objects.all():
+                # REJECTED_AFTER_WRITTEN = 2
+                ApplicationSubmission.objects.create(
+                    status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+                    user=user,
+                    application=penn_memes_fall_app,
+                    committee=None,
+                )
+                for committee in penn_memes_fall_app.committees.all():
+                    ApplicationSubmission.objects.create(
+                        status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+                        user=user,
+                        application=penn_memes_fall_app,
+                        committee=committee,
+                    )
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)
@@ -728,6 +1014,13 @@ class Command(BaseCommand):
                         "creator": ben,
                         "name": f"Test Event #{j} for {club.name}",
                         "description": "This is the description for this event.",
+                    },
+                )
+
+                # Create a showing for the event
+                EventShowing.objects.get_or_create(
+                    event=event,
+                    defaults={
                         "start_time": start_time,
                         "end_time": end_time,
                     },
@@ -762,34 +1055,49 @@ class Command(BaseCommand):
             count += 1
 
         # Add tickets
-
         hr = Club.objects.get(code="harvard-rejects")
 
         hr_events = Event.objects.filter(club=hr)
 
-        for idx, e in enumerate(hr_events[:3]):
+        for idx, event in enumerate(hr_events[:3]):
+            # Get the first showing for this event
+            showing = EventShowing.objects.filter(event=event).first()
+            if not showing:
+                # Create a showing if none exists
+                showing = EventShowing.objects.create(
+                    event=event,
+                    start_time=now + datetime.timedelta(days=idx),
+                    end_time=now + datetime.timedelta(days=idx, hours=2),
+                )
+
             # Switch up person every so often
             person = ben if idx < 2 else user_objs[1]
 
             # Create some unowned tickets
             Ticket.objects.bulk_create(
-                [Ticket(event=e, type="Regular", price=10.10) for _ in range(10)]
+                [
+                    Ticket(showing=showing, type="Regular", price=10.10)
+                    for _ in range(10)
+                ]
             )
 
             Ticket.objects.bulk_create(
-                [Ticket(event=e, type="Premium", price=100.10) for _ in range(5)]
+                [
+                    Ticket(showing=showing, type="Premium", price=100.10)
+                    for _ in range(5)
+                ]
             )
 
             # Create some owned tickets and tickets in cart
             for i in range((idx + 1) * 10):
                 if i % 5:
                     Ticket.objects.create(
-                        event=e, owner=person, type="Regular", price=i
+                        showing=showing, owner=person, type="Regular", price=i
                     )
                 else:
                     c, _ = Cart.objects.get_or_create(owner=person)
                     c.tickets.add(
-                        Ticket.objects.create(event=e, type="Premium", price=i)
+                        Ticket.objects.create(showing=showing, type="Premium", price=i)
                     )
 
         self.stdout.write("Finished populating database!")

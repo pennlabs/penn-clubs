@@ -1,7 +1,11 @@
 import { ReactElement } from 'react'
 
 import { Club, ClubRecruitingCycle } from '../../types'
-import { getSizeDisplay, isClubFieldShown } from '../../utils'
+import {
+  getSizeDisplay,
+  hasAdminPermissions,
+  isClubFieldShown,
+} from '../../utils'
 import { Icon, StrongText, Text } from '../common'
 
 const iconStyles = {
@@ -34,8 +38,51 @@ type InfoBoxProps = {
   club: Club
 }
 
-const InfoBox = (props: InfoBoxProps): ReactElement | null => {
+const InfoBox = (props: InfoBoxProps): ReactElement<any> | null => {
+  const isAdmin = hasAdminPermissions()
+
   const data = [
+    // Admin-only fields
+    ...(isAdmin
+      ? [
+          // ...(props.club.status?.name
+          //   ? [
+          //       {
+          //         field: 'status',
+          //         icon: 'activity',
+          //         text: `Status: ${props.club.status.name}`,
+          //       },
+          //     ]
+          //   : []),
+          ...(props.club.type?.name
+            ? [
+                {
+                  field: 'type',
+                  icon: 'tag',
+                  text: `Type: ${props.club.type.name}`,
+                },
+              ]
+            : []),
+          ...(props.club.designation?.name
+            ? [
+                {
+                  field: 'designation',
+                  icon: 'star',
+                  text: `Designation: ${props.club.designation.name}`,
+                },
+              ]
+            : []),
+          ...(props.club.eligibility?.length
+            ? [
+                {
+                  field: 'eligibility',
+                  icon: 'clipboard',
+                  text: `Eligibility: ${props.club.eligibility.map((e) => e?.name).join(', ')}`,
+                },
+              ]
+            : []),
+        ]
+      : []),
     {
       field: 'size',
       icon: 'user',
@@ -47,9 +94,7 @@ const InfoBox = (props: InfoBoxProps): ReactElement | null => {
     {
       field: 'accepting_members',
       icon: props.club.accepting_members ? 'check-circle' : 'x-circle',
-      text: props.club.accepting_members
-        ? 'Currently Accepting Members'
-        : 'Not Currently Accepting Members',
+      text: `Currently Accepting: ${props.club.accepting_members ? 'Yes' : 'No'}`,
     },
     {
       field: 'application_required',
@@ -60,13 +105,34 @@ const InfoBox = (props: InfoBoxProps): ReactElement | null => {
     },
     {
       field: 'recruiting_cycle',
-      icon: 'clock',
+      icon: 'calendar',
       text: recruitingTextMap[props.club.recruiting_cycle],
     },
+    ...(props.club.classification?.name
+      ? [
+          {
+            field: 'classification',
+            icon: 'key',
+            text: `Classification: ${props.club.classification.name}`,
+          },
+        ]
+      : []),
+    ...(props.club.affiliations?.length
+      ? [
+          {
+            field: 'affiliations',
+            icon: 'award',
+            text: `Affiliations: ${props.club.affiliations.map((affiliation) => affiliation.label).join(', ')}`,
+          },
+        ]
+      : []),
   ]
 
   const infoFields = data
-    .filter(({ field }) => isClubFieldShown(field))
+    .filter(
+      ({ field, text }) =>
+        isClubFieldShown(field) && text !== null && text !== undefined,
+    )
     .map(({ icon, text }) => (
       <Text style={infoStyles} key={text}>
         <Icon name={icon} style={iconStyles} alt={text} />
@@ -81,7 +147,7 @@ const InfoBox = (props: InfoBoxProps): ReactElement | null => {
   return (
     <>
       {' '}
-      <StrongText>Basic Info</StrongText>
+      <StrongText>Organizational Profile</StrongText>
       {infoFields}
     </>
   )

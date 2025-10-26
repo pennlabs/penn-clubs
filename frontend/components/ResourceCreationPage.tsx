@@ -8,7 +8,20 @@ import {
   RED,
   SNOW,
 } from '../constants'
-import { Club, Major, School, StudentType, Tag, Year } from '../types'
+import {
+  Category,
+  Classification,
+  Club,
+  Eligibility,
+  GroupActivityOption,
+  Major,
+  School,
+  Status,
+  StudentType,
+  Tag,
+  Type,
+  Year,
+} from '../types'
 import { doApiRequest } from '../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -47,11 +60,17 @@ type ResourceCreationPageProps = {
   majors: Major[]
   tags: Tag[]
   studentTypes: StudentType[]
+  categories: Category[]
+  classifications: Classification[]
+  eligibilities: Eligibility[]
+  types: Type[]
+  statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
 }
 
 type TabItem = {
   name: string
-  content: () => ReactElement
+  content: () => ReactElement<any>
   disabled?: boolean
   onEnterTab?: () => Promise<void>
 }
@@ -64,7 +83,13 @@ const ResourceCreationPage = ({
   majors,
   tags,
   studentTypes,
-}: ResourceCreationPageProps): ReactElement => {
+  categories,
+  classifications,
+  eligibilities,
+  types,
+  statuses,
+  groupActivityOptions,
+}: ResourceCreationPageProps): ReactElement<any> => {
   const isResuming = initialClub != null
   const metadata = (
     <Metadata
@@ -78,7 +103,9 @@ const ResourceCreationPage = ({
     (initialClub?.advisor_set.length ?? 0) > 0,
   )
   const [club, setClub] = useState<Club | null>(initialClub ?? null)
-  const [message, setMessage] = useState<ReactElement | string | null>(null)
+  const [message, setMessage] = useState<ReactElement<any> | string | null>(
+    null,
+  )
 
   if (authenticated === false) {
     return <AuthPrompt>{metadata}</AuthPrompt>
@@ -105,7 +132,7 @@ const ResourceCreationPage = ({
   const steps: TabItem[] = [
     {
       name: 'Introduction',
-      content: (): ReactElement => (
+      content: (): ReactElement<any> => (
         <>
           <Title>Introduction</Title>
           {isResuming &&
@@ -170,22 +197,28 @@ const ResourceCreationPage = ({
       ),
     },
     {
-      name: 'Basic',
-      content: (): ReactElement => (
+      name: 'Organizational Profile',
+      content: (): ReactElement<any> => (
         <>
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Information</Title>
           <Text>
-            Use the form below to fill out basic information about your{' '}
-            {OBJECT_NAME_SINGULAR}.
+            Use the form below to fill out organizational profile information
+            about your {OBJECT_NAME_SINGULAR}.
           </Text>
           <ClubEditCard
             isEdit={club !== null}
+            eligibilities={eligibilities}
+            categories={categories}
+            classifications={classifications}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             onSubmit={({ message, club }): Promise<void> => {
               setClub(club ?? null)
               if (club) {
@@ -255,7 +288,7 @@ const ResourceCreationPage = ({
     },
     {
       name: 'Details',
-      content: (): ReactElement => (
+      content: (): ReactElement<any> => (
         <>
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Details</Title>
           <Text>
@@ -294,7 +327,7 @@ const ResourceCreationPage = ({
     },
     {
       name: 'Complete',
-      content: (): ReactElement => (
+      content: (): ReactElement<any> => (
         <>
           <Title>{OBJECT_NAME_TITLE_SINGULAR} Created</Title>
           <Text>

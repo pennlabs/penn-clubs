@@ -31,6 +31,7 @@ const sites = {
 
     APPROVAL_AUTHORITY: 'Office of Student Affairs',
     APPROVAL_AUTHORITY_URL: 'https://osa.vpul.upenn.edu/',
+    APPROVAL_AUTHORITY_SHORTHAND: 'OSA',
 
     FIELD_PARTICIPATION_LABEL: 'How to Get Involved',
 
@@ -42,13 +43,15 @@ const sites = {
       'You can upload club constitutions here. Please upload your club constitution in pdf or docx format.',
 
     CONTACT_EMAIL: 'contact@pennclubs.com',
-    SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu',
-    FEEDBACK_URL: 'https://airtable.com/appFRa4NQvNMEbWsA/shrZdY76Bauj77H90',
+    SUPPORT_EMAIL: 'vpul-orgs@pobox.upenn.edu', // For specific inquiries / procedural requests to OSA, platform related
+    OSA_EMAIL: 'vpul-pennosa@pobox.upenn.edu', // General inquiries to OSA
+    SAC_EMAIL: 'sac@sacfunded.net',
+    FEEDBACK_URL: 'https://airtable.com/appFRa4NQvNcMEbWsA/shrZdY76Bauj77H90',
 
     CLUB_FIELDS: [
       'accepting_members',
       'application_required',
-      'badges',
+      'affiliations',
       'email_public',
       'founded',
       'github',
@@ -58,6 +61,12 @@ const sites = {
       'size',
       'target_majors',
       'target_schools',
+      'category',
+      'eligibility',
+      'status',
+      'type',
+      'designation',
+      'group_activity_assessment',
     ],
     // enable showing members for each club
     SHOW_MEMBERS: false,
@@ -79,6 +88,8 @@ const sites = {
     SHOW_ORG_MANAGEMENT: true,
     // show feedback icon on bottom right
     SHOW_FEEDBACK: true,
+    // show ownership requests feature
+    SHOW_OWNERSHIP_REQUESTS: false,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
@@ -105,11 +116,12 @@ const sites = {
         that you are targeting the general student population.
       </>
     ),
+    FORM_TARGET_ENABLED: false,
     OBJECT_MEMBERSHIP_DEFAULT_TITLE: 'Member',
     CLUB_EMPTY_STATE: (
       <>
-        Looking for university resources? Check out{' '}
-        <a href="https://hub.provost.upenn.edu/">Hub@Penn</a>!
+        View all clubs, including those inactive or pending approval, in our{' '}
+        <a href="/directory">directory</a>!
       </>
     ),
 
@@ -193,6 +205,10 @@ const sites = {
       'signature_events',
       'student_types',
       'target_schools',
+      'category',
+      'eligibility',
+      'status',
+      'group_activity_assessment',
     ],
     SHOW_MEMBERS: false,
     SHOW_MEMBERSHIP_REQUEST: false,
@@ -204,6 +220,7 @@ const sites = {
     SHOW_APPLICATIONS: false,
     SHOW_ORG_MANAGEMENT: false,
     SHOW_FEEDBACK: true,
+    SHOW_OWNERSHIP_REQUESTS: false,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
@@ -251,9 +268,8 @@ const sites = {
   },
 }
 
+export const LOGIN_REQUIRED_ALL = true
 export const TICKETING_PAYMENT_ENABLED = true
-export const REAPPROVAL_QUEUE_ENABLED = true
-export const NEW_APPROVAL_QUEUE_ENABLED = true
 export const SITE_ID = site
 export const SITE_NAME = sites[site].SITE_NAME
 export const SITE_SUBTITLE = sites[site].SITE_SUBTITLE
@@ -263,6 +279,8 @@ export const SCHOOL_NAME = sites[site].SCHOOL_NAME
 export const DOMAIN = sites[site].DOMAIN
 export const CONTACT_EMAIL = sites[site].CONTACT_EMAIL
 export const SUPPORT_EMAIL = sites[site].SUPPORT_EMAIL
+export const OSA_EMAIL = sites[site].OSA_EMAIL
+export const SAC_EMAIL = sites[site].SAC_EMAIL
 export const FEEDBACK_URL = sites[site].FEEDBACK_URL
 
 export const OBJECT_NAME_PLURAL = sites[site].OBJECT_NAME_PLURAL
@@ -274,6 +292,8 @@ export const OBJECT_NAME_TITLE_SINGULAR = sites[site].OBJECT_NAME_TITLE_SINGULAR
 
 export const APPROVAL_AUTHORITY = sites[site].APPROVAL_AUTHORITY
 export const APPROVAL_AUTHORITY_URL = sites[site].APPROVAL_AUTHORITY_URL
+export const APPROVAL_AUTHORITY_SHORTHAND =
+  sites[site].APPROVAL_AUTHORITY_SHORTHAND
 
 export const SITE_LOGO = sites[site].SITE_LOGO
 export const SITE_FAVICON = sites[site].SITE_FAVICON
@@ -303,6 +323,7 @@ export const SHOW_SEARCHBAR_TOP = sites[site].SHOW_SEARCHBAR_TOP
 export const SHOW_APPLICATIONS = sites[site].SHOW_APPLICATIONS
 export const SHOW_ORG_MANAGEMENT = sites[site].SHOW_ORG_MANAGEMENT
 export const SHOW_FEEDBACK = sites[site].SHOW_FEEDBACK
+export const SHOW_OWNERSHIP_REQUESTS = sites[site].SHOW_OWNERSHIP_REQUESTS
 
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =
@@ -332,5 +353,7 @@ export const FORM_LOGO_DESCRIPTION: ReactNode =
   sites[site].FORM_LOGO_DESCRIPTION
 export const FORM_TARGET_DESCRIPTION: ReactNode =
   sites[site].FORM_TARGET_DESCRIPTION
+
+export const FORM_TARGET_ENABLED = sites[site].FORM_TARGET_ENABLED
 
 export const OBJECT_INVITE_LABEL = sites[site].OBJECT_INVITE_LABEL

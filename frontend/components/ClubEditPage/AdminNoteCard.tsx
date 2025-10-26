@@ -13,7 +13,7 @@ type AdminNoteCardProps = {
 
 export default function AdminNoteCard({
   club,
-}: AdminNoteCardProps): ReactElement {
+}: AdminNoteCardProps): ReactElement<any> {
   const noteTableFields = [
     { label: 'Author', name: 'creator' },
     { label: 'Note', name: 'content' },

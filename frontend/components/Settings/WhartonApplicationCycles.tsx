@@ -51,7 +51,7 @@ type ClubApplicationWithClub = ClubApplication & {
   club__code: number
 }
 
-const WhartonApplicationCycles = (): ReactElement => {
+const WhartonApplicationCycles = (): ReactElement<any> => {
   const [editMembership, setEditMembership] = useState(false)
   const [membershipCycle, setMembershipCycle] = useState<Cycle>({
     name: '',

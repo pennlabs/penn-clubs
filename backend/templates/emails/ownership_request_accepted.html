@@ -1,0 +1,13 @@
+<!-- TYPES:
+club_name:
+    type: string
+full_name:
+    type: string
+-->
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>Ownership Request Accepted for <b>{{ club_name }}</b></h2>
+    <p style="font-size: 1.2em">Congratulations <b>{{ full_name }}</b>! Your request for ownership of <b>{{ club_name }}</b> has been accepted. You are now an owner of this club and can manage its settings and members.</p>
+    <p>You can now access the club management features through the Penn Clubs website.</p>
+{% endblock %}

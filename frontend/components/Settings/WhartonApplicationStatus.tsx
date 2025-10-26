@@ -1,9 +1,11 @@
-import React, { ReactElement, useState } from 'react'
-import { Hint, RadialChart } from 'react-vis'
+import React, { ReactElement, useEffect, useState } from 'react'
+import Select from 'react-select'
+import { Cell, Pie, PieChart, Tooltip } from 'recharts'
 import styled from 'styled-components'
 
 import { WHITE } from '~/constants/colors'
 import { ApplicationStatus } from '~/types'
+import { doApiRequest } from '~/utils'
 
 import { FAIR_NAME, OBJECT_NAME_PLURAL } from '../../utils/branding'
 import { CardHeader, CardTitle } from '../ClubCard'
@@ -13,7 +15,12 @@ type Props = {
   statuses: ApplicationStatus[]
 }
 
-type PieDataPoint = { angle: number; label: string; color?: string }
+type PieDataPoint = {
+  value: number
+  label: string
+  color?: string
+  tooltip: string
+}
 type PieData = PieDataPoint[]
 type PieChartData = {
   [key: string]: {
@@ -55,6 +62,12 @@ function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
 
   Object.keys(applicationCommittees).forEach((club) => {
     Object.keys(applicationCommittees[club]).forEach((committee) => {
+      const obj = applicationCommittees[club][committee]
+      const total: number = (Object.values(obj) as number[]).reduce(
+        (acc: number, curr: number) => acc + curr,
+        0,
+      )
+
       Object.keys(applicationCommittees[club][committee]).forEach((status) => {
         if (!(club in applicationsGrouped)) {
           applicationsGrouped[club] = {}
@@ -62,10 +75,12 @@ function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
         if (!(committee in applicationsGrouped[club])) {
           applicationsGrouped[club][committee] = []
         }
+        const val = applicationCommittees[club][committee][status]
         applicationsGrouped[club][committee].push({
-          angle: applicationCommittees[club][committee][status],
+          value: val,
           label: status,
           color: colors[status],
+          tooltip: `\n count: ${val} \n percent: ${((val / total) * 100).toFixed(2)}%`,
         })
       })
     })
@@ -76,11 +91,18 @@ function parseStatuses(statuses: ApplicationStatus[]): PieChartData {
       return
     }
     applicationsGrouped[application].Total = []
+    const obj = applicationsTotal[application]
+
+    const total: number = (Object.values(obj) as number[]).reduce(
+      (acc: number, curr: number) => acc + curr,
+      0,
+    )
     Object.keys(applicationsTotal[application]).forEach((status) =>
       applicationsGrouped[application].Total.push({
-        angle: applicationsTotal[application][status],
+        value: applicationsTotal[application][status],
         label: status,
         color: colors[status],
+        tooltip: `\n count: ${applicationsTotal[application][status]} \n percent: ${((applicationsTotal[application][status] / total) * 100).toFixed(2)}%`,
       }),
     )
   })
@@ -133,24 +155,6 @@ function StatusCard({
   const [currentCommittee, setCurrentCommittee] = useState<string | null>(null)
   const [value, setValue] = useState<PieDataPoint | null>(null)
 
-  function count(committee: string, label: string): number {
-    return (
-      pieData[application][committee].find((data) => data.label === label)
-        ?.angle ?? 0
-    )
-  }
-
-  function percentage(committee: string, label: string): number {
-    const total = pieData[application][committee].reduce(
-      (acc, x) => acc + x.angle,
-      0,
-    )
-    const count =
-      pieData[application][committee].find((data) => data.label === label)
-        ?.angle ?? 0
-    return count !== 0 ? Math.round((count / total) * 10000) / 100 : 0
-  }
-
   return (
     <>
       <Card className="mb-4" $bordered $background={WHITE}>
@@ -178,39 +182,36 @@ function StatusCard({
                   position: 'relative',
                   fontSize: '10pt',
                 }}
+                key={committee}
               >
                 <CardTitle className="is-size-5">
                   {committee === 'null' ? 'General Member' : committee}
                 </CardTitle>
-                <RadialChart
-                  data={pieData[application][committee]}
-                  width={200}
-                  height={200}
-                  radius={80}
-                  colorType="literal"
-                  labelsAboveChildren={true}
-                  onValueMouseOver={(v: PieDataPoint) => {
-                    setValue(v)
-                    setCurrentCommittee(committee)
-                  }}
-                >
-                  {value != null && committee === currentCommittee && (
-                    <Hint value={value}>
-                      <div
-                        style={{
-                          backgroundColor: 'black',
-                          color: 'white',
-                          padding: '5px',
-                          borderRadius: '10px',
-                        }}
-                      >
-                        <p>{value.label}</p>
-                        <p>count: {count(committee, value.label)}</p>
-                        <p>percent: {percentage(committee, value.label)}%</p>
-                      </div>
-                    </Hint>
-                  )}
-                </RadialChart>
+                <PieChart width={200} height={200}>
+                  <Pie
+                    data={pieData[application][committee]}
+                    dataKey="value"
+                    nameKey="label"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="95%"
+                    labelLine={false}
+                  >
+                    {pieData[application][committee].map((d, ind) => (
+                      <Cell key={ind} fill={d.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name, { payload }) => (
+                      <span style={{ whiteSpace: 'pre-line' }}>
+                        {payload.tooltip}
+                      </span>
+                    )}
+                    wrapperStyle={{
+                      zIndex: 9999,
+                    }}
+                  />
+                </PieChart>
               </div>
             ))}
         </div>
@@ -221,10 +222,60 @@ function StatusCard({
 
 const WhartonApplicationStatus = ({
   statuses: initialStatuses,
-}: Props): ReactElement => {
-  const [statuses, _] = useState<
+}: Props): ReactElement<any> => {
+  const [statuses, setStatuses] = useState<
     ApplicationStatus[] | { detail: string } | null
   >(initialStatuses ?? null)
+  const [selectedCycle, setSelectedCycle] = useState<{
+    value: number | null
+    label: string
+  } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Extract unique cycles from statuses
+  const cycleOptions = React.useMemo(() => {
+    if (!statuses || 'detail' in statuses) return []
+
+    const cycles = new Map<number | null, string>()
+    statuses.forEach((status) => {
+      if (status.cycle_id !== null && status.cycle_name !== null) {
+        cycles.set(status.cycle_id, status.cycle_name)
+      }
+    })
+
+    const options = [
+      { value: null, label: 'All Cycles' },
+      ...Array.from(cycles.entries())
+        .map(([id, name]) => ({ value: id, label: name }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    ]
+
+    return options
+  }, [initialStatuses])
+
+  useEffect(() => {
+    if (selectedCycle === null) {
+      // Default to "All Cycles"
+      setSelectedCycle({ value: null, label: 'All Cycles' })
+      return
+    }
+
+    setIsLoading(true)
+    const url =
+      selectedCycle.value === null
+        ? '/whartonapplications/status/?format=json'
+        : `/whartonapplications/status/?format=json&cycle=${selectedCycle.value}`
+
+    doApiRequest(url)
+      .then((resp) => resp.json())
+      .then((data) => {
+        setStatuses(data)
+        setIsLoading(false)
+      })
+      .catch(() => {
+        setIsLoading(false)
+      })
+  }, [selectedCycle])
 
   function downloadData(statuses) {
     const dataStr =
@@ -238,7 +289,7 @@ const WhartonApplicationStatus = ({
     downloadAnchorNode.remove()
   }
 
-  if (statuses == null) {
+  if (statuses == null || isLoading) {
     return <Loading />
   }
 
@@ -255,9 +306,29 @@ const WhartonApplicationStatus = ({
         registered {OBJECT_NAME_PLURAL} for an {FAIR_NAME} fair. Only users with
         the required permissions can view this page.
       </Text>
-      <button className="button" onClick={() => downloadData(statuses)}>
-        Download Data
-      </button>
+      <div className="columns">
+        <div className="column is-4">
+          <label className="label">Filter by Application Cycle</label>
+          <Select
+            options={cycleOptions}
+            value={selectedCycle}
+            onChange={(option) => setSelectedCycle(option)}
+            placeholder="Select cycle..."
+          />
+        </div>
+        <div className="column">
+          <label className="label" style={{ visibility: 'hidden' }}>
+            Actions
+          </label>
+          <button
+            className="button"
+            onClick={() => downloadData(statuses)}
+            title="Downloads data for the currently selected cycle filter"
+          >
+            Download Filtered Data
+          </button>
+        </div>
+      </div>
       <div className="column">
         <Legend
           items={Object.keys(colors).map((label) => ({

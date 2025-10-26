@@ -6,11 +6,21 @@ module.exports = {
     })
     return config
   },
+  experimental: {
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
+  },
   compiler: {
     styledComponents: true,
   },
   async rewrites() {
-    return [
+    const rewrites = [
       {
         source: '/sacfairguide',
         destination: '/guides/fair',
@@ -20,6 +30,19 @@ module.exports = {
         destination: '/club/:slug*',
       },
     ]
+    if (process.env.NODE_ENV !== 'production') {
+      rewrites.push(
+        {
+          source: '/api/:path((?!api/.*$).*)',
+          destination: 'http://localhost:8000/api/:path/',
+        },
+        {
+          source: '/api/:path((?!api/).*)/:query(.*)',
+          destination: 'http://localhost:8000/api/:path/:query',
+        },
+      )
+    }
+    return rewrites
   },
   async redirects() {
     return [
@@ -37,4 +60,5 @@ module.exports = {
     SENTRY_URL: process.env.SENTRY_URL,
   },
   productionBrowserSourceMaps: true,
+  trailingSlash: true,
 }

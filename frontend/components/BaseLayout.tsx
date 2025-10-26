@@ -6,7 +6,7 @@ import AuthPrompt from '~/components/common/AuthPrompt'
 import Footer from '~/components/Footer'
 import Header from '~/components/Header'
 import { NAV_HEIGHT, SNOW } from '~/constants'
-import { GlobalStyle, RenderPageWrapper, ToastStyle } from '~/renderPage'
+import { RenderPageWrapper, ToastStyle } from '~/renderPage'
 import { PermissionsContext } from '~/utils'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
@@ -45,7 +45,6 @@ export const BaseLayout: React.FC<PropsWithChildren<BaseLayoutProps>> = ({
           hideProgressBar={true}
         />
       </ToastStyle>
-      <GlobalStyle />
     </>
   )
 }

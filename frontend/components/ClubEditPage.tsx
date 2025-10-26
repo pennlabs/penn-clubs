@@ -12,7 +12,6 @@ import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard, { QRCodeType } from '../components/ClubEditPage/QRCodeCard'
-import TicketsViewCard from '../components/ClubEditPage/TicketsViewCard'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_RENEW_ROUTE,
@@ -21,11 +20,17 @@ import {
   HOME_ROUTE,
 } from '../constants/routes'
 import {
+  Category,
+  Classification,
   Club,
+  Eligibility,
+  GroupActivityOption,
   Major,
   School,
+  Status,
   StudentType,
   Tag,
+  Type,
   UserInfo,
   VisitType,
   Year,
@@ -70,33 +75,45 @@ import { BrowserTabView } from './TabView'
 type ClubFormProps = {
   clubId: string | undefined
   authenticated: boolean | null
+  categories: Category[]
+  classifications: Classification[]
+  eligibilities: Eligibility[]
   schools: School[]
   majors: Major[]
   years: Year[]
   tags: Tag[]
   studentTypes: StudentType[]
+  types: Type[]
+  statuses: Status[]
+  groupActivityOptions: GroupActivityOption[]
   tab?: string | null
   userInfo?: UserInfo
 }
 
 const ClubForm = ({
   authenticated,
+  categories,
+  classifications,
+  eligibilities,
   schools,
   years,
   majors,
   tags,
   studentTypes,
+  types,
+  statuses,
+  groupActivityOptions,
   clubId,
   tab,
   userInfo,
-}: ClubFormProps): ReactElement => {
+}: ClubFormProps): ReactElement<any> => {
   const [club, setClub] = useState<Club | null>(null)
   const [isEdit, setIsEdit] = useState<boolean>(typeof clubId !== 'undefined')
 
   const router = useRouter()
 
   const notify = (
-    msg: string | ReactElement,
+    msg: string | ReactElement<any>,
     type: TypeOptions = 'info',
   ): void => {
     toast[type](msg)
@@ -107,7 +124,7 @@ const ClubForm = ({
     club,
     isEdit: isEditNew,
   }: {
-    message: ReactElement | string | null
+    message: ReactElement<any> | string | null
     club?: Club
     isEdit?: boolean
   }): Promise<void> => {
@@ -219,7 +236,7 @@ const ClubForm = ({
   let tabs: {
     name: string
     label: string
-    content: ReactElement
+    content: ReactElement<any>
     disabled?: boolean
   }[] = []
 
@@ -231,11 +248,17 @@ const ClubForm = ({
         content: (
           <ClubEditCard
             isEdit={isEdit}
+            eligibilities={eligibilities}
+            categories={categories}
+            classifications={classifications}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            groupActivityOptions={groupActivityOptions}
             club={club}
             onSubmit={submit}
           />
@@ -300,11 +323,6 @@ const ClubForm = ({
             <EventsCard club={club} />
           </>
         ),
-      },
-      {
-        name: 'tickets',
-        label: 'Tickets',
-        content: <TicketsViewCard club={club} />,
       },
       {
         name: 'recruitment',
@@ -443,12 +461,18 @@ const ClubForm = ({
         <div style={{ marginTop: '1em' }}>
           <ClubEditCard
             isEdit={isEdit}
+            eligibilities={eligibilities}
+            categories={categories}
             schools={schools}
             years={years}
             majors={majors}
             tags={tags}
             club={club === null ? {} : club}
             studentTypes={studentTypes}
+            types={types}
+            statuses={statuses}
+            classifications={classifications}
+            groupActivityOptions={groupActivityOptions}
             onSubmit={submit}
           />
         </div>

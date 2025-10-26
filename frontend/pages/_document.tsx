@@ -9,7 +9,9 @@ import Document, {
   NextScript,
 } from 'next/document'
 import { ReactElement } from 'react'
-import { ServerStyleSheet } from 'styled-components'
+import styled from 'styled-components'
+
+import { BULMA_A, BULMA_GREY } from '../constants/colors'
 
 export const renderStatic = async (html) => {
   if (html === undefined) {
@@ -21,43 +23,41 @@ export const renderStatic = async (html) => {
   return { html, ids, css }
 }
 
+const StyledHtml = styled.html`
+  a {
+    color: ${BULMA_A};
+  }
+
+  .has-text-grey {
+    color: ${BULMA_GREY} !important;
+  }
+`
+
 class BaseDocument extends Document {
   static async getInitialProps(
     ctx: DocumentContext,
   ): Promise<DocumentInitialProps> {
-    const sheet = new ServerStyleSheet()
-    const originalRenderPage = ctx.renderPage
-    try {
-      ctx.renderPage = () =>
-        originalRenderPage({
-          enhanceApp: (App) => (props) =>
-            sheet.collectStyles(<App {...props} />),
-        })
-      const initialProps = await Document.getInitialProps(ctx)
-      const page = await ctx.renderPage()
-      const { css, ids } = await renderStatic(page.html)
+    const initialProps = await Document.getInitialProps(ctx)
+    const page = await ctx.renderPage()
+    const { css, ids } = await renderStatic(page.html)
 
-      return {
-        ...initialProps,
-        styles: (
-          <>
-            {initialProps.styles}
-            {sheet.getStyleElement()}
-            <style
-              data-emotion={`css ${ids.join(' ')}`}
-              dangerouslySetInnerHTML={{ __html: css }}
-            />
-          </>
-        ),
-      }
-    } finally {
-      sheet.seal()
+    return {
+      ...initialProps,
+      styles: (
+        <>
+          {initialProps.styles}
+          <style
+            data-emotion={`css ${ids.join(' ')}`}
+            dangerouslySetInnerHTML={{ __html: css }}
+          />
+        </>
+      ),
     }
   }
 
-  render(): ReactElement {
+  render(): ReactElement<any> {
     return (
-      <Html lang="en">
+      <StyledHtml as={Html} lang="en">
         <Head>
           <link
             rel="stylesheet"
@@ -99,7 +99,7 @@ class BaseDocument extends Document {
           <Main />
           <NextScript />
         </body>
-      </Html>
+      </StyledHtml>
     )
   }
 }

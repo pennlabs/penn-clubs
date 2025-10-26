@@ -6,13 +6,13 @@
 # Python files
 __pycache__/
 *.pyc
-.python-version
 
 # Distribution
 /frontend/public/storybook/
 build/
 dist/
 *.egg-info/
+backend/static/
 
 # Code testing/coverage
 .tox

@@ -84,7 +84,7 @@ const StyledLinkAnchor = styled.a`
   }
 `
 
-const StyledLink = (props): ReactElement => {
+const StyledLink = (props): ReactElement<any> => {
   return (
     <Link href={props.href} legacyBehavior>
       <StyledLinkAnchor {...props} />
@@ -110,21 +110,13 @@ type Props = {
  * Checks authenticated === false to confirm browser has loaded and user is not logged in.
  * Will be undefined if browser has not loaded and true is browser has loaded and user is logged in.
  */
-const Links = ({ userInfo, authenticated, show }: Props): ReactElement => {
+const Links = ({ userInfo, authenticated, show }: Props): ReactElement<any> => {
   const router = useRouter()
   return (
     <Menu className="navbar-menu" $show={show}>
       <div className="navbar-end" style={{ padding: '0 1rem' }}>
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
           Events
-        </StyledLink>
-        <StyledLink
-          href="https://penncfa.com/"
-          onClick={() => logEvent('cfa redirect', 'click')}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Funding
         </StyledLink>
         <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
           FAQ

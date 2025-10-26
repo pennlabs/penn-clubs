@@ -23,6 +23,8 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    Category,
+    Classification,
     Club,
     ClubApplication,
     ClubApprovalResponseTemplate,
@@ -30,8 +32,12 @@ from clubs.models import (
     ClubFairBooth,
     ClubFairRegistration,
     ClubVisit,
+    Designation,
+    Eligibility,
     Event,
+    EventShowing,
     Favorite,
+    GroupActivityOption,
     Major,
     Membership,
     MembershipInvite,
@@ -41,10 +47,12 @@ from clubs.models import (
     OwnershipRequest,
     Profile,
     QuestionAnswer,
-    RecurringEvent,
+    RankingWeights,
+    RegistrationQueueSettings,
     Report,
     School,
     SearchQuery,
+    Status,
     StudentType,
     Subscribe,
     Tag,
@@ -56,6 +64,7 @@ from clubs.models import (
     Ticket,
     TicketTransactionRecord,
     TicketTransferRecord,
+    Type,
     Year,
     ZoomMeetingVisit,
 )
@@ -102,8 +111,7 @@ def do_merge_clubs(modeladmin, request, queryset):
     if queryset.count() > 5:
         modeladmin.message_user(
             request,
-            "You have selected more than 5 clubs, "
-            "you probably do not want to do this.",
+            "You have selected more than 5 clubs, you probably do not want to do this.",
             level=messages.ERROR,
         )
         return
@@ -184,7 +192,15 @@ class ClubChildrenInline(TabularInline):
 
 class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
     search_fields = ("name", "subtitle", "email", "code")
-    list_display = ("name", "email", "has_owner", "has_invite", "active", "approved")
+    list_display = (
+        "name",
+        "email",
+        "has_owner",
+        "has_invite",
+        "active",
+        "approved",
+        "get_designation",
+    )
     list_filter = (
         "size",
         "application_required",
@@ -222,6 +238,11 @@ class ClubAdmin(simple_history.admin.SimpleHistoryAdmin):
 
     has_owner.boolean = True
 
+    def get_designation(self, obj):
+        return obj.designation.name if obj.designation else "None"
+
+    get_designation.short_description = "Designation"
+
 
 class ClubFairAdmin(admin.ModelAdmin):
     list_display = ("name", "organization", "contact", "start_time")
@@ -230,9 +251,9 @@ class ClubFairAdmin(admin.ModelAdmin):
 
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("name", "club", "type", "start_time", "end_time")
+    list_display = ("name", "club", "type")
     search_fields = ("name", "club__name")
-    list_filter = ("start_time", "end_time")
+    list_filter = ("type",)
 
     def club(self, obj):
         return obj.club.name
@@ -295,8 +316,8 @@ class OwnershipRequestAdmin(admin.ModelAdmin):
         "club__name",
         "created_at",
     )
-    list_display = ("requester", "club", "email", "withdrawn", "is_owner", "created_at")
-    list_filter = ("withdrawn",)
+    list_display = ("requester", "club", "email", "status", "is_owner", "created_at")
+    list_filter = ("status",)
 
     def requester(self, obj):
         return obj.requester.username
@@ -394,6 +415,14 @@ class TagAdmin(admin.ModelAdmin):
     actions = [do_merge_tags]
 
 
+class ClassificationAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "symbol", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
 class BadgeAdmin(admin.ModelAdmin):
     def club_count(self, obj):
         return obj.club_set.count()
@@ -413,6 +442,47 @@ class BadgeAdmin(admin.ModelAdmin):
     list_display = ("label", "purpose", "org", "club_count", "badge_color", "visible")
     list_filter = ("visible", "purpose")
     actions = [do_merge_tags]
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "designation", "club_count")
+    list_filter = ("designation",)
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class EligibilityAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class DesignationAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "categories")
+
+    def categories(self, obj):
+        return ", ".join(obj.categories.values_list("name", flat=True))
+
+
+class TypeAdmin(admin.ModelAdmin):
+    search_fields = ("name", "symbol")
+    list_display = ("name", "symbol", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
+
+
+class StatusAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    list_display = ("name", "club_count")
+
+    def club_count(self, obj):
+        return obj.clubs.count()
 
 
 class MajorAdmin(admin.ModelAdmin):
@@ -451,6 +521,122 @@ class ClubApprovalResponseTemplateAdmin(admin.ModelAdmin):
     search_fields = ("title", "content")
 
 
+class GroupActivityOptionAdmin(admin.ModelAdmin):
+    list_display = ["text", "is_active", "order", "created_at"]
+    list_editable = ["is_active", "order"]
+    list_filter = ["is_active", "created_at"]
+    search_fields = ["text", "description"]
+    ordering = ["order", "text"]
+
+    fieldsets = ((None, {"fields": ("text", "is_active", "order")}),)
+
+
+class RankingWeightsAdmin(admin.ModelAdmin):
+    """
+    Admin interface for managing club ranking weights.
+    This is a singleton model, so only one instance should exist.
+    """
+
+    list_display = (
+        "inactive_penalty",
+        "favorites_per",
+        "tags_good",
+        "officer_bonus",
+        "member_base",
+        "logo_bonus",
+        "fair_bonus",
+        "application_bonus",
+        "updated_at",
+        "updated_by",
+    )
+
+    readonly_fields = ("updated_at", "updated_by")
+
+    fieldsets = (
+        (
+            "Core Weights",
+            {
+                "fields": (
+                    "inactive_penalty",
+                    "favorites_per",
+                    "tags_good",
+                    "tags_many",
+                    "officer_bonus",
+                    "member_base",
+                    "member_per",
+                    "logo_bonus",
+                )
+            },
+        ),
+        (
+            "Content Quality",
+            {
+                "fields": (
+                    "subtitle_bad",
+                    "subtitle_good",
+                    "images_bonus",
+                    "desc_short",
+                    "desc_med",
+                    "desc_long",
+                )
+            },
+        ),
+        (
+            "Events & Activities",
+            {
+                "fields": (
+                    "fair_bonus",
+                    "application_bonus",
+                    "today_event_base",
+                    "today_event_good",
+                    "week_event_base",
+                    "week_event_good",
+                )
+            },
+        ),
+        (
+            "Communication & Engagement",
+            {
+                "fields": (
+                    "email_bonus",
+                    "social_bonus",
+                    "howto_penalty",
+                    "outdated_penalty",
+                    "testimonial_one",
+                    "testimonial_three",
+                )
+            },
+        ),
+        ("Randomization", {"fields": ("random_scale",)}),
+        (
+            "Metadata",
+            {"fields": ("updated_at", "updated_by"), "classes": ("collapse",)},
+        ),
+    )
+
+    def has_add_permission(self, request):
+        """Prevent adding new instances since this is a singleton."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion since this is a singleton."""
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        """Override changelist to redirect to the singleton instance."""
+        from clubs.models import RankingWeights
+
+        ranking_weights = RankingWeights.get()
+        return self.change_view(request, str(ranking_weights.pk), extra_context)
+
+    def get_queryset(self, request):
+        """Only show the singleton instance."""
+        from clubs.models import RankingWeights
+
+        ranking_weights = RankingWeights.get()
+        return super().get_queryset(request).filter(pk=ranking_weights.pk)
+
+
 admin.site.register(Asset)
 admin.site.register(ApplicationCommittee)
 admin.site.register(ApplicationExtension)
@@ -477,7 +663,6 @@ admin.site.register(MembershipInvite, MembershipInviteAdmin)
 admin.site.register(OwnershipRequest, OwnershipRequestAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(QuestionAnswer, QuestionAnswerAdmin)
-admin.site.register(RecurringEvent)
 admin.site.register(Report, ReportAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(TargetMajor)
@@ -498,3 +683,13 @@ admin.site.register(TicketTransferRecord)
 admin.site.register(Cart)
 admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
+admin.site.register(RegistrationQueueSettings)
+admin.site.register(RankingWeights, RankingWeightsAdmin)
+admin.site.register(EventShowing)
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Designation, DesignationAdmin)
+admin.site.register(Eligibility, EligibilityAdmin)
+admin.site.register(Type, TypeAdmin)
+admin.site.register(Status, StatusAdmin)
+admin.site.register(Classification, ClassificationAdmin)
+admin.site.register(GroupActivityOption, GroupActivityOptionAdmin)

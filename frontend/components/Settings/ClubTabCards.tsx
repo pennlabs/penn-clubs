@@ -18,7 +18,7 @@ const ClubTabCards = ({
   togglePublic,
   toggleActive,
   leaveClub,
-}: ClubTabCardProps): ReactElement => (
+}: ClubTabCardProps): ReactElement<any> => (
   <div className={className}>
     {memberships.map((mship) => (
       <ClubTabCard

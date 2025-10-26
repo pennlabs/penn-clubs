@@ -15,17 +15,22 @@ type Entity = {
   data: any
 }
 
-const MediaComponent = (props): ReactElement => {
-  const data = props.contentState
-    .getEntity(props.block.getEntityAt(0))
-    .getData()
-
-  return (
-    <iframe
-      src={data.src ?? 'about:blank'}
-      style={{ width: data.width ?? '100%', height: data.height }}
-    />
-  )
+const MediaComponent = (props): ReactElement<any> => {
+  try {
+    const entityKey = props?.block?.getEntityAt?.(0)
+    if (!entityKey) return <></>
+    const entity = props?.contentState?.getEntity?.(entityKey)
+    const data = entity?.getData?.() ?? {}
+    return (
+      <iframe
+        src={data.src ?? 'about:blank'}
+        style={{ width: data.width ?? '100%', height: data.height }}
+      />
+    )
+  } catch {
+    // Gracefully no-op if entity lookup fails for any reason
+    return <></>
+  }
 }
 
 export const htmlToEntity = (
@@ -62,16 +67,26 @@ export const blockRendererFunction = (
   block,
   config,
 ):
-  | { component: (props: any) => ReactElement; editable: boolean }
+  | { component: (props: any) => ReactElement<any>; editable: boolean }
   | undefined => {
   if (block.getType() === 'atomic') {
-    const contentState = config.getEditorState().getCurrentContent()
-    const entity = contentState.getEntity(block.getEntityAt(0))
-    if (entity && entity.type === 'EMBED') {
-      return {
-        component: MediaComponent,
-        editable: false,
+    const editorState = config?.getEditorState?.()
+    if (!editorState) return
+    const contentState = editorState.getCurrentContent()
+    const entityKey = block.getEntityAt(0)
+    if (!entityKey) return
+    try {
+      const entity = contentState.getEntity(entityKey)
+      const type =
+        typeof entity.getType === 'function' ? entity.getType() : entity?.type
+      if (type === 'EMBED') {
+        return {
+          component: MediaComponent,
+          editable: false,
+        }
       }
+    } catch {
+      // Invalid/missing entity key; fall back to default rendering
     }
   }
 }
@@ -79,14 +94,14 @@ export const blockRendererFunction = (
 /**
  * A toolbar widget for the editor to embed interactive content, like iframes.
  */
-const EmbedOption = (props: Props): ReactElement => {
+const EmbedOption = (props: Props): ReactElement<any> => {
   const [showModal, setShowModal] = useState<boolean>(false)
 
   const [embedUrl, setEmbedUrl] = useState<string>('')
   const [embedWidth, setEmbedWidth] = useState<string>('100%')
   const [embedHeight, setEmbedHeight] = useState<string>('1200px')
   const [errorMessage, setErrorMessage] = useState<
-    ReactElement | string | null
+    ReactElement<any> | string | null
   >(null)
 
   const embedContent = (embedUrl: string) => {

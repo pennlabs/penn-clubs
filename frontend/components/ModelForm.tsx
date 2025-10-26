@@ -72,19 +72,19 @@ type ModelFormProps = {
   onChange?: (object: ModelObject) => void
   defaultObject?: ModelObject
   fileFields?: string[]
-  empty?: ReactElement | string
+  empty?: ReactElement<any> | string
   fields: any
   tableFields?: TableField[]
   searchableColumns?: string[]
   filterOptions?: FilterOption[]
-  currentTitle?: (object: ModelObject) => ReactElement | string
+  currentTitle?: (object: ModelObject) => ReactElement<any> | string
   noun?: string
   deleteVerb?: string
   allowCreation?: boolean
   allowEditing?: boolean
   allowDeletion?: boolean
   confirmDeletion?: boolean
-  actions?: (object: ModelObject) => ReactElement
+  actions?: (object: ModelObject) => ReactElement<any>
   draggable?: boolean
 }
 
@@ -106,7 +106,9 @@ export const doFormikInitialValueFixes = (currentObject: {
         prev[otherKey] = val
       }
     }
+
     prev[key] = val
+
     return prev
   }, {})
 }
@@ -123,7 +125,7 @@ type ModelTableProps = {
   deleteVerb?: string
   onEdit?: (object: ModelObject) => void
   onDelete?: (object: ModelObject) => void
-  actions?: (object: ModelObject) => ReactElement
+  actions?: (object: ModelObject) => ReactElement<any>
   draggable?: boolean
   onDragEnd?: (result: any) => void | null | undefined
 }
@@ -146,7 +148,7 @@ export const ModelTable = ({
   actions,
   draggable = false,
   onDragEnd,
-}: ModelTableProps): ReactElement => {
+}: ModelTableProps): ReactElement<any> => {
   const columns = useMemo(
     () =>
       tableFields.map(({ label, name }) => ({
@@ -234,7 +236,7 @@ export const ModelTable = ({
  * Creates a form with CRUD (create, read, update, delete)
  * capabilities for a Django model using a provided endpoint.
  */
-export const ModelForm = (props: ModelFormProps): ReactElement => {
+export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
   const [objects, setObjects] = useState<ModelObject[]>([])
   const [currentlyEditing, changeCurrentlyEditing] =
     useState<ModelObject | null>(null)
@@ -448,7 +450,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement => {
         changeObjects(resp)
         if (onUpdate) onUpdate(resp)
       })
-  }, [])
+  }, [props.listParams])
 
   if (!objects) {
     return <Loading />
