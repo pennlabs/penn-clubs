@@ -1039,16 +1039,21 @@ class SyncBadgesTestCase(TestCase):
         self.child1.badges.add(self.parent_badge)
 
         # child2 is also a child but doesn't have the badge yet
+        # parent_org also doesn't have the badge yet
 
         # Run sync_badge for just this badge
         sync_cmd = SyncCommand()
         badge_count, parent_count = sync_cmd.sync_badge(self.parent_badge)
 
         # Refresh from database
+        self.parent_org.refresh_from_db()
         self.child2.refresh_from_db()
+
+        # Check that parent_org now has the badge
+        self.assertTrue(self.parent_org.badges.filter(pk=self.parent_badge.pk).exists())
 
         # Check that child2 now has the badge
         self.assertTrue(self.child2.badges.filter(pk=self.parent_badge.pk).exists())
 
-        # Check that badge_count is 1 (child2 got the badge)
-        self.assertEqual(badge_count, 1)
+        # Check that badge_count is 2 (parent_org and child2 got the badge)
+        self.assertEqual(badge_count, 2)

@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 )
             count += 1
         for child in club.children_orgs.all():
-            return self.recursively_add_badge(club, badge) + count
+            count += self.recursively_add_badge(child, badge)
         return count
 
     def get_parent_club_codes(self, club):
