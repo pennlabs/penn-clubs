@@ -1941,6 +1941,25 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        # assert that removing the badge also removes the parent relationship
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.delete(
+            reverse("badge-clubs-detail", args=(self.wc_badge.id, child_club.code)),
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        child_club.refresh_from_db()
+        self.assertEqual(child_club.badges.count(), 0)
+        self.assertEqual(child_club.parent_orgs.count(), 0)
+
+        # assert that we can no longer modify the club after badge removal
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(child_club.code,)),
+            {"description": "We love Wharton again"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
     def test_club_archive_no_auth(self):
         """
         Unauthenticated users should not be able to archive a club.

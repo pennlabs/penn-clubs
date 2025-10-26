@@ -28,6 +28,7 @@ from ics import Event as ICSEvent
 
 from clubs.management.commands.rank import DEFAULT_WEIGHTS
 from clubs.models import (
+    Badge,
     Club,
     ClubApplication,
     ClubFair,
@@ -967,3 +968,87 @@ class OsaPermsUpdatesTestCase(TestCase):
             self.assertTrue(self.user1.is_superuser)
             self.assertTrue(self.user1.has_perm("approve_club"))
             self.assertTrue(self.user1.has_perm("see_pending_clubs"))
+
+
+class SyncBadgesTestCase(TestCase):
+    def setUp(self):
+        # Create parent organization
+        self.parent_org = Club.objects.create(
+            code="parent-org", name="Parent Organization", active=True
+        )
+
+        # Create badge associated with parent org
+        self.parent_badge = Badge.objects.create(
+            label="Parent Badge",
+            description="Badge for parent organization",
+            org=self.parent_org,
+        )
+
+        # Create child clubs
+        self.child1 = Club.objects.create(
+            code="child-1", name="Child Club 1", active=True
+        )
+        self.child2 = Club.objects.create(
+            code="child-2", name="Child Club 2", active=True
+        )
+        self.child3 = Club.objects.create(
+            code="child-3", name="Child Club 3", active=True
+        )
+
+        # Establish parent-child relationships
+        self.child1.parent_orgs.add(self.parent_org)
+        self.child2.parent_orgs.add(self.parent_org)
+
+    def test_sync_badges(self):
+        """
+        Test that sync_badges correctly synchronizes badges
+        based on parent-child relationships.
+        """
+        # Manually add badge to child1 (correct state)
+        self.child1.badges.add(self.parent_badge)
+
+        # Manually add badge to child3 (incorrect - child3 is not a child of parent_org)
+        self.child3.badges.add(self.parent_badge)
+
+        # child2 should get the badge but doesn't have it yet
+
+        # Run sync_badges
+        call_command("sync")
+
+        # Refresh from database
+        self.child1.refresh_from_db()
+        self.child2.refresh_from_db()
+        self.child3.refresh_from_db()
+
+        # Check that child1 still has the badge (it's a child of parent_org)
+        self.assertTrue(self.child1.badges.filter(pk=self.parent_badge.pk).exists())
+
+        # Check that child2 now has the badge (it's a child of parent_org)
+        self.assertTrue(self.child2.badges.filter(pk=self.parent_badge.pk).exists())
+
+        # Check that child3 no longer has the badge (it's not a child of parent_org)
+        self.assertFalse(self.child3.badges.filter(pk=self.parent_badge.pk).exists())
+
+    def test_sync_badge_single(self):
+        """
+        Test that sync_badge correctly synchronizes a single badge.
+        """
+        from clubs.management.commands.sync import Command as SyncCommand
+
+        # Add badge to child1 (which is a child of parent_org)
+        self.child1.badges.add(self.parent_badge)
+
+        # child2 is also a child but doesn't have the badge yet
+
+        # Run sync_badge for just this badge
+        sync_cmd = SyncCommand()
+        badge_count, parent_count = sync_cmd.sync_badge(self.parent_badge)
+
+        # Refresh from database
+        self.child2.refresh_from_db()
+
+        # Check that child2 now has the badge
+        self.assertTrue(self.child2.badges.filter(pk=self.parent_badge.pk).exists())
+
+        # Check that badge_count is 1 (child2 got the badge)
+        self.assertEqual(badge_count, 1)

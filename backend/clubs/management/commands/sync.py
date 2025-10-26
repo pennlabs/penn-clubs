@@ -138,8 +138,9 @@ class Command(BaseCommand):
         """
         # remove badges with orgs from all clubs
         for club in Club.objects.all():
-            club.badges = club.badges.filter(org__isnull=False)
-            club.save()
+            badges_to_remove = club.badges.filter(org__isnull=False)
+            if badges_to_remove.exists():
+                club.badges.remove(*badges_to_remove)
 
         badge_add_count = 0
         parent_child_add_count = 0
@@ -150,7 +151,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"Modified {badge_add_count} club badge relationships."
+                f"Modified {badge_add_count} club badge relationships. "
                 f"Modified {parent_child_add_count} parent child relationships."
             )
         )
