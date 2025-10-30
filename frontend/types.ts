@@ -460,10 +460,12 @@ export type ApplicationSubmission = {
   created_at: string
   first_name: string
   last_name: string
+  email: string
   status: string
   responses: Array<ApplicationResponse>
   club: string
   code: string
+  graduation_year: string
   notified: boolean
   reason: string
   application_link: string

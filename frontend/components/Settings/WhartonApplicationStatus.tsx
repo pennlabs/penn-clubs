@@ -1,5 +1,7 @@
+import { json2csv } from 'json-2-csv'
 import React, { ReactElement, useEffect, useState } from 'react'
 import Select from 'react-select'
+import { toast } from 'react-toastify'
 import { Cell, Pie, PieChart, Tooltip } from 'recharts'
 import styled from 'styled-components'
 
@@ -277,16 +279,19 @@ const WhartonApplicationStatus = ({
       })
   }, [selectedCycle])
 
-  function downloadData(statuses) {
-    const dataStr =
-      'data:text/json;charset=utf-8,' +
-      encodeURIComponent(JSON.stringify(statuses, null, 2))
-    const downloadAnchorNode = document.createElement('a')
-    downloadAnchorNode.setAttribute('href', dataStr)
-    downloadAnchorNode.setAttribute('download', 'applicationStatuses.json')
-    document.body.appendChild(downloadAnchorNode)
-    downloadAnchorNode.click()
-    downloadAnchorNode.remove()
+  function downloadData(statuses: ApplicationStatus[]) {
+    try {
+      const csv = json2csv(statuses, { emptyFieldValue: '' })
+      const dataStr = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
+      const downloadAnchorNode = document.createElement('a')
+      downloadAnchorNode.setAttribute('href', dataStr)
+      downloadAnchorNode.setAttribute('download', 'applicationStatuses.csv')
+      document.body.appendChild(downloadAnchorNode)
+      downloadAnchorNode.click()
+      downloadAnchorNode.remove()
+    } catch (error) {
+      toast.error('Failed to download CSV. Please try again.')
+    }
   }
 
   if (statuses == null || isLoading) {

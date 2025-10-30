@@ -8028,6 +8028,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     def export(self, *args, **kwargs):
         """
         Given some application submissions, export them to CSV.
+        Deprecated in favor of client-side export.
 
         Cached for 2 hours.
         ---
