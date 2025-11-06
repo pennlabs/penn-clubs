@@ -9394,6 +9394,12 @@ class RegistrationQueueSettingsView(APIView):
                                     format: date-time
                                 updated_by:
                                     type: string
+                                reapproval_date_of_next_flip:
+                                    type: string
+                                    format: date-time
+                                new_approval_date_of_next_flip:
+                                    type: string
+                                    format: date-time
             "400":
                 content:
                     application/json:
@@ -9404,6 +9410,28 @@ class RegistrationQueueSettingsView(APIView):
                                     type: string
         ---
         """
+
+        # Validate that any provided scheduled dates are in the future
+        reapproval_date = request.data.get("reapproval_date_of_next_flip")
+        if reapproval_date and isinstance(reapproval_date, str):
+            reapproval_date = parse(reapproval_date)
+            now = timezone.now()
+            if reapproval_date < now:
+                return Response(
+                    {"error": "Reapproval date of next flip must be in the future."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        new_approval_date = request.data.get("new_approval_date_of_next_flip")
+        if new_approval_date and isinstance(new_approval_date, str):
+            new_approval_date = parse(new_approval_date)
+            now = timezone.now()
+            if new_approval_date < now:
+                return Response(
+                    {"error": "New approval date of next flip must be in the future."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         queue_setting = RegistrationQueueSettings.get()
         serializer = RegistrationQueueSettingsSerializer(
             queue_setting, data=request.data, partial=True
