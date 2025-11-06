@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
+import DatePicker from 'react-datepicker'
 import Select from 'react-select'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -454,18 +455,229 @@ const QueueSettingsButton = ({
   }
 }
 
+const ModalDatePickerWrapper = styled.div`
+  .react-datepicker-popper {
+    z-index: 2003 !important;
+  }
+
+  .react-datepicker-wrapper {
+    width: 100%;
+  }
+
+  display: flex;
+  margin-bottom: 3rem;
+  overflow: visible;
+`
+
 type QueueSchedulerModalProps = {
   show: boolean
+  queueType: 'reapproval' | 'new'
+  registrationQueueSettings?: RegistrationQueueSettings | null
+  setRegistrationQueueSettings: (settings: RegistrationQueueSettings) => void
+  showModal: boolean
   closeModal: () => void
+}
+
+function parseDate(value?: string | null): Date | null {
+  return value ? new Date(value) : null
 }
 
 const QueueSchedulerModal = ({
   show,
+  queueType,
+  registrationQueueSettings,
+  showModal,
+  setRegistrationQueueSettings,
   closeModal,
 }: QueueSchedulerModalProps): ReactElement => {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  useEffect(() => {
+    if (!registrationQueueSettings) return
+
+    const date =
+      queueType === 'reapproval'
+        ? parseDate(registrationQueueSettings?.reapproval_date_of_next_flip)
+        : parseDate(registrationQueueSettings?.new_approval_date_of_next_flip)
+
+    setSelectedDate(date)
+  }, [showModal])
+
+  const queueState =
+    queueType === 'reapproval'
+      ? registrationQueueSettings?.reapproval_queue_open
+      : registrationQueueSettings?.new_approval_queue_open || false
+  const desiredState = !queueState // if queue is open, we want to close it, and vice versa
+  const scheduledDate =
+    queueType === 'reapproval'
+      ? registrationQueueSettings?.reapproval_date_of_next_flip
+      : registrationQueueSettings?.new_approval_date_of_next_flip
+
+  const saveScheduledDate = async () => {
+    const body: Record<string, any> = {}
+    if (queueType === 'reapproval') {
+      body.reapproval_date_of_next_flip = selectedDate
+        ? selectedDate.toISOString()
+        : null
+    } else {
+      body.new_approval_date_of_next_flip = selectedDate
+        ? selectedDate.toISOString()
+        : null
+    }
+    try {
+      const resp = await doApiRequest('/settings/queue/', {
+        method: 'PATCH',
+        body,
+      })
+
+      if (!resp.ok) {
+        toast.error('Failed to update queue settings.')
+        return
+      }
+
+      const refreshedSettings = await resp.json()
+      setRegistrationQueueSettings(refreshedSettings)
+      toast.success('Successfully updated queue settings.')
+    } catch (err) {}
+    // setApprove(true)
+    // setShowModal(true)
+    closeModal()
+  }
+
+  const now = new Date()
+  const maxTime = new Date().setHours(23, 59)
+
   return (
-    <Modal show={show} closeModal={closeModal}>
-      <ModalContent>QueueSchedulerModal</ModalContent>
+    <Modal
+      show={show}
+      closeModal={() => {
+        closeModal()
+      }}
+      overflow="visible"
+    >
+      <ModalContent>
+        <div className="mb3" style={{ marginBottom: '2rem' }}>
+          The{' '}
+          <b>
+            {queueType === 'reapproval' ? 'reapproval' : 'new request approval'}{' '}
+            queue
+          </b>{' '}
+          is currently
+          <b className={queueState ? 'has-text-success' : 'has-text-danger'}>
+            {' '}
+            {queueState ? ' open' : ' closed'}
+          </b>{' '}
+          and is currently{' '}
+          {scheduledDate == null ? (
+            <>
+              not scheduled to
+              <b
+                className={
+                  desiredState ? 'has-text-success' : 'has-text-danger'
+                }
+              >
+                {desiredState ? ' open. ' : ' close. '}
+              </b>
+            </>
+          ) : (
+            <>
+              {' '}
+              scheduled to{' '}
+              <b
+                className={
+                  desiredState ? 'has-text-success' : 'has-text-danger'
+                }
+              >
+                {desiredState ? ' open ' : ' close '}
+              </b>
+              at{' '}
+              <b>
+                {new Date(scheduledDate).toLocaleString(undefined, {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })}
+              </b>
+              .
+            </>
+          )}{' '}
+          Schedule when the{' '}
+          <b>
+            {queueType === 'reapproval'
+              ? 'reapproval '
+              : 'new request approval'}{' '}
+            queue
+          </b>{' '}
+          should{' '}
+          <b className={desiredState ? 'has-text-success' : 'has-text-danger'}>
+            {desiredState ? 'open' : 'close'}
+          </b>
+          !
+        </div>
+        <label>Date and Time</label>
+        <ModalDatePickerWrapper>
+          <DatePicker
+            selected={selectedDate}
+            // onCalendarOpen={() => {setSelectedDate(new Date)}}
+            onChange={(date: Date) => {
+              if (date <= now) {
+                const nextHour = new Date(now)
+                nextHour.setHours(now.getHours() + 1, 0, 0, 0)
+                date = nextHour
+              }
+              setSelectedDate(date)
+            }}
+            onChangeRaw={(e) => {
+              e.preventDefault() // Currently prevents manual text input. If implement, add checking for valid times
+              // const dateStr = e.target.value.trim()
+            }}
+            showTimeSelect
+            dateFormat="MM/dd/yyyy h:mm aa"
+            timeIntervals={60}
+            minDate={now}
+            minTime={
+              !selectedDate ||
+              (selectedDate && selectedDate.toDateString()) ===
+                now.toDateString()
+                ? now
+                : new Date().setHours(0, 0)
+            }
+            maxTime={maxTime}
+            placeholderText="Select date and time"
+            className="input"
+            // portalId="root-portal"
+          />
+          <button
+            type="button"
+            className="button is-right"
+            title="Clear Date"
+            onClick={() => setSelectedDate(null)}
+          >
+            <Icon name="x" className="has-text-dark" size="20" />
+          </button>
+        </ModalDatePickerWrapper>
+
+        <div className="buttons">
+          <button
+            className="button is-success"
+            // disabled={!selectedCodes.length || loading}
+            onClick={saveScheduledDate}
+          >
+            <Icon name="check" /> Confirm
+          </button>
+          <button
+            className="button is-danger"
+            // disabled={!selectedCodes.length || loading}
+            onClick={() => {
+              closeModal()
+            }}
+          >
+            <Icon name="x" /> Cancel
+          </button>
+        </div>
+      </ModalContent>
     </Modal>
   )
 }
@@ -484,6 +696,9 @@ const QueueTab = (): ReactElement => {
     useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
   const [showQSModal, setShowQSModal] = useState<boolean>(false)
+  const [QSModalQueueType, setQSModalQueueType] = useState<
+    'reapproval' | 'new'
+  >('reapproval')
 
   function refetchClubs() {
     doApiRequest('/clubs/?active=true&approved=none&format=json')
@@ -512,7 +727,9 @@ const QueueTab = (): ReactElement => {
 
     doApiRequest('/settings/queue/?format=json')
       .then((resp) => resp.json())
-      .then(setRegistrationQueueSettings)
+      .then((data) => {
+        setRegistrationQueueSettings(data)
+      })
   }
 
   useEffect(() => {
@@ -669,16 +886,28 @@ const QueueTab = (): ReactElement => {
                 })
               }
             />
-            <button
-              onClick={() => {
-                setShowQSModal(true)
-              }}
+            <div
+              className="reapproval-datepicker-icon"
+              style={{ justifySelf: 'center', alignSelf: 'center' }}
             >
-              {' '}
-              test{' '}
-            </button>
+              <span title="Schedule reapproval queue open/close time">
+                <Icon
+                  name="calendar"
+                  size="20"
+                  onClick={() => {
+                    setShowQSModal(true)
+                    setQSModalQueueType('reapproval')
+                  }}
+                />
+              </span>
+            </div>
+
             <QueueSchedulerModal
               show={showQSModal}
+              queueType={QSModalQueueType}
+              registrationQueueSettings={registrationQueueSettings}
+              showModal={showQSModal}
+              setRegistrationQueueSettings={setRegistrationQueueSettings}
               closeModal={() => {
                 setShowQSModal(false)
               }}
@@ -693,6 +922,21 @@ const QueueTab = (): ReactElement => {
                 })
               }
             />
+            <div
+              className="new-approval-datepicker-icon"
+              style={{ justifySelf: 'center', alignSelf: 'center' }}
+            >
+              <span title="Schedule new approval queue open/close time">
+                <Icon
+                  name="calendar"
+                  size="20"
+                  onClick={() => {
+                    setShowQSModal(true)
+                    setQSModalQueueType('new')
+                  }}
+                />
+              </span>
+            </div>
           </QueueSettingsButtonStack>
         </>
       )}
