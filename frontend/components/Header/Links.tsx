@@ -115,6 +115,9 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement<any> => {
   return (
     <Menu className="navbar-menu" $show={show}>
       <div className="navbar-end" style={{ padding: '0 1rem' }}>
+        <StyledLink href="/clubs" onClick={() => logEvent('clubs', 'click')}>
+          Clubs
+        </StyledLink>
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
           Events
         </StyledLink>

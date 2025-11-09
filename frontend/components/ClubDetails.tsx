@@ -1,7 +1,7 @@
 import { ReactElement } from 'react'
 import styled from 'styled-components'
 
-import { UpdateClubContext } from '~/pages'
+import { UpdateClubContext } from '~/pages/clubs'
 
 import { CLUBS_GREY } from '../constants/colors'
 import { Club, ClubApplicationRequired } from '../types'
