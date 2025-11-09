@@ -1168,9 +1168,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 "eligibility",
             )
 
-            export_members = (
-                self.request.accepted_renderer.format == "xlsx"
-                and "members" in self.request.query_params.get("fields", "")
+            fields = self.request.query_params.get("fields", "")
+            export_members = self.request.accepted_renderer.format == "xlsx" and (
+                "members" in fields or fields == ""
             )
             if export_members:
                 membership_queryset = Membership.objects.select_related(
