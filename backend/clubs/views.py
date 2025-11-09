@@ -1165,6 +1165,20 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 "group_activity_assessment",
                 "eligibility",
             )
+
+            export_members = (
+                self.request.accepted_renderer.format == "xlsx"
+                and "members" in self.request.query_params.get("fields", "")
+            )
+            if export_members:
+                membership_queryset = Membership.objects.select_related(
+                    "person", "person__profile"
+                )
+
+                queryset = queryset.prefetch_related(
+                    Prefetch("membership_set", queryset=membership_queryset),
+                )
+
             queryset = queryset.select_related(
                 "classification",
                 "category",
