@@ -1,6 +1,7 @@
 import { Icon } from 'components/common'
 import { DateTime } from 'luxon'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
@@ -21,12 +22,83 @@ import {
   LOGO_SCALE,
   MD,
   mediaMaxWidth,
+  PHONE,
 } from '~/constants/measurements'
+// displayEvents
+const displayEvents = (events) => {
+  if (!events || events.length === 0) {
+    return (
+      <>
+        <SectionHeader>
+          <SectionTitle>No Upcoming Events</SectionTitle>
+          <SeeMoreLink href="/events">See More</SeeMoreLink>
+        </SectionHeader>
+        <p>Check back later for updates on upcoming events!</p>
+      </>
+    )
+  }
+  const eventsToShow = events.length > 5 ? events.slice(0, 5) : events
+  return (
+    <>
+      <SectionHeader>
+        <SectionTitle>Upcoming Events</SectionTitle>
+        <SeeMoreLink href="/events">See More</SeeMoreLink>
+      </SectionHeader>
 
+      {eventsToShow.map((event) => (
+        <Link key={event.id} href={`/events/${event.id}`}>
+          <EventCard>
+            <EventImageWrapper>
+              <SmallCover
+                image={event.image_url}
+                fallback={
+                  <p style={{ textAlign: 'center' }}>
+                    <b>{event.name?.toUpperCase() || 'EVENT'}</b>
+                  </p>
+                }
+              />
+            </EventImageWrapper>
+
+            <EventInfo>
+              <EventClubName>{event.club_name}</EventClubName>
+              <EventTitle>{event.name}</EventTitle>
+              <EventDate>
+                {formatEventDateRange(
+                  event.earliest_start_time,
+                  event.earliest_end_time,
+                )}
+              </EventDate>
+            </EventInfo>
+          </EventCard>
+        </Link>
+      ))}
+    </>
+  )
+}
+const displayClubs = (clubs) => {
+  return clubs.map((club) => (
+    <Link key={club.code} href={`/club/${club.code}`}>
+      <ClubResult>
+        <SmallLogo image={club.image_url} name={club.name} />
+        <ClubInfo>
+          <ClubName>{club.name}</ClubName>
+          <ClubTags>
+            {club.tags
+              ?.slice(0, 3)
+              .map((tag) => <ClubTag key={tag.id}>{tag.name}</ClubTag>)}
+          </ClubTags>
+        </ClubInfo>
+      </ClubResult>
+    </Link>
+  ))
+}
 const PageContainer = styled.div`
   background-color: ${SNOW};
   min-height: 100vh;
   padding: 2rem 2rem;
+  @media (max-width: ${PHONE}) {
+    padding: 2rem 0rem;
+  }
 `
 
 const HeaderSection = styled.div`
@@ -72,6 +144,7 @@ const Subtitle = styled.p`
   font-size: 1rem;
   color: ${CLUBS_GREY_LIGHT};
   margin: 0.5rem 0 2rem 0;
+  padding: 0 2rem;
   font-style: italic;
 `
 
@@ -84,18 +157,14 @@ const SearchContainer = styled.div`
 const InternalSearchContainer = styled.div`
   border-radius: 25px;
   background-color: ${WHITE};
-  border-radius: 25px;
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  &::placeholder {
-    color: ${CLUBS_GREY_LIGHT};
-  }
 `
 const SearchInput = styled.input`
   width: 100%;
   padding: 1rem 3rem 1rem 1rem;
-  border: 0px;
   border-radius: 25px;
+  border: none;
   font-size: 1rem;
   background-color: ${WHITE};
   &::placeholder {
@@ -129,6 +198,10 @@ const SectionHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  @media (max-width: ${PHONE}) {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
 `
 
 const SectionTitle = styled.h2`
@@ -146,6 +219,12 @@ const SeeMoreLink = styled.a`
   &:hover {
     text-decoration: underline;
   }
+
+  @media (max-width: ${PHONE}) {
+    display: block;
+    flex-basis: 100%;
+    margin-top: 0.5rem;
+  }
 `
 
 const ErrorBanner = styled.div`
@@ -158,14 +237,26 @@ const ErrorBanner = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  @media (max-width: ${PHONE}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 `
 
 const RetryButton = styled.button`
   background: transparent;
-  border: none;
+  border: 0px;
   color: ${CLUBS_BLUE};
   font-weight: 700;
   cursor: pointer;
+
+  @media (max-width: ${PHONE}) {
+    display: block;
+    width: auto;
+    margin-top: 0.25rem;
+  }
 `
 
 const EventCard = styled.div`
@@ -186,10 +277,26 @@ const EventCard = styled.div`
   &:focus {
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
   }
+
+  @media (max-width: ${PHONE}) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0; /* we'll let children control padding so image sits edge-to-edge */
+    gap: 0;
+  }
 `
 
 const EventInfo = styled.div`
   flex: 1;
+  padding: 0 0; /* default no extra horizontal padding */
+
+  @media (min-width: ${PHONE}) {
+    padding: 0; /* keep behavior on desktop unchanged */
+  }
+
+  @media (max-width: ${PHONE}) {
+    padding: 0.75rem 1rem; /* content padding when stacked */
+  }
 `
 
 const EventClubName = styled.h3`
@@ -215,6 +322,14 @@ const EventImageWrapper = styled.div`
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
+
+  @media (max-width: ${PHONE}) {
+    width: 100%;
+    height: 160px; /* taller banner image on mobile */
+    border-radius: 8px 8px 0 0; /* round top corners only */
+    flex-shrink: 0;
+    order: -1; /* place image above content when stacked */
+  }
 `
 
 const SmallCover: React.FC<{ image?: string; fallback?: React.ReactNode }> = ({
@@ -309,9 +424,23 @@ const ClubResultsContainer = styled.div`
   margin-top: 1rem;
 `
 
+const NoResults = styled.div`
+  padding: 1rem 1.25rem;
+  color: ${CLUBS_GREY_LIGHT};
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border-top: 1px solid #f0f0f0;
+`
+
+const NoResultsTitle = styled.div`
+  font-weight: 700;
+  color: ${H1_TEXT};
+  margin-bottom: 0.25rem;
+`
+
 const ClubResult = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   padding: 1.25rem 1.5rem;
   gap: 1rem;
   border-bottom: 1px solid #f0f0f0;
@@ -352,6 +481,16 @@ const EventFallbackLogo = styled(ClubLogo)`
   border-radius: 8px;
   padding: 0.5rem;
   box-sizing: border-box;
+
+  @media (max-width: ${PHONE}) {
+    width: 100%;
+    height: 160px;
+    padding: 0;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `
 
 const ClubInfo = styled.div`
@@ -364,6 +503,7 @@ const ClubInfo = styled.div`
 
 const ClubName = styled.h4`
   font-size: 1.125rem;
+  text-align: left;
   font-weight: 700;
   color: ${H1_TEXT};
   margin: 0;
@@ -399,13 +539,12 @@ function formatEventDateRange(startISO, endISO) {
   const startDate = dateFormatter.format(start)
   const endWeekday = weekdayFormatter.format(end)
   const endDate = dateFormatter.format(end)
-
   // If the range is within the same month
-  if (start.getMonth() === end.getMonth()) {
+  if (startDate === endDate) {
+    return `${startWeekday}, ${startDate}`
+  } else if (start.getMonth() === end.getMonth()) {
     return `${startWeekday}, ${startDate} – ${endWeekday}, ${endDate}`
-  }
-  // If across different months
-  else {
+  } else {
     const fullDateFormatter = new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
@@ -428,7 +567,9 @@ const Splash = (): ReactElement<any> => {
   const [clubSearchValue, setClubSearchValue] = useState('')
   const [clubSearchInput, setClubSearchInput] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [clubsSearchFinished, setClubsSearchFinished] = useState(false)
   const searchTimeout = useRef<number | null>(null)
+  const router = useRouter()
 
   const retryClubs = async () => {
     setClubsError(null)
@@ -437,7 +578,7 @@ const Splash = (): ReactElement<any> => {
         method: 'GET',
       })
       const data = await response.json()
-      setClubs(data.results?.slice(0, 3) || [])
+      setClubs(data.results?.slice(0, 4) || [])
     } catch (e) {
       setClubsError('Could not load clubs. Please try again.')
     }
@@ -446,7 +587,7 @@ const Splash = (): ReactElement<any> => {
   const retryEvents = async () => {
     setEventsError(null)
     try {
-      const response = await fetch('/api/events/')
+      const response = await doApiRequest('/events/')
       if (response.ok) {
         const data = await response.json()
         setTrendingEvents(data)
@@ -457,27 +598,6 @@ const Splash = (): ReactElement<any> => {
       setEventsError('Could not load events. Please try again.')
     }
   }
-
-  // Fetch initial clubs
-  useEffect(() => {
-    const fetchInitialClubs = async () => {
-      try {
-        const response = await doApiRequest('/clubs/?format=json&page=1', {
-          method: 'GET',
-        })
-        const data = await response.json()
-        setClubs(data.results?.slice(0, 3) || [])
-        setClubsError(null)
-      } catch (error) {
-        // Handle error silently
-        setClubs([])
-        setClubsError('Could not load clubs. Server may be down.')
-      }
-    }
-    fetchInitialClubs()
-  }, [])
-
-  // Fetch trending events
   useEffect(() => {
     const fetchTrendingEvents = async () => {
       try {
@@ -526,6 +646,12 @@ const Splash = (): ReactElement<any> => {
   // Fetch clubs based on search
   useEffect(() => {
     const fetchClubs = async () => {
+      setClubsSearchFinished(false)
+      // do not call the API if the search value is empty
+      if (!clubSearchValue || clubSearchValue.trim().length === 0) {
+        setClubs([])
+        return
+      }
       try {
         const params = new URLSearchParams({
           format: 'json',
@@ -544,59 +670,31 @@ const Splash = (): ReactElement<any> => {
         setClubs([])
         setClubsError('Search failed. Please try again.')
       }
+      setClubsSearchFinished(true)
     }
 
     fetchClubs()
   }, [clubSearchValue])
-  const displayClubs = (clubs) => {
-    return clubs.map((club) => (
-      <Link key={club.code} href={`/club/${club.code}`}>
-        <ClubResult>
-          <SmallLogo image={club.image_url} name={club.name} />
-          <ClubInfo>
-            <ClubName>{club.name}</ClubName>
-            <ClubTags>
-              {club.tags
-                ?.slice(0, 3)
-                .map((tag) => <ClubTag key={tag.id}>{tag.name}</ClubTag>)}
-            </ClubTags>
-          </ClubInfo>
-        </ClubResult>
-      </Link>
-    ))
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    performSearch()
   }
 
-  const displayEvents = (events) => {
-    if (!events || events.length === 0) {
-      return null
+  // perform the search navigation logic (shared by Enter key and search icon click)
+  const performSearch = () => {
+    const q = clubSearchInput.trim()
+    if (!q) return
+
+    if (clubs && clubs.length === 1) {
+      const only = (clubs as any)[0]
+      if (only && only.code) {
+        router.push(`/club/${only.code}`)
+        return
+      }
     }
-    const eventsToShow = events.length > 5 ? events.slice(0, 5) : events
-    return eventsToShow.map((event) => (
-      <Link key={event.id} href={`/events/${event.id}`}>
-        <EventCard>
-          <EventInfo>
-            <EventClubName>{event.club_name}</EventClubName>
-            <EventTitle>{event.name}</EventTitle>
-            <EventDate>
-              {formatEventDateRange(
-                event.earliest_start_time,
-                event.earliest_end_time,
-              )}
-            </EventDate>
-          </EventInfo>
-          <EventImageWrapper>
-            <SmallCover
-              image={event.image_url}
-              fallback={
-                <p style={{ textAlign: 'center' }}>
-                  <b>{event.name?.toUpperCase() || 'EVENT'}</b>
-                </p>
-              }
-            />
-          </EventImageWrapper>
-        </EventCard>
-      </Link>
-    ))
+
+    router.push(`/clubs?search=${encodeURIComponent(q)}`)
   }
   return (
     <PageContainer>
@@ -611,13 +709,15 @@ const Splash = (): ReactElement<any> => {
         <SearchContainer>
           <InternalSearchContainer>
             <SearchInput
+              aria-label="Search clubs"
               placeholder="Explore Your Favorite Clubs Here"
               value={clubSearchInput}
               onChange={(e) => setClubSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
             />
-            <SearchIcon>
+            <SearchIcon onClick={performSearch}>
               <Icon name="search" size="1.2rem" />
             </SearchIcon>
             {clubsError && (
@@ -626,20 +726,31 @@ const Splash = (): ReactElement<any> => {
                 <RetryButton onClick={retryClubs}>Retry</RetryButton>
               </ErrorBanner>
             )}
-            {isSearchFocused && clubs.length > 0 && (
-              <ClubResultsContainer onMouseDown={(e) => e.preventDefault()}>
-                {displayClubs(clubs)}
-              </ClubResultsContainer>
-            )}
+            {isSearchFocused &&
+              clubSearchInput.trim().length > 0 &&
+              ((clubs && clubs.length > 0) || clubsSearchFinished) && (
+                <ClubResultsContainer onMouseDown={(e) => e.preventDefault()}>
+                  {clubs && clubs.length > 0 ? (
+                    displayClubs(clubs)
+                  ) : (
+                    <NoResults>
+                      <NoResultsTitle>No clubs found</NoResultsTitle>
+                      <div>
+                        We couldn't find any clubs matching "{clubSearchInput}".{' '}
+                        <a
+                          href={`/clubs?search=${encodeURIComponent(clubSearchInput)}`}
+                        >
+                          See all clubs
+                        </a>
+                      </div>
+                    </NoResults>
+                  )}
+                </ClubResultsContainer>
+              )}
           </InternalSearchContainer>
         </SearchContainer>
       </HeaderSection>
-
       <TrendingSection>
-        <SectionHeader>
-          <SectionTitle>Upcoming Events</SectionTitle>
-          <SeeMoreLink href="/events">See More</SeeMoreLink>
-        </SectionHeader>
         {eventsError && (
           <ErrorBanner>
             <div>{eventsError}</div>
