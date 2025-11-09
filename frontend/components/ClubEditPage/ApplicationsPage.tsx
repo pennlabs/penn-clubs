@@ -394,7 +394,9 @@ export default function ApplicationsPage({
 }: {
   club: Club
 }): ReactElement<any> {
-  const [applications, setApplications] = useState<Array<Application>>([])
+  const [applications, setApplications] = useState<Array<Application> | null>(
+    null,
+  )
   const [currentApplication, setCurrentApplication] =
     useState<Application | null>(null)
   const [submissions, setSubmissions] = useState<{
@@ -419,8 +421,8 @@ export default function ApplicationsPage({
     })
       .then((resp) => resp.json())
       .then((applications) => {
+        setApplications(applications)
         if (applications.length !== 0) {
-          setApplications(applications)
           setCurrentApplication({
             ...applications[applications.length - 1],
             name: format_app_name(applications[applications.length - 1]),
@@ -612,40 +614,53 @@ export default function ApplicationsPage({
   return (
     <>
       <StyledHeader style={{ marginBottom: '2px' }}>Applications</StyledHeader>
-      <Text>
-        Select an application here and responses will populate below! Click on
-        any response to see the entire application. You can also download to
-        CSV.
-      </Text>
-      <Select
-        options={applications.toReversed().map((application) => {
-          return {
-            ...application,
-            value: application.id,
-            label: format_app_name(application),
-          }
-        })}
-        value={
-          currentApplication != null
-            ? {
-                ...currentApplication,
-                value: currentApplication.id,
-                label: currentApplication.name,
+      {applications === null ? (
+        <Loading />
+      ) : applications.length === 0 ? (
+        <Text>
+          No applications have been created for this club.{' '}
+          <a href={`/club/${club.code}/edit/recruitment`}>
+            Create a new application.
+          </a>
+        </Text>
+      ) : (
+        <>
+          <Text>
+            Select an application here and responses will populate below! Click
+            on any response to see the entire application. You can also download
+            to CSV.
+          </Text>
+          <Select
+            options={applications.toReversed().map((application) => {
+              return {
+                ...application,
+                value: application.id,
+                label: format_app_name(application),
               }
-            : null
-        }
-        onChange={(
-          v: {
-            value: number
-            label: string
-            cycle: string
-            application_end_time: string
-          } | null,
-        ) =>
-          v != null &&
-          setCurrentApplication({ ...v, id: v.value, name: v.label })
-        }
-      />
+            })}
+            value={
+              currentApplication != null
+                ? {
+                    ...currentApplication,
+                    value: currentApplication.id,
+                    label: currentApplication.name,
+                  }
+                : null
+            }
+            onChange={(
+              v: {
+                value: number
+                label: string
+                cycle: string
+                application_end_time: string
+              } | null,
+            ) =>
+              v != null &&
+              setCurrentApplication({ ...v, id: v.value, name: v.label })
+            }
+          />
+        </>
+      )}
       <br></br>
       <div>
         {currentApplication != null ? (
@@ -895,9 +910,10 @@ export default function ApplicationsPage({
             </button>
           </div>
         )}
-      <br></br>
       <div>
-        {currentApplication != null ? (
+        {applications !== null &&
+        applications.length > 0 &&
+        currentApplication != null ? (
           <>
             <StyledHeader style={{ marginBottom: '2px' }}>
               Extensions
@@ -927,10 +943,9 @@ export default function ApplicationsPage({
               noun="Extension"
             />
           </>
-        ) : (
-          <Loading />
-        )}
+        ) : null}
       </div>
+
       {showModal && (
         <Modal
           show={showModal}
