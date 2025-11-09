@@ -211,6 +211,22 @@ class ClubTestCase(TestCase):
             email="example@example.com",
         )
 
+        self.wc = Club.objects.create(
+            code="wharton-council",
+            name="Wharton Council",
+            approved=True,
+            email="example@example.com",
+        )
+
+        # some tests (e.g. directory) implicitly assume some constant number of clubs
+        self.NUM_CLUBS = 2
+
+        self.wc_badge = Badge.objects.create(
+            org=self.wc,
+            label="Wharton Council",
+            description="Wharton Council",
+        )
+
         self.event1 = Event.objects.create(
             code="test-event",
             club=self.club1,
@@ -268,7 +284,7 @@ class ClubTestCase(TestCase):
         """
         resp = self.client.get(reverse("clubs-directory"))
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(len(resp.data), self.NUM_CLUBS)
 
     def test_advisor_visibility(self):
         """
@@ -1879,6 +1895,71 @@ class ClubTestCase(TestCase):
         self.assertEqual(data["description"], "We do stuff.")
         self.assertEqual(len(data["tags"]), 2)
 
+    def test_club_modify_child(self):
+        """
+        Officers of parent clubs should be able to modify child clubs
+        (e.g. clubs with the parent badge).
+        """
+        child_club = Club.objects.create(
+            name="WC Member Club",
+            code="wc-club",
+            description="We love Wharton",
+        )
+        Membership.objects.create(
+            person=self.user4, club=self.wc, role=Membership.ROLE_OFFICER
+        )
+
+        self.client.login(username=self.user4.username, password="test")
+
+        # assert that we can't modify a non-child club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(child_club.code,)),
+            {"description": "We hate Wharton"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # assert that we can modify a child club
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("badge-clubs-list", args=(self.wc_badge.id,)),
+            {"club": child_club.code},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        child_club.refresh_from_db()
+        self.assertEqual(child_club.badges.count(), 1)
+        self.assertEqual(child_club.badges.all()[0], self.wc_badge)
+        self.assertEqual(child_club.parent_orgs.count(), 1)
+        self.assertEqual(child_club.parent_orgs.all()[0], self.wc)
+
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(child_club.code,)),
+            {"description": "We hate Wharton"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # assert that removing the badge also removes the parent relationship
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.delete(
+            reverse("badge-clubs-detail", args=(self.wc_badge.id, child_club.code)),
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        child_club.refresh_from_db()
+        self.assertEqual(child_club.badges.count(), 0)
+        self.assertEqual(child_club.parent_orgs.count(), 0)
+
+        # assert that we can no longer modify the club after badge removal
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(child_club.code,)),
+            {"description": "We love Wharton again"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
     def test_club_archive_no_auth(self):
         """
         Unauthenticated users should not be able to archive a club.
@@ -1916,6 +1997,7 @@ class ClubTestCase(TestCase):
         self.club1.save()
 
         # ensure club was put back on clubs endpoint
+        cache.clear()
         resp = self.client.get(reverse("clubs-list"))
         self.assertIn(resp.status_code, [200], resp.content)
         codes = [club["code"] for club in resp.data]
@@ -2354,7 +2436,7 @@ class ClubTestCase(TestCase):
             reverse("clubs-list"), {"format": "xlsx", "fields": "name"}
         )
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertEqual(1, len(res.data[0]))
 
@@ -2363,14 +2445,14 @@ class ClubTestCase(TestCase):
             reverse("clubs-list"), {"format": "xlsx", "fields": "name,code"}
         )
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertEqual(2, len(res.data[0]))
 
     def test_club_report_selects_all_fields(self):
         res = self.client.get(reverse("clubs-list"), {"format": "xlsx"})
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertTrue(len(res.data[0]) > 2)
 

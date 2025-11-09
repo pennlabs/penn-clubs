@@ -1,4 +1,5 @@
 import { Field, Form, Formik } from 'formik'
+import { json2csv } from 'json-2-csv'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
@@ -18,7 +19,7 @@ import {
   ApplicationSubmission,
   Club,
 } from '~/types'
-import { doApiRequest, getApiUrl, getSemesterFromDate } from '~/utils'
+import { doApiRequest, getSemesterFromDate } from '~/utils'
 
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
@@ -409,6 +410,8 @@ export default function ApplicationsPage({
   const [categoriesSelectAll, setCategoriesSelectAll] = useState<Array<string>>(
     [],
   )
+  const [filteredSubmissionsForExport, setFilteredSubmissionsForExport] =
+    useState<Array<ApplicationSubmission>>([])
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -514,6 +517,87 @@ export default function ApplicationsPage({
       })),
     [responseTableFields],
   )
+
+  const tableData = useMemo(
+    () =>
+      currentApplication != null && submissions[currentApplication.id] != null
+        ? submissions[currentApplication.id].map((item, index) =>
+            item.pk ? { ...item, id: item.pk } : { ...item, id: index },
+          )
+        : [],
+    [submissions, currentApplication?.id],
+  )
+
+  function downloadResponsesCsv() {
+    if (
+      currentApplication == null ||
+      submissions[currentApplication.id] == null ||
+      submissions[currentApplication.id].length === 0
+    ) {
+      return
+    }
+
+    const rows =
+      filteredSubmissionsForExport && filteredSubmissionsForExport.length > 0
+        ? filteredSubmissionsForExport
+        : submissions[currentApplication.id]
+
+    // Collect all unique question prompts across filtered rows
+    const promptSet = new Set<string>()
+    rows.forEach((sub) => {
+      if (sub.responses) {
+        sub.responses.forEach((r) => {
+          if (r && r.question && r.question.prompt) {
+            promptSet.add(r.question.prompt)
+          }
+        })
+      }
+    })
+    const prompts = Array.from(promptSet).sort((a, b) => a.localeCompare(b))
+
+    // Build CSV records with required base fields and question columns
+    const records = rows.map((sub) => {
+      const base: { [key: string]: string } = {
+        'First Name': sub.first_name || '',
+        'Last Name': sub.last_name || '',
+        Email: sub.email || '',
+        Committee: sub.committee || 'General Member',
+        Status: sub.status || '',
+        'Graduation Year': sub.graduation_year || '',
+      }
+
+      // Build a quick lookup for responses by prompt
+      const responsesByPrompt: { [prompt: string]: string } = {}
+      if (sub.responses) {
+        sub.responses.forEach((r) => {
+          const prompt = r?.question?.prompt
+          if (!prompt) return
+          const mc = r?.multiple_choice?.value
+          const text = r?.text
+          responsesByPrompt[prompt] = (mc != null ? mc : text) || ''
+        })
+      }
+
+      prompts.forEach((p) => {
+        base[p] = responsesByPrompt[p] || ''
+      })
+
+      return base
+    })
+
+    try {
+      const csv = json2csv(records, { emptyFieldValue: '' })
+      const dataStr = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
+      const a = document.createElement('a')
+      a.setAttribute('href', dataStr)
+      a.setAttribute('download', 'submissions.csv')
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    } catch (e) {
+      toast.error('Failed to download CSV. Please try again.')
+    }
+  }
 
   const format_app_name: (application: Application) => any = (application) => (
     <span>
@@ -707,14 +791,14 @@ export default function ApplicationsPage({
                 <ScrollWrapper>
                   <TableWrapper>
                     <Table
-                      data={submissions[currentApplication.id].map(
-                        (item, index) =>
-                          item.pk
-                            ? { ...item, id: item.pk }
-                            : { ...item, id: index },
-                      )}
+                      data={tableData}
                       columns={responseTableFields}
                       searchableColumns={['name']}
+                      onFilteredDataChange={(rows) =>
+                        setFilteredSubmissionsForExport(
+                          rows as Array<ApplicationSubmission>,
+                        )
+                      }
                       filterOptions={[
                         {
                           label: 'notified',
@@ -803,18 +887,12 @@ export default function ApplicationsPage({
         submissions[currentApplication.id] != null &&
         submissions[currentApplication.id].length > 0 && (
           <div style={{ marginTop: '1em' }}>
-            <a
-              href={
-                currentApplication != null
-                  ? getApiUrl(
-                      `/clubs/${club.code}/applications/${currentApplication.id}/submissions/export`,
-                    )
-                  : '#'
-              }
+            <button
               className="button is-link is-small"
+              onClick={downloadResponsesCsv}
             >
               <Icon alt="download" name="download" /> Download Responses
-            </a>
+            </button>
           </div>
         )}
       <br></br>

@@ -14,6 +14,7 @@ from clubs.models import (
     ApplicationCycle,
     ApplicationMultipleChoice,
     ApplicationQuestion,
+    ApplicationQuestionResponse,
     ApplicationSubmission,
     Badge,
     Cart,
@@ -972,6 +973,40 @@ class Command(BaseCommand):
                         user=user,
                         application=penn_memes_fall_app,
                         committee=committee,
+                    )
+
+        # Create example responses for penn-memes applications
+        for app in filter(None, [penn_memes_spring_app, penn_memes_fall_app]):
+            mc_q = ApplicationQuestion.objects.filter(
+                application=app,
+                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                prompt="""Choose one of the following prompts
+                          for your personal statement""",
+            ).first()
+            fr_q = ApplicationQuestion.objects.filter(
+                application=app,
+                question_type=ApplicationQuestion.FREE_RESPONSE,
+                prompt="Answer the prompt you selected",
+            ).first()
+
+            submissions_qs = ApplicationSubmission.objects.filter(application=app)
+            choices = list(mc_q.multiple_choice.all()) if mc_q else []
+
+            for idx, sub in enumerate(submissions_qs):
+                if mc_q and choices:
+                    ApplicationQuestionResponse.objects.get_or_create(
+                        question=mc_q,
+                        submission=sub,
+                        defaults={"multiple_choice": choices[idx % len(choices)]},
+                    )
+                if fr_q:
+                    ApplicationQuestionResponse.objects.get_or_create(
+                        question=fr_q,
+                        submission=sub,
+                        defaults={
+                            "text": f"""Sample response by
+                            {sub.user.first_name} {sub.user.last_name} for {app.name}"""
+                        },
                     )
 
         # 10am today

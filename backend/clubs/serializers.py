@@ -72,6 +72,7 @@ from clubs.models import (
     Type,
     Year,
 )
+from clubs.permissions import ClubPermission
 from clubs.utils import clean, html_to_text
 
 
@@ -1017,6 +1018,15 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
 
 
+class FakeView(object):
+    """
+    Dummy view used for permissions checking by the UserPermissionAPIView.
+    """
+
+    def __init__(self, action):
+        self.action = action
+
+
 class ClubDiffSerializer(serializers.ModelSerializer):
     diff = serializers.SerializerMethodField()
 
@@ -1177,8 +1187,14 @@ class ClubListSerializer(serializers.ModelSerializer):
         if instance.ghost and not instance.approved:
             user = self.context["request"].user
 
-            can_see_pending = user.has_perm("clubs.see_pending_clubs") or user.has_perm(
-                "clubs.manage_club"
+            # admins, club members, and anyone with permission to edit the club
+            # can see its latest, potentially unapproved version
+            can_see_pending = (
+                user.has_perm("clubs.see_pending_clubs")
+                or user.has_perm("clubs.manage_club")
+                or ClubPermission().has_object_permission(
+                    self.context["request"], FakeView("update"), instance
+                )
             )
             is_member = (
                 user.is_authenticated
