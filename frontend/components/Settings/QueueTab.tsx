@@ -415,26 +415,28 @@ const QueueSettingsButtonStack = styled.div<{ direction: 'column' | 'row' }>`
 const QueueSettingsButton = ({
   open,
   for: queueType,
-  setOpen: setQueueOpen,
+  updateQueueSettings,
 }: {
   open: boolean
   for: 'reapproval_queue_open' | 'new_approval_queue_open'
-  setOpen: (open: boolean) => void
+  updateQueueSettings: (data: RegistrationQueueSettings) => void
 }): ReactElement<any> => {
-  const onClick = () => {
-    doApiRequest('/settings/queue/', {
+  const onClick = async () => {
+    const resp = await doApiRequest('/settings/queue/', {
       method: 'PATCH',
 
       body: {
         [queueType]: !open,
       },
-    }).then((resp) => {
-      if (resp.ok) {
-        setQueueOpen(!open)
-      } else {
-        toast.error('Failed to update queue settings.')
-      }
     })
+
+    if (!resp.ok) {
+      toast.error('Failed to update queue settings.')
+      return
+    }
+
+    const data = await resp.json()
+    updateQueueSettings(data)
   }
 
   const name =
@@ -545,7 +547,9 @@ const QueueSchedulerModal = ({
 
       const refreshedSettings = await resp.json()
       setRegistrationQueueSettings(refreshedSettings)
-      toast.success('Successfully updated queue settings.')
+      toast.success(
+        'Successfully updated queue settings and cleared scheduled flip date.',
+      )
     } catch (err) {}
     // setApprove(true)
     // setShowModal(true)
@@ -567,7 +571,9 @@ const QueueSchedulerModal = ({
         <div className="mb3" style={{ marginBottom: '2rem' }}>
           The{' '}
           <b>
-            {queueType === 'reapproval' ? 'reapproval' : 'new request approval'}{' '}
+            {queueType === 'reapproval'
+              ? 'reapproval request'
+              : 'new approval request'}{' '}
             queue
           </b>{' '}
           is currently
@@ -575,7 +581,7 @@ const QueueSchedulerModal = ({
             {' '}
             {queueState ? ' open' : ' closed'}
           </b>{' '}
-          and is currently{' '}
+          and is{' '}
           {scheduledDate == null ? (
             <>
               not scheduled to
@@ -612,11 +618,14 @@ const QueueSchedulerModal = ({
               .
             </>
           )}{' '}
+        </div>
+        {/* <label>Date and Time</label> */}
+        <label>
           Schedule when the{' '}
           <b>
             {queueType === 'reapproval'
-              ? 'reapproval '
-              : 'new request approval'}{' '}
+              ? 'reapproval request'
+              : 'new approval request'}{' '}
             queue
           </b>{' '}
           should{' '}
@@ -624,8 +633,7 @@ const QueueSchedulerModal = ({
             {desiredState ? 'open' : 'close'}
           </b>
           !
-        </div>
-        <label>Date and Time</label>
+        </label>
         <ModalDatePickerWrapper>
           <DatePicker
             selected={selectedDate}
@@ -849,36 +857,130 @@ const QueueTab = (): ReactElement => {
             <div>
               <SmallTitle>Status</SmallTitle>
               <div className="mb-3">
-                The approval queue is currently
-                <b
-                  className={
-                    registrationQueueSettings.reapproval_queue_open
-                      ? 'has-text-success'
-                      : 'has-text-danger'
-                  }
-                >
-                  {registrationQueueSettings.reapproval_queue_open
-                    ? ' open'
-                    : ' closed'}
-                </b>{' '}
-                for reapproval requests and
-                <b
-                  className={
-                    registrationQueueSettings.new_approval_queue_open
-                      ? 'has-text-success'
-                      : 'has-text-danger'
-                  }
-                >
-                  {registrationQueueSettings.new_approval_queue_open
-                    ? ' open'
-                    : ' closed'}
-                </b>{' '}
-                for new requests.
-                <span
-                  title={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
-                >
-                  <Icon name="clock" className="ml-1" />
-                </span>
+                <div>
+                  The <b>reapproval request queue</b> is currently
+                  <b
+                    className={
+                      registrationQueueSettings.reapproval_queue_open
+                        ? 'has-text-success'
+                        : 'has-text-danger'
+                    }
+                  >
+                    {registrationQueueSettings.reapproval_queue_open
+                      ? ' open'
+                      : ' closed'}
+                  </b>{' '}
+                  {registrationQueueSettings.reapproval_date_of_next_flip ? (
+                    <>
+                      {' and is scheduled to '}
+                      <b
+                        className={
+                          registrationQueueSettings.reapproval_queue_open
+                            ? 'has-text-danger'
+                            : 'has-text-success'
+                        }
+                      >
+                        {registrationQueueSettings.reapproval_queue_open
+                          ? 'close'
+                          : 'open'}
+                      </b>
+                      {' at '}
+                      <b>
+                        {new Date(
+                          registrationQueueSettings.reapproval_date_of_next_flip,
+                        ).toLocaleString(undefined, {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
+                      </b>
+                    </>
+                  ) : (
+                    <>
+                      and is not scheduled to
+                      <b
+                        className={
+                          registrationQueueSettings.reapproval_queue_open
+                            ? 'has-text-danger'
+                            : 'has-text-success'
+                        }
+                      >
+                        {registrationQueueSettings.reapproval_queue_open
+                          ? ' close'
+                          : ' open'}
+                      </b>
+                    </>
+                  )}
+                  .
+                </div>
+                <div>
+                  The <b>new approval request queue</b> is currently
+                  <b
+                    className={
+                      registrationQueueSettings.new_approval_queue_open
+                        ? 'has-text-success'
+                        : 'has-text-danger'
+                    }
+                  >
+                    {registrationQueueSettings.new_approval_queue_open
+                      ? ' open'
+                      : ' closed'}
+                  </b>
+                  {registrationQueueSettings.new_approval_date_of_next_flip ? (
+                    <>
+                      {' and is scheduled to '}
+                      <b
+                        className={
+                          registrationQueueSettings.new_approval_queue_open
+                            ? 'has-text-danger'
+                            : 'has-text-success'
+                        }
+                      >
+                        {registrationQueueSettings.new_approval_queue_open
+                          ? 'close'
+                          : 'open'}
+                      </b>
+                      {' at '}
+                      <b>
+                        {new Date(
+                          registrationQueueSettings.new_approval_date_of_next_flip,
+                        ).toLocaleString(undefined, {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
+                      </b>
+                    </>
+                  ) : (
+                    <>
+                      {' '}
+                      and is not scheduled to
+                      <b
+                        className={
+                          registrationQueueSettings.new_approval_queue_open
+                            ? 'has-text-danger'
+                            : 'has-text-success'
+                        }
+                      >
+                        {registrationQueueSettings.new_approval_queue_open
+                          ? ' close'
+                          : ' open'}
+                      </b>
+                    </>
+                  )}
+                  .
+                  <span
+                    title={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
+                  >
+                    <Icon name="clock" className="ml-1" />
+                  </span>
+                </div>
               </div>
             </div>
           </QueueSectionHeader>
@@ -886,12 +988,7 @@ const QueueTab = (): ReactElement => {
             <QueueSettingsButton
               open={registrationQueueSettings.reapproval_queue_open}
               for="reapproval_queue_open"
-              setOpen={(open) =>
-                setRegistrationQueueSettings({
-                  ...registrationQueueSettings,
-                  reapproval_queue_open: open,
-                })
-              }
+              updateQueueSettings={setRegistrationQueueSettings}
             />
             <div
               className="reapproval-datepicker-icon"
@@ -922,12 +1019,7 @@ const QueueTab = (): ReactElement => {
             <QueueSettingsButton
               open={registrationQueueSettings.new_approval_queue_open}
               for="new_approval_queue_open"
-              setOpen={(open) =>
-                setRegistrationQueueSettings({
-                  ...registrationQueueSettings,
-                  new_approval_queue_open: open,
-                })
-              }
+              updateQueueSettings={setRegistrationQueueSettings}
             />
             <div
               className="new-approval-datepicker-icon"
