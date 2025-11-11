@@ -490,6 +490,7 @@ const QueueSchedulerModal = ({
   closeModal,
 }: QueueSchedulerModalProps): ReactElement => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const TIME_INTERVAL = 5 // minutes
   useEffect(() => {
     if (!registrationQueueSettings) return
 
@@ -500,6 +501,14 @@ const QueueSchedulerModal = ({
 
     setSelectedDate(date)
   }, [showModal])
+
+  function getNextValidDateTime(): Date {
+    const now = new Date()
+    const ms = 1000 * 60 * TIME_INTERVAL
+
+    const rounded = new Date(Math.ceil(now.getTime() / ms) * ms)
+    return rounded
+  }
 
   const queueState =
     queueType === 'reapproval'
@@ -622,9 +631,7 @@ const QueueSchedulerModal = ({
             // onCalendarOpen={() => {setSelectedDate(new Date)}}
             onChange={(date: Date) => {
               if (date <= now) {
-                const nextHour = new Date(now)
-                nextHour.setHours(now.getHours() + 1, 0, 0, 0)
-                date = nextHour
+                date = getNextValidDateTime()
               }
               setSelectedDate(date)
             }}
@@ -634,7 +641,7 @@ const QueueSchedulerModal = ({
             }}
             showTimeSelect
             dateFormat="MM/dd/yyyy h:mm aa"
-            timeIntervals={60}
+            timeIntervals={TIME_INTERVAL}
             minDate={now}
             minTime={
               !selectedDate ||
