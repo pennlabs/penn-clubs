@@ -45,6 +45,7 @@ from django.db.models import (
     CharField,
     Count,
     DurationField,
+    Exists,
     ExpressionWrapper,
     F,
     Max,
@@ -1228,6 +1229,37 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # filter out archived clubs
         queryset = queryset.filter(archived=False)
 
+        # filter out inactive clubs for regular users (non-members, non-officers, non-superusers)
+        if self.action == "list":
+            user = self.request.user
+            is_superuser = user.is_authenticated and user.is_superuser
+            has_special_perms = (
+                user.has_perm("clubs.see_pending_clubs")
+                or user.has_perm("clubs.manage_club")
+                or user.has_perm("clubs.approve_club")
+            )
+            
+            # Only filter out inactive clubs for regular users
+            # Superusers and users with special permissions can see all inactive clubs
+            if not (is_superuser or has_special_perms):
+                if user.is_authenticated:
+                    # Show active clubs OR inactive clubs where user is member/officer
+                    # Use Subquery to avoid JOIN duplicates
+                    queryset = queryset.filter(
+                        Q(active=True)
+                        | Q(
+                            active=False,
+                            pk__in=Subquery(
+                                Membership.objects.filter(
+                                    person=user, role__lte=Membership.ROLE_OFFICER
+                                ).values_list("club_id", flat=True)
+                            ),
+                        )
+                    )
+                else:
+                    # Anonymous users can only see active clubs
+                    queryset = queryset.filter(active=True)
+
         # filter by approved clubs
         if (
             self.request.user.has_perm("clubs.see_pending_clubs")
@@ -2163,7 +2195,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             and not self.request.user.has_perm("clubs.approve_club")
         ):
             return Response(cached_object)
-
         resp = super().list(*args, **kwargs)
         cache.set(key, resp.data, 60 * 60)
         return resp
