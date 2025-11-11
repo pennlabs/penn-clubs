@@ -2702,7 +2702,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
                     # archive and deactivate the club
                     if self.instance:
                         self.validated_data["archived"] = True
-                        self.validated_data["archived_by"] = request.user
+                        self.validated_data["archived_by"] = request.user if request is not None else None
                         self.validated_data["archived_on"] = timezone.now()
                         self.validated_data["active"] = False
                 elif status_name in ["FULL", "PRELIMINARY", "PROVISIONAL"]:
