@@ -1243,6 +1243,14 @@ class ClubListSerializer(serializers.ModelSerializer):
                 "help_text": "The text shown to the user in a preview card. "
                 "Short description of the club.",
             },
+            "approved": {
+                "read_only": True,
+                "help_text": "Whether the club has been approved by administrators.",
+            },
+            "active": {
+                "read_only": True,
+                "help_text": "Whether the club is active.",
+            },
         }
 
 
@@ -1466,7 +1474,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     events = serializers.SerializerMethodField("get_events")
     is_request = serializers.SerializerMethodField("get_is_request")
     student_types = serializers.SerializerMethodField("get_target_student_types")
-    approved_comment = serializers.CharField(required=False, allow_blank=True)
+    approved_comment = serializers.CharField(
+        required=False, allow_blank=True, read_only=True
+    )
     approved_by = serializers.SerializerMethodField("get_approved_by")
     advisor_set = serializers.SerializerMethodField("get_advisor_set")
     category = CategorySerializer(required=False)
@@ -1751,27 +1761,27 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         return social_validation_helper(value, ["youtube.com", "youtu.be"])
 
-    def validate_active(self, value):
-        """
-        Only officers, owners, and superusers may change the active status of a club.
-        """
-        user = self.context["request"].user
+    # def validate_active(self, value):
+    #     """
+    #     Only officers, owners, and superusers may change the active status of a club.
+    #     """
+    #     user = self.context["request"].user
 
-        # people with approve permissions can also change the active status of the club
-        if user.has_perm("clubs.approve_club"):
-            return value
+    #     # people with approve permissions can also change the active status of a club
+    #     if user.has_perm("clubs.approve_club"):
+    #         return value
 
-        # check if at least an officer
-        club_code = self.context["view"].kwargs.get("code")
-        club = Club.objects.get(code=club_code)
-        membership = Membership.objects.filter(person=user, club=club).first()
-        if membership and membership.role <= Membership.ROLE_OFFICER:
-            return value
+    #     # check if at least an officer
+    #     club_code = self.context["view"].kwargs.get("code")
+    #     club = Club.objects.get(code=club_code)
+    #     membership = Membership.objects.filter(person=user, club=club).first()
+    #     if membership and membership.role <= Membership.ROLE_OFFICER:
+    #         return value
 
-        # otherwise, can't edit this field
-        raise serializers.ValidationError(
-            "You do not have permissions to change the active status of the club."
-        )
+    #     # otherwise, can't edit this field
+    #     raise serializers.ValidationError(
+    #         "You do not have permissions to change the active status of the club."
+    #     )
 
     def validate(self, data):
         """
@@ -1845,15 +1855,23 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if request and request.user.has_perm("clubs.approve_club"):
             needs_reapproval = False
 
-        queue_settings = RegistrationQueueSettings.get()
-        if needs_reapproval and not queue_settings.reapproval_queue_open:
-            raise serializers.ValidationError(
-                "The approval queue is not currently open."
-            )
-
         has_approved_version = (
             self.instance and self.instance.history.filter(approved=True).exists()
         )
+
+        queue_settings = RegistrationQueueSettings.get()
+        if needs_reapproval:
+            # check appropriate queue based on whether club has been approved before
+            if has_approved_version and not queue_settings.reapproval_queue_open:
+                raise serializers.ValidationError(
+                    "The reapproval queue is not currently open."
+                )
+            elif (
+                not has_approved_version and not queue_settings.new_approval_queue_open
+            ):
+                raise serializers.ValidationError(
+                    "The new approval queue is not currently open."
+                )
 
         if needs_reapproval:
             self.validated_data["approved"] = None
@@ -1861,14 +1879,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             self.validated_data["approved_on"] = None
             self.validated_data["ghost"] = has_approved_version
 
-        # if approval was revoked, also reset the other fields
-        if (
-            "approved" in self.validated_data
-            and self.validated_data["approved"] is None
-        ):
-            self.validated_data["approved"] = None
-            self.validated_data["approved_by"] = None
-            self.validated_data["approved_on"] = None
+            under_review_status = Status.objects.filter(
+                name__iexact="Under Review"
+            ).first()
+            if under_review_status:
+                self.validated_data["status"] = under_review_status
 
         # if approved, update who and when club was approved
         new_approval_status = self.validated_data.get("approved")
@@ -2598,6 +2613,7 @@ class AssetSerializer(serializers.ModelSerializer):
 class AuthenticatedClubSerializer(ClubSerializer):
     """
     Provides additional information about the club to members in the club.
+    Club officers can set status to "Under Review" for renewals.
     """
 
     members = AuthenticatedMembershipSerializer(
@@ -2610,6 +2626,15 @@ class AuthenticatedClubSerializer(ClubSerializer):
     advisor_set = AdvisorSerializer(many=True, required=False)
     owners = serializers.SerializerMethodField("get_owners")
     officers = serializers.SerializerMethodField("get_officers")
+
+    # Make status_id writable for club officers (validation enforced below)
+    status_id = serializers.PrimaryKeyRelatedField(
+        queryset=Status.objects.all(),
+        source="status",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
 
     def get_owners(self, obj):
         return MinimalUserProfileSerializer(
@@ -2627,6 +2652,81 @@ class AuthenticatedClubSerializer(ClubSerializer):
             context=self.context,
         ).data
 
+    def validate_status_id(self, value):
+        """
+        Club officers can only set status to "Under Review" for their own club.
+        Admins should use AdminClubSerializer which skips this validation.
+        """
+        from clubs.permissions import is_officer_or_above
+
+        user = self.context["request"].user
+
+        # Can only set to "Under Review"
+        if value and value.name.upper() != "UNDER REVIEW":
+            raise serializers.ValidationError(
+                "You can only request a review by setting status to 'Under Review'. "
+                "Other status changes require administrator permissions."
+            )
+
+        # Must be officer or above of THIS specific club
+        club_code = self.context["view"].kwargs.get("code")
+        if not club_code:
+            raise serializers.ValidationError("Club not found.")
+
+        try:
+            club = Club.objects.get(code=club_code)
+        except Club.DoesNotExist:
+            raise serializers.ValidationError("Club not found.")
+
+        if not is_officer_or_above(user, club):
+            raise serializers.ValidationError(
+                "You must be at least an officer of this club to request a review."
+            )
+
+        return value
+
+    def save(self):
+        """
+        Handle status mapping for club officers and admins.
+        Maps status changes to appropriate approval/active/archived states.
+        """
+        request = self.context.get("request", None)
+
+        # Map status changes to approval/active/archived states
+        # Officers can set to "Under Review", admins can set to any status
+        if "status" in self.validated_data:
+            status = self.validated_data["status"]
+            if status:
+                status_name = status.name.upper()
+                if status_name == "DEFUNCT":
+                    # archive and deactivate the club
+                    if self.instance:
+                        self.validated_data["archived"] = True
+                        self.validated_data["archived_by"] = request.user
+                        self.validated_data["archived_on"] = timezone.now()
+                        self.validated_data["active"] = False
+                elif status_name in ["FULL", "PRELIMINARY", "PROVISIONAL"]:
+                    # approved clubs should be active
+                    self.validated_data["approved"] = True
+                    self.validated_data["active"] = True
+                elif status_name in ["SUSPENDED", "INACTIVE"]:
+                    # rejected clubs should be inactive
+                    self.validated_data["approved"] = False
+                    self.validated_data["active"] = False
+                elif status_name == "UNDER REVIEW":
+                    # under review = pending approval (clear approval fields)
+                    self.validated_data["approved"] = None
+                    self.validated_data["active"] = True
+                    self.validated_data["approved_by"] = None
+                    self.validated_data["approved_on"] = None
+                elif status_name == "TEMPORARY":
+                    # temporary clubs are active but not approved
+                    self.validated_data["approved"] = False
+                    self.validated_data["active"] = True
+
+        # Call parent save to handle reapproval logic and other operations
+        return super().save()
+
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + [
             "email_public",
@@ -2637,40 +2737,40 @@ class AuthenticatedClubSerializer(ClubSerializer):
             "owners",
             "officers",
             "approved_on",
+            "status_id",
         ]
 
 
 class AdminClubSerializer(AuthenticatedClubSerializer):
     """
     Serializer for Club objects when used by admins.
-    Makes admin-only fields (status, type, eligibility) required by default.
+    Makes admin-only fields writable.
     """
 
-    status = StatusSerializer(required=False, allow_null=True)
+    # Admin-only writable fields - override read-only versions from parent
+    approved = serializers.BooleanField(required=False)
+    approved_comment = serializers.CharField(required=False, allow_null=True)
     type = TypeSerializer(required=False, allow_null=True)
     eligibility = EligibilitySerializer(many=True, required=False, allow_null=True)
 
-    # def validate(self, attrs):
-    #     """
-    #     require fields on creation
-    #     """
-    #     if self.instance is None:
-    #         missing = {}
-    #         for f in ("status", "type", "eligibility"):
-    #             if not attrs.get(f):
-    #                 missing[f] = "This field is required."
-    #         if missing:
-    #             raise serializers.ValidationError(missing)
-    #     return super().validate(attrs)
+    def validate_status_id(self, value):
+        """
+        Admins can set any status without restrictions.
+        Override parent validation to skip officer-level checks.
+        """
+        # No validation - admins can do anything
+        return value
 
     class Meta(AuthenticatedClubSerializer.Meta):
         fields = AuthenticatedClubSerializer.Meta.fields + [
             "status",
+            "status_id",
             "type",
             "eligibility",
+            "approved",
+            "approved_comment",
         ]
         save_related_fields = AuthenticatedClubSerializer.Meta.save_related_fields + [
-            "status",
             "type",
             "eligibility",
         ]

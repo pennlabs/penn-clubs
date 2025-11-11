@@ -409,6 +409,8 @@ class Command(BaseCommand):
                 "Inactive",
                 "Suspended",
                 "Defunct",
+                "Temporary",
+                "Under Review",
             ]
         ]
 

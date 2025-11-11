@@ -4,8 +4,16 @@ import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import Select from 'react-select'
 
 import { CLUB_SETTINGS_ROUTE } from '~/constants/routes'
+import { getStatusActionInfo, UNDER_REVIEW_STATUS } from '~/constants/status'
 
-import { Club, ClubFair, MembershipRank, Template, UserInfo } from '../../types'
+import {
+  Club,
+  ClubFair,
+  MembershipRank,
+  Status,
+  Template,
+  UserInfo,
+} from '../../types'
 import {
   apiCheckPermission,
   doApiRequest,
@@ -141,6 +149,8 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
   const [fairs, setFairs] = useState<ClubFair[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
   const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
+  const [statuses, setStatuses] = useState<Status[]>([])
+  const [selectedStatus, setSelectedStatus] = useState<Status | null>(null)
 
   const canApprove = apiCheckPermission('clubs.approve_club')
   const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
@@ -164,6 +174,16 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
       doApiRequest('/templates/?format=json')
         .then((resp) => resp.json())
         .then(setTemplates)
+
+      // Fetch statuses and filter out "Under Review"
+      doApiRequest('/statuses/?format=json')
+        .then((resp) => resp.json())
+        .then((data: Status[]) => {
+          const filteredStatuses = data.filter(
+            (status) => status.name.toUpperCase() !== UNDER_REVIEW_STATUS,
+          )
+          setStatuses(filteredStatuses)
+        })
     }
 
     if (isOfficer || canApprove) {
@@ -213,49 +233,69 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
           </ModalContent>
         </Modal>
       )}
-      {club.approved && canApprove && (
+      {club.approved && (canApprove || isOfficer) && (
         <div className="notification is-info">
           <div className="mb-3">
             <b>{club.name}</b> has been approved by <b>{club.approved_by}</b>{' '}
-            for the school year. If you want to revoke approval for this{' '}
-            {OBJECT_NAME_SINGULAR}, use the button below.
+            for the school year.{' '}
+            {canApprove &&
+              'If you want to revoke approval for this ' +
+                OBJECT_NAME_SINGULAR +
+                ', use the button below.'}
           </div>
           {club.approved_comment && (
             <div className="mb-5">
               <TextQuote>{club.approved_comment}</TextQuote>
             </div>
           )}
-          <button
-            className="button is-info is-light"
-            disabled={loading}
-            onClick={() => {
-              doConfirm({
-                func: () => {
-                  setLoading(true)
-                  doApiRequest(`/clubs/${club.code}/?format=json`, {
-                    method: 'PATCH',
-                    body: {
-                      approved: null,
-                    },
-                  })
-                    .then(() => router.reload())
-                    .finally(() => setLoading(false))
-                },
-                message: (
-                  <>
-                    Are you sure you would like to revoke approval for{' '}
-                    <b>{club.name}</b>?
-                  </>
-                ),
-              })
-            }}
-          >
-            <Icon name="x" /> Revoke Approval
-          </button>
+          {canApprove && (
+            <button
+              className="button is-info is-light"
+              disabled={loading}
+              onClick={async () => {
+                doConfirm({
+                  func: async () => {
+                    setLoading(true)
+                    // Fetch the "Under Review" status to revoke approval
+                    const statusesResp = await doApiRequest(
+                      '/statuses/?format=json',
+                    )
+                    const statusesData = await statusesResp.json()
+                    const underReviewStatus = statusesData.find(
+                      (s: Status) =>
+                        s.name.toUpperCase() === UNDER_REVIEW_STATUS,
+                    )
+
+                    if (underReviewStatus) {
+                      doApiRequest(`/clubs/${club.code}/?format=json`, {
+                        method: 'PATCH',
+                        body: {
+                          status_id: underReviewStatus.id,
+                          approved_comment: 'Approval revoked',
+                        },
+                      })
+                        .then(() => router.reload())
+                        .finally(() => setLoading(false))
+                    } else {
+                      setLoading(false)
+                    }
+                  },
+                  message: (
+                    <>
+                      Are you sure you would like to revoke approval for{' '}
+                      <b>{club.name}</b>?
+                    </>
+                  ),
+                })
+              }}
+            >
+              <Icon name="x" /> Revoke Approval
+            </button>
+          )}
           <ClubHistoryDropdown history={history} />
         </div>
       )}
-      {(club.active || canDeleteClub) && club.approved !== true ? (
+      {(club.active || canDeleteClub || isOfficer) && club.approved !== true ? (
         <div className="notification is-warning">
           <Text>
             {club.approved === false ? (
@@ -373,97 +413,76 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
                       </button>
                     </div>
                   </div>
-                </>
-              )}
-              <div className="buttons">
-                {canApprove && club.active && (
-                  <>
-                    <button
-                      className="button is-success"
-                      disabled={loading}
-                      onClick={() => {
-                        setLoading(true)
-                        doApiRequest(`/clubs/${club.code}/?format=json`, {
-                          method: 'PATCH',
-                          body: {
-                            approved: true,
-                            approved_comment: comment,
-                          },
-                        })
-                          .then(() => router.reload())
-                          .finally(() => setLoading(false))
-                      }}
-                    >
-                      <Icon name="check" /> Approve
-                    </button>
-                    <button
-                      className="button is-danger"
-                      disabled={loading}
-                      onClick={() => {
-                        setLoading(true)
-                        doApiRequest(`/clubs/${club.code}/?format=json`, {
-                          method: 'PATCH',
-                          body: {
-                            approved: false,
-                            approved_comment: comment,
-                          },
-                        })
-                          .then(() => router.reload())
-                          .finally(() => setLoading(false))
-                      }}
-                    >
-                      <Icon name="x" /> Reject
-                    </button>
-                  </>
-                )}
-                {canDeleteClub && (
-                  <button
-                    className="button is-danger is-pulled-right"
-                    disabled={loading}
-                    onClick={() => {
-                      doConfirm({
-                        func: () => {
+                  <div className="field is-grouped mb-3">
+                    <div className="control is-expanded">
+                      <label className="label">Status</label>
+                      <Select
+                        placeholder="Select status"
+                        options={statuses.map((status) => ({
+                          value: status.id,
+                          label: status.name,
+                        }))}
+                        value={
+                          selectedStatus
+                            ? {
+                                value: selectedStatus.id,
+                                label: selectedStatus.name,
+                              }
+                            : null
+                        }
+                        onChange={(selectedOption) => {
+                          if (selectedOption) {
+                            const status = statuses.find(
+                              (s) => s.id === selectedOption.value,
+                            )
+                            setSelectedStatus(status || null)
+                          } else {
+                            setSelectedStatus(null)
+                          }
+                        }}
+                      />
+                      <p className="help">
+                        Select a status to set for the club.
+                      </p>
+                    </div>
+                    <div className="control" style={{ marginTop: '32px' }}>
+                      {(() => {
+                        const handleAction = () => {
+                          if (!selectedStatus) return
+
                           setLoading(true)
                           doApiRequest(`/clubs/${club.code}/?format=json`, {
-                            method: 'DELETE',
+                            method: 'PATCH',
+                            body: {
+                              approved_comment:
+                                comment ||
+                                '(Administrator did not include a comment.)',
+                              status_id: selectedStatus.id,
+                            },
                           })
                             .then(() => router.reload())
                             .finally(() => setLoading(false))
-                        },
-                        message: (
-                          <>
-                            <p>
-                              Are you sure you want to delete <b>{club.name}</b>
-                              ?
-                            </p>
-                            <p>
-                              Here are a list of reasons for using this feature:
-                            </p>
-                            <div className="content">
-                              <ul>
-                                <li>
-                                  Duplicate {OBJECT_NAME_SINGULAR} entries
-                                </li>
-                                <li>
-                                  Mistakenly created {OBJECT_NAME_SINGULAR} with
-                                  user acknowledgement and permission
-                                </li>
-                              </ul>
-                            </div>
-                            <p>
-                              If you are deleting this {OBJECT_NAME_SINGULAR}{' '}
-                              for another reason that is not on this list,
-                              please check with <Contact /> first. Thank you!
-                            </p>
-                          </>
-                        ),
-                      })
-                    }}
-                  >
-                    <Icon name="trash" /> Delete
-                  </button>
-                )}
-              </div>
+                        }
+
+                        const actionInfo = selectedStatus
+                          ? getStatusActionInfo(selectedStatus.name)
+                          : null
+
+                        return (
+                          <button
+                            className={`button ${actionInfo?.buttonClass || 'is-success'}`}
+                            disabled={loading || !selectedStatus}
+                            onClick={handleAction}
+                          >
+                            <Icon name={actionInfo?.icon || 'check'} />{' '}
+                            {actionInfo?.label || 'Approve'}
+                          </button>
+                        )
+                      })()}
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
           {club.approved === false && isOfficer && (
@@ -476,12 +495,25 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
               </div>
               <button
                 className="button is-warning is-light"
-                onClick={() => {
+                onClick={async () => {
+                  // Set status to "UNDER REVIEW" when requesting review
+                  const statusesResp = await doApiRequest(
+                    '/statuses/?format=json',
+                  )
+                  const statusesData = await statusesResp.json()
+                  const underReviewStatus = statusesData.find(
+                    (s: Status) => s.name.toUpperCase() === UNDER_REVIEW_STATUS,
+                  )
+
+                  const body: any = {}
+
+                  if (underReviewStatus) {
+                    body.status_id = underReviewStatus.id
+                  }
+
                   doApiRequest(`/clubs/${club.code}/?format=json`, {
                     method: 'PATCH',
-                    body: {
-                      approved: null,
-                    },
+                    body,
                   }).then(() => router.reload())
                 }}
               >

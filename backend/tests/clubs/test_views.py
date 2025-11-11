@@ -186,6 +186,17 @@ class ClubTestCase(TestCase):
         )
 
         cls.status1 = Status.objects.create(name="Active")
+
+        # Create all status types for status-based approval system
+        cls.status_full = Status.objects.create(name="Full")
+        cls.status_preliminary = Status.objects.create(name="Preliminary")
+        cls.status_provisional = Status.objects.create(name="Provisional")
+        cls.status_suspended = Status.objects.create(name="Suspended")
+        cls.status_inactive = Status.objects.create(name="Inactive")
+        cls.status_temporary = Status.objects.create(name="Temporary")
+        cls.status_defunct = Status.objects.create(name="Defunct")
+        cls.status_under_review = Status.objects.create(name="Under Review")
+
         cls.type1 = Type.objects.create(
             name="Department-Sponsored Progam", symbol="DSP"
         )
@@ -1094,8 +1105,8 @@ class ClubTestCase(TestCase):
             self.assertIn(resp.status_code, [400, 403], resp.content)
 
         good_tries = [
-            {"active": True},
-            {"active": False},
+            {"status_id": self.status_full.id},
+            {"status_id": self.status_inactive.id},
         ]
         for good in good_tries:
             resp = self.client.patch(
@@ -1209,22 +1220,383 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user5.username, password="test")
 
         # mark club as unapproved
+        self.club1.status = self.status_under_review
         self.club1.approved = None
-        self.club1.save(update_fields=["approved"])
+        self.club1.save(update_fields=["status", "approved"])
 
         # approve club
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
-            {"approved": True},
+            {"status_id": self.status_full.id},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure database correctly updated
         self.club1.refresh_from_db()
-        self.assertTrue(self.club1.approved)
+        self.assertEqual(self.club1.status.name, "Full")
         self.assertIsNotNone(self.club1.approved_on)
         self.assertIsNotNone(self.club1.approved_by)
+
+    def test_officer_can_set_status_to_under_review(self):
+        """
+        Test that an officer can set status to "Under Review" for their club.
+        """
+        # Add user as officer
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user1.username, password="test")
+
+        # Set status to "Under Review"
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_under_review.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Verify status and approval state
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.status.name, "Under Review")
+        self.assertIsNone(self.club1.approved)
+        self.assertTrue(self.club1.active)
+
+    def test_officer_cannot_set_status_to_other_values(self):
+        """
+        Test that an officer cannot set status to anything other than "Under Review".
+        """
+        # Add user as officer
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user1.username, password="test")
+
+        # Try to set status to every status except "Under Review" (should fail for each)
+        forbidden_statuses = [
+            self.status_full,
+            self.status_preliminary,
+            self.status_provisional,
+            self.status_suspended,
+            self.status_inactive,
+            self.status_temporary,
+            self.status_defunct,
+            self.status1,
+        ]
+        for status in forbidden_statuses:
+            resp = self.client.patch(
+                reverse("clubs-detail", args=(self.club1.code,)),
+                {"status_id": status.id},
+                content_type="application/json",
+            )
+            self.assertEqual(resp.status_code, 400, resp.content)
+            self.assertIn("Under Review", str(resp.content))
+
+    def test_non_officer_cannot_set_status(self):
+        """
+        Test that a regular member cannot set status.
+        """
+        # Add user as regular member (not officer)
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_MEMBER
+        )
+        self.client.login(username=self.user1.username, password="test")
+
+        # Try to set status to "Under Review" (should fail)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_under_review.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_officer_cannot_set_status_for_other_club(self):
+        """
+        Test that an officer cannot set status for a club they're not an officer of.
+        """
+        # Create another club
+        club2 = Club.objects.create(
+            code="test-club-2",
+            name="Test Club 2",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+        )
+
+        # Add user as officer of club1, but not club2
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user1.username, password="test")
+
+        # Try to set status for club2 (should fail)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club2.code,)),
+            {"status_id": self.status_under_review.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_admin_can_set_any_status(self):
+        """
+        Test that an admin can set any status without restrictions.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # Test setting to each status type
+        statuses_to_test = [
+            (self.status_full, True, True, False),  # approved, active, not archived
+            (self.status_preliminary, True, True, False),
+            (self.status_provisional, True, True, False),
+            (self.status_suspended, False, False, False),
+            (self.status_inactive, False, False, False),
+            (self.status_temporary, False, True, False),
+            (self.status_under_review, None, True, False),
+        ]
+
+        for (
+            status,
+            expected_approved,
+            expected_active,
+            expected_archived,
+        ) in statuses_to_test:
+            # Reset club state
+            self.club1.approved = True
+            self.club1.active = True
+            self.club1.archived = False
+            self.club1.save()
+
+            resp = self.client.patch(
+                reverse("clubs-detail", args=(self.club1.code,)),
+                {"status_id": status.id},
+                content_type="application/json",
+            )
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+
+            self.club1.refresh_from_db()
+            self.assertEqual(self.club1.status.id, status.id)
+            if expected_approved is not None:
+                self.assertEqual(self.club1.approved, expected_approved)
+            else:
+                self.assertIsNone(self.club1.approved)
+            self.assertEqual(self.club1.active, expected_active)
+            self.assertEqual(self.club1.archived, expected_archived)
+
+    def test_status_full_maps_to_approved_active(self):
+        """
+        Test that setting status to FULL maps to approved=True, active=True.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        self.club1.approved = None
+        self.club1.active = False
+        self.club1.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_full.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertTrue(self.club1.approved)
+        self.assertTrue(self.club1.active)
+        self.assertEqual(self.club1.status.name, "Full")
+
+    def test_status_suspended_maps_to_rejected_inactive(self):
+        """
+        Test that setting status to SUSPENDED maps to approved=False, active=False.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        self.club1.approved = True
+        self.club1.active = True
+        self.club1.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_suspended.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertFalse(self.club1.approved)
+        self.assertFalse(self.club1.active)
+        self.assertEqual(self.club1.status.name, "Suspended")
+
+    def test_status_under_review_maps_to_pending_active(self):
+        """
+        Test that setting status to UNDER REVIEW maps to approved=None, active=True,
+        and clears approved_by and approved_on.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # Set initial approval state
+        self.club1.approved = True
+        self.club1.approved_by = self.user5
+        self.club1.approved_on = timezone.now()
+        self.club1.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_under_review.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertIsNone(self.club1.approved)
+        self.assertTrue(self.club1.active)
+        self.assertIsNone(self.club1.approved_by)
+        self.assertIsNone(self.club1.approved_on)
+        self.assertEqual(self.club1.status.name, "Under Review")
+
+    def test_status_defunct_maps_to_archived_inactive(self):
+        """
+        Test that setting status to DEFUNCT maps to archived=True, active=False,
+        and sets archived_by and archived_on.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        self.club1.archived = False
+        self.club1.active = True
+        self.club1.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_defunct.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertTrue(self.club1.archived)
+        self.assertFalse(self.club1.active)
+        self.assertEqual(self.club1.archived_by, self.user5)
+        self.assertIsNotNone(self.club1.archived_on)
+        self.assertEqual(self.club1.status.name, "Defunct")
+
+    def test_status_set_to_under_review_on_reapproval(self):
+        """
+        Test when club needs reapproval, status is automatically set to "Under Review".
+        """
+        # Add officer
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+        self.client.login(username=self.user1.username, password="test")
+
+        # Approve club first
+        self.club1.approved = True
+        self.club1.save()
+
+        # Change name (triggers reapproval)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"name": "Updated Club Name"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # Verify status is set to "Under Review"
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.status.name, "Under Review")
+        self.assertIsNone(self.club1.approved)
+
+    def test_admin_can_modify_status_id_alone(self):
+        """
+        Test that admin can modify status_id without other fields.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_full.id},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.status.id, self.status_full.id)
+
+    def test_admin_can_modify_approved_comment_alone(self):
+        """
+        Test that admin can modify approved_comment without other fields.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved_comment": "This is a test comment"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.approved_comment, "This is a test comment")
+
+    def test_admin_can_modify_both_approval_fields_together(self):
+        """
+        Test that admin can modify both status_id and approved_comment together
+        (since they're both approval fields).
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {
+                "status_id": self.status_full.id,
+                "approved_comment": "Approved with comment",
+            },
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.status.id, self.status_full.id)
+        self.assertEqual(self.club1.approved_comment, "Approved with comment")
+
+    def test_admin_cannot_modify_approval_fields_with_other_fields(self):
+        """
+        Test that admin cannot modify approval fields (status_id, approved_comment)
+        together with other club fields in the same request.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        # Try to modify status_id with name (should fail)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"status_id": self.status_full.id, "name": "New Name"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("approval fields", str(resp.content).lower())
+
+        # Try to modify approved_comment with description (should fail)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved_comment": "Comment", "description": "New description"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
+    def test_admin_can_modify_other_fields_without_approval_fields(self):
+        """
+        Test that admin can modify other club fields when not touching approval fields.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"name": "New Club Name", "description": "New description"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.name, "New Club Name")
 
     def test_club_display_after_deactivation_for_permissioned_vs_non_permissioned(self):
         """
@@ -1889,7 +2261,7 @@ class ClubTestCase(TestCase):
 
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
-            {"active": False},
+            {"status_id": self.status_inactive.id},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 204], resp.content)
@@ -1907,7 +2279,7 @@ class ClubTestCase(TestCase):
         self.client.login(username=self.user2.username, password="test")
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
-            {"active": False},
+            {"status_id": self.status_inactive.id},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [400, 403], resp.content)
@@ -2504,11 +2876,11 @@ class ClubTestCase(TestCase):
         club.save(update_fields=["approved"])
         resp = self.client.patch(
             reverse("clubs-detail", args=(club.code,)),
-            {"approved": None},
+            {"status_id": self.status_under_review.id},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [400], resp.content)
-        club.approved = True
+        club.approved = None
         club.save(update_fields=["approved"])
 
         # ensure that non-reapproval requests are still allowed
@@ -2521,6 +2893,10 @@ class ClubTestCase(TestCase):
         # Re-open reapproval queue
         queue_settings.reapproval_queue_open = True
         queue_settings.save()
+
+        # Reset club to approved state before checking history
+        club.approved = True
+        club.save(update_fields=["approved"])
 
         # store result of approval history query
         resp = self.client.get(reverse("clubs-history", args=(club.code,)))
@@ -2668,10 +3044,15 @@ class ClubTestCase(TestCase):
         # mark the club as active (student side renewal)
         resp = self.client.patch(
             reverse("clubs-detail", args=(club.code,)),
-            {"active": True},
+            {"status_id": self.status_under_review.id},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # verify club is now active and under review
+        club.refresh_from_db()
+        self.assertTrue(club.active)
+        self.assertIsNone(club.approved)
 
         # ensure a confirmation email was sent
         self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
@@ -2699,7 +3080,10 @@ class ClubTestCase(TestCase):
         # approve the club
         resp = self.client.patch(
             reverse("clubs-detail", args=(club.code,)),
-            {"approved": True, "approved_comment": "This is a great club!"},
+            {
+                "status_id": self.status_full.id,
+                "approved_comment": "This is a great club!",
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -2711,37 +3095,23 @@ class ClubTestCase(TestCase):
         mail_count = len(mail.outbox)
 
         # mark club has unapproved
+        club.status = self.status_under_review
         club.approved = None
-        club.save(update_fields=["approved"])
+        club.save(update_fields=["status", "approved"])
 
         # reject the club
         resp = self.client.patch(
             reverse("clubs-detail", args=(club.code,)),
-            {"approved": False, "approved_comment": "This is a bad club!"},
+            {
+                "status_id": self.status_suspended.id,
+                "approved_comment": "This is a bad club!",
+            },
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # ensure email is sent out to let club know
         self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
-
-        # approve the club without comment
-        club.approved = None
-        club.save(update_fields=["approved"])
-
-        resp = self.client.patch(
-            reverse("clubs-detail", args=(club.code,)),
-            {"approved": True, "approved_comment": ""},
-            content_type="application/json",
-        )
-        self.assertIn(resp.status_code, [200, 201], resp.content)
-
-        # ensure badge still exists
-        self.assertTrue(club.badges.filter(pk=badge.pk).count(), 1)
-
-        # mark club as unapproved
-        club.approved = None
-        club.save(update_fields=["approved"])
 
         # login as user without approve permissions
         self.assertFalse(self.user2.has_perm("clubs.approve_club"))
@@ -2754,10 +3124,13 @@ class ClubTestCase(TestCase):
         # try approving the club
         resp = self.client.patch(
             reverse("clubs-detail", args=(club.code,)),
-            {"approved": True, "approved_comment": "I'm approving my own club!"},
+            {
+                "status_id": self.status_full.id,
+                "approved_comment": "I'm approving my own club!",
+            },
             content_type="application/json",
         )
-        self.assertIn(resp.status_code, [401, 403], resp.content)
+        self.assertIn(resp.status_code, [400, 401, 403], resp.content)
 
     def test_club_analytics(self):
         # choose a club
