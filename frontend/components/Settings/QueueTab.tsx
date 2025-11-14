@@ -436,6 +436,7 @@ const QueueSettingsButton = ({
 
     const data = await resp.json()
     updateQueueSettings(data)
+    toast.success('Updated queue settings and cleared scheduled flip date.')
   }
 
   const name =
@@ -546,9 +547,7 @@ const QueueSchedulerModal = ({
 
       const refreshedSettings = await resp.json()
       setRegistrationQueueSettings(refreshedSettings)
-      toast.success(
-        'Successfully updated queue settings and cleared scheduled flip date.',
-      )
+      toast.success('Successfully updated queue settings.')
     } catch (err) {}
     // setApprove(true)
     // setShowModal(true)
