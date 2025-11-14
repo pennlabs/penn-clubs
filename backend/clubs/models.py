@@ -2501,15 +2501,6 @@ class RegistrationQueueSettings(models.Model):
 
         return changed
 
-    def clear_scheduled_flips(self):
-        """
-        Clear any scheduled flips without changing current state.
-        """
-
-        self.reapproval_date_of_next_flip = None
-        self.new_approval_date_of_next_flip = None
-        self.save()
-
     @classmethod
     def create(cls, **kwargs):
         """
