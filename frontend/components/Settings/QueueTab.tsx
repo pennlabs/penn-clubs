@@ -493,7 +493,7 @@ const QueueSchedulerModal = ({
   closeModal,
 }: QueueSchedulerModalProps): ReactElement => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const TIME_INTERVAL = 5 // minutes
+  const TIME_INTERVAL = 60 // minutes
   useEffect(() => {
     if (!registrationQueueSettings) return
 
