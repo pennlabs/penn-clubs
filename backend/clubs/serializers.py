@@ -72,6 +72,7 @@ from clubs.models import (
     Type,
     Year,
 )
+from clubs.permissions import ClubPermission
 from clubs.utils import clean, html_to_text
 
 
@@ -1017,6 +1018,15 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
 
 
+class FakeView(object):
+    """
+    Dummy view used for permissions checking by the UserPermissionAPIView.
+    """
+
+    def __init__(self, action):
+        self.action = action
+
+
 class ClubDiffSerializer(serializers.ModelSerializer):
     diff = serializers.SerializerMethodField()
 
@@ -1177,8 +1187,14 @@ class ClubListSerializer(serializers.ModelSerializer):
         if instance.ghost and not instance.approved:
             user = self.context["request"].user
 
-            can_see_pending = user.has_perm("clubs.see_pending_clubs") or user.has_perm(
-                "clubs.manage_club"
+            # admins, club members, and anyone with permission to edit the club
+            # can see its latest, potentially unapproved version
+            can_see_pending = (
+                user.has_perm("clubs.see_pending_clubs")
+                or user.has_perm("clubs.manage_club")
+                or ClubPermission().has_object_permission(
+                    self.context["request"], FakeView("update"), instance
+                )
             )
             is_member = (
                 user.is_authenticated
@@ -2353,6 +2369,7 @@ class OwnershipRequestSerializer(serializers.ModelSerializer):
             "name",
             "requester",
             "school",
+            "status",
             "username",
         )
 
@@ -3086,6 +3103,8 @@ class WhartonApplicationStatusSerializer(serializers.Serializer):
     name = serializers.CharField(source="annotated_name")
     count = serializers.IntegerField()
     status = serializers.SerializerMethodField("get_status")
+    cycle_id = serializers.IntegerField(source="annotated_cycle_id", allow_null=True)
+    cycle_name = serializers.CharField(source="annotated_cycle_name", allow_null=True)
 
     def get_status(self, obj):
         """
@@ -3099,7 +3118,16 @@ class WhartonApplicationStatusSerializer(serializers.Serializer):
 
     class Meta:
         model = ApplicationSubmission
-        fields = ("club", "application", "committee", "name", "status", "count")
+        fields = (
+            "club",
+            "application",
+            "committee",
+            "name",
+            "status",
+            "count",
+            "cycle_id",
+            "cycle_name",
+        )
 
 
 class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):

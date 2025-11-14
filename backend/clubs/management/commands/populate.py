@@ -11,8 +11,10 @@ from options.models import Option
 from clubs.models import (
     Advisor,
     ApplicationCommittee,
+    ApplicationCycle,
     ApplicationMultipleChoice,
     ApplicationQuestion,
+    ApplicationQuestionResponse,
     ApplicationSubmission,
     Badge,
     Cart,
@@ -791,6 +793,25 @@ class Command(BaseCommand):
 
         # create club applications that are wharton common app
         eastern = pytz.timezone("America/New_York")
+
+        # Create application cycles
+        fall_cycle, _ = ApplicationCycle.objects.get_or_create(
+            name="Fall 2024",
+            defaults={
+                "start_date": datetime.datetime(2024, 9, 1, 0, 0, tzinfo=eastern),
+                "end_date": datetime.datetime(2024, 11, 30, 23, 59, tzinfo=eastern),
+                "release_date": datetime.datetime(2024, 12, 15, 0, 0, tzinfo=eastern),
+            },
+        )
+        spring_cycle, _ = ApplicationCycle.objects.get_or_create(
+            name="Spring 2025",
+            defaults={
+                "start_date": datetime.datetime(2025, 1, 15, 0, 0, tzinfo=eastern),
+                "end_date": datetime.datetime(2025, 3, 31, 23, 59, tzinfo=eastern),
+                "release_date": datetime.datetime(2025, 4, 15, 0, 0, tzinfo=eastern),
+            },
+        )
+
         application_start_time = datetime.datetime(2021, 9, 4, 0, 0, tzinfo=eastern)
         application_end_time = datetime.datetime(2021, 11, 20, 2, 0, tzinfo=eastern)
         result_release_time = datetime.datetime(2021, 12, 4, 0, 0, tzinfo=eastern)
@@ -799,7 +820,9 @@ class Command(BaseCommand):
         )
         prompt_two = "Tell us about a time you faced a challenge and how you solved it"
         prompt_three = "Tell us about a time you collaborated well in a team"
-        for code in ["pppjo", "harvard-rejects", "penn-memes"]:
+
+        # Create applications for pppjo and harvard-rejects
+        for code in ["pppjo", "harvard-rejects"]:
             club = Club.objects.get(code=code)
             name = f"{club.name} Application"
             application = ClubApplication.objects.create(
@@ -809,6 +832,7 @@ class Command(BaseCommand):
                 application_end_time=application_end_time,
                 result_release_time=result_release_time,
                 is_wharton_council=True,
+                application_cycle=fall_cycle,
             )
             link = (
                 f"http://localhost:3000/club/{club.code}/application/{application.pk}"
@@ -837,11 +861,69 @@ class Command(BaseCommand):
                 application=application,
             )
 
-        application = ClubApplication.objects.last()
-        ApplicationCommittee.objects.create(name="one", application=application)
-        ApplicationCommittee.objects.create(name="two", application=application)
-        ApplicationCommittee.objects.create(name="three", application=application)
-        ApplicationCommittee.objects.create(name="four", application=application)
+        # Create two applications for penn-memes with different cycles
+        club = Club.objects.get(code="penn-memes")
+        penn_memes_fall_app = None
+        penn_memes_spring_app = None
+        for cycle, cycle_name in [(fall_cycle, "Fall"), (spring_cycle, "Spring")]:
+            name = f"{club.name} Application ({cycle_name})"
+            application = ClubApplication.objects.create(
+                name=name,
+                club=club,
+                application_start_time=application_start_time,
+                application_end_time=application_end_time,
+                result_release_time=result_release_time,
+                is_wharton_council=True,
+                application_cycle=cycle,
+            )
+            link = (
+                f"http://localhost:3000/club/{club.code}/application/{application.pk}"
+            )
+            application.external_url = link
+            application.save()
+            prompt = "Choose one of the following prompts for your personal statement"
+            prompt_question = ApplicationQuestion.objects.create(
+                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                application=application,
+                prompt=prompt,
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_one, question=prompt_question
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_two, question=prompt_question
+            )
+            ApplicationMultipleChoice.objects.create(
+                value=prompt_three, question=prompt_question
+            )
+            ApplicationQuestion.objects.create(
+                question_type=ApplicationQuestion.FREE_RESPONSE,
+                prompt="Answer the prompt you selected",
+                word_limit=150,
+                application=application,
+            )
+
+            # Store references to the applications
+            if cycle == fall_cycle:
+                penn_memes_fall_app = application
+            else:
+                penn_memes_spring_app = application
+
+        # Add committees to Spring application
+        ApplicationCommittee.objects.create(
+            name="Redditors", application=penn_memes_spring_app
+        )
+        ApplicationCommittee.objects.create(
+            name="Sidechat", application=penn_memes_spring_app
+        )
+        ApplicationCommittee.objects.create(
+            name="M&T", application=penn_memes_spring_app
+        )
+        ApplicationCommittee.objects.create(
+            name="Twitter", application=penn_memes_spring_app
+        )
+
+        # Create submissions for Spring application with various statuses
         status_counter = 0
         for user in get_user_model().objects.all():
             status = ApplicationSubmission.STATUS_TYPES[
@@ -850,17 +932,82 @@ class Command(BaseCommand):
             ApplicationSubmission.objects.create(
                 status=status,
                 user=user,
-                application=application,
+                application=penn_memes_spring_app,
                 committee=None,
             )
             status_counter += 1
-            for committee in application.committees.all():
+            for committee in penn_memes_spring_app.committees.all():
                 ApplicationSubmission.objects.create(
                     status=status,
                     user=user,
-                    application=application,
+                    application=penn_memes_spring_app,
                     committee=committee,
                 )
+
+        # Create application submissions for penn-memes Fall application (all rejected)
+        if penn_memes_fall_app:
+            ApplicationCommittee.objects.create(
+                name="Redditors", application=penn_memes_fall_app
+            )
+            ApplicationCommittee.objects.create(
+                name="Sidechat", application=penn_memes_fall_app
+            )
+            ApplicationCommittee.objects.create(
+                name="M&T", application=penn_memes_fall_app
+            )
+            ApplicationCommittee.objects.create(
+                name="Twitter", application=penn_memes_fall_app
+            )
+            # Create rejected submissions for all users
+            for user in get_user_model().objects.all():
+                # REJECTED_AFTER_WRITTEN = 2
+                ApplicationSubmission.objects.create(
+                    status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+                    user=user,
+                    application=penn_memes_fall_app,
+                    committee=None,
+                )
+                for committee in penn_memes_fall_app.committees.all():
+                    ApplicationSubmission.objects.create(
+                        status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+                        user=user,
+                        application=penn_memes_fall_app,
+                        committee=committee,
+                    )
+
+        # Create example responses for penn-memes applications
+        for app in filter(None, [penn_memes_spring_app, penn_memes_fall_app]):
+            mc_q = ApplicationQuestion.objects.filter(
+                application=app,
+                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+                prompt="""Choose one of the following prompts
+                          for your personal statement""",
+            ).first()
+            fr_q = ApplicationQuestion.objects.filter(
+                application=app,
+                question_type=ApplicationQuestion.FREE_RESPONSE,
+                prompt="Answer the prompt you selected",
+            ).first()
+
+            submissions_qs = ApplicationSubmission.objects.filter(application=app)
+            choices = list(mc_q.multiple_choice.all()) if mc_q else []
+
+            for idx, sub in enumerate(submissions_qs):
+                if mc_q and choices:
+                    ApplicationQuestionResponse.objects.get_or_create(
+                        question=mc_q,
+                        submission=sub,
+                        defaults={"multiple_choice": choices[idx % len(choices)]},
+                    )
+                if fr_q:
+                    ApplicationQuestionResponse.objects.get_or_create(
+                        question=fr_q,
+                        submission=sub,
+                        defaults={
+                            "text": f"""Sample response by
+                            {sub.user.first_name} {sub.user.last_name} for {app.name}"""
+                        },
+                    )
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)

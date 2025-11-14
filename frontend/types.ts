@@ -402,6 +402,8 @@ export type ApplicationStatus = {
   name: string
   status: string
   count: number
+  cycle_id: number | null
+  cycle_name: string | null
 }
 
 export enum ApplicationQuestionType {
@@ -458,10 +460,12 @@ export type ApplicationSubmission = {
   created_at: string
   first_name: string
   last_name: string
+  email: string
   status: string
   responses: Array<ApplicationResponse>
   club: string
   code: string
+  graduation_year: string
   notified: boolean
   reason: string
   application_link: string

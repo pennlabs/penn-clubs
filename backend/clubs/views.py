@@ -18,6 +18,7 @@ import pandas as pd
 import pytz
 import qrcode
 import requests
+from analytics.entries import FuncEntry
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from CyberSource import (
@@ -84,6 +85,7 @@ from social_django.utils import load_strategy
 from tatsu.exceptions import FailedParse
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
+from clubs.management.commands.sync import Command as SyncCommand
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
     AdminNote,
@@ -195,6 +197,7 @@ from clubs.serializers import (
     EventShowingWriteSerializer,
     EventWriteSerializer,
     ExternalMemberListSerializer,
+    FakeView,
     FavoriteSerializer,
     FavoriteWriteSerializer,
     FavouriteEventSerializer,
@@ -239,6 +242,7 @@ from clubs.serializers import (
     YearSerializer,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
+from pennclubs.analytics import LabsAnalytics
 
 
 def update_holds(func):
@@ -942,6 +946,7 @@ class ClubFairViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(FuncEntry(name="register_club_fair"))
     def register(self, request, *args, **kwargs):
         """
         Register a club for this club fair.
@@ -1327,6 +1332,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return resp
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(FuncEntry(name="club_upload_file"))
     def upload_file(self, request, *args, **kwargs):
         """
         Upload a file for the club.
@@ -2395,6 +2401,9 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         return Response(fields)
 
     @action(detail=False, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry("email_blast_to_club_active_members"),
+    )
     def email_blast(self, request, *args, **kwargs):
         """
         Send email blast to targeted (active) club members.
@@ -3349,6 +3358,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     @transaction.atomic
     @update_holds
+    @LabsAnalytics.record_api_function(FuncEntry(name="add_to_cart"))
     def add_to_cart(self, request, *args, **kwargs):
         """
         Add tickets from this showing to cart
@@ -4033,6 +4043,11 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="email_blast_to_all_ticket_holders",
+        )
+    )
     def email_blast(self, request, *args, **kwargs):
         """
         Send an email blast to all users holding tickets.
@@ -4201,6 +4216,14 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         return questions.filter(Q(approved=True) | Q(author=self.request.user))
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="question_answer_like",
+            get_value_with_args=lambda self, request: request.resolver_match.kwargs.get(
+                "club_code"
+            ),
+        ),
+    )
     def like(self, request, *args, **kwargs):
         """
         Endpoint used to like a question answer.
@@ -4222,6 +4245,14 @@ class QuestionAnswerViewSet(viewsets.ModelViewSet):
         return Response({})
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="question_answer_unlike",
+            get_value_with_args=lambda self, request: request.resolver_match.kwargs.get(
+                "club_code"
+            ),
+        ),
+    )
     def unlike(self, request, *args, **kwargs):
         """
         Endpoint used to unlike a question answer.
@@ -4471,6 +4502,12 @@ class MembershipRequestViewSet(viewsets.ModelViewSet):
     lookup_field = "club__code"
     http_method_names = ["get", "post", "delete"]
 
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="create_membership_request",
+            get_value_with_args=lambda self, request: request.data.get("club", None),
+        )
+    )
     def create(self, request, *args, **kwargs):
         """
         If a membership request object already exists, reuse it.
@@ -4539,6 +4576,14 @@ class MembershipRequestOwnerViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="accept_membership_request",
+            get_value_with_args=lambda self, request: self.kwargs.get(
+                "club_code", None
+            ),
+        )
+    )
     def accept(self, request, *ages, **kwargs):
         """
         Accept a membership request as a club officer.
@@ -4569,9 +4614,9 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
     """
     list: Return a list of clubs that the logged in user has sent ownership request to.
 
-    create: Sent ownership request to a club.
+    create: Send ownership request to a club.
 
-    destroy: Deleted a ownership request from a club.
+    destroy: Delete a ownership request from a club.
     """
 
     serializer_class = UserOwnershipRequestSerializer
@@ -4581,8 +4626,13 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        If a ownership request object already exists, reuse it.
+        Implement 6-month cooldown rule for ownership requests:
+        - If no request was made within the past 6 months, allow new request
+        - If withdrawn request was made within the past 6 months, allow resubmission
+        - If pending/accepted/denied request was made within the past 6 months,
+          deny new request
         """
+
         club = request.data.get("club", None)
         club_instance = Club.objects.filter(code=club).first()
         if club_instance is None:
@@ -4590,17 +4640,30 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
                 {"detail": "Invalid club code"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        create_defaults = {"club": club_instance, "requester": request.user}
-
-        obj, created = OwnershipRequest.objects.update_or_create(
-            club__code=club,
-            requester=request.user,
-            defaults={"withdrawn": False, "created_at": timezone.now()},
-            create_defaults=create_defaults,
+        can_request, reason, recent_request = (
+            OwnershipRequest.can_user_request_ownership(request.user, club_instance)
         )
 
-        serializer = self.get_serializer(obj, many=False)
+        if not can_request:
+            return Response(
+                {"detail": reason},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        if recent_request is None:
+            # No request within 6 months, create new one
+            request_instance = OwnershipRequest.objects.create(
+                club=club_instance,
+                requester=request.user,
+                status=OwnershipRequest.PENDING,
+            )
+        else:
+            # Withdrawn request within 6 months, reuse it
+            recent_request.status = OwnershipRequest.PENDING
+            recent_request.save()
+            request_instance = recent_request
+
+        serializer = self.get_serializer(request_instance, many=False)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
@@ -4611,15 +4674,22 @@ class OwnershipRequestViewSet(viewsets.ModelViewSet):
         owners with requests.
         """
         obj = self.get_object()
-        obj.withdrawn = True
-        obj.save(update_fields=["withdrawn"])
+
+        if obj.status != OwnershipRequest.PENDING:
+            return Response(
+                {"detail": "Cannot withdraw a request that has already been handled"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        obj.status = OwnershipRequest.WITHDRAWN
+        obj.save(update_fields=["status"])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return OwnershipRequest.objects.filter(
             requester=self.request.user,
-            withdrawn=False,
+            status=OwnershipRequest.PENDING,
             club__archived=False,
         )
 
@@ -4636,7 +4706,7 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     Accept an ownership request as a club owner.
 
     all:
-    Return a list of ownership requests older than a week. Used by Superusers.
+    Return a list of ownership requests. Used by Superusers.
     """
 
     serializer_class = OwnershipRequestSerializer
@@ -4648,14 +4718,15 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action != "all":
             return OwnershipRequest.objects.filter(
-                club__code=self.kwargs["club_code"], withdrawn=False
+                status=OwnershipRequest.PENDING, club__code=self.kwargs["club_code"]
             )
         else:
-            return OwnershipRequest.objects.filter(withdrawn=False).order_by(
-                "created_at"
-            )
+            return OwnershipRequest.objects.filter(
+                status=OwnershipRequest.PENDING
+            ).order_by("created_at")
 
     @action(detail=True, methods=["post"])
+    @LabsAnalytics.record_api_function(FuncEntry(name="accept_ownership_request"))
     def accept(self, request, *args, **kwargs):
         """
         Accept an ownership request as a club owner.
@@ -4682,8 +4753,47 @@ class OwnershipRequestManagementViewSet(viewsets.ModelViewSet):
             defaults={"role": Membership.ROLE_OWNER},
         )
 
-        request_object.delete()
+        request_object.status = OwnershipRequest.ACCEPTED
+        request_object.save(update_fields=["status"])
+
+        club_name = request_object.club.name
+        full_name = request_object.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "full_name": full_name,
+        }
+
+        send_mail_helper(
+            name="ownership_request_accepted",
+            subject=f"Ownership Request Accepted for {club_name}",
+            emails=[request_object.requester.email],
+            context=context,
+        )
+
         return Response({"success": True})
+
+    def destroy(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.status = OwnershipRequest.DENIED
+        obj.save(update_fields=["status"])
+
+        club_name = obj.club.name
+        full_name = obj.requester.get_full_name()
+
+        context = {
+            "club_name": club_name,
+            "full_name": full_name,
+        }
+
+        send_mail_helper(
+            name="ownership_request_denied",
+            subject=f"Ownership Request Denied for {club_name}",
+            emails=[obj.requester.email],
+            context=context,
+        )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"], permission_classes=[IsSuperuser])
     def all(self, request, *args, **kwargs):
@@ -5173,15 +5283,6 @@ class FavoriteCalendarAPIView(APIView):
         response = HttpResponse(calendar, content_type="text/calendar")
         response["Content-Disposition"] = "attachment; filename=favorite_events.ics"
         return response
-
-
-class FakeView(object):
-    """
-    Dummy view used for permissions checking by the UserPermissionAPIView.
-    """
-
-    def __init__(self, action):
-        self.action = action
 
 
 class UserGroupAPIView(APIView):
@@ -5699,6 +5800,9 @@ class MeetingZoomAPIView(APIView):
                 }
             )
 
+    @LabsAnalytics.record_api_function(
+        FuncEntry(name="create_or_fix_event_zoom_meeting")
+    )
     def post(self, request):
         """
         Create a new Zoom meeting for this event
@@ -6294,6 +6398,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     @update_holds
     @transaction.atomic
+    @LabsAnalytics.record_api_function(FuncEntry(name="checkout_initiated"))
     def initiate_checkout(self, request, *args, **kwargs):
         """
         Checkout all tickets in cart and create a Cybersource capture context
@@ -6465,6 +6570,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     @update_holds
     @transaction.atomic
+    @LabsAnalytics.record_api_function(FuncEntry(name="complete_checkout"))
     def complete_checkout(self, request, *args, **kwargs):
         """
         Complete the checkout after the user has entered their payment details
@@ -6613,6 +6719,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
+    @LabsAnalytics.record_api_function(FuncEntry(name="transfer_ticket"))
     def transfer(self, request, *args, **kwargs):
         """
         Transfer a ticket to another user
@@ -7815,6 +7922,9 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
 class WhartonApplicationStatusAPIView(generics.ListAPIView):
     """
     get: Return aggregate status for Wharton application submissions
+
+    Query parameters:
+    - cycle: (optional) Filter by application cycle ID
     """
 
     permission_class = [WhartonApplicationPermission | IsSuperuser]
@@ -7824,18 +7934,30 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
         return "List statuses for Wharton application submissions"
 
     def get_queryset(self):
+        queryset = ApplicationSubmission.objects.filter(
+            application__is_wharton_council=True
+        )
+
+        # Optional cycle filtering
+        cycle_id = self.request.query_params.get("cycle")
+        if cycle_id:
+            queryset = queryset.filter(application__application_cycle_id=cycle_id)
+
         return (
-            ApplicationSubmission.objects.filter(application__is_wharton_council=True)
-            .annotate(
+            queryset.annotate(
                 annotated_name=F("application__name"),
                 annotated_committee=F("committee__name"),
                 annotated_club=F("application__club__name"),
+                annotated_cycle_id=F("application__application_cycle_id"),
+                annotated_cycle_name=F("application__application_cycle__name"),
             )
             .values(
                 "annotated_name",
                 "application",
                 "annotated_committee",
                 "annotated_club",
+                "annotated_cycle_id",
+                "annotated_cycle_name",
                 "status",
             )
             .annotate(count=Count("status"))
@@ -7906,6 +8028,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
     def export(self, *args, **kwargs):
         """
         Given some application submissions, export them to CSV.
+        Deprecated in favor of client-side export.
 
         Cached for 2 hours.
         ---
@@ -8254,12 +8377,15 @@ class BadgeClubViewSet(viewsets.ModelViewSet):
         badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
         club = get_object_or_404(Club, code=request.data["club"])
         club.badges.add(badge)
+        SyncCommand().sync_badge(badge)
         return Response({"success": True})
 
     def destroy(self, request, *args, **kwargs):
         club = self.get_object()
         badge = get_object_or_404(Badge, pk=self.kwargs["badge_pk"])
         club.badges.remove(badge)
+        club.parent_orgs.remove(badge.org)
+        SyncCommand().sync_badge(badge)
         return Response({"success": True})
 
     def get_queryset(self):
@@ -8274,6 +8400,12 @@ class MassInviteAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @LabsAnalytics.record_api_function(
+        FuncEntry(
+            name="mass_invite_to_club",
+            get_value=lambda args, res: res.data.get("sent", 0),
+        ),
+    )
     def post(self, request, *args, **kwargs):
         club = get_object_or_404(Club, code=kwargs["club_code"])
 

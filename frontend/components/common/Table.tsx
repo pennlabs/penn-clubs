@@ -78,6 +78,7 @@ type tableProps = {
   initialPage?: number
   setInitialPage?: (page: number) => void
   initialPageSize?: number
+  onFilteredDataChange?: (rows: Row[]) => void
 }
 
 const Styles = styled.div`
@@ -129,6 +130,7 @@ const Table = ({
   initialPage = 0,
   setInitialPage,
   initialPageSize = 10,
+  onFilteredDataChange,
 }: tableProps): ReactElement<any> => {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [tableData, setTableData] = useState<Row[]>([])
@@ -139,7 +141,9 @@ const Table = ({
         return true
       }
       return searchableColumns.some((searchId) => {
-        const strings = item[searchId].split(' ')
+        const raw = item[searchId]
+        const value = raw == null ? '' : String(raw)
+        const strings = value.split(' ')
         return strings.some((string) =>
           string.toLowerCase().startsWith(searchQuery.toLowerCase()),
         )
@@ -160,6 +164,9 @@ const Table = ({
       return valid
     })
     setTableData(filteredData)
+    if (onFilteredDataChange) {
+      onFilteredDataChange(filteredData)
+    }
   }, [searchQuery, selectedFilter, data])
 
   const memoColumns = useMemo(

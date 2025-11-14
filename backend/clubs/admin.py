@@ -316,8 +316,8 @@ class OwnershipRequestAdmin(admin.ModelAdmin):
         "club__name",
         "created_at",
     )
-    list_display = ("requester", "club", "email", "withdrawn", "is_owner", "created_at")
-    list_filter = ("withdrawn",)
+    list_display = ("requester", "club", "email", "status", "is_owner", "created_at")
+    list_filter = ("status",)
 
     def requester(self, obj):
         return obj.requester.username

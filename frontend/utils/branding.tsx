@@ -88,6 +88,8 @@ const sites = {
     SHOW_ORG_MANAGEMENT: true,
     // show feedback icon on bottom right
     SHOW_FEEDBACK: true,
+    // show ownership requests feature
+    SHOW_OWNERSHIP_REQUESTS: false,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Officer', 20: 'Member' },
     OBJECT_MEMBERSHIP_LABEL: 'Members',
@@ -218,6 +220,7 @@ const sites = {
     SHOW_APPLICATIONS: false,
     SHOW_ORG_MANAGEMENT: false,
     SHOW_FEEDBACK: true,
+    SHOW_OWNERSHIP_REQUESTS: false,
 
     MEMBERSHIP_ROLE_NAMES: { 0: 'Owner', 10: 'Editor' },
     OBJECT_MEMBERSHIP_LABEL: 'Staff',
@@ -320,6 +323,7 @@ export const SHOW_SEARCHBAR_TOP = sites[site].SHOW_SEARCHBAR_TOP
 export const SHOW_APPLICATIONS = sites[site].SHOW_APPLICATIONS
 export const SHOW_ORG_MANAGEMENT = sites[site].SHOW_ORG_MANAGEMENT
 export const SHOW_FEEDBACK = sites[site].SHOW_FEEDBACK
+export const SHOW_OWNERSHIP_REQUESTS = sites[site].SHOW_OWNERSHIP_REQUESTS
 
 export const OBJECT_MEMBERSHIP_LABEL = sites[site].OBJECT_MEMBERSHIP_LABEL
 export const OBJECT_MEMBERSHIP_LABEL_LOWERCASE =

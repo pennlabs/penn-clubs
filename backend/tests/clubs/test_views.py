@@ -211,6 +211,22 @@ class ClubTestCase(TestCase):
             email="example@example.com",
         )
 
+        self.wc = Club.objects.create(
+            code="wharton-council",
+            name="Wharton Council",
+            approved=True,
+            email="example@example.com",
+        )
+
+        # some tests (e.g. directory) implicitly assume some constant number of clubs
+        self.NUM_CLUBS = 2
+
+        self.wc_badge = Badge.objects.create(
+            org=self.wc,
+            label="Wharton Council",
+            description="Wharton Council",
+        )
+
         self.event1 = Event.objects.create(
             code="test-event",
             club=self.club1,
@@ -268,7 +284,7 @@ class ClubTestCase(TestCase):
         """
         resp = self.client.get(reverse("clubs-directory"))
         self.assertIn(resp.status_code, [200, 201], resp.content)
-        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(len(resp.data), self.NUM_CLUBS)
 
     def test_advisor_visibility(self):
         """
@@ -1879,6 +1895,71 @@ class ClubTestCase(TestCase):
         self.assertEqual(data["description"], "We do stuff.")
         self.assertEqual(len(data["tags"]), 2)
 
+    def test_club_modify_child(self):
+        """
+        Officers of parent clubs should be able to modify child clubs
+        (e.g. clubs with the parent badge).
+        """
+        child_club = Club.objects.create(
+            name="WC Member Club",
+            code="wc-club",
+            description="We love Wharton",
+        )
+        Membership.objects.create(
+            person=self.user4, club=self.wc, role=Membership.ROLE_OFFICER
+        )
+
+        self.client.login(username=self.user4.username, password="test")
+
+        # assert that we can't modify a non-child club
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(child_club.code,)),
+            {"description": "We hate Wharton"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
+        # assert that we can modify a child club
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.post(
+            reverse("badge-clubs-list", args=(self.wc_badge.id,)),
+            {"club": child_club.code},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        child_club.refresh_from_db()
+        self.assertEqual(child_club.badges.count(), 1)
+        self.assertEqual(child_club.badges.all()[0], self.wc_badge)
+        self.assertEqual(child_club.parent_orgs.count(), 1)
+        self.assertEqual(child_club.parent_orgs.all()[0], self.wc)
+
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(child_club.code,)),
+            {"description": "We hate Wharton"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        # assert that removing the badge also removes the parent relationship
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.delete(
+            reverse("badge-clubs-detail", args=(self.wc_badge.id, child_club.code)),
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        child_club.refresh_from_db()
+        self.assertEqual(child_club.badges.count(), 0)
+        self.assertEqual(child_club.parent_orgs.count(), 0)
+
+        # assert that we can no longer modify the club after badge removal
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(child_club.code,)),
+            {"description": "We love Wharton again"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [400, 403], resp.content)
+
     def test_club_archive_no_auth(self):
         """
         Unauthenticated users should not be able to archive a club.
@@ -1916,6 +1997,7 @@ class ClubTestCase(TestCase):
         self.club1.save()
 
         # ensure club was put back on clubs endpoint
+        cache.clear()
         resp = self.client.get(reverse("clubs-list"))
         self.assertIn(resp.status_code, [200], resp.content)
         codes = [club["code"] for club in resp.data]
@@ -2354,7 +2436,7 @@ class ClubTestCase(TestCase):
             reverse("clubs-list"), {"format": "xlsx", "fields": "name"}
         )
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertEqual(1, len(res.data[0]))
 
@@ -2363,14 +2445,14 @@ class ClubTestCase(TestCase):
             reverse("clubs-list"), {"format": "xlsx", "fields": "name,code"}
         )
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertEqual(2, len(res.data[0]))
 
     def test_club_report_selects_all_fields(self):
         res = self.client.get(reverse("clubs-list"), {"format": "xlsx"})
         self.assertEqual(200, res.status_code)
-        self.assertEqual(1, len(res.data))
+        self.assertEqual(self.NUM_CLUBS, len(res.data))
         self.assertTrue(isinstance(res.data[0], dict))
         self.assertTrue(len(res.data[0]) > 2)
 
@@ -3428,7 +3510,7 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 204], resp.content)
         self.assertEqual(
             OwnershipRequest.objects.filter(
-                club=self.club1, requester=self.user2, withdrawn=True
+                club=self.club1, requester=self.user2, status=OwnershipRequest.WITHDRAWN
             ).count(),
             1,
         )
@@ -3510,9 +3592,16 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(
             OwnershipRequest.objects.filter(
-                club=self.club1, requester=self.user2
+                club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
             ).count(),
             0,
+        )
+
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2, status=OwnershipRequest.ACCEPTED
+            ).count(),
+            1,
         )
 
         self.assertEqual(
@@ -3567,9 +3656,16 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(
             OwnershipRequest.objects.filter(
-                club=self.club1, requester=self.user2
+                club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
             ).count(),
             0,
+        )
+
+        self.assertEqual(
+            OwnershipRequest.objects.filter(
+                club=self.club1, requester=self.user2, status=OwnershipRequest.DENIED
+            ).count(),
+            1,
         )
 
         self.assertEqual(
@@ -4277,6 +4373,246 @@ class ClubTestCase(TestCase):
         long_desc_club.refresh_from_db()
         self.assertEqual(long_desc_club.description, long_description)
         self.assertEqual(long_desc_club.subtitle, "A new subtitle")
+
+    def test_ownership_requests_6month_cooldown_rule(self):
+        """
+        Test the 6-month cooldown rule for ownership requests
+        """
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        # Test 1: No previous request - should allow new request
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+
+        # Test 2: Pending request within 6 months - should deny new request
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
+        # Test 3: Withdrawn request within 6 months - should allow resubmission
+        ownership_request = OwnershipRequest.objects.get(
+            club=self.club1, requester=self.user2
+        )
+        ownership_request.status = OwnershipRequest.WITHDRAWN
+        ownership_request.save()
+
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+
+        # Verify the same request object was reused
+        ownership_request.refresh_from_db()
+        self.assertEqual(ownership_request.status, OwnershipRequest.PENDING)
+
+        # Test 4: Accepted request within 6 months - should deny new request
+        ownership_request.status = OwnershipRequest.ACCEPTED
+        ownership_request.save()
+
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
+        # Test 5: Denied request within 6 months - should deny new request
+        ownership_request.status = OwnershipRequest.DENIED
+        ownership_request.save()
+
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+
+        # Test 6: Request older than 6 months - should allow new request
+        ownership_request.created_at = timezone.now() - timezone.timedelta(days=200)
+        ownership_request.save()
+
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+
+    def test_ownership_requests_withdrawal_validation(self):
+        """
+        Test that withdrawal only works on pending requests
+        """
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        # Create ownership request
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+
+        ownership_request = OwnershipRequest.objects.get(
+            club=self.club1, requester=self.user2
+        )
+
+        # Test withdrawing pending request - should work
+        resp = self.client.delete(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(resp.status_code, 204, resp.content)
+        ownership_request.refresh_from_db()
+        self.assertEqual(ownership_request.status, OwnershipRequest.WITHDRAWN)
+
+        # Test withdrawing already withdrawn request - should fail
+        resp = self.client.delete(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(
+            resp.status_code, 404, resp.content
+        )  # Not found in user's pending requests
+
+        # Test withdrawing accepted request - should fail
+        ownership_request.status = OwnershipRequest.ACCEPTED
+        ownership_request.save()
+
+        # Create a new pending request to test withdrawal validation
+        OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+
+        # Manually set the accepted request back to pending to test validation
+        ownership_request.status = OwnershipRequest.ACCEPTED
+        ownership_request.save()
+
+        # Try to withdraw the accepted request (this should fail in the viewset)
+        # We need to test this through the API, but first create a pending request
+        OwnershipRequest.objects.filter(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        ).delete()
+
+        OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.ACCEPTED
+        )
+
+        # This should fail because the request is not pending
+        resp = self.client.delete(
+            reverse("ownership-requests-detail", args=(self.club1.code,))
+        )
+        self.assertEqual(
+            resp.status_code, 404, resp.content
+        )  # Not found in user's pending requests
+
+    def test_ownership_requests_email_notifications(self):
+        """
+        Test email notifications for accept/deny actions
+        """
+        from django.core import mail
+
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        # Create ownership request
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("ownership-requests-list"),
+            {"club": self.club1.code},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+
+        # Test accept email notification
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            reverse(
+                "club-ownership-requests-accept",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user2.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # Check that acceptance email was sent
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Ownership Request Accepted", mail.outbox[0].subject)
+        self.assertIn(self.user2.email, mail.outbox[0].to)
+        self.assertIn(self.club1.name, mail.outbox[0].body)
+
+        # Create another request for deny test
+        self.client.login(username=self.user2.username, password="test")
+        OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+
+        # Test deny email notification
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.delete(
+            reverse(
+                "club-ownership-requests-detail",
+                kwargs={
+                    "club_code": self.club1.code,
+                    "requester__username": self.user2.username,
+                },
+            )
+        )
+        self.assertEqual(resp.status_code, 204, resp.content)
+
+        # Check that denial email was sent
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn("Ownership Request Denied", mail.outbox[1].subject)
+        self.assertIn(self.user2.email, mail.outbox[1].to)
+        self.assertIn(self.club1.name, mail.outbox[1].body)
+
+    def test_ownership_requests_admin_view_only_pending(self):
+        """
+        Test that admin view only shows pending requests
+        """
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OWNER
+        )
+
+        # Create requests with different statuses
+        OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user2, status=OwnershipRequest.PENDING
+        )
+        OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user3, status=OwnershipRequest.ACCEPTED
+        )
+        OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user4, status=OwnershipRequest.DENIED
+        )
+        OwnershipRequest.objects.create(
+            club=self.club1, requester=self.user5, status=OwnershipRequest.WITHDRAWN
+        )
+
+        # Test admin view (superuser)
+        self.client.login(username=self.user5.username, password="test")
+        resp = self.client.get(
+            reverse("club-ownership-requests-all", args=("anystring",))
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # Should only show pending request
+        self.assertEqual(len(resp.json()), 1)
+        self.assertEqual(resp.json()[0]["username"], self.user2.username)
 
 
 class HealthTestCase(TestCase):
