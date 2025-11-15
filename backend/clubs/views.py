@@ -45,7 +45,6 @@ from django.db.models import (
     CharField,
     Count,
     DurationField,
-    Exists,
     ExpressionWrapper,
     F,
     Max,
@@ -1229,7 +1228,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # filter out archived clubs
         queryset = queryset.filter(archived=False)
 
-        # filter out inactive clubs for regular users (non-members, non-officers, non-superusers)
+        # filter out inactive clubs for regular users (non-officers/superusers)
         if self.action == "list":
             user = self.request.user
             is_superuser = user.is_authenticated and user.is_superuser
@@ -1238,23 +1237,20 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 or user.has_perm("clubs.manage_club")
                 or user.has_perm("clubs.approve_club")
             )
-            
+
             # Only filter out inactive clubs for regular users
             # Superusers and users with special permissions can see all inactive clubs
             if not (is_superuser or has_special_perms):
                 if user.is_authenticated:
-                    # Show active clubs OR inactive clubs where user is member/officer
+                    # Show active clubs OR inactive clubs where user is officer
                     # Use Subquery to avoid JOIN duplicates
+                    user_club_ids = Membership.objects.filter(
+                        person=user,
+                        role__lte=Membership.ROLE_OFFICER,
+                        active=True,
+                    ).values_list("club_id", flat=True)
                     queryset = queryset.filter(
-                        Q(active=True)
-                        | Q(
-                            active=False,
-                            pk__in=Subquery(
-                                Membership.objects.filter(
-                                    person=user, role__lte=Membership.ROLE_OFFICER
-                                ).values_list("club_id", flat=True)
-                            ),
-                        )
+                        Q(active=True) | Q(active=False, pk__in=Subquery(user_club_ids))
                     )
                 else:
                     # Anonymous users can only see active clubs
