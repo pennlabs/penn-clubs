@@ -8,8 +8,6 @@ import {
 } from 'react'
 import styled from 'styled-components'
 
-import { mediaMaxWidth, mediaMinWidth, SM } from '~/constants'
-
 import { BORDER, MEDIUM_GRAY, WHITE } from '../../constants/colors'
 import { CLUB_APPLY_ROUTE, CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club, ClubApplicationRequired, QuestionAnswer } from '../../types'
@@ -40,6 +38,7 @@ const Wrapper = styled.span`
   justify-content: flex-end;
   margin-bottom: 0.8rem;
   line-height: 1;
+  gap: 20px;
 `
 
 const BookmarkCountWrapper = styled.div`
@@ -75,7 +74,6 @@ const ActionDiv = styled.div`
 
 const ActionButton = styled.a`
   font-size: 0.8em;
-  margin-right: 20px;
 `
 
 type ActionsProps = {
@@ -379,14 +377,7 @@ export const QuestionFollowUpAction = ({
   )
 }
 
-export const DesktopActions = styled(Actions)`
-  ${mediaMaxWidth(SM)} {
-    display: none !important;
-  }
-`
-
-export const MobileActions = styled(Actions)`
-  ${mediaMinWidth(SM)} {
-    display: none !important;
-  }
+export const ActionBar = styled(Actions)`
+  display: flex;
+  justify-content: flex-start;
 `

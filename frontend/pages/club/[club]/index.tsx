@@ -1,5 +1,5 @@
 import ClubMetadata from 'components/ClubMetadata'
-import { DesktopActions, MobileActions } from 'components/ClubPage/Actions'
+import { ActionBar } from 'components/ClubPage/Actions'
 import AdvisorList from 'components/ClubPage/AdvisorList'
 import ClubApprovalDialog from 'components/ClubPage/ClubApprovalDialog'
 import Description from 'components/ClubPage/Description'
@@ -262,7 +262,7 @@ const ClubPage = ({
               pending approval from the {APPROVAL_AUTHORITY}.
             </div>
           )}
-          <MobileActions
+          <ActionBar
             club={club}
             authenticated={userInfo !== undefined}
             updateRequests={updateRequests}
@@ -313,11 +313,6 @@ const ClubPage = ({
           {events.length > 0 && <EventCarousel events={events} />}
         </div>
         <div className="column is-one-third">
-          <DesktopActions
-            club={club}
-            authenticated={userInfo !== undefined}
-            updateRequests={updateRequests}
-          />
           <QAButton onClick={scrollToQuestions}>
             {questions.length > 0
               ? `Click here to see the ${questions.length} question${
