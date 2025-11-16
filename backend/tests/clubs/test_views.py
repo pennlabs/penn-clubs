@@ -208,6 +208,7 @@ class ClubTestCase(TestCase):
             classification=self.classification1,
             category=self.category1,
             approved=True,
+            active=True,
             email="example@example.com",
         )
 
@@ -215,6 +216,7 @@ class ClubTestCase(TestCase):
             code="wharton-council",
             name="Wharton Council",
             approved=True,
+            active=True,
             email="example@example.com",
         )
 
@@ -1649,6 +1651,220 @@ class ClubTestCase(TestCase):
             data = json.loads(resp.content.decode("utf-8"))
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
+
+    def test_club_list_filters_inactive_clubs_for_regular_users(self):
+        """
+        Test that regular users (non-members, non-officers, non-superusers)
+        cannot see inactive clubs in the list.
+        """
+        # Make club1 inactive
+        self.club1.active = False
+        self.club1.save()
+
+        # Regular user (not logged in)
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        # Should not see inactive club
+        self.assertNotIn("test-club", codes)
+        # Should still see active clubs
+        self.assertIn("wharton-council", codes)
+
+        # Regular authenticated user (not member/officer/superuser)
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        # Should not see inactive club
+        self.assertNotIn("test-club", codes)
+        # Should still see active clubs
+        self.assertIn("wharton-council", codes)
+
+        # Restore club1 to active
+        self.club1.active = True
+        self.club1.save()
+
+    def test_club_list_filters_inactive_clubs_for_members(self):
+        """
+        Test that members cannot see inactive clubs, even for clubs they're members of.
+        """
+        # Make club1 inactive
+        self.club1.active = False
+        self.club1.save()
+
+        # Make user1 a member of club1
+        Membership.objects.create(
+            person=self.user1,
+            club=self.club1,
+            role=Membership.ROLE_MEMBER,
+        )
+
+        # Login as user1
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+
+        # Should NOT see inactive club, even though they're a member
+        self.assertNotIn("test-club", codes)
+        # Should still see active clubs
+        self.assertIn("wharton-council", codes)
+
+        # Restore club1 to active
+        self.club1.active = True
+        self.club1.save()
+
+    def test_club_list_filters_inactive_clubs_for_officers(self):
+        """
+        Test that officers are treated as regular users for inactive clubs.
+        """
+        # Make club1 inactive
+        self.club1.active = False
+        self.club1.save()
+
+        # Make user1 an officer of club1
+        Membership.objects.create(
+            person=self.user1,
+            club=self.club1,
+            role=Membership.ROLE_OFFICER,
+        )
+
+        # Login as user1
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+
+        # Officers should not see inactive clubs
+        self.assertNotIn("test-club", codes)
+        # Should still see active clubs
+        self.assertIn("wharton-council", codes)
+
+        # Restore club1 to active
+        self.club1.active = True
+        self.club1.save()
+
+    def test_club_list_shows_all_inactive_clubs_to_superusers(self):
+        """
+        Test that superusers can see all inactive clubs.
+        """
+        # Make both clubs inactive
+        self.club1.active = False
+        self.club1.save()
+        self.wc.active = False
+        self.wc.save()
+
+        # Login as superuser
+        self.client.login(username=self.user5.username, password="test")
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+
+        # Should see all inactive clubs
+        self.assertIn("test-club", codes)
+        self.assertIn("wharton-council", codes)
+
+        # Restore clubs to active
+        self.club1.active = True
+        self.club1.save()
+        self.wc.active = True
+        self.wc.save()
+
+    def test_club_list_bypass_includes_inactive_clubs(self):
+        """
+        Test that bypass=true shows inactive clubs even for regular users.
+        """
+        # Make club1 inactive
+        self.club1.active = False
+        self.club1.save()
+
+        # Without bypass, inactive club should be hidden
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertNotIn("test-club", codes)
+        self.assertIn("wharton-council", codes)
+
+        # With bypass=true, inactive club should be visible
+        resp = self.client.get(reverse("clubs-list") + "?bypass=true")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("test-club", codes)
+        self.assertIn("wharton-council", codes)
+
+    def test_club_list_shows_all_inactive_clubs_to_users_with_special_permissions(self):
+        """
+        Test that users with special permissions
+        (see_pending_clubs, manage_club, approve_club) can see all inactive clubs.
+        """
+        # Make club1 inactive
+        self.club1.active = False
+        self.club1.save()
+
+        # Give user1 the see_pending_clubs permission
+        content_type = ContentType.objects.get_for_model(Club)
+        permission = Permission.objects.get(
+            codename="see_pending_clubs", content_type=content_type
+        )
+        self.user1.user_permissions.add(permission)
+        self.user1.save()
+
+        # Login as user1
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+
+        # Should see inactive club
+        self.assertIn("test-club", codes)
+        # Should still see active clubs
+        self.assertIn("wharton-council", codes)
+
+        # Clean up
+        self.user1.user_permissions.remove(permission)
+        self.user1.save()
+        self.club1.active = True
+        self.club1.save()
+
+    def test_club_list_active_clubs_always_visible(self):
+        """
+        Test that active clubs are always visible to everyone.
+        This could be subject to approval filtering, so we set approved to True.
+        """
+        # Ensure both existing clubs are active
+        self.club1.active = True
+        self.club1.save()
+        self.wc.active = True
+        self.wc.save()
+
+        # Test as anonymous user
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("test-club", codes)
+        self.assertIn("wharton-council", codes)
+
+        # Test as regular user
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("test-club", codes)
+        self.assertIn("wharton-council", codes)
 
     def test_club_detail_diff(self):
         """
