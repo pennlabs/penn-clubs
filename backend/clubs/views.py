@@ -1176,7 +1176,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             # only prefetch members if exporting to Excel with "members" field
             if export_members:
                 membership_queryset = Membership.objects.select_related(
-                    "person", "person__profile"
+                    "person__profile"
                 )
 
                 queryset = queryset.prefetch_related(
