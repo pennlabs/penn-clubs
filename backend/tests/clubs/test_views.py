@@ -1720,7 +1720,7 @@ class ClubTestCase(TestCase):
 
     def test_club_list_filters_inactive_clubs_for_officers(self):
         """
-        Test that officers can see inactive clubs they're officers of.
+        Test that officers are treated as regular users for inactive clubs.
         """
         # Make club1 inactive
         self.club1.active = False
@@ -1741,8 +1741,8 @@ class ClubTestCase(TestCase):
         data = json.loads(resp.content.decode("utf-8"))
         codes = [club["code"] for club in data]
 
-        # Should see inactive club since they're an officer of it
-        self.assertIn("test-club", codes)
+        # Officers should not see inactive clubs
+        self.assertNotIn("test-club", codes)
         # Should still see active clubs
         self.assertIn("wharton-council", codes)
 
@@ -1777,6 +1777,30 @@ class ClubTestCase(TestCase):
         self.club1.save()
         self.wc.active = True
         self.wc.save()
+
+    def test_club_list_bypass_includes_inactive_clubs(self):
+        """
+        Test that bypass=true shows inactive clubs even for regular users.
+        """
+        # Make club1 inactive
+        self.club1.active = False
+        self.club1.save()
+
+        # Without bypass, inactive club should be hidden
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertNotIn("test-club", codes)
+        self.assertIn("wharton-council", codes)
+
+        # With bypass=true, inactive club should be visible
+        resp = self.client.get(reverse("clubs-list") + "?bypass=true")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("test-club", codes)
+        self.assertIn("wharton-council", codes)
 
     def test_club_list_shows_all_inactive_clubs_to_users_with_special_permissions(self):
         """

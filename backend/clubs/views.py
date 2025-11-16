@@ -1228,8 +1228,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         # filter out archived clubs
         queryset = queryset.filter(archived=False)
 
-        # filter out inactive clubs for regular users (non-officers/superusers)
-        if self.action == "list":
+        bypass = self.request.query_params.get("bypass", "").lower() == "true"
+
+        # filter out inactive clubs for non-admins
+        if self.action == "list" and not bypass:
             user = self.request.user
             is_superuser = user.is_authenticated and user.is_superuser
             has_special_perms = (
@@ -1241,25 +1243,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             # Only filter out inactive clubs for regular users
             # Superusers and users with special permissions can see all inactive clubs
             if not (is_superuser or has_special_perms):
-                if user.is_authenticated:
-                    # Show active clubs OR inactive clubs where user is officer
-                    # Use Subquery to avoid JOIN duplicates
-                    user_club_ids = Membership.objects.filter(
-                        person=user,
-                        role__lte=Membership.ROLE_OFFICER,
-                        active=True,
-                    ).values_list("club_id", flat=True)
-                    queryset = queryset.filter(
-                        Q(active=True) | Q(active=False, pk__in=Subquery(user_club_ids))
-                    )
-                else:
-                    # Anonymous users can only see active clubs
-                    queryset = queryset.filter(active=True)
+                queryset = queryset.filter(active=True)
 
         # filter by approved clubs
         if (
             self.request.user.has_perm("clubs.see_pending_clubs")
-            or self.request.query_params.get("bypass", "").lower() == "true"
+            or bypass
             or self.action not in {"list"}
         ):
             return queryset
@@ -2181,18 +2170,31 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         Return a list of all clubs. Responses cached for 1 hour
 
-        Responses are only cached for people with specific permissions
+        Responses are cached only for non-superusers without elevated permissions.
         """
-        key = self.request.build_absolute_uri()
-        cached_object = cache.get(key)
-        if (
-            cached_object
-            and not self.request.user.groups.filter(name="Approvers").exists()
-            and not self.request.user.has_perm("clubs.approve_club")
-        ):
-            return Response(cached_object)
+        user = self.request.user
+        is_superuser = user.is_authenticated and user.is_superuser
+        has_special_perms = (
+            user.has_perm("clubs.see_pending_clubs")
+            or user.has_perm("clubs.manage_club")
+            or user.has_perm("clubs.approve_club")
+            or user.groups.filter(name="Approvers").exists()
+        )
+        bypass = self.request.query_params.get("bypass", "").lower() == "true"
+
+        use_cache = not is_superuser and not has_special_perms and not bypass
+
+        key = None
+        if use_cache:
+            key = self.request.build_absolute_uri()
+            cached_object = cache.get(key)
+            if cached_object:
+                return Response(cached_object)
+
         resp = super().list(*args, **kwargs)
-        cache.set(key, resp.data, 60 * 60)
+
+        if use_cache and key is not None:
+            cache.set(key, resp.data, 60 * 60)
         return resp
 
     def retrieve(self, *args, **kwargs):
