@@ -6,6 +6,7 @@ import time
 from collections import Counter
 from unittest.mock import MagicMock, patch
 
+from dateutil.parser import isoparse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -5355,7 +5356,7 @@ class RegistrationQueueSettingsTestCase(TestCase):
         self.assertIn("reapproval_queue_open", data)
         self.assertIn("new_approval_queue_open", data)
 
-    def test_update_settings(self):
+    def test_update_settings(self):  # manual non-scheduled updates
         # non-superusers can't update
         self.client.login(username="user", password="password")
         resp = self.client.patch(
@@ -5385,6 +5386,56 @@ class RegistrationQueueSettingsTestCase(TestCase):
         data = resp.json()
         self.assertFalse(data["reapproval_queue_open"])
         self.assertFalse(data["new_approval_queue_open"])
+
+    def test_schedule_queue_flips(self):
+        self.client.login(username="super", password="password")
+        past_time = timezone.now() - timezone.timedelta(hours=1)
+
+        # setting schedule date with past datetime fails
+        reapproval_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"reapproval_date_of_next_flip": past_time.isoformat()}),
+            content_type="application/json",
+        )
+        new_approval_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"new_approval_date_of_next_flip": past_time.isoformat()}),
+            content_type="application/json",
+        )
+        self.assertEqual(reapproval_resp.status_code, 400, reapproval_resp.content)
+        self.assertEqual(new_approval_resp.status_code, 400, new_approval_resp.content)
+
+        # settings with future datetime works and changes database accordingly
+        valid_time = timezone.now() + timezone.timedelta(hours=1)
+        resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {
+                    "reapproval_date_of_next_flip": valid_time.isoformat(),
+                    "new_approval_date_of_next_flip": valid_time.isoformat(),
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(
+            isoparse(resp.data["reapproval_date_of_next_flip"]), valid_time
+        )
+        self.assertEqual(
+            isoparse(resp.data["new_approval_date_of_next_flip"]), valid_time
+        )
+
+        manual_flip_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {"reapproval_queue_open": False, "new_approval_queue_open": False}
+            ),
+            content_type="application/json",
+        )
+        # manual flips clear scheduled dates
+        self.assertEqual(manual_flip_resp.status_code, 200, manual_flip_resp.content)
+        self.assertEqual(manual_flip_resp.data["reapproval_date_of_next_flip"], None)
+        self.assertEqual(manual_flip_resp.data["new_approval_date_of_next_flip"], None)
 
 
 class EventShowingTestCase(TestCase):
