@@ -497,10 +497,11 @@ class OwnershipRequestTestCase(TestCase):
 
 
 class RegistrationQueueSettingsTestCase(TestCase):
-    queue_settings = RegistrationQueueSettings.get()
-    queue_settings.reapproval_queue_open = True
-    queue_settings.new_approval_queue_open = True
-    queue_settings.save()
+    def setUp(self):
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = True
+        queue_settings.new_approval_queue_open = True
+        queue_settings.save()
 
     def test_apply_scheduled_flips(self):
         queue_settings = RegistrationQueueSettings.get()
