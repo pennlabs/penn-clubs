@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router'
 import React, {
   ReactElement,
   SetStateAction,
@@ -335,12 +336,55 @@ export const SearchBarTextItem = ({
     throw new Error('This component must be used inside a search bar!')
   }
 
-  const [nameInput, setNameInput] = useState<string>('')
+  const searchValue = useContext(SearchBarValueContext)
+  const router = useRouter()
   const [timeout, storeTimeout] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Initialize from parent searchInput value first, then URL if available
+  const getInitialValue = (): string => {
+    // If parent has search value, use that (it already syncs with URL)
+    if (searchValue[param]) {
+      return String(searchValue[param])
+    }
+    // Otherwise check URL directly (for initial load)
+    if (router?.isReady && router?.query?.search) {
+      return String(router.query.search)
+    }
+    return ''
+  }
+  const [nameInput, setNameInput] = useState<string>(getInitialValue)
+
+  // Sync local input with parent searchInput value (which may come from URL)
+  useEffect(() => {
+    const parentValue = searchValue[param] ? String(searchValue[param]) : ''
+    if (parentValue !== nameInput) {
+      setNameInput(parentValue)
+    }
+  }, [searchValue[param]])
+
+  // Also sync with URL query if router becomes ready (backup sync)
+  useEffect(() => {
+    if (!router?.isReady) return
+    const q = router.query.search
+    const urlValue = q ? String(q) : ''
+    const parentValue = searchValue[param] ? String(searchValue[param]) : ''
+    // Only update if different from current and matches URL (not parent)
+    if (urlValue !== nameInput && urlValue === parentValue) {
+      setNameInput(urlValue)
+    }
+  }, [router?.isReady, router?.query?.search])
 
   useEffect(() => {
     timeout !== null && clearTimeout(timeout)
+
+    // Check if the current nameInput matches the parent value
+    // If it does, we're syncing from parent and don't need to update parent again
+    const parentValue = searchValue[param] ? String(searchValue[param]) : ''
+    if (nameInput === parentValue) {
+      // Already in sync with parent, no need to trigger callback
+      return
+    }
+
     const timeoutId: number = window.setTimeout(
       () =>
         searchCallback((inpt) => {
@@ -356,7 +400,7 @@ export const SearchBarTextItem = ({
       400,
     )
     storeTimeout(timeoutId)
-  }, [nameInput])
+  }, [nameInput, searchValue[param]])
 
   const focus = () => inputRef.current && inputRef.current.focus()
 
@@ -445,7 +489,6 @@ export const SearchBarTagItem = ({
   useEffect(() => {
     setTags(paramsToTags(searchValue[param], options))
   }, [searchValue])
-
   const updateTag = (tag: FuseTag) => {
     const selectedTags = toggleItemInArray(
       tag,
