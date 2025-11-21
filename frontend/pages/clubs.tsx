@@ -15,6 +15,7 @@ import SearchBar, {
   SearchInput,
 } from 'components/SearchBar'
 import equal from 'deep-equal'
+import { useRouter } from 'next/router'
 import {
   createContext,
   ReactElement,
@@ -285,11 +286,44 @@ const searchIsEmpty = (input: SearchInput): boolean => {
 }
 
 const Splash = (props: SplashProps): ReactElement<any> => {
+  const router = useRouter()
   const fairIsOpen = useSetting('FAIR_OPEN')
   const fairIsVirtual = useSetting('FAIR_VIRTUAL')
   const preFair = useSetting('PRE_FAIR')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
   const currentSearch = useRef<SearchInput>({})
+
+  // Initialize searchInput from URL query params
+  const getInitialSearchInput = (): SearchInput => {
+    if (!router.isReady) return {}
+    const query = router.query
+    const initial: SearchInput = {}
+
+    // Read search param from URL
+    if (query.search && typeof query.search === 'string') {
+      initial.search = query.search
+    }
+
+    // Read other search params (tags, badges, etc.) from URL if present
+    Object.keys(query).forEach((key) => {
+      if (key !== 'search' && query[key]) {
+        initial[key] =
+          typeof query[key] === 'string'
+            ? query[key]
+            : Array.isArray(query[key])
+              ? query[key][0]
+              : String(query[key])
+      }
+    })
+
+    return initial
+  }
+
+  // Initialize searchInput state - update when router becomes ready
+  const [searchInput, setSearchInput] = useState<SearchInput>(() => {
+    // Return empty object initially, will be set when router is ready
+    return {}
+  })
 
   const [clubs, setClubs] = useState<PaginatedClubPage>(props.clubs)
   const updateClub = (code, key, value) => {
@@ -311,16 +345,84 @@ const Splash = (props: SplashProps): ReactElement<any> => {
     useState<Maybe<PaginatedClubPage>>()
 
   const [isLoading, setLoading] = useState<boolean>(false)
-  const [searchInput, setSearchInput] = useState<SearchInput>({})
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
+  // Initialize clubs with search params if URL has search query
+  const [isInitialized, setIsInitialized] = useState<boolean>(false)
+
+  // Initialize clubs with URL search params on mount
   useEffect((): void => {
-    if (equal(searchInput, currentSearch.current)) {
+    if (!router.isReady || isInitialized) return
+
+    const initialSearch = getInitialSearchInput()
+
+    // Update searchInput state if URL has params
+    if (Object.keys(initialSearch).length > 0) {
+      setSearchInput(initialSearch)
+    }
+
+    // Only fetch if URL has search params different from default
+    if (Object.keys(initialSearch).length > 0) {
+      setLoading(true)
+      currentSearch.current = { ...initialSearch }
+
+      const paramsObject = {
+        format: 'json',
+        page: '1',
+        ...initialSearch,
+      }
+
+      ;(async () => {
+        if (SITE_ID === 'fyh' && !searchIsEmpty(currentSearch.current)) {
+          // general is basically everything (including the search result)
+          const generalParams = new URLSearchParams({
+            format: 'json',
+            page: '1',
+            viewType: 'general',
+          })
+          const exclusiveParams = new URLSearchParams({
+            ...paramsObject,
+            viewType: 'exclusive',
+          })
+          const results = await doBulkLookup([
+            ['general', `/clubs/?${generalParams.toString()}`],
+            ['exclusive', `/clubs/?${exclusiveParams.toString()}`],
+          ])
+          if (equal(currentSearch.current, initialSearch)) {
+            setClubs(results.general)
+            setExclusiveClubs(results.exclusive)
+            setLoading(false)
+            setIsInitialized(true)
+          }
+        } else {
+          const params = new URLSearchParams(paramsObject)
+          const displayClubs = await doApiRequest(
+            `/clubs/?${params.toString()}`,
+            {
+              method: 'GET',
+            },
+          ).then((res) => res.json())
+          if (equal(currentSearch.current, initialSearch)) {
+            setClubs(displayClubs)
+            setExclusiveClubs(undefined)
+            setLoading(false)
+            setIsInitialized(true)
+          }
+        }
+      })()
+    } else {
+      setIsInitialized(true)
+    }
+  }, [router.isReady])
+
+  // Handle search input changes after initialization
+  useEffect((): void => {
+    if (!isInitialized || equal(searchInput, currentSearch.current)) {
       return
     }
+
     currentSearch.current = { ...searchInput }
     setLoading(true)
-
     const paramsObject = {
       format: 'json',
       page: '1',
@@ -363,7 +465,7 @@ const Splash = (props: SplashProps): ReactElement<any> => {
         }
       }
     })()
-  }, [searchInput])
+  }, [searchInput, isInitialized])
 
   const tagOptions = useMemo<FuseTag[]>(
     () =>

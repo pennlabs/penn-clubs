@@ -1,5 +1,6 @@
 import { Icon } from 'components/common'
 import { DateTime } from 'luxon'
+import moment from 'moment'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
@@ -14,6 +15,7 @@ import {
   CLUBS_GREY,
   CLUBS_GREY_LIGHT,
   H1_TEXT,
+  LIGHTER_BLUE,
   SNOW,
   WHITE,
 } from '~/constants/colors'
@@ -50,7 +52,8 @@ const displayEvents = (events) => {
           <EventCard>
             <EventImageWrapper>
               <SmallCover
-                image={event.image_url}
+                image={event.image_url || undefined}
+                clubImage={(event as any).club_image_url || undefined}
                 fallback={
                   <p style={{ textAlign: 'center' }}>
                     <b>{event.name?.toUpperCase() || 'EVENT'}</b>
@@ -175,7 +178,7 @@ const SearchInput = styled.input`
   }
 `
 
-const SearchIcon = styled.div`
+const SearchIcon = styled.button`
   position: absolute;
   right: 2.5rem;
   display: flex;
@@ -183,6 +186,8 @@ const SearchIcon = styled.div`
   align-items: start;
   justify-content: center;
   padding-right: 16px;
+  border: none;
+  background: none;
   color: ${CLUBS_BLUE};
   cursor: pointer;
 `
@@ -241,21 +246,21 @@ const ErrorBanner = styled.div`
   @media (max-width: ${PHONE}) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 `
 
 const RetryButton = styled.button`
   background: transparent;
-  border: 0px;
+  border: none;
   color: ${CLUBS_BLUE};
   font-weight: 700;
   cursor: pointer;
-
+  padding: 0;
   @media (max-width: ${PHONE}) {
     display: block;
     width: auto;
-    margin-top: 0.25rem;
+    margin-top: 0;
   }
 `
 
@@ -332,25 +337,32 @@ const EventImageWrapper = styled.div`
   }
 `
 
-const SmallCover: React.FC<{ image?: string; fallback?: React.ReactNode }> = ({
-  image,
-  fallback,
-}) => {
-  const [isValid, setIsValid] = React.useState<boolean | null>(null)
+const SmallCover: React.FC<{
+  image?: string
+  clubImage?: string
+  fallback?: React.ReactNode
+}> = ({ image, clubImage, fallback }) => {
+  const [eventImageValid, setEventImageValid] = React.useState<boolean | null>(
+    null,
+  )
+  const [clubImageValid, setClubImageValid] = React.useState<boolean | null>(
+    null,
+  )
 
+  // Check event image first
   React.useEffect(() => {
     if (!image) {
-      setIsValid(false)
+      setEventImageValid(false)
       return
     }
 
     let cancelled = false
     const img = new Image()
     img.onload = () => {
-      if (!cancelled) setIsValid(true)
+      if (!cancelled) setEventImageValid(true)
     }
     img.onerror = () => {
-      if (!cancelled) setIsValid(false)
+      if (!cancelled) setEventImageValid(false)
     }
     img.src = image
 
@@ -359,13 +371,43 @@ const SmallCover: React.FC<{ image?: string; fallback?: React.ReactNode }> = ({
     }
   }, [image])
 
+  // If event image is invalid, try club image as fallback
+  React.useEffect(() => {
+    if (eventImageValid === true || !clubImage) {
+      setClubImageValid(null)
+      return
+    }
+
+    if (eventImageValid === false) {
+      let cancelled = false
+      const img = new Image()
+      img.onload = () => {
+        if (!cancelled) setClubImageValid(true)
+      }
+      img.onerror = () => {
+        if (!cancelled) setClubImageValid(false)
+      }
+      img.src = clubImage
+
+      return () => {
+        cancelled = true
+      }
+    }
+  }, [eventImageValid, clubImage])
+
   // while loading or invalid, show fallback; only render image after successful load
   return (
     <EventImageWrapper>
-      {isValid ? (
+      {eventImageValid === true ? (
         <img
           src={image}
           alt="cover"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : clubImageValid === true ? (
+        <img
+          src={clubImage}
+          alt="club cover"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (
@@ -420,9 +462,7 @@ const SmallLogo: React.FC<{ image?: string; name?: string }> = ({
   return <ClubLogo>{name?.charAt(0)?.toUpperCase() || 'C'}</ClubLogo>
 }
 
-const ClubResultsContainer = styled.div`
-  margin-top: 1rem;
-`
+const ClubResultsContainer = styled.div``
 
 const NoResults = styled.div`
   padding: 1rem 1.25rem;
@@ -435,7 +475,6 @@ const NoResults = styled.div`
 const NoResultsTitle = styled.div`
   font-weight: 700;
   color: ${H1_TEXT};
-  margin-bottom: 0.25rem;
 `
 
 const ClubResult = styled.div`
@@ -450,7 +489,7 @@ const ClubResult = styled.div`
     transform 0.08s ease;
 
   &:hover {
-    background-color: #fbfcff;
+    background-color: ${LIGHTER_BLUE};
     transform: translateY(-1px);
   }
 
@@ -526,30 +565,27 @@ const ClubTag = styled.span`
 `
 
 function formatEventDateRange(startISO, endISO) {
-  const start = new Date(startISO)
-  const end = new Date(endISO)
+  const start = moment(startISO)
+  const end = moment(endISO)
 
-  const weekdayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
-  const dateFormatter = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
+  if (!start.isValid() || !end.isValid()) {
+    return 'Invalid date range'
+  }
 
-  const startWeekday = weekdayFormatter.format(start)
-  const startDate = dateFormatter.format(start)
-  const endWeekday = weekdayFormatter.format(end)
-  const endDate = dateFormatter.format(end)
-  // If the range is within the same month
+  const startWeekday = start.format('dddd')
+  const startDate = start.format('MMM D')
+  const endWeekday = end.format('dddd')
+  const endDate = end.format('MMM D')
+
+  // If the range is on the same date
   if (startDate === endDate) {
     return `${startWeekday}, ${startDate}`
-  } else if (start.getMonth() === end.getMonth()) {
+  } else if (start.month() === end.month()) {
+    // Same month, show both dates with weekdays
     return `${startWeekday}, ${startDate} – ${endWeekday}, ${endDate}`
   } else {
-    const fullDateFormatter = new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
-    return `${startWeekday}, ${fullDateFormatter.format(start)} – ${endWeekday}, ${fullDateFormatter.format(end)}`
+    // Different months, show full date for both
+    return `${startWeekday}, ${startDate} – ${endWeekday}, ${endDate}`
   }
 }
 
@@ -567,7 +603,7 @@ const Splash = (): ReactElement<any> => {
   const [clubSearchValue, setClubSearchValue] = useState('')
   const [clubSearchInput, setClubSearchInput] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
-  const [clubsSearchFinished, setClubsSearchFinished] = useState(false)
+  const [clubsChanged, setClubsChanged] = useState(false)
   const searchTimeout = useRef<number | null>(null)
   const router = useRouter()
 
@@ -578,7 +614,8 @@ const Splash = (): ReactElement<any> => {
         method: 'GET',
       })
       const data = await response.json()
-      setClubs(data.results?.slice(0, 4) || [])
+      if (data.length === 0) return
+      setClubs(data.results?.slice(0, 4))
     } catch (e) {
       setClubsError('Could not load clubs. Please try again.')
     }
@@ -631,7 +668,6 @@ const Splash = (): ReactElement<any> => {
     if (searchTimeout.current != null) {
       window.clearTimeout(searchTimeout.current)
     }
-
     searchTimeout.current = window.setTimeout(() => {
       setClubSearchValue(clubSearchInput)
     }, 300)
@@ -646,7 +682,6 @@ const Splash = (): ReactElement<any> => {
   // Fetch clubs based on search
   useEffect(() => {
     const fetchClubs = async () => {
-      setClubsSearchFinished(false)
       // do not call the API if the search value is empty
       if (!clubSearchValue || clubSearchValue.trim().length === 0) {
         setClubs([])
@@ -663,14 +698,17 @@ const Splash = (): ReactElement<any> => {
           method: 'GET',
         })
         const data = await response.json()
-        setClubs(data.results?.slice(0, 4) || [])
+        if (clubs.length !== 0 && data.results.length !== 0) {
+          setClubsChanged(false)
+        }
         setClubsError(null)
+        setClubs(data.results?.slice(0, 4))
       } catch (error) {
         // Handle error silently
         setClubs([])
         setClubsError('Search failed. Please try again.')
       }
-      setClubsSearchFinished(true)
+      setClubsChanged(true)
     }
 
     fetchClubs()
@@ -696,6 +734,12 @@ const Splash = (): ReactElement<any> => {
 
     router.push(`/clubs?search=${encodeURIComponent(q)}`)
   }
+  const handleInputChange = (text) => {
+    if (text.length === 0) {
+      setClubsChanged(false)
+    }
+    setClubSearchInput(text)
+  }
   return (
     <PageContainer>
       <HeaderSection>
@@ -712,7 +756,7 @@ const Splash = (): ReactElement<any> => {
               aria-label="Search clubs"
               placeholder="Explore Your Favorite Clubs Here"
               value={clubSearchInput}
-              onChange={(e) => setClubSearchInput(e.target.value)}
+              onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
@@ -727,23 +771,19 @@ const Splash = (): ReactElement<any> => {
               </ErrorBanner>
             )}
             {isSearchFocused &&
-              clubSearchInput.trim().length > 0 &&
-              ((clubs && clubs.length > 0) || clubsSearchFinished) && (
+              !clubsError &&
+              clubSearchInput.trim().length > 0 && (
                 <ClubResultsContainer onMouseDown={(e) => e.preventDefault()}>
                   {clubs && clubs.length > 0 ? (
                     displayClubs(clubs)
-                  ) : (
+                  ) : clubsChanged ? (
                     <NoResults>
                       <NoResultsTitle>No clubs found</NoResultsTitle>
-                      <div>
-                        We couldn't find any clubs matching "{clubSearchInput}".{' '}
-                        <a
-                          href={`/clubs?search=${encodeURIComponent(clubSearchInput)}`}
-                        >
-                          See all clubs
-                        </a>
-                      </div>
+                      <p>We couldn't find any clubs matching your search.</p>
+                      <a href={`/clubs`}>See all clubs</a>
                     </NoResults>
+                  ) : (
+                    <></>
                   )}
                 </ClubResultsContainer>
               )}
@@ -751,13 +791,14 @@ const Splash = (): ReactElement<any> => {
         </SearchContainer>
       </HeaderSection>
       <TrendingSection>
-        {eventsError && (
+        {eventsError ? (
           <ErrorBanner>
             <div>{eventsError}</div>
             <RetryButton onClick={retryEvents}>Retry</RetryButton>
           </ErrorBanner>
+        ) : (
+          displayEvents(trendingEvents)
         )}
-        {displayEvents(trendingEvents)}
       </TrendingSection>
     </PageContainer>
   )
