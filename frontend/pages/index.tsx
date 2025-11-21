@@ -162,6 +162,7 @@ const InternalSearchContainer = styled.div`
   background-color: ${WHITE};
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 `
 const SearchInput = styled.input`
   width: 100%;
@@ -462,8 +463,6 @@ const SmallLogo: React.FC<{ image?: string; name?: string }> = ({
   return <ClubLogo>{name?.charAt(0)?.toUpperCase() || 'C'}</ClubLogo>
 }
 
-const ClubResultsContainer = styled.div``
-
 const NoResults = styled.div`
   padding: 1rem 1.25rem;
   color: ${CLUBS_GREY_LIGHT};
@@ -492,9 +491,17 @@ const ClubResult = styled.div`
     background-color: ${LIGHTER_BLUE};
     transform: translateY(-1px);
   }
+`
 
-  &:last-child {
+const ClubResultsContainer = styled.div`
+  /* only apply rounding/styling to the actual last result element */
+  & > *:last-child ${ClubResult} {
     border-bottom: none;
+    border-radius: 0 0 16px 16px;
+  }
+
+  & > *:last-child ${ClubResult}:hover {
+    transform: none;
   }
 `
 
