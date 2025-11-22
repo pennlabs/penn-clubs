@@ -348,7 +348,7 @@ export default function ClubEditCard({
 
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
-  const { settings: queueSettings } = useRegistrationQueueSettings()
+  const { settings: queueSettings, isLoading } = useRegistrationQueueSettings()
   const [showRankModal, setShowRankModal] = useState<boolean>(false)
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
@@ -1164,7 +1164,8 @@ export default function ClubEditCard({
               }}
             />
           )}
-          {queueSettings?.reapproval_queue_open !== true &&
+          {!isLoading &&
+            queueSettings?.reapproval_queue_open !== true &&
             queueSettings?.new_approval_queue_open !== true && (
               <LiveBanner>
                 <LiveTitle>
@@ -1177,7 +1178,8 @@ export default function ClubEditCard({
                 </LiveSub>
               </LiveBanner>
             )}
-          {queueSettings?.new_approval_queue_open !== true &&
+          {!isLoading &&
+            queueSettings?.new_approval_queue_open !== true &&
             queueSettings?.reapproval_queue_open === true &&
             !isEdit && (
               <LiveBanner>
@@ -1189,7 +1191,8 @@ export default function ClubEditCard({
                 </LiveSub>
               </LiveBanner>
             )}
-          {queueSettings?.reapproval_queue_open !== true &&
+          {!isLoading &&
+            queueSettings?.reapproval_queue_open !== true &&
             queueSettings?.new_approval_queue_open === true &&
             isEdit && (
               <LiveBanner>
