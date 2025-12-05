@@ -8,6 +8,7 @@ import {
   RED,
   SNOW,
 } from '../constants'
+import { UNDER_REVIEW_STATUS } from '../constants/status'
 import {
   Category,
   Classification,
@@ -347,14 +348,26 @@ const ResourceCreationPage = ({
       ),
       onEnterTab: async () => {
         if (club !== null) {
-          const resp = await doApiRequest(`/clubs/${club.code}/?format=json`, {
-            method: 'PATCH',
-            body: {
-              active: true,
-            },
-          })
-          const data = await resp.json()
-          setClub(data)
+          // Fetch the "Under Review" status
+          const statusesResp = await doApiRequest('/statuses/?format=json')
+          const statusesData = await statusesResp.json()
+          const underReviewStatus = statusesData.find(
+            (s: Status) => s.name.toUpperCase() === UNDER_REVIEW_STATUS,
+          )
+
+          if (underReviewStatus) {
+            const resp = await doApiRequest(
+              `/clubs/${club.code}/?format=json`,
+              {
+                method: 'PATCH',
+                body: {
+                  status_id: underReviewStatus.id,
+                },
+              },
+            )
+            const data = await resp.json()
+            setClub(data)
+          }
         }
       },
     },
