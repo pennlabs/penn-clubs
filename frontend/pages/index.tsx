@@ -1,4 +1,4 @@
-import { Icon } from 'components/common'
+import { Icon, Metadata } from 'components/common'
 import { DateTime } from 'luxon'
 import moment from 'moment'
 import Link from 'next/link'
@@ -748,66 +748,72 @@ const Splash = (): ReactElement<any> => {
     setClubSearchInput(text)
   }
   return (
-    <PageContainer>
-      <HeaderSection>
-        <LogoContainer>
-          <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
-          <Title>{SITE_NAME}</Title>
-        </LogoContainer>
-        <Subtitle>
-          Student Organizations at the University of Pennsylvania
-        </Subtitle>
-        <SearchContainer>
-          <InternalSearchContainer>
-            <SearchInput
-              aria-label="Search clubs"
-              placeholder="Explore Your Favorite Clubs Here"
-              value={clubSearchInput}
-              onChange={(e) => handleInputChange(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-            />
-            <SearchIcon onClick={performSearch}>
-              <Icon name="search" size="1.2rem" />
-            </SearchIcon>
-            {clubsError && (
-              <ErrorBanner>
-                <div>{clubsError}</div>
-                <RetryButton onClick={retryClubs}>Retry</RetryButton>
-              </ErrorBanner>
-            )}
-            {isSearchFocused &&
-              !clubsError &&
-              clubSearchInput.trim().length > 0 && (
-                <ClubResultsContainer onMouseDown={(e) => e.preventDefault()}>
-                  {clubs && clubs.length > 0 ? (
-                    displayClubs(clubs)
-                  ) : clubsChanged ? (
-                    <NoResults>
-                      <NoResultsTitle>No clubs found</NoResultsTitle>
-                      <p>We couldn't find any clubs matching your search.</p>
-                      <a href={`/clubs`}>See all clubs</a>
-                    </NoResults>
-                  ) : (
-                    <></>
-                  )}
-                </ClubResultsContainer>
+    <>
+      <Metadata
+        title={`${SITE_NAME}`}
+        description={`Penn's official club management and discovery platform.`}
+      />
+      <PageContainer>
+        <HeaderSection>
+          <LogoContainer>
+            <Logo src={SITE_LOGO} alt={`${SITE_NAME} Logo`} />
+            <Title>{SITE_NAME}</Title>
+          </LogoContainer>
+          <Subtitle>
+            Student Organizations at the University of Pennsylvania
+          </Subtitle>
+          <SearchContainer>
+            <InternalSearchContainer>
+              <SearchInput
+                aria-label="Search clubs"
+                placeholder="Explore Your Favorite Clubs Here"
+                value={clubSearchInput}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+              />
+              <SearchIcon onClick={performSearch}>
+                <Icon name="search" size="1.2rem" />
+              </SearchIcon>
+              {clubsError && (
+                <ErrorBanner>
+                  <div>{clubsError}</div>
+                  <RetryButton onClick={retryClubs}>Retry</RetryButton>
+                </ErrorBanner>
               )}
-          </InternalSearchContainer>
-        </SearchContainer>
-      </HeaderSection>
-      <TrendingSection>
-        {eventsError ? (
-          <ErrorBanner>
-            <div>{eventsError}</div>
-            <RetryButton onClick={retryEvents}>Retry</RetryButton>
-          </ErrorBanner>
-        ) : (
-          displayEvents(trendingEvents)
-        )}
-      </TrendingSection>
-    </PageContainer>
+              {isSearchFocused &&
+                !clubsError &&
+                clubSearchInput.trim().length > 0 && (
+                  <ClubResultsContainer onMouseDown={(e) => e.preventDefault()}>
+                    {clubs && clubs.length > 0 ? (
+                      displayClubs(clubs)
+                    ) : clubsChanged ? (
+                      <NoResults>
+                        <NoResultsTitle>No clubs found</NoResultsTitle>
+                        <p>We couldn't find any clubs matching your search.</p>
+                        <a href={`/clubs`}>See all clubs</a>
+                      </NoResults>
+                    ) : (
+                      <></>
+                    )}
+                  </ClubResultsContainer>
+                )}
+            </InternalSearchContainer>
+          </SearchContainer>
+        </HeaderSection>
+        <TrendingSection>
+          {eventsError ? (
+            <ErrorBanner>
+              <div>{eventsError}</div>
+              <RetryButton onClick={retryEvents}>Retry</RetryButton>
+            </ErrorBanner>
+          ) : (
+            displayEvents(trendingEvents)
+          )}
+        </TrendingSection>
+      </PageContainer>
+    </>
   )
 }
 

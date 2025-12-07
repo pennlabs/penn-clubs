@@ -545,7 +545,10 @@ const Splash = (props: SplashProps): ReactElement<any> => {
 
   return (
     <>
-      <Metadata />
+      <Metadata
+        title={`Browse ${OBJECT_NAME_TITLE}`}
+        description={`${SITE_TAGLINE}`}
+      />
       <div style={{ backgroundColor: SNOW }}>
         <SearchBar updateSearch={setSearchInput} searchInput={searchInput}>
           {SHOW_SEARCHBAR_TOP || (
