@@ -1944,14 +1944,23 @@ class CartItem(models.Model):
     def total_price(self) -> int:
         if (
             self.ticket_class.group_discount
+            and self.ticket_class.group_size
             and self.quantity >= self.ticket_class.group_size
         ):
             discount = self.ticket_class.group_discount
             return self.ticket_class.price * self.quantity * (1 - discount)
         return self.ticket_class.price * self.quantity
 
+    class Meta:
+        unique_together = (("cart", "ticket_class"),)
+
 
 class TicketQuerySet(models.query.QuerySet):
+    """
+    Custom queryset for the Ticket model that overrides the delete method to prevent
+    deletion of tickets with an associated transaction record.
+    """
+
     def delete(self):
         if self.filter(transaction_record__isnull=False).exists():
             raise ProtectedError(
@@ -1986,7 +1995,7 @@ class Ticket(models.Model):
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         blank=True,
         null=True,
     )
@@ -2002,6 +2011,7 @@ class Ticket(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # class level attribute
     objects = TicketQuerySet.as_manager()
 
     def delete(self, *args, **kwargs):

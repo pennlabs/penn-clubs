@@ -1923,6 +1923,38 @@ class TicketSerializer(serializers.ModelSerializer):
         )
 
 
+class TicketBuyerSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ticket buyer information in the buyers endpoint
+    """
+
+    fullname = serializers.SerializerMethodField()
+    owner_id = serializers.PrimaryKeyRelatedField(source="owner", read_only=True)
+    email = serializers.EmailField(source="owner_email", read_only=True)
+    ticket_type = serializers.CharField(source="ticket_class.name", read_only=True)
+
+    def get_fullname(self, obj):
+        """Get full name from owner or transaction record"""
+        if obj.owner:
+            return obj.owner.get_full_name()
+
+        return (
+            f"{obj.transaction_record.buyer_first_name} "
+            f"{obj.transaction_record.buyer_last_name}"
+        ).strip()
+
+    class Meta:
+        model = Ticket
+        fields = (
+            "fullname",
+            "id",
+            "owner_id",
+            "email",
+            "ticket_type",
+            "attended",
+        )
+
+
 class TicketClassSerializer(serializers.ModelSerializer):
     """
     Serializer for ticket class information within cart items
@@ -1981,10 +2013,11 @@ class CartItemSerializer(serializers.ModelSerializer):
                     id=self.instance.id if self.instance else None
                 )
             )
-            if current_total + quantity > cart.event.ticket_order_limit:
+            event_ticket_limit = cart.showing.event.ticket_order_limit
+            if current_total + quantity > event_ticket_limit:
                 raise serializers.ValidationError(
                     f"""Cannot exceed event ticket limit of
-                    {cart.event.ticket_order_limit}"""
+                    {event_ticket_limit}"""
                 )
 
         return data

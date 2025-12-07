@@ -198,6 +198,7 @@ from clubs.serializers import (
     SubscribeSerializer,
     TagSerializer,
     TestimonialSerializer,
+    TicketBuyerSerializer,
     TicketClassSerializer,
     TicketSerializer,
     UserClubVisitSerializer,
@@ -2682,6 +2683,11 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                 current_end = current_end + datetime.timedelta(days=offset)
 
             return Response(EventSerializer(event).data)
+        else:
+            return Response(
+                event_serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -3046,7 +3052,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             club_code = self.kwargs.get("club_code")
             qs = qs.filter(event__club__code=club_code)
 
-            # Check if the user is an officer or admin
+            # Check if the user is not an officer or admin
             if not self.request.user.is_authenticated or (
                 not self.request.user.has_perm("clubs.manage_club")
                 and not Membership.objects.filter(
@@ -3329,12 +3335,6 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        cart = Cart.objects.create(
-            showing=showing,
-            session_key=request.session.session_key,
-            owner=request.user if request.user.is_authenticated else None,
-        )
-
         # Check if the showing has already ended
         if showing.end_time < timezone.now():
             return Response(
@@ -3370,6 +3370,12 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        cart, _ = Cart.objects.get_or_create(
+            showing=showing,
+            session_key=request.session.session_key,
+            owner=request.user if request.user.is_authenticated else None,
+        )
+
         # Attempt to add items to cart
         for item in quantities:
             ticket_class = get_object_or_404(
@@ -3393,12 +3399,19 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-            # Add or update cart item
-            CartItem.objects.create(
-                cart=cart,
-                ticket_class=ticket_class,
-                quantity=quantity,
-            )
+            # check for existing cart item with same ticket_class
+            existing_cart_item = CartItem.objects.filter(
+                cart=cart, ticket_class=ticket_class
+            ).first()
+            if existing_cart_item:
+                existing_cart_item.quantity += quantity
+                existing_cart_item.save()
+            else:
+                CartItem.objects.create(
+                    cart=cart,
+                    ticket_class=ticket_class,
+                    quantity=quantity,
+                )
 
         return Response(
             {
@@ -3430,8 +3443,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                                                 type: string
                                                 description: Full name of the buyer
                                             id:
-                                                type: integer
-                                                description: Ticket ID
+                                                type: string
+                                                description: Ticket ID (UUID)
                                             owner_id:
                                                 type: integer
                                                 nullable: true
@@ -3452,32 +3465,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             "owner", "ticket_class", "transaction_record"
         )
 
-        buyers = []
-        for ticket in tickets:
-            # For registered users, use their info
-            if ticket.owner:
-                fullname = f"{ticket.owner.first_name} {ticket.owner.last_name}"
-                owner_id = ticket.owner.id
-            # For guest users, use transaction record info
-            else:
-                fullname = (
-                    f"{ticket.transaction_record.buyer_first_name} "
-                    f"{ticket.transaction_record.buyer_last_name}"
-                )
-                owner_id = None
-
-            buyers.append(
-                {
-                    "fullname": fullname,
-                    "id": str(ticket.id),
-                    "owner_id": owner_id,
-                    "email": ticket.owner_email,
-                    "ticket_type": ticket.ticket_class.name,
-                    "attended": ticket.attended,
-                }
-            )
-
-        return Response({"buyers": buyers})
+        serializer = TicketBuyerSerializer(tickets, many=True)
+        return Response({"buyers": serializer.data})
 
     @action(detail=True, methods=["get"])
     def tickets(self, request, *args, **kwargs):
@@ -3532,6 +3521,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
 
         return Response({"ticket_types": serializer.data})
 
+    # handles PUT requests to the .../tickets/ route
     @tickets.mapping.put
     @transaction.atomic
     def create_tickets(self, request, *args, **kwargs):
@@ -3824,8 +3814,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             quantity = int(ticket_request.get("quantity", 1))
 
             # Track total inventory needed per ticket class
-            inventory_needed[ticket_class.id] = (
-                inventory_needed.get(ticket_class.id, 0) + quantity
+            inventory_needed[ticket_type] = (
+                inventory_needed.get(ticket_type, 0) + quantity
             )
 
             validated_requests.append(
@@ -3838,8 +3828,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             )
 
         # Check if we have enough inventory for all requests
-        for ticket_class_id, needed in inventory_needed.items():
-            ticket_class = TicketClass.objects.get(id=ticket_class_id)
+        for ticket_class in fetched_ticket_classes.values():
+            needed = inventory_needed.get(ticket_class.name, 0)
             if needed > ticket_class.remaining:
                 errors.append(
                     f"Not enough inventory for '{ticket_class.name}': "
@@ -3969,7 +3959,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        reply_emails = showing.event.club.get_officer_emails()
+        reply_emails = ", ".join(officer_emails)
 
         send_mail_helper(
             name="blast",
@@ -3980,7 +3970,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 "content": content,
                 "reply_emails": reply_emails,
             },
-            reply_to=reply_emails,
+            reply_to=officer_emails,
         )
 
         return Response(
@@ -6106,7 +6096,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
         except ValidationError as e:
             return Response(
-                {"success": False, "detail": str(e)}, status=status.HTTP_403_FORBIDDEN
+                {"success": False, "detail": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
 
     @action(detail=False, methods=["post"])
@@ -6229,7 +6219,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             except ValidationError as e:
                 return Response(
                     {"success": False, "detail": str(e)},
-                    status=status.HTTP_403_FORBIDDEN,
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
         elif decision in ["DECLINE", "ERROR", "CANCEL"]:
@@ -6324,18 +6314,24 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
         ticket.owner = receiver
+        ticket.owner_email = receiver.email
         ticket.save()
-        TicketTransferRecord.objects.create(
+
+        # Create transfer record and send confirmation emails
+        transfer_record = TicketTransferRecord.objects.create(
             ticket=ticket, sender=self.request.user, receiver=receiver
-        ).send_confirmation_email()
+        )
+        transfer_record.send_confirmation_email()
         ticket.send_confirmation_email()  # send event details to recipient
 
+        # send event details to recipient
         return Response({"detail": "Successfully transferred ownership of ticket"})
 
     def get_queryset(self):
         officer_clubs = Membership.objects.filter(
             person=self.request.user, role__lte=Membership.ROLE_OFFICER
         ).values_list("club", flat=True)
+
         if self.action == "partial_update":
             return Ticket.objects.filter(
                 ticket_class__showing__event__club__in=officer_clubs
@@ -6345,6 +6341,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 Q(owner=self.request.user.id)
                 | Q(ticket_class__showing__event__club__in=officer_clubs)
             ).select_related("ticket_class__showing__event__club")
+
         return Ticket.objects.filter(owner=self.request.user.id)
 
     def _give_tickets(self, user, order_info, cart, reconciliation_id, cart_items):
