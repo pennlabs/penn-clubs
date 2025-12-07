@@ -306,6 +306,7 @@ export const SearchBarOptionItem = ({
   label,
 }: SearchBarOptionItemProps): ReactElement<any> => {
   const searchCallback = useContext(SearchBarContext)
+  const searchValue = useContext(SearchBarValueContext)
   if (searchCallback == null) {
     throw new Error('This component must be used inside a search bar!')
   }
@@ -313,12 +314,16 @@ export const SearchBarOptionItem = ({
   return (
     <Collapsible name={label}>
       <OrderInput
+        value={searchValue[param]}
         onChange={(order: string) =>
-          searchCallback((inpt) => ({
-            ...inpt,
-            [param]: order,
-            seed: Math.floor(new Date().getTime() / 1000000).toString(),
-          }))
+          searchCallback((inpt) => {
+            if (order === 'featured') {
+              const next = { ...inpt }
+              delete next[param]
+              return next
+            }
+            return { ...inpt, [param]: order }
+          })
         }
       />
     </Collapsible>

@@ -1652,6 +1652,70 @@ class ClubTestCase(TestCase):
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
 
+    def test_club_list_classification_group_filter(self):
+        """
+        Ensure graduate vs undergraduate grouping filters classification variants.
+        """
+        undergrad = Classification.objects.get_or_create(
+            symbol="UG", defaults={"name": "Undergraduate"}
+        )[0]
+        undergrad_open = Classification.objects.get_or_create(
+            symbol="UGo", defaults={"name": "Undergraduate Open"}
+        )[0]
+        grad_open = Classification.objects.get_or_create(
+            symbol="Go", defaults={"name": "Graduate Open"}
+        )[0]
+
+        Club.objects.create(
+            code="undergrad-club",
+            name="Undergrad Club",
+            classification=undergrad,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="undergrad@example.com",
+        )
+        Club.objects.create(
+            code="undergrad-open-club",
+            name="Undergrad Open Club",
+            classification=undergrad_open,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="undergrad-open@example.com",
+        )
+        Club.objects.create(
+            code="grad-open-club",
+            name="Graduate Open Club",
+            classification=grad_open,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="grad-open@example.com",
+        )
+
+        resp = self.client.get(
+            reverse("clubs-list"), {"classification_group": "undergraduate"}
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("undergrad-club", codes)
+        self.assertIn("undergrad-open-club", codes)
+        self.assertNotIn("test-club", codes)
+        self.assertNotIn("grad-open-club", codes)
+
+        resp = self.client.get(
+            reverse("clubs-list"), {"classification_group": "graduate"}
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("test-club", codes)
+        self.assertIn("grad-open-club", codes)
+        self.assertNotIn("undergrad-club", codes)
+        self.assertNotIn("undergrad-open-club", codes)
+
     def test_club_list_filters_inactive_clubs_for_regular_users(self):
         """
         Test that regular users (non-members, non-officers, non-superusers)

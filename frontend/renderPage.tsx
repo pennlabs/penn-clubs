@@ -23,6 +23,7 @@ import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import {
   Affiliation,
+  Classification,
   Club,
   School,
   StudentType,
@@ -391,6 +392,7 @@ export type PaginatedClubPage = {
 type ListPageProps = {
   affiliations: Affiliation[]
   clubs: PaginatedClubPage
+  classifications: Classification[]
   schools: School[]
   studentTypes: StudentType[]
   tags: Tag[]
@@ -417,6 +419,7 @@ const getPublicCachedContent = async () => {
         schoolRequest,
         yearRequest,
         studentTypesRequest,
+        classificationRequest,
       ] = await Promise.all([
         doApiRequest('/tags/?format=json'),
         doApiRequest('/badges/?format=json'),
@@ -425,6 +428,7 @@ const getPublicCachedContent = async () => {
         isClubFieldShown('student_types')
           ? doApiRequest('/student_types/?format=json')
           : Promise.resolve(null),
+        doApiRequest('/classifications/?format=json'),
       ])
 
       const [
@@ -433,6 +437,7 @@ const getPublicCachedContent = async () => {
         schoolResponse,
         yearResponse,
         studentTypesResponse,
+        classificationsResponse,
       ] = await Promise.all([
         tagsRequest.json(),
         affiliationsRequest.json(),
@@ -441,10 +446,12 @@ const getPublicCachedContent = async () => {
         studentTypesRequest != null
           ? studentTypesRequest.json()
           : Promise.resolve([]),
+        classificationRequest.json(),
       ])
 
       return {
         affiliations: affiliationsResponse as Affiliation[],
+        classifications: classificationsResponse as Classification[],
         schools: schoolResponse as School[],
         studentTypes: studentTypesResponse as StudentType[],
         tags: tagsResponse as Tag[],
