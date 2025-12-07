@@ -1,4 +1,5 @@
 import datetime
+import random
 
 import pytz
 import requests
@@ -476,6 +477,15 @@ class Command(BaseCommand):
                 contents = image_cache[url]
             return contents
 
+        classification_choices = list(
+            Classification.objects.filter(symbol__in=["UG", "UGo", "G", "Go"])
+        )
+
+        def pick_classification():
+            if not classification_choices:
+                return None
+            return random.choice(classification_choices)
+
         # create clubs
         for info in clubs:
             partial = dict(info)
@@ -514,6 +524,12 @@ class Command(BaseCommand):
                 if name in info:
                     for new_obj in info[name]:
                         new_obj, _ = obj.objects.get_or_create(club=club, **new_obj)
+
+            # assign a random classification (UG, UGo, G, Go)
+            classification = pick_classification()
+            if classification:
+                club.classification = classification
+                club.save()
 
         # create badges
         badge, _ = Badge.objects.get_or_create(
@@ -585,6 +601,9 @@ class Command(BaseCommand):
             club.recruiting_cycle = Club.RECRUITING_CYCLES[
                 (i - 1) % len(Club.RECRUITING_CYCLES)
             ][0]
+            classification = pick_classification()
+            if classification:
+                club.classification = classification
             club.save()
 
             Advisor.objects.get_or_create(

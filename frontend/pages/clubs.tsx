@@ -1,18 +1,27 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
 import { LiveEventsDialog } from 'components/ClubPage/LiveEventsDialog'
-import { Icon, Metadata, Title, WideContainer } from 'components/common'
+import {
+  Icon,
+  Metadata,
+  Tag as TagBadge,
+  Title,
+  WideContainer,
+} from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
+import DropdownFilter from 'components/DropdownFilter'
 import { FuseTag } from 'components/FilterSearch'
 import { ActionLink } from 'components/Header/Feedback'
 import PaginatedClubDisplay from 'components/PaginatedClubDisplay'
 import SearchBar, {
+  Collapsible,
   SearchBarCheckboxItem,
   SearchBarOptionItem,
   SearchbarRightContainer,
   SearchBarTagItem,
   SearchBarTextItem,
   SearchInput,
+  SearchTag,
 } from 'components/SearchBar'
 import equal from 'deep-equal'
 import { useRouter } from 'next/router'
@@ -28,6 +37,7 @@ import { PaginatedClubPage, renderListPage } from 'renderPage'
 import styled from 'styled-components'
 import {
   Affiliation,
+  Classification,
   Maybe,
   School,
   StudentType,
@@ -94,6 +104,7 @@ type SplashProps = {
   clubs: PaginatedClubPage
   tags: Tag[]
   affiliations: Affiliation[]
+  classifications: Classification[]
   schools: School[]
   years: Year[]
   studentTypes: StudentType[]
@@ -135,25 +146,33 @@ const SearchTags = ({
       {!!tags.length && (
         <div style={{ padding: '0 30px 30px 0' }}>
           {tags.map((tag) => {
+            const background = tag.color
+              ? tag.color.startsWith('#')
+                ? tag.color
+                : `#${tag.color}`
+              : (TAG_BACKGROUND_COLOR_MAP[tag.name] ?? CLUBS_PURPLE)
+            const foreground = TAG_TEXT_COLOR_MAP[tag.name] ?? 'white'
+
             return (
-              <span
+              <TagBadge
                 key={`${tag.value} ${tag.label}`}
+                color={background}
+                foregroundColor={foreground}
                 className="tag is-rounded"
                 style={{
-                  color: TAG_TEXT_COLOR_MAP[tag.name] ?? 'white',
-                  backgroundColor:
-                    TAG_BACKGROUND_COLOR_MAP[tag.name] ?? CLUBS_PURPLE,
-                  fontWeight: 600,
                   margin: 3,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3em',
                 }}
               >
-                {tag.label}
+                <span>{tag.label}</span>
                 <button
                   className="delete is-small"
                   onClick={() => {
                     const newTags = searchInput[tag.name]
                       .split(',')
-                      .filter((t) => t.value === tag.value)
+                      .filter((t) => t !== String(tag.value))
                       .join(',')
                     if (newTags.length > 0) {
                       setSearchInput((inpt) => ({
@@ -169,7 +188,7 @@ const SearchTags = ({
                     }
                   }}
                 />
-              </span>
+              </TagBadge>
             )
           })}
           <ClearAllLink
@@ -293,6 +312,18 @@ const Splash = (props: SplashProps): ReactElement<any> => {
   const renewalBanner = useSetting('CLUB_REGISTRATION')
   const currentSearch = useRef<SearchInput>({})
 
+  const decodeQueryKey = (key: string): string => {
+    if (key === 'tags') return 'tags__in'
+    if (key === 'affiliations') return 'badges__in'
+    return key
+  }
+
+  const encodeQueryKey = (key: string): string => {
+    if (key === 'tags__in') return 'tags'
+    if (key === 'badges__in') return 'affiliations'
+    return key
+  }
+
   // Initialize searchInput from URL query params
   const getInitialSearchInput = (): SearchInput => {
     if (!router.isReady) return {}
@@ -307,7 +338,22 @@ const Splash = (props: SplashProps): ReactElement<any> => {
     // Read other search params (tags, badges, etc.) from URL if present
     Object.keys(query).forEach((key) => {
       if (key !== 'search' && query[key]) {
-        initial[key] =
+        const decodedKey = decodeQueryKey(key)
+        if (key === 'ordering') {
+          const orderingValue =
+            typeof query[key] === 'string'
+              ? query[key]
+              : Array.isArray(query[key])
+                ? query[key][0]
+                : String(query[key])
+          if (orderingValue === 'featured') {
+            return
+          }
+          initial[decodedKey] =
+            orderingValue === '-favorite_count' ? 'bookmarks' : orderingValue
+          return
+        }
+        initial[decodedKey] =
           typeof query[key] === 'string'
             ? query[key]
             : Array.isArray(query[key])
@@ -345,6 +391,7 @@ const Splash = (props: SplashProps): ReactElement<any> => {
     useState<Maybe<PaginatedClubPage>>()
 
   const [isLoading, setLoading] = useState<boolean>(false)
+  const [showLoadIndicator, setShowLoadIndicator] = useState<boolean>(false)
   const [display, setDisplay] = useState<'cards' | 'list'>('cards')
 
   // Initialize clubs with search params if URL has search query
@@ -366,10 +413,13 @@ const Splash = (props: SplashProps): ReactElement<any> => {
       setLoading(true)
       currentSearch.current = { ...initialSearch }
 
-      const paramsObject = {
+      const paramsObject: Record<string, string> = {
         format: 'json',
         page: '1',
         ...initialSearch,
+      }
+      if (paramsObject.ordering === 'bookmarks') {
+        paramsObject.ordering = '-favorite_count'
       }
 
       ;(async () => {
@@ -423,10 +473,13 @@ const Splash = (props: SplashProps): ReactElement<any> => {
 
     currentSearch.current = { ...searchInput }
     setLoading(true)
-    const paramsObject = {
+    const paramsObject: Record<string, string> = {
       format: 'json',
       page: '1',
       ...searchInput,
+    }
+    if (paramsObject.ordering === 'bookmarks') {
+      paramsObject.ordering = '-favorite_count'
     }
 
     ;(async () => {
@@ -466,6 +519,65 @@ const Splash = (props: SplashProps): ReactElement<any> => {
       }
     })()
   }, [searchInput, isInitialized])
+
+  useEffect(() => {
+    if (!router.isReady || !isInitialized) return
+
+    const cleanedSearch = Object.entries(searchInput).reduce<
+      Record<string, string>
+    >((acc, [key, value]) => {
+      if (value !== undefined && value !== '') {
+        const encodedKey = encodeQueryKey(key)
+        acc[encodedKey] = value
+      }
+      return acc
+    }, {})
+
+    const currentQuery = Object.entries(router.query).reduce<
+      Record<string, string>
+    >((acc, [key, value]) => {
+      if (typeof value === 'string') {
+        acc[key] = value
+      } else if (Array.isArray(value) && value.length > 0) {
+        acc[key] = value[0]
+      }
+      return acc
+    }, {})
+
+    if (equal(cleanedSearch, currentQuery)) {
+      return
+    }
+
+    router.replace(
+      {
+        pathname: router.pathname,
+        query: cleanedSearch,
+      },
+      undefined,
+      { shallow: true },
+    )
+  }, [
+    searchInput,
+    router.isReady,
+    isInitialized,
+    router.pathname,
+    router.query,
+    router,
+  ])
+
+  useEffect(() => {
+    let timer: number | null = null
+    if (isLoading) {
+      timer = window.setTimeout(() => setShowLoadIndicator(true), 200)
+    } else {
+      setShowLoadIndicator(false)
+    }
+    return () => {
+      if (timer != null) {
+        window.clearTimeout(timer)
+      }
+    }
+  }, [isLoading])
 
   const tagOptions = useMemo<FuseTag[]>(
     () =>
@@ -526,6 +638,68 @@ const Splash = (props: SplashProps): ReactElement<any> => {
     color: is_graduate && SITE_ID === 'clubs' ? CLUBS_BLUE : undefined,
   }))
 
+  const classificationGroupOptions = useMemo(() => {
+    const hasUndergraduate = props.classifications.some(({ symbol, name }) => {
+      const symbolLower = (symbol ?? '').toLowerCase()
+      const nameLower = (name ?? '').toLowerCase()
+      return symbolLower.startsWith('ug') || nameLower.includes('undergraduate')
+    })
+
+    const hasGraduate = props.classifications.some(({ symbol, name }) => {
+      const symbolLower = (symbol ?? '').toLowerCase()
+      const nameLower = (name ?? '').toLowerCase()
+      const isUndergrad =
+        symbolLower.startsWith('ug') || nameLower.includes('undergraduate')
+      if (isUndergrad) {
+        return false
+      }
+      return symbolLower.startsWith('g') || nameLower.includes('graduate')
+    })
+
+    const options: SearchTag[] = []
+    if (hasUndergraduate) {
+      options.push({
+        value: 'undergraduate',
+        label: 'Undergraduate (open + only)',
+        name: 'classification_group',
+      })
+    }
+    if (hasGraduate) {
+      options.push({
+        value: 'graduate',
+        label: 'Graduate (open + only)',
+        name: 'classification_group',
+      })
+    }
+    return options
+  }, [props.classifications])
+
+  const classificationGroupDropdownOptions = useMemo(
+    () =>
+      classificationGroupOptions.length > 0
+        ? [
+            {
+              value: 'all',
+              label: 'Both',
+              name: 'classification_group',
+            },
+            ...classificationGroupOptions,
+          ]
+        : [],
+    [classificationGroupOptions],
+  )
+
+  const classificationGroupSelected = useMemo(() => {
+    const current =
+      searchInput.classification_group &&
+      searchInput.classification_group.length > 0
+        ? searchInput.classification_group
+        : 'all'
+    return classificationGroupDropdownOptions.filter(
+      (opt) => opt.value === current,
+    )
+  }, [classificationGroupDropdownOptions, searchInput.classification_group])
+
   const yearOptions = props.years.map(({ id, name }) => ({
     value: id,
     label: name,
@@ -569,6 +743,26 @@ const Splash = (props: SplashProps): ReactElement<any> => {
             />
           )}
           <SearchBarOptionItem param="ordering" label="Ordering" />
+          {classificationGroupDropdownOptions.length > 0 && (
+            <Collapsible name="Student Level">
+              <DropdownFilter
+                name="classification_group"
+                options={classificationGroupDropdownOptions}
+                selected={classificationGroupSelected}
+                updateTag={(tag) => {
+                  setSearchInput((prev) => {
+                    const nextValue = String(tag.value)
+                    if (nextValue === 'all') {
+                      const next = { ...prev }
+                      delete next.classification_group
+                      return next
+                    }
+                    return { ...prev, classification_group: nextValue }
+                  })
+                }}
+              />
+            </Collapsible>
+          )}
           {isClubFieldShown('application_required') && (
             <SearchBarCheckboxItem
               param="application_required__in"
@@ -701,6 +895,7 @@ const Splash = (props: SplashProps): ReactElement<any> => {
                 badges__in: affiliationOptions,
                 application_required__in: applicationRequiredOptions,
                 size__in: sizeOptions,
+                classification_group: classificationGroupOptions,
                 target_schools__in: schoolOptions,
                 target_years__in: yearOptions,
                 student_types__in: studentTypeOptions,
@@ -718,7 +913,7 @@ const Splash = (props: SplashProps): ReactElement<any> => {
 
             {renewalBanner && <ListRenewalDialog />}
 
-            {isLoading && <ListLoadIndicator />}
+            {showLoadIndicator && <ListLoadIndicator />}
 
             <UpdateClubContext.Provider value={updateClub}>
               {exclusiveClubs && (

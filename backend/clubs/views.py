@@ -412,6 +412,53 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         params = request.GET.dict()
 
+        classification_group = params.pop("classification_group", "").strip().lower()
+        if classification_group:
+            group_values = [
+                val.strip().replace(" ", "_")
+                for val in classification_group.split(",")
+                if val.strip()
+            ]
+            normalized_group = group_values[0] if group_values else ""
+
+            if {"undergraduate", "graduate"} <= set(group_values):
+                normalized_group = ""
+
+            if normalized_group in {"all", "both"}:
+                normalized_group = ""
+            elif normalized_group in {"undergrad", "undergraduate", "ug"}:
+                normalized_group = "undergraduate"
+            elif normalized_group in {"grad", "graduate", "g"}:
+                normalized_group = "graduate"
+
+            if queryset.model == Club:
+                classification_field = "classification__id__in"
+            else:
+                classification_field = "club__classification__id__in"
+
+            classifications = Classification.objects.all()
+            classification_ids = []
+
+            if normalized_group == "undergraduate":
+                classification_ids = list(
+                    classifications.filter(
+                        Q(symbol__istartswith="ug") | Q(name__icontains="undergrad")
+                    ).values_list("id", flat=True)
+                )
+            elif normalized_group == "graduate":
+                classification_ids = list(
+                    classifications.filter(
+                        Q(symbol__istartswith="g") | Q(name__icontains="graduate")
+                    )
+                    .exclude(
+                        Q(symbol__istartswith="ug") | Q(name__icontains="undergrad")
+                    )
+                    .values_list("id", flat=True)
+                )
+
+            if classification_ids:
+                queryset = queryset.filter(**{classification_field: classification_ids})
+
         def parse_year(field, value, operation, queryset):
             if value.isdigit():
                 suffix = ""
@@ -519,6 +566,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "available_virtually": parse_boolean,
             "badges": parse_badges,
             "code": parse_string,
+            "classification": parse_int,
             "enables_subscription": parse_boolean,
             "favorite_count": parse_int,
             "founded": parse_year,
