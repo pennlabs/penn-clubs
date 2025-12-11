@@ -1260,6 +1260,72 @@ class ClubTestCase(TestCase):
         self.assertIn("The approval queue is not currently open.", str(resp.content))
         self.assertFalse(Club.objects.filter(code="new-club").exists())
 
+    def test_club_create_new_approval_queue_closed_superuser_can_create(self):
+        """
+        Superusers can create clubs even when the new approval queue is closed.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "super-club",
+                "name": "Superuser Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "superclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="super-club")
+        self.assertTrue(club.approved)
+        self.assertEqual(club.approved_by, self.user5)
+        self.assertTrue(club.active)
+
+    def test_club_create_queue_closed_with_approve_permission(self):
+        """
+        Users with approve_club permission can create clubs when the queue is closed.
+        """
+        self.client.login(username=self.user4.username, password="test")
+
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "approver-club",
+                "name": "Approver Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "approverclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="approver-club")
+        self.assertTrue(club.approved)
+        self.assertEqual(club.approved_by, self.user4)
+        self.assertTrue(club.active)
+
     def test_club_approve(self):
         """
         Test approving an existing unapproved club.
@@ -2967,6 +3033,57 @@ class ClubTestCase(TestCase):
 
         # ensure club is still marked as approved
         club.refresh_from_db()
+        self.assertTrue(club.approved)
+
+    def test_sensitive_field_edit_queue_closed_superuser_allowed(self):
+        club = self.club1
+        self.assertTrue(club.approved)
+
+        self.client.login(username=self.user5.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"name": "Superuser Rename"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        club.refresh_from_db()
+        self.assertEqual(club.name, "Superuser Rename")
+        self.assertTrue(club.approved)
+
+    def test_sensitive_field_edit_queue_closed_with_approve_permission(self):
+        club = self.club1
+        self.assertTrue(club.approved)
+
+        Membership.objects.create(
+            person=self.user4, club=club, role=Membership.ROLE_OFFICER
+        )
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        self.client.login(username=self.user4.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"name": "Approver Rename"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        club.refresh_from_db()
+        self.assertEqual(club.name, "Approver Rename")
         self.assertTrue(club.approved)
 
     def test_club_detail_endpoints_unauth(self):

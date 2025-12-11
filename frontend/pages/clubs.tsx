@@ -851,7 +851,10 @@ const Splash = (props: SplashProps): ReactElement<any> => {
         <SearchbarRightContainer>
           <WideContainer background={SNOW} fullHeight>
             <div style={{ padding: '30px 0' }}>
-              <DisplayButtons switchDisplay={setDisplay} />
+              <DisplayButtons
+                switchDisplay={setDisplay}
+                userInfo={props.userInfo}
+              />
 
               <Title style={{ color: H1_TEXT }}>
                 Browse {OBJECT_NAME_TITLE}

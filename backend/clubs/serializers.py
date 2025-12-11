@@ -1598,14 +1598,22 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Ensure new clubs follow certain invariants.
         """
-        # New clubs created through the API must always be approved.
-        validated_data["approved"] = None
-
         request = self.context.get("request", None)
-        perms = request and request.user.has_perm("clubs.approve_club")
+        can_skip_queue = request and (
+            request.user.is_superuser or request.user.has_perm("clubs.approve_club")
+        )
+        if can_skip_queue:
+            validated_data["approved"] = True
+            validated_data["approved_by"] = request.user
+            validated_data["approved_on"] = timezone.now()
+            validated_data["ghost"] = False
+            validated_data["active"] = True
+        else:
+            # New clubs created through the API must always be approved.
+            validated_data["approved"] = None
 
         queue_settings = RegistrationQueueSettings.get()
-        if not perms and (
+        if not can_skip_queue and (
             not queue_settings.reapproval_queue_open
             or not queue_settings.new_approval_queue_open
         ):
@@ -1860,7 +1868,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         # if the editing user has approval permissions, skip the approval process
         request = self.context.get("request", None)
-        if request and request.user.has_perm("clubs.approve_club"):
+        can_skip_queue = request and (
+            request.user.is_superuser or request.user.has_perm("clubs.approve_club")
+        )
+        if can_skip_queue:
             needs_reapproval = False
 
         queue_settings = RegistrationQueueSettings.get()

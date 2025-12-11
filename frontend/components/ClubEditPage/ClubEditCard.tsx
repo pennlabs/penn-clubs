@@ -1,6 +1,6 @@
 import { Field, Form, Formik, useField, useFormikContext } from 'formik'
 import Link from 'next/link'
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { BLACK } from '~/constants'
@@ -22,9 +22,11 @@ import {
   StudentType,
   Tag,
   Type,
+  UserInfo,
   Year,
 } from '../../types'
 import {
+  apiCheckPermission,
   bifurcateFilter,
   categorizeFilter,
   doApiRequest,
@@ -234,6 +236,7 @@ type ClubEditCardProps = {
   types: Readonly<Type[]>
   statuses: Readonly<Status[]>
   groupActivityOptions: Readonly<GroupActivityOption[]>
+  userInfo?: UserInfo
   club: Partial<Club>
   isEdit: boolean
 
@@ -345,10 +348,19 @@ export default function ClubEditCard({
   groupActivityOptions,
   club,
   isEdit,
+  userInfo,
 
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
   const { settings: queueSettings, isLoading } = useRegistrationQueueSettings()
+  const canApprove = apiCheckPermission('clubs.approve_club', true) === true
+  const isSuperuser = userInfo?.is_superuser === true
+  const hasQueueOverride = isSuperuser || canApprove
+  const isReapprovalOpen = queueSettings?.reapproval_queue_open === true
+  const isNewApprovalOpen = queueSettings?.new_approval_queue_open === true
+  const queueBlocksCurrentForm =
+    (isEdit && !isReapprovalOpen) || (!isEdit && !isNewApprovalOpen)
+  const [isClient, setIsClient] = useState(false)
   const [showRankModal, setShowRankModal] = useState<boolean>(false)
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
@@ -389,6 +401,10 @@ export default function ClubEditCard({
   )
 
   const [emailModal, showEmailModal] = useState<boolean>(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
@@ -618,7 +634,7 @@ export default function ClubEditCard({
           type: 'text',
           required: true,
           label: `${OBJECT_NAME_TITLE_SINGULAR} Name`,
-          disabled: queueSettings?.reapproval_queue_open !== true,
+          disabled: !isReapprovalOpen && !hasQueueOverride,
           help: isEdit ? (
             <>
               Changing this field will require reapproval from the{' '}
@@ -692,7 +708,7 @@ export default function ClubEditCard({
           required: true,
           placeholder: `Type your ${OBJECT_NAME_SINGULAR} mission here!`,
           type: 'html',
-          hidden: queueSettings?.reapproval_queue_open !== true,
+          hidden: !isClient || (!isReapprovalOpen && !hasQueueOverride),
         },
         {
           name: 'image',
@@ -700,7 +716,7 @@ export default function ClubEditCard({
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
-          disabled: queueSettings?.reapproval_queue_open !== true,
+          disabled: !isReapprovalOpen && !hasQueueOverride,
         },
         {
           name: 'size',
@@ -858,11 +874,13 @@ export default function ClubEditCard({
           name: 'how_to_get_involved',
           label: FIELD_PARTICIPATION_LABEL,
           type: 'html',
+          hidden: !isClient,
         },
         {
           name: 'signature_events',
           label: 'Signature Events',
           type: 'html',
+          hidden: !isClient,
         },
         {
           type: 'content',
@@ -1164,46 +1182,64 @@ export default function ClubEditCard({
               }}
             />
           )}
-          {!isLoading &&
-            queueSettings?.reapproval_queue_open !== true &&
-            queueSettings?.new_approval_queue_open !== true && (
-              <LiveBanner>
-                <LiveTitle>
-                  Queue Closed{isSummer() ? ' for Summer Break' : ''}
-                </LiveTitle>
-                <LiveSub>
-                  No edits to existing clubs or applications for new clubs will
-                  be submitted for review to the {APPROVAL_AUTHORITY}. Please
-                  reach out to <Contact point="osa" /> with any questions.
-                </LiveSub>
-              </LiveBanner>
-            )}
-          {!isLoading &&
-            queueSettings?.new_approval_queue_open !== true &&
-            queueSettings?.reapproval_queue_open === true &&
-            !isEdit && (
-              <LiveBanner>
-                <LiveTitle>Queue Closed for New Clubs</LiveTitle>
-                <LiveSub>
-                  Submissions for new clubs are closed for the time being.
-                  Please reach out to the {APPROVAL_AUTHORITY} at
-                  <Contact point="osa" /> with any questions.
-                </LiveSub>
-              </LiveBanner>
-            )}
-          {!isLoading &&
-            queueSettings?.reapproval_queue_open !== true &&
-            queueSettings?.new_approval_queue_open === true &&
-            isEdit && (
-              <LiveBanner>
-                <LiveTitle>Queue Closed for Re-Approval</LiveTitle>
-                <LiveSub>
-                  Submissions for re-approval are closed for the time being.
-                  Please reach out to the {APPROVAL_AUTHORITY} at
-                  <Contact point="osa" /> with any questions.
-                </LiveSub>
-              </LiveBanner>
-            )}
+          {!isLoading && !isReapprovalOpen && !isNewApprovalOpen && (
+            <LiveBanner>
+              <LiveTitle>
+                Queue Closed{isSummer() ? ' for Summer Break' : ''}{' '}
+                {hasQueueOverride ? '(admin override)' : ''}
+              </LiveTitle>
+              <LiveSub>
+                No edits to existing clubs or applications for new clubs will be
+                submitted for review to the {APPROVAL_AUTHORITY}. Please reach
+                out to <Contact point="osa" /> with any questions.
+                {hasQueueOverride && (
+                  <p className="mt-2">
+                    Your elevated access allows you to make changes or register
+                    a new club. Clubs you create will start off approved and
+                    active.
+                  </p>
+                )}
+              </LiveSub>
+            </LiveBanner>
+          )}
+          {!isLoading && !isNewApprovalOpen && isReapprovalOpen && !isEdit && (
+            <LiveBanner>
+              <LiveTitle>
+                Queue Closed for New Clubs{' '}
+                {hasQueueOverride ? '(admin override)' : ''}
+              </LiveTitle>
+              <LiveSub>
+                Submissions for new clubs are closed for the time being. Please
+                reach out to the {APPROVAL_AUTHORITY} at
+                <Contact point="osa" /> with any questions.
+                {hasQueueOverride && (
+                  <p className="mt-2">
+                    Your elevated access allows you to register a new club.
+                    Clubs you create will start off approved and active.
+                  </p>
+                )}
+              </LiveSub>
+            </LiveBanner>
+          )}
+          {!isLoading && !isReapprovalOpen && isNewApprovalOpen && isEdit && (
+            <LiveBanner>
+              <LiveTitle>
+                Queue Closed for Re-Approval{' '}
+                {hasQueueOverride ? '(admin override)' : ''}
+              </LiveTitle>
+              <LiveSub>
+                Submissions for re-approval are closed for the time being.
+                Please reach out to the {APPROVAL_AUTHORITY} at
+                <Contact point="osa" /> with any questions.
+                {hasQueueOverride && (
+                  <p className="mt-2">
+                    Your elevated access allows you to make changes. Clubs you
+                    create will start off approved and active.
+                  </p>
+                )}
+              </LiveSub>
+            </LiveBanner>
+          )}
           <FormStyle isHorizontal>
             {fields.map(({ name, description, fields, hidden }, i) => {
               if (hidden) {
@@ -1270,7 +1306,7 @@ export default function ClubEditCard({
               disabled={
                 !dirty ||
                 isSubmitting ||
-                (queueSettings?.new_approval_queue_open !== true && !isEdit)
+                (!isNewApprovalOpen && !isEdit && !hasQueueOverride)
               }
               type="submit"
               className="button is-primary is-large"

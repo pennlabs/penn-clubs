@@ -1382,7 +1382,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if club.image is not None
             else queue_settings.approval_queue_open
         )
-        if not request.user.has_perm("clubs.approve_club") and not relevant_queue_open:
+        if (
+            not (
+                request.user.is_superuser or request.user.has_perm("clubs.approve_club")
+            )
+            and not relevant_queue_open
+        ):
             raise PermissionDenied(
                 "The approval queue is not currently open for editing club images."
             )

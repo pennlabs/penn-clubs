@@ -259,6 +259,7 @@ const ClubForm = ({
             types={types}
             statuses={statuses}
             groupActivityOptions={groupActivityOptions}
+            userInfo={userInfo}
             club={club}
             onSubmit={submit}
           />

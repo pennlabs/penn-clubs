@@ -12,6 +12,8 @@ import {
   WHITE_ALPHA,
 } from '../constants/colors'
 import { BODY_FONT } from '../constants/styles'
+import { UserInfo } from '../types'
+import { apiCheckPermission } from '../utils'
 import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE_SINGULAR,
@@ -53,8 +55,13 @@ const buttonStyles = {
 
 const DisplayButtons = ({
   switchDisplay,
+  userInfo,
 }: DisplayButtonsProps): ReactElement<any> => {
   const { settings: queueSettings } = useRegistrationQueueSettings()
+  const canApprove = apiCheckPermission('clubs.approve_club', true) === true
+  const isSuperuser = userInfo?.is_superuser === true
+  const showRegisterButton =
+    queueSettings?.new_approval_queue_open === true || canApprove || isSuperuser
 
   return (
     <DisplayButtonsTag>
@@ -74,7 +81,7 @@ const DisplayButtons = ({
       >
         <Icon name="list" alt="list icon" style={iconStyles} />
       </button>
-      {queueSettings?.new_approval_queue_open === true && (
+      {showRegisterButton && (
         <Link href="/create" className="button is-small is-primary">
           <Icon
             name="plus"
@@ -90,6 +97,7 @@ const DisplayButtons = ({
 
 type DisplayButtonsProps = {
   switchDisplay: (disp: 'list' | 'cards') => void
+  userInfo?: UserInfo
 }
 
 export default DisplayButtons
