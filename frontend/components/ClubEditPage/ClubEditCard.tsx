@@ -352,6 +352,8 @@ export default function ClubEditCard({
 
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
+  const placeholderRejectionReason =
+    'Placeholder club - must edit with real details for approval'
   const { settings: queueSettings, isLoading } = useRegistrationQueueSettings()
   const canApprove = apiCheckPermission('clubs.approve_club', true) === true
   const isSuperuser = userInfo?.is_superuser === true
@@ -512,6 +514,8 @@ export default function ClubEditCard({
       }
     }
 
+    const requestedApproval = (body as { approved?: boolean }).approved === true
+
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {
@@ -520,7 +524,15 @@ export default function ClubEditCard({
           })
         : doApiRequest('/clubs/?format=json', {
             method: 'POST',
-            body,
+            body: hasQueueOverride
+              ? {
+                  ...body,
+                  approved: requestedApproval,
+                  ...(requestedApproval
+                    ? {}
+                    : { approved_comment: placeholderRejectionReason }),
+                }
+              : body,
           })
 
     return req.then((resp) => {
@@ -629,6 +641,15 @@ export default function ClubEditCard({
         </div>
       ),
       fields: [
+        ...(!isEdit && hasQueueOverride
+          ? [
+              {
+                name: 'approved',
+                type: 'checkbox',
+                label: `If checked, this ${OBJECT_NAME_SINGULAR} will be visible to the public right away without approval. Otherwise, it will be created as not approved with a placeholder reason until edited and resubmitted for review.`,
+              },
+            ]
+          : []),
         {
           name: 'name',
           type: 'text',
@@ -1124,6 +1145,7 @@ export default function ClubEditCard({
     application_required: CLUB_APPLICATIONS[0].value,
     recruiting_cycle: CLUB_RECRUITMENT_CYCLES[0].value,
     group_activity_assessment: [],
+    ...(hasQueueOverride ? { approved: false } : {}),
   }
 
   const editingFields = new Set<string>()
@@ -1195,8 +1217,8 @@ export default function ClubEditCard({
                 {hasQueueOverride && (
                   <p className="mt-2">
                     Your elevated access allows you to make changes or register
-                    a new club. Clubs you create will start off approved and
-                    active.
+                    a new club. When creating a new club, you can choose whether
+                    it should become immediately visible without approval.
                   </p>
                 )}
               </LiveSub>
@@ -1214,8 +1236,9 @@ export default function ClubEditCard({
                 <Contact point="osa" /> with any questions.
                 {hasQueueOverride && (
                   <p className="mt-2">
-                    Your elevated access allows you to register a new club.
-                    Clubs you create will start off approved and active.
+                    Your elevated access allows you to register a new club. You
+                    can choose whether it should become immediately visible
+                    without approval.
                   </p>
                 )}
               </LiveSub>
@@ -1234,7 +1257,8 @@ export default function ClubEditCard({
                 {hasQueueOverride && (
                   <p className="mt-2">
                     Your elevated access allows you to make changes. Clubs you
-                    create will start off approved and active.
+                    create can be made immediately visible without approval upon
+                    creation.
                   </p>
                 )}
               </LiveSub>

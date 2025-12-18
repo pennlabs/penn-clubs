@@ -1598,21 +1598,62 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Ensure new clubs follow certain invariants.
         """
+        placeholder_rejection_reason = (
+            "Placeholder club - must edit with real details for approval"
+        )
         request = self.context.get("request", None)
         can_skip_queue = request and (
             request.user.is_superuser or request.user.has_perm("clubs.approve_club")
         )
+        queue_settings = RegistrationQueueSettings.get()
+
+        if not can_skip_queue:
+            requested_approval = validated_data.get("approved")
+            if requested_approval is True or requested_approval is False:
+                raise serializers.ValidationError(
+                    {"approved": "You do not have permission to approve clubs."}
+                )
+
         if can_skip_queue:
-            validated_data["approved"] = True
-            validated_data["approved_by"] = request.user
-            validated_data["approved_on"] = timezone.now()
-            validated_data["ghost"] = False
             validated_data["active"] = True
+
+            approved_provided = hasattr(self, "initial_data") and (
+                "approved" in self.initial_data
+            )
+            requested_approval = (
+                validated_data.get("approved") if approved_provided else False
+            )
+
+            if requested_approval is True:
+                validated_data["approved"] = True
+                validated_data["approved_by"] = request.user
+                validated_data["approved_on"] = timezone.now()
+                validated_data["ghost"] = False
+            elif requested_approval is None:
+                validated_data["approved"] = None
+                validated_data["approved_by"] = None
+                validated_data["approved_on"] = None
+                validated_data["ghost"] = False
+            elif requested_approval is False:
+                validated_data["approved"] = False
+                validated_data["approved_by"] = request.user
+                validated_data["approved_on"] = timezone.now()
+                validated_data["ghost"] = False
+                if not validated_data.get("approved_comment"):
+                    validated_data["approved_comment"] = placeholder_rejection_reason
+            else:
+                raise serializers.ValidationError(
+                    {
+                        "approved": (
+                            "New clubs can only be created as approved (true) "
+                            "rejected (false), or pending approval (null)."
+                        )
+                    }
+                )
         else:
-            # New clubs created through the API must always be approved.
+            # New clubs created through the API start unapproved.
             validated_data["approved"] = None
 
-        queue_settings = RegistrationQueueSettings.get()
         if not can_skip_queue and (
             not queue_settings.reapproval_queue_open
             or not queue_settings.new_approval_queue_open
