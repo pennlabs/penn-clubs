@@ -520,7 +520,9 @@ export default function ClubEditCard({
           })
         : doApiRequest('/clubs/?format=json', {
             method: 'POST',
-            body,
+            body: hasQueueOverride
+              ? { ...body, approved: body.approved ? true : null }
+              : body,
           })
 
     return req.then((resp) => {
@@ -629,6 +631,16 @@ export default function ClubEditCard({
         </div>
       ),
       fields: [
+        ...(!isEdit && hasQueueOverride
+          ? [
+              {
+                name: 'approved',
+                type: 'checkboxText',
+                label: 'Publicly visible immediately',
+                help: `If checked, this ${OBJECT_NAME_SINGULAR} will be visible to the public right away. Otherwise, it will be created as active but not publicly visible until approved.`,
+              },
+            ]
+          : []),
         {
           name: 'name',
           type: 'text',
@@ -1124,6 +1136,7 @@ export default function ClubEditCard({
     application_required: CLUB_APPLICATIONS[0].value,
     recruiting_cycle: CLUB_RECRUITMENT_CYCLES[0].value,
     group_activity_assessment: [],
+    ...(hasQueueOverride ? { approved: false } : {}),
   }
 
   const editingFields = new Set<string>()
@@ -1195,8 +1208,8 @@ export default function ClubEditCard({
                 {hasQueueOverride && (
                   <p className="mt-2">
                     Your elevated access allows you to make changes or register
-                    a new club. Clubs you create will start off approved and
-                    active.
+                    a new club. When creating a new club, you can choose whether
+                    it should become publicly visible immediately.
                   </p>
                 )}
               </LiveSub>
@@ -1215,7 +1228,8 @@ export default function ClubEditCard({
                 {hasQueueOverride && (
                   <p className="mt-2">
                     Your elevated access allows you to register a new club.
-                    Clubs you create will start off approved and active.
+                    You can choose whether it should become publicly visible
+                    immediately.
                   </p>
                 )}
               </LiveSub>
@@ -1234,7 +1248,8 @@ export default function ClubEditCard({
                 {hasQueueOverride && (
                   <p className="mt-2">
                     Your elevated access allows you to make changes. Clubs you
-                    create will start off approved and active.
+                    create can be made publicly visible immediately upon
+                    creation.
                   </p>
                 )}
               </LiveSub>

@@ -1326,6 +1326,92 @@ class ClubTestCase(TestCase):
         self.assertIsNone(club.approved_by)
         self.assertTrue(club.active)
 
+    def test_club_create_queue_closed_superuser_can_choose_to_approve(self):
+        self.client.login(username=self.user5.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "super-approved-club",
+                "name": "Superuser Approved Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "superapprovedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="super-approved-club")
+        self.assertTrue(club.approved)
+        self.assertEqual(club.approved_by, self.user5)
+        self.assertTrue(club.active)
+
+    def test_club_create_queue_closed_with_approve_permission_can_choose_to_approve(
+        self,
+    ):
+        self.client.login(username=self.user4.username, password="test")
+
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "approver-approved-club",
+                "name": "Approver Approved Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "approverapprovedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="approver-approved-club")
+        self.assertTrue(club.approved)
+        self.assertEqual(club.approved_by, self.user4)
+        self.assertTrue(club.active)
+
+    def test_club_create_non_admin_cannot_set_approved(self):
+        self.client.login(username=self.user4.username, password="test")
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "non-admin-approved-club",
+                "name": "Non Admin Approved Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "nonadminapprovedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("approved", resp.json())
+        self.assertFalse(Club.objects.filter(code="non-admin-approved-club").exists())
+
     def test_club_approve(self):
         """
         Test approving an existing unapproved club.

@@ -1603,10 +1603,6 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             request.user.is_superuser or request.user.has_perm("clubs.approve_club")
         )
         queue_settings = RegistrationQueueSettings.get()
-        is_new_approval_queue_open = (
-            queue_settings.reapproval_queue_open
-            and queue_settings.new_approval_queue_open
-        )
 
         if not can_skip_queue:
             requested_approval = validated_data.get("approved")
@@ -1618,13 +1614,11 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if can_skip_queue:
             validated_data["active"] = True
 
-            approved_provided = (
-                hasattr(self, "initial_data") and "approved" in self.initial_data
+            approved_provided = hasattr(self, "initial_data") and (
+                "approved" in self.initial_data
             )
             requested_approval = (
-                validated_data.get("approved")
-                if approved_provided
-                else (True if is_new_approval_queue_open else None)
+                validated_data.get("approved") if approved_provided else None
             )
 
             if requested_approval is True:
