@@ -1608,22 +1608,44 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             and queue_settings.new_approval_queue_open
         )
 
+        if not can_skip_queue:
+            requested_approval = validated_data.get("approved")
+            if requested_approval is True or requested_approval is False:
+                raise serializers.ValidationError(
+                    {"approved": "You do not have permission to approve clubs."}
+                )
+
         if can_skip_queue:
             validated_data["active"] = True
 
-            # If the new-club queue is closed, creating via override should not
-            # auto-approve. The club can be active, but it shouldn't have an
-            # approved/public version yet.
-            if is_new_approval_queue_open:
+            approved_provided = (
+                hasattr(self, "initial_data") and "approved" in self.initial_data
+            )
+            requested_approval = (
+                validated_data.get("approved")
+                if approved_provided
+                else (True if is_new_approval_queue_open else None)
+            )
+
+            if requested_approval is True:
                 validated_data["approved"] = True
                 validated_data["approved_by"] = request.user
                 validated_data["approved_on"] = timezone.now()
                 validated_data["ghost"] = False
-            else:
+            elif requested_approval is None:
                 validated_data["approved"] = None
                 validated_data["approved_by"] = None
                 validated_data["approved_on"] = None
                 validated_data["ghost"] = False
+            else:
+                raise serializers.ValidationError(
+                    {
+                        "approved": (
+                            "New clubs can only be created as approved (true) "
+                            "or pending approval (null)."
+                        )
+                    }
+                )
         else:
             # New clubs created through the API start unapproved.
             validated_data["approved"] = None
