@@ -352,6 +352,8 @@ export default function ClubEditCard({
 
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
+  const placeholderRejectionReason =
+    'Placeholder club - must edit with real details for approval'
   const { settings: queueSettings, isLoading } = useRegistrationQueueSettings()
   const canApprove = apiCheckPermission('clubs.approve_club', true) === true
   const isSuperuser = userInfo?.is_superuser === true
@@ -512,6 +514,8 @@ export default function ClubEditCard({
       }
     }
 
+    const requestedApproval = (body as { approved?: boolean }).approved === true
+
     const req =
       isEdit && club !== null
         ? doApiRequest(`/clubs/${club.code}/?format=json`, {
@@ -521,7 +525,13 @@ export default function ClubEditCard({
         : doApiRequest('/clubs/?format=json', {
             method: 'POST',
             body: hasQueueOverride
-              ? { ...body, approved: body.approved ? true : null }
+              ? {
+                  ...body,
+                  approved: requestedApproval,
+                  ...(requestedApproval
+                    ? {}
+                    : { approved_comment: placeholderRejectionReason }),
+                }
               : body,
           })
 
@@ -635,9 +645,8 @@ export default function ClubEditCard({
           ? [
               {
                 name: 'approved',
-                type: 'checkboxText',
-                label: 'Publicly visible immediately',
-                help: `If checked, this ${OBJECT_NAME_SINGULAR} will be visible to the public right away. Otherwise, it will be created as active but not publicly visible until approved.`,
+                type: 'checkbox',
+                label: `If checked, this ${OBJECT_NAME_SINGULAR} will be visible to the public right away without approval. Otherwise, it will be created as not approved with a placeholder reason until edited and resubmitted for review.`,
               },
             ]
           : []),
@@ -1209,7 +1218,7 @@ export default function ClubEditCard({
                   <p className="mt-2">
                     Your elevated access allows you to make changes or register
                     a new club. When creating a new club, you can choose whether
-                    it should become publicly visible immediately.
+                    it should become immediately visible without approval.
                   </p>
                 )}
               </LiveSub>
@@ -1227,9 +1236,9 @@ export default function ClubEditCard({
                 <Contact point="osa" /> with any questions.
                 {hasQueueOverride && (
                   <p className="mt-2">
-                    Your elevated access allows you to register a new club.
-                    You can choose whether it should become publicly visible
-                    immediately.
+                    Your elevated access allows you to register a new club. You
+                    can choose whether it should become immediately visible
+                    without approval.
                   </p>
                 )}
               </LiveSub>
@@ -1248,7 +1257,7 @@ export default function ClubEditCard({
                 {hasQueueOverride && (
                   <p className="mt-2">
                     Your elevated access allows you to make changes. Clubs you
-                    create can be made publicly visible immediately upon
+                    create can be made immediately visible without approval upon
                     creation.
                   </p>
                 )}

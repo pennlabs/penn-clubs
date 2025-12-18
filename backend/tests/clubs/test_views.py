@@ -1286,8 +1286,12 @@ class ClubTestCase(TestCase):
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
         club = Club.objects.get(code="super-club")
-        self.assertIsNone(club.approved)
-        self.assertIsNone(club.approved_by)
+        self.assertFalse(club.approved)
+        self.assertEqual(club.approved_by, self.user5)
+        self.assertEqual(
+            club.approved_comment,
+            "Placeholder club - must edit with real details for approval",
+        )
         self.assertTrue(club.active)
 
     def test_club_create_queue_closed_with_approve_permission(self):
@@ -1322,8 +1326,12 @@ class ClubTestCase(TestCase):
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
         club = Club.objects.get(code="approver-club")
-        self.assertIsNone(club.approved)
-        self.assertIsNone(club.approved_by)
+        self.assertFalse(club.approved)
+        self.assertEqual(club.approved_by, self.user4)
+        self.assertEqual(
+            club.approved_comment,
+            "Placeholder club - must edit with real details for approval",
+        )
         self.assertTrue(club.active)
 
     def test_club_create_queue_closed_superuser_can_choose_to_approve(self):
@@ -1388,6 +1396,46 @@ class ClubTestCase(TestCase):
         club = Club.objects.get(code="approver-approved-club")
         self.assertTrue(club.approved)
         self.assertEqual(club.approved_by, self.user4)
+        self.assertTrue(club.active)
+
+    def test_club_create_queue_closed_with_approve_permission_can_choose_to_reject(
+        self,
+    ):
+        self.client.login(username=self.user4.username, password="test")
+
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "approver-rejected-club",
+                "name": "Approver Rejected Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "approverrejectedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": False,
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="approver-rejected-club")
+        self.assertFalse(club.approved)
+        self.assertEqual(club.approved_by, self.user4)
+        self.assertEqual(
+            club.approved_comment,
+            "Placeholder club - must edit with real details for approval",
+        )
         self.assertTrue(club.active)
 
     def test_club_create_non_admin_cannot_set_approved(self):

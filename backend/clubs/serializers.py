@@ -1598,6 +1598,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Ensure new clubs follow certain invariants.
         """
+        placeholder_rejection_reason = (
+            "Placeholder club - must edit with real details for approval"
+        )
         request = self.context.get("request", None)
         can_skip_queue = request and (
             request.user.is_superuser or request.user.has_perm("clubs.approve_club")
@@ -1618,7 +1621,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 "approved" in self.initial_data
             )
             requested_approval = (
-                validated_data.get("approved") if approved_provided else None
+                validated_data.get("approved") if approved_provided else False
             )
 
             if requested_approval is True:
@@ -1631,12 +1634,19 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 validated_data["approved_by"] = None
                 validated_data["approved_on"] = None
                 validated_data["ghost"] = False
+            elif requested_approval is False:
+                validated_data["approved"] = False
+                validated_data["approved_by"] = request.user
+                validated_data["approved_on"] = timezone.now()
+                validated_data["ghost"] = False
+                if not validated_data.get("approved_comment"):
+                    validated_data["approved_comment"] = placeholder_rejection_reason
             else:
                 raise serializers.ValidationError(
                     {
                         "approved": (
                             "New clubs can only be created as approved (true) "
-                            "or pending approval (null)."
+                            "rejected (false), or pending approval (null)."
                         )
                     }
                 )
