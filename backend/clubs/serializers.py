@@ -1602,17 +1602,32 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         can_skip_queue = request and (
             request.user.is_superuser or request.user.has_perm("clubs.approve_club")
         )
+        queue_settings = RegistrationQueueSettings.get()
+        is_new_approval_queue_open = (
+            queue_settings.reapproval_queue_open
+            and queue_settings.new_approval_queue_open
+        )
+
         if can_skip_queue:
-            validated_data["approved"] = True
-            validated_data["approved_by"] = request.user
-            validated_data["approved_on"] = timezone.now()
-            validated_data["ghost"] = False
             validated_data["active"] = True
+
+            # If the new-club queue is closed, creating via override should not
+            # auto-approve. The club can be active, but it shouldn't have an
+            # approved/public version yet.
+            if is_new_approval_queue_open:
+                validated_data["approved"] = True
+                validated_data["approved_by"] = request.user
+                validated_data["approved_on"] = timezone.now()
+                validated_data["ghost"] = False
+            else:
+                validated_data["approved"] = None
+                validated_data["approved_by"] = None
+                validated_data["approved_on"] = None
+                validated_data["ghost"] = False
         else:
-            # New clubs created through the API must always be approved.
+            # New clubs created through the API start unapproved.
             validated_data["approved"] = None
 
-        queue_settings = RegistrationQueueSettings.get()
         if not can_skip_queue and (
             not queue_settings.reapproval_queue_open
             or not queue_settings.new_approval_queue_open

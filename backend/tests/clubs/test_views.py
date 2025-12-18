@@ -1286,8 +1286,8 @@ class ClubTestCase(TestCase):
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
         club = Club.objects.get(code="super-club")
-        self.assertTrue(club.approved)
-        self.assertEqual(club.approved_by, self.user5)
+        self.assertIsNone(club.approved)
+        self.assertIsNone(club.approved_by)
         self.assertTrue(club.active)
 
     def test_club_create_queue_closed_with_approve_permission(self):
@@ -1322,8 +1322,8 @@ class ClubTestCase(TestCase):
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
         club = Club.objects.get(code="approver-club")
-        self.assertTrue(club.approved)
-        self.assertEqual(club.approved_by, self.user4)
+        self.assertIsNone(club.approved)
+        self.assertIsNone(club.approved_by)
         self.assertTrue(club.active)
 
     def test_club_approve(self):
