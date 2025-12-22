@@ -2370,7 +2370,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         bypass = self.request.query_params.get("bypass", "").lower() == "true"
 
-        # Cache only for anonymous users to avoid leaking user-specific data.
+        # Cache only for anonymous users to avoid leaking user-specific data
+        # or stale is_favorite / is_subscribed
         use_cache = (
             (not user.is_authenticated)
             and (not is_superuser)
