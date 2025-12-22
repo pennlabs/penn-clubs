@@ -5396,10 +5396,10 @@ class EventShowingTestCase(TestCase):
     def setUpTestData(cls):
         User = get_user_model()
         cls.user1 = User.objects.create_user(
-            "officer@seas.upenn.edu", "officer@seas.upenn.edu", "password"
+            "officer@example.com", "officer@example.com", "password"
         )
         cls.user2 = User.objects.create_user(
-            "member@seas.upenn.edu", "member@seas.upenn.edu", "password"
+            "member@example.com", "member@example.com", "password"
         )
         cls.user3 = User.objects.create_user(
             "random@example.com", "random@example.com", "password"

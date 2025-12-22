@@ -292,6 +292,41 @@ class ClubPublicVisibilityMagicLinkView(APIView):
         return HttpResponseRedirect(f"{edit_url}?visibility_link={error}")
 
     def get(self, request, club_code: str, token: str, *args, **kwargs):
+        """
+        Toggle a club's public visibility via a signed, time-limited link.
+
+        This endpoint always responds with a redirect:
+        - On success, redirects to the club page with
+          `visibility_updated=public|private`.
+        - On error (expired/invalid/missing), redirects to the club edit page with
+          `visibility_link=expired|invalid|missing`.
+        ---
+        parameters:
+          - name: visible
+            in: query
+            required: true
+            description: Set the club's public visibility.
+            schema:
+              type: string
+              enum: ["true", "false", "yes", "no", "y", "n"]
+        responses:
+          "302":
+            description: Redirect to club page or club edit page.
+            content:
+              text/html:
+                schema:
+                  type: string
+          "404":
+            description: Club not found.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    detail:
+                      type: string
+        ---
+        """
         signer = TimestampSigner(salt=f"club-public-visibility:{club_code}")
         try:
             payload = signer.unsign(token, max_age=self.max_age_seconds)
