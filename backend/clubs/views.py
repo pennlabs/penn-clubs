@@ -38,6 +38,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.core.validators import validate_email
 from django.db import transaction
 from django.db.models import (
@@ -59,7 +60,7 @@ from django.db.models import (
 )
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
@@ -243,6 +244,116 @@ from clubs.serializers import (
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
 from pennclubs.analytics import LabsAnalytics
+
+
+CLUBS_LIST_CACHE_VERSION_KEY = "clubs:list:anon:version"
+
+
+def _bump_clubs_list_cache_version():
+    """
+    Bump anonymous club list cache version so clubs removed from public view don't
+    remain visible due to cached list responses.
+    """
+    try:
+        cache.incr(CLUBS_LIST_CACHE_VERSION_KEY)
+    except ValueError:
+        cache.set(CLUBS_LIST_CACHE_VERSION_KEY, 2, None)
+
+
+def _get_clubs_list_cache_version() -> int:
+    return int(cache.get(CLUBS_LIST_CACHE_VERSION_KEY, 1))
+
+
+def is_public_viewer(request) -> bool:
+    """
+    Return True if the request should be treated as a public viewer
+    (unauthenticated), meaning access should be restricted to clubs explicitly
+    marked visible to the public.
+    """
+    user = getattr(request, "user", None)
+    return not (user is not None and getattr(user, "is_authenticated", False))
+
+
+class ClubPublicVisibilityMagicLinkView(APIView):
+    """
+    A signed, time-limited magic link endpoint to toggle a club's public visibility.
+    Intended to be used from email buttons; does not require authentication.
+    """
+
+    authentication_classes = []
+    permission_classes = []
+
+    max_age_seconds = 60 * 60 * 24 * 14  # 14 days
+
+    def _redirect_to_edit(self, club_code: str, error: str):
+        edit_url = settings.EDIT_URL.format(
+            domain=settings.DEFAULT_DOMAIN, club=club_code
+        )
+        return HttpResponseRedirect(f"{edit_url}?visibility_link={error}")
+
+    def get(self, request, club_code: str, token: str, *args, **kwargs):
+        """
+        Toggle a club's public visibility via a signed, time-limited link.
+
+        This endpoint always responds with a redirect:
+        - On success, redirects to the club page with
+          `visibility_updated=public|private`.
+        - On error (expired/invalid/missing), redirects to the club edit page with
+          `visibility_link=expired|invalid|missing`.
+        ---
+        parameters:
+          - name: visible
+            in: query
+            required: true
+            description: Set the club's public visibility.
+            schema:
+              type: string
+              enum: ["true", "false", "yes", "no", "y", "n"]
+        responses:
+          "302":
+            description: Redirect to club page or club edit page.
+            content:
+              text/html:
+                schema:
+                  type: string
+          "404":
+            description: Club not found.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    detail:
+                      type: string
+        ---
+        """
+        signer = TimestampSigner(salt=f"club-public-visibility:{club_code}")
+        try:
+            payload = signer.unsign(token, max_age=self.max_age_seconds)
+        except SignatureExpired:
+            return self._redirect_to_edit(club_code, "expired")
+        except BadSignature:
+            return self._redirect_to_edit(club_code, "invalid")
+
+        if payload != "ok":
+            return self._redirect_to_edit(club_code, "invalid")
+
+        visible = parse_boolean(request.query_params.get("visible"))
+        if visible is None:
+            return self._redirect_to_edit(club_code, "missing")
+
+        club = get_object_or_404(Club.objects.filter(archived=False), code=club_code)
+        club.visible_to_public = visible
+        club.save(update_fields=["visible_to_public"])
+
+        cache.delete(f"clubs:{club.id}-anon")
+        _bump_clubs_list_cache_version()
+
+        state = "public" if club.visible_to_public else "private"
+        club_url = settings.VIEW_URL.format(
+            domain=settings.DEFAULT_DOMAIN, club=club.code
+        )
+        return HttpResponseRedirect(f"{club_url}?visibility_updated={state}")
 
 
 def update_holds(func):
@@ -1309,6 +1420,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if not (is_superuser or has_special_perms):
                 queryset = queryset.filter(active=True)
 
+        # Restrict unauthenticated viewers to explicitly public clubs.
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(visible_to_public=True)
+
         # filter by approved clubs
         if (
             self.request.user.has_perm("clubs.see_pending_clubs")
@@ -1411,6 +1526,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "ghost",
                 ]
             )
+            _bump_clubs_list_cache_version()
 
             # create thumbnail
             club.create_thumbnail(request)
@@ -1953,12 +2069,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         operationId: Club Directory List
         ---
         """
-        serializer = ClubMinimalSerializer(
+        queryset = (
             Club.objects.all()
             .exclude((~Q(approved=True) & Q(ghost=False)) | Q(archived=True))
-            .order_by(Lower("name")),
-            many=True,
+            .order_by(Lower("name"))
         )
+        if is_public_viewer(request):
+            queryset = queryset.filter(visible_to_public=True)
+
+        serializer = ClubMinimalSerializer(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
@@ -2251,11 +2370,21 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         bypass = self.request.query_params.get("bypass", "").lower() == "true"
 
-        use_cache = not is_superuser and not has_special_perms and not bypass
+        # Cache only for anonymous users to avoid leaking user-specific data
+        # or stale is_favorite / is_subscribed
+        use_cache = (
+            (not user.is_authenticated)
+            and (not is_superuser)
+            and (not has_special_perms)
+            and (not bypass)
+        )
 
         key = None
         if use_cache:
-            key = self.request.build_absolute_uri()
+            key = (
+                f"clubs:list:anon:v{_get_clubs_list_cache_version()}:"
+                f"{self.request.build_absolute_uri()}"
+            )
             cached_object = cache.get(key)
             if cached_object:
                 return Response(cached_object)
@@ -2274,13 +2403,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
 
+        # Avoid caching for authenticated users.
+        # Responses include user-specific fields.
+        if self.request.user.is_authenticated:
+            return super().retrieve(*args, **kwargs)
+
         # don't cache if user has elevated view perms
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"""clubs:{club.id}-{
-            "authed" if self.request.user.is_authenticated else "anon"
-        }"""
+        key = f"clubs:{club.id}-anon"
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -2296,6 +2428,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_approval_permission(request)
         cache.delete(f"clubs:{self.get_object().id}-authed")
         cache.delete(f"clubs:{self.get_object().id}-anon")
+        _bump_clubs_list_cache_version()
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
@@ -2305,6 +2438,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_approval_permission(request)
         cache.delete(f"clubs:{self.get_object().id}-authed")
         cache.delete(f"clubs:{self.get_object().id}-anon")
+        _bump_clubs_list_cache_version()
         return super().partial_update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
@@ -2317,6 +2451,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         instance.archived_by = self.request.user
         instance.archived_on = timezone.now()
         instance.save()
+        _bump_clubs_list_cache_version()
 
         # Send notice to club officers and executor
         context = {
@@ -2957,6 +3092,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         start_time = parse(event_data.pop("start_time"))
         end_time = parse(event_data.pop("end_time"))
         location = event_data.pop("location", None)
+        location_visible_to_public = parse_boolean(
+            event_data.pop("location_visible_to_public", False)
+        )
+        if location_visible_to_public is None:
+            raise DRFValidationError(
+                detail="location_visible_to_public must be a boolean value"
+            )
 
         # offset and end_date default to create a single event
         offset = event_data.pop("offset", 1)
@@ -2982,6 +3124,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     "start_time": current_start,
                     "end_time": current_end,
                     "location": location,
+                    "location_visible_to_public": location_visible_to_public,
                     "event": event.id,
                 }
                 showing_serializer = EventShowingWriteSerializer(
@@ -3037,8 +3180,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Event.objects.all()
+        public_viewer = is_public_viewer(self.request)
         is_club_specific = self.kwargs.get("club_code") is not None
         if is_club_specific:
+            if public_viewer and self.action in {"list", "retrieve"}:
+                get_object_or_404(
+                    Club.objects.filter(archived=False),
+                    code=self.kwargs["club_code"],
+                    visible_to_public=True,
+                )
             qs = qs.filter(club__code=self.kwargs["club_code"])
             # Check if the user is an officer or admin
             if not self.request.user.is_authenticated or (
@@ -3073,6 +3223,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     | Q(club__isnull=True),
                     Q(club__isnull=True) | Q(club__archived=False),
                 )
+
+        if public_viewer:
+            qs = qs.filter(Q(club__isnull=True) | Q(club__visible_to_public=True))
+
         # Order events by their earliest showing's start time
         return (
             qs.select_related("club", "creator")
@@ -3205,7 +3359,7 @@ class EventViewSet(ClubEventViewSet):
 
         # cache the response for this endpoint with short timeout
         if date is None:
-            key = f"events:fair:directory:{request.user.is_authenticated}:{fair}"
+            key = f"events:fair:directory:{is_public_viewer(request)}:{fair}"
             cached = cache.get(key)
             if cached:
                 return Response(cached)
@@ -3230,6 +3384,8 @@ class EventViewSet(ClubEventViewSet):
         events = Event.objects.filter(
             type=Event.FAIR, club__badges__purpose="fair", club__badges__fair=fair
         )
+        if is_public_viewer(request):
+            events = events.filter(club__visible_to_public=True)
 
         # Get event showings for these events
         event_showings = EventShowing.objects.filter(event__in=events)
@@ -5234,7 +5390,10 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     http_methods_names = ["get", "post"]
 
     def get_queryset(self):
-        return ClubFairBooth.objects.all()
+        queryset = ClubFairBooth.objects.all()
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(club__visible_to_public=True)
+        return queryset
 
     @action(detail=False, methods=["get"])
     def live(self, *args, **kwargs):
@@ -5280,6 +5439,8 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
             .order_by("start_time")
             .all()
         )
+        if is_public_viewer(self.request):
+            booths = booths.filter(club__visible_to_public=True)
 
         return Response(ClubBoothSerializer(booths, many=True).data)
 
@@ -7032,12 +7193,24 @@ class ExternalMemberListViewSet(viewsets.ModelViewSet):
     http_method_names = ["get"]
     serializer_class = ExternalMemberListSerializer
 
+    def list(self, request, *args, **kwargs):
+        if is_public_viewer(request):
+            get_object_or_404(
+                Club.objects.filter(archived=False),
+                code=self.kwargs["code"],
+                visible_to_public=True,
+            )
+        return super().list(request, *args, **kwargs)
+
     def get_queryset(self):
-        return (
+        queryset = (
             Membership.objects.all()
             .select_related("person", "club")
             .filter(club__code=self.kwargs["code"])
         )
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(club__visible_to_public=True)
+        return queryset
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -8487,7 +8660,12 @@ class BadgeClubViewSet(viewsets.ModelViewSet):
         return Response({"success": True})
 
     def get_queryset(self):
-        return Club.objects.filter(badges__id=self.kwargs["badge_pk"]).order_by("name")
+        queryset = Club.objects.filter(badges__id=self.kwargs["badge_pk"]).order_by(
+            "name"
+        )
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(visible_to_public=True)
+        return queryset
 
 
 class MassInviteAPIView(APIView):

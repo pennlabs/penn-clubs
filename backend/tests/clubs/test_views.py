@@ -2,6 +2,7 @@ import datetime
 import io
 import json
 import os
+import time
 from collections import Counter
 from unittest.mock import MagicMock, patch
 
@@ -11,6 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
 from django.core.management import call_command
+from django.core.signing import TimestampSigner
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -57,7 +59,13 @@ class SearchTestCase(TestCase):
     def setUpTestData(cls):
         Club.objects.bulk_create(
             [
-                Club(code=f"club-{i}", name=f"Club #{i}", active=True, approved=True)
+                Club(
+                    code=f"club-{i}",
+                    name=f"Club #{i}",
+                    active=True,
+                    approved=True,
+                    visible_to_public=True,
+                )
                 for i in range(0, 100)
             ]
         )
@@ -210,6 +218,7 @@ class ClubTestCase(TestCase):
             approved=True,
             active=True,
             email="example@example.com",
+            visible_to_public=True,
         )
 
         self.wc = Club.objects.create(
@@ -218,6 +227,7 @@ class ClubTestCase(TestCase):
             approved=True,
             active=True,
             email="example@example.com",
+            visible_to_public=True,
         )
 
         # some tests (e.g. directory) implicitly assume some constant number of clubs
@@ -1817,6 +1827,7 @@ class ClubTestCase(TestCase):
         """
         with open(os.devnull, "w") as f:
             call_command("populate", stdout=f)
+        Club.objects.update(visible_to_public=True)
 
         prof_tag_id = Tag.objects.filter(name="Professional").first().id
         athl_tag_id = Tag.objects.filter(name="Athletics").first().id
@@ -1874,6 +1885,7 @@ class ClubTestCase(TestCase):
             approved=True,
             active=True,
             email="undergrad@example.com",
+            visible_to_public=True,
         )
         Club.objects.create(
             code="undergrad-open-club",
@@ -1883,6 +1895,7 @@ class ClubTestCase(TestCase):
             approved=True,
             active=True,
             email="undergrad-open@example.com",
+            visible_to_public=True,
         )
         Club.objects.create(
             code="grad-open-club",
@@ -1892,6 +1905,7 @@ class ClubTestCase(TestCase):
             approved=True,
             active=True,
             email="grad-open@example.com",
+            visible_to_public=True,
         )
 
         resp = self.client.get(
@@ -2041,6 +2055,160 @@ class ClubTestCase(TestCase):
         self.club1.save()
         self.wc.active = True
         self.wc.save()
+
+    def test_public_visibility_hides_clubs_from_anonymous(self):
+        private = Club.objects.create(
+            code="private-club",
+            name="Private Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="private@example.com",
+            visible_to_public=False,
+        )
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertNotIn(private.code, codes)
+
+        resp = self.client.get(reverse("clubs-detail", args=(private.code,)))
+        self.assertEqual(resp.status_code, 404)
+
+        resp = self.client.get(reverse("clubs-list") + "?search=Private")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertNotIn(private.code, codes)
+
+    def test_public_visibility_allows_penn_users(self):
+        private = Club.objects.create(
+            code="private-club",
+            name="Private Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="private@example.com",
+            visible_to_public=False,
+        )
+
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(reverse("clubs-detail", args=(private.code,)))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["code"], private.code)
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn(private.code, codes)
+
+    def test_public_visibility_allows_authenticated_users(self):
+        private = Club.objects.create(
+            code="private-club",
+            name="Private Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="private@example.com",
+            visible_to_public=False,
+        )
+
+        external = get_user_model().objects.create_user(
+            "external", "external@example.com", "test"
+        )
+        self.client.login(username=external.username, password="test")
+
+        resp = self.client.get(reverse("clubs-detail", args=(private.code,)))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["code"], private.code)
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn(private.code, codes)
+
+    def test_public_visibility_magic_link_sets_value(self):
+        club = Club.objects.create(
+            code="magic-club",
+            name="Magic Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="magic@example.com",
+            visible_to_public=False,
+        )
+
+        signer = TimestampSigner(salt=f"club-public-visibility:{club.code}")
+        token = signer.sign("ok")
+
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token)) + "?visible=true"
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_updated=public", resp["Location"])
+        club.refresh_from_db()
+        self.assertTrue(club.visible_to_public)
+
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token))
+            + "?visible=false"
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_updated=private", resp["Location"])
+        club.refresh_from_db()
+        self.assertFalse(club.visible_to_public)
+
+        resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_public_visibility_magic_link_redirects_on_errors(self):
+        club = Club.objects.create(
+            code="magic-club-error",
+            name="Magic Club Error",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="magic@example.com",
+            visible_to_public=False,
+        )
+
+        signer = TimestampSigner(salt=f"club-public-visibility:{club.code}")
+        token = signer.sign("ok")
+
+        # Invalid signature
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token + "x"))
+            + "?visible=true"
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_link=invalid", resp["Location"])
+
+        # Missing desired value
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token))
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_link=missing", resp["Location"])
+
+        # Expired token
+        with patch("clubs.views.ClubPublicVisibilityMagicLinkView.max_age_seconds", 0):
+            expired_token = signer.sign("ok")
+            time.sleep(1)
+            resp = self.client.get(
+                reverse("club-public-visibility", args=(club.code, expired_token))
+                + "?visible=true"
+            )
+            self.assertEqual(resp.status_code, 302)
+            self.assertIn("visibility_link=expired", resp["Location"])
 
     def test_club_list_bypass_includes_inactive_clubs(self):
         """
@@ -5281,7 +5449,7 @@ class EventShowingTestCase(TestCase):
         response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["location"], "Test Location")
+        self.assertIsNone(response.data[0]["location"])
 
         # Test member
         self.client.login(username=self.user2.username, password="password")
@@ -5297,15 +5465,23 @@ class EventShowingTestCase(TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["location"], "Test Location")
 
+        # Test authenticated non-Penn user
+        self.client.login(username=self.user3.username, password="password")
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
     def test_retrieve_showing(self):
         """
         Test that anyone can retrieve a specific event showing.
         """
+        self.client.logout()
         response = self.client.get(
             reverse("event-showings-detail", args=[self.event.id, self.showing.id])
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["location"], "Test Location")
+        self.assertIsNone(response.data["location"])
 
     def test_create_showing_permissions(self):
         """

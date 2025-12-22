@@ -1,0 +1,51 @@
+<!-- TYPES:
+name:
+  type: string
+code:
+  type: string
+site_name:
+  type: string
+visible_to_public:
+  type: boolean
+make_public_url:
+  type: string
+make_private_url:
+  type: string
+edit_url:
+  type: string
+view_url:
+  type: string
+-->
+{% extends 'emails/base.html' %}
+{% block content %}
+  <h2>Choose whether <b>{{ name }}</b> is visible to the public</h2>
+  <p style="font-size: 1.2em">
+    We added a new setting to control whether your club page appears to people who are not signed in.
+    By default, clubs are <b>not</b> visible to the public.
+  </p>
+
+  <div style="margin-top: 20px">
+    <a
+      style="text-decoration: none; padding: 8px 20px; font-size: 1.25em; color: white; background-color: #276cda; border-radius: 3px; font-weight: bold; display: inline-block"
+      href="{{ make_public_url }}"
+    >
+      Make public
+    </a>
+    <span style="display: inline-block; width: 10px"></span>
+    <a
+      style="text-decoration: none; padding: 8px 20px; font-size: 1.25em; color: white; background-color: #f14668; border-radius: 3px; font-weight: bold; display: inline-block"
+      href="{{ make_private_url }}"
+    >
+      Keep private
+    </a>
+  </div>
+
+  <p style="font-size: 1.2em; margin-top: 18px">
+    You can also update this setting on your edit page:
+    <a href="{{ edit_url }}">{{ edit_url }}</a>
+  </p>
+
+  <p style="font-size: 1.1em; margin-top: 24px; color: #666">
+    If you believe you received this email in error, please reply to this message.
+  </p>
+{% endblock %}

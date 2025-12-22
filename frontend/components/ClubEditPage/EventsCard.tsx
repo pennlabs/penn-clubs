@@ -11,6 +11,7 @@ import { FAIR_NAME, OBJECT_EVENT_TYPES } from '../../utils/branding'
 import { Device, Icon, Line, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
 import {
+  CheckboxField,
   DateTimeField,
   FileField,
   RichTextField,
@@ -335,6 +336,11 @@ const showingTableFields = [
     label: 'Location',
   },
   {
+    name: 'location_visible_to_public',
+    label: 'Public Location',
+    converter: (a?: boolean): string => (a ? 'Yes' : 'No'),
+  },
+  {
     name: 'ticket_drop_time',
     label: 'Ticket Drop',
     converter: (a?: string | null): ReactElement | string =>
@@ -461,6 +467,11 @@ export default function EventsCard({
             as={TextField}
             placeholder="Where will this date take place?"
           />
+          <Field
+            name="location_visible_to_public"
+            as={CheckboxField}
+            label="If unchecked, people who are not signed in will not be shown the location."
+          />
           <button
             className="button is-small is-block mb-2 is-pulled-right"
             onClick={() => setIsRecurring(!isRecurring)}
@@ -515,6 +526,11 @@ export default function EventsCard({
         name="location"
         as={TextField}
         placeholder="Date Location (Optional)"
+      />
+      <Field
+        name="location_visible_to_public"
+        as={CheckboxField}
+        label="If unchecked, people who are not signed in will not be shown the location."
       />
       <Field
         name="ticket_drop_time"
@@ -585,6 +601,7 @@ export default function EventsCard({
           </Link>
         )}
         baseUrl={`/clubs/${club.code}/events/`}
+        defaultObject={{ location_visible_to_public: false }}
         listParams={
           showPastEvents ? '' : `&latest_start_time__gte=${earliestEndTime}`
         }
@@ -627,6 +644,7 @@ export default function EventsCard({
             key={selectedEvent.id}
             baseUrl={`/events/${selectedEvent.id}/showings/`}
             initialData={selectedEvent.showings || []}
+            defaultObject={{ location_visible_to_public: false }}
             keyField="id"
             fields={showingFields}
             tableFields={showingTableFields}
