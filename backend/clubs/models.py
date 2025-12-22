@@ -328,6 +328,11 @@ class Club(models.Model):
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
     email = models.EmailField(blank=True, null=True)
     email_public = models.BooleanField(default=True)
+    visible_to_public = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="If false, hide the club from unauthenticated users.",
+    )
     facebook = models.URLField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     twitter = models.URLField(blank=True, null=True)
@@ -1035,6 +1040,12 @@ class EventShowing(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)
+    location_visible_to_public = models.BooleanField(
+        default=False,
+        help_text=(
+            "If false, hide this showing's location from unauthenticated users."
+        ),
+    )
     ticket_order_limit = models.IntegerField(default=10)
     ticket_drop_time = models.DateTimeField(null=True, blank=True)
 

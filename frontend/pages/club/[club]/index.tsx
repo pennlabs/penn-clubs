@@ -25,9 +25,11 @@ import {
 } from 'components/common'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useRef, useState } from 'react'
 import Linkify from 'react-linkify'
 import Select from 'react-select'
+import { toast } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
 import { Club, QuestionAnswer, UserInfo, VisitType } from 'types'
@@ -104,6 +106,7 @@ const ClubPage = ({
   questions,
   userInfo,
 }: ClubPageProps): ReactElement<any> => {
+  const router = useRouter()
   const [club, setClub] = useState<Club>(initialClub)
   const [questionSortBy, setQuestionSortBy] = useState<string>('id')
   const scrollToRef = (ref) =>
@@ -160,6 +163,20 @@ const ClubPage = ({
       },
     })
   }, [])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    const value = router.query.visibility_updated
+    if (value !== 'public' && value !== 'private') return
+
+    const label = club.name ? club.name : `This ${OBJECT_NAME_SINGULAR}`
+    toast.success(`${label} is now ${value}.`)
+
+    const { visibility_updated, ...rest } = router.query
+    router.replace({ pathname: router.pathname, query: rest }, undefined, {
+      shallow: true,
+    })
+  }, [router.isReady, router.query.visibility_updated, club.name])
 
   const { code } = club
   if (!code) {

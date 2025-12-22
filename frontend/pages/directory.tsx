@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ReactElement } from 'react'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
-import { Club } from 'types'
+import { Club, UserInfo } from 'types'
 import { doApiRequest } from 'utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -16,6 +16,7 @@ import { SNOW } from '~/constants'
 
 type Props = {
   clubs: Club[]
+  userInfo?: UserInfo
 }
 
 const DirectoryList = styled.ul`
@@ -35,16 +36,27 @@ const DirectoryList = styled.ul`
   }
 `
 
-const Directory = ({ clubs }: Props): ReactElement<any> => {
+const Directory = ({ clubs, userInfo }: Props): ReactElement<any> => {
   return (
     <>
       <Container fullHeight background={SNOW}>
         <Metadata title={`${OBJECT_NAME_TITLE} Directory`} />
         <InfoPageTitle>{OBJECT_NAME_TITLE} Directory</InfoPageTitle>
         <p className="mb-5 has-text-grey">
-          The directory is an alphabetically sorted list of all {clubs.length}{' '}
-          {OBJECT_NAME_PLURAL} on {SITE_NAME}. {OBJECT_NAME_TITLE} that are
-          either inactive or pending approval are displayed in grey.
+          {userInfo === undefined ? (
+            <>
+              The directory is an alphabetically sorted list of all{' '}
+              {clubs.length} {OBJECT_NAME_PLURAL} on {SITE_NAME} that have
+              elected to be visible to the public.
+            </>
+          ) : (
+            <>
+              The directory is an alphabetically sorted list of all{' '}
+              {clubs.length} {OBJECT_NAME_PLURAL} on {SITE_NAME}.{' '}
+              {OBJECT_NAME_TITLE} that are either inactive or pending approval
+              are displayed in grey.
+            </>
+          )}
         </p>
         <DirectoryList>
           {clubs.map((club) => (

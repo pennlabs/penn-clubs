@@ -420,6 +420,18 @@ class EventShowingSerializer(serializers.ModelSerializer):
     def get_ticketed(self, obj):
         return obj.tickets.exists()
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        user = getattr(request, "user", None) if request is not None else None
+        if (
+            not (user is not None and getattr(user, "is_authenticated", False))
+            and not instance.location_visible_to_public
+            and instance.location
+        ):
+            data["location"] = None
+        return data
+
     class Meta:
         model = EventShowing
         fields = [
@@ -428,6 +440,7 @@ class EventShowingSerializer(serializers.ModelSerializer):
             "start_time",
             "end_time",
             "location",
+            "location_visible_to_public",
             "ticket_order_limit",
             "ticket_drop_time",
             "ticketed",
@@ -2678,6 +2691,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     fairs = serializers.SerializerMethodField("get_fairs")
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
+    visible_to_public = serializers.BooleanField(default=False, required=False)
     advisor_set = AdvisorSerializer(many=True, required=False)
     owners = serializers.SerializerMethodField("get_owners")
     officers = serializers.SerializerMethodField("get_officers")
@@ -2701,6 +2715,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + [
             "email_public",
+            "visible_to_public",
             "fairs",
             "files",
             "ics_import_url",

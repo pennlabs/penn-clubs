@@ -842,6 +842,25 @@ export default function ClubEditCard({
       ].filter(({ name }) => isClubFieldShown(name)),
     },
     {
+      name: 'Visibility',
+      type: 'group',
+      description: (
+        <Text>
+          Control whether your {OBJECT_NAME_SINGULAR} appears to people who are
+          not signed in. If this is unchecked, your {OBJECT_NAME_SINGULAR} will
+          not appear in public search results and your public page will return a
+          404 "Not Found" error.
+        </Text>
+      ),
+      fields: [
+        {
+          name: 'visible_to_public',
+          type: 'checkbox',
+          label: `Make this ${OBJECT_NAME_SINGULAR} visible to the public.`,
+        },
+      ].filter(({ name }) => isClubFieldShown(name)),
+    },
+    {
       name: OBJECT_TAB_ADMISSION_LABEL,
       type: 'group',
       description: SHOW_RANK_ALGORITHM ? (
@@ -1140,6 +1159,7 @@ export default function ClubEditCard({
     subtitle: '',
     email: '',
     email_public: true,
+    visible_to_public: true,
     accepting_members: false,
     size: CLUB_SIZES[0].value,
     application_required: CLUB_APPLICATIONS[0].value,
