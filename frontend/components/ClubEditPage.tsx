@@ -112,6 +112,14 @@ const ClubForm = ({
 
   const router = useRouter()
 
+  // Reset state when clubId changes (e.g., navigating from edit page to create page)
+  useEffect(() => {
+    setIsEdit(typeof clubId !== 'undefined')
+    if (typeof clubId === 'undefined') {
+      setClub(null)
+    }
+  }, [clubId])
+
   const notify = (
     msg: string | ReactElement<any>,
     type: TypeOptions = 'info',
