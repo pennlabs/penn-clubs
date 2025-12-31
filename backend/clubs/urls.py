@@ -2,6 +2,7 @@ from django.conf import settings
 from django.urls import include, path
 from rest_framework_nested import routers
 
+from clubs.sitemap import SitemapPathsView
 from clubs.views import (
     AdminNoteViewSet,
     AdvisorViewSet,
@@ -228,6 +229,7 @@ urlpatterns = [
         name="wharton-applications-status",
     ),
     path(r"health/", HealthView.as_view(), name="health"),
+    path(r"sitemap-paths/", SitemapPathsView.as_view(), name="sitemap-paths"),
     path(
         "settings/queue/",
         RegistrationQueueSettingsView.as_view(),
