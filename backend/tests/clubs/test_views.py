@@ -54,6 +54,127 @@ from clubs.models import (
 )
 
 
+class SitemapTestCase(TestCase):
+    """Test sitemap-paths JSON API for next-sitemap integration."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.public_club = Club.objects.create(
+            code="public-club",
+            name="Public Club",
+            active=True,
+            approved=True,
+            visible_to_public=True,
+        )
+        cls.private_club = Club.objects.create(
+            code="private-club",
+            name="Private Club",
+            active=True,
+            approved=True,
+            visible_to_public=False,
+        )
+        cls.inactive_club = Club.objects.create(
+            code="inactive-club",
+            name="Inactive Club",
+            active=False,
+            approved=True,
+            visible_to_public=True,
+        )
+        cls.archived_club = Club.objects.create(
+            code="archived-club",
+            name="Archived Club",
+            active=True,
+            approved=True,
+            visible_to_public=True,
+            archived=True,
+        )
+        cls.unapproved_club = Club.objects.create(
+            code="unapproved-club",
+            name="Unapproved Club",
+            active=True,
+            approved=False,
+            visible_to_public=True,
+        )
+        cls.ghost_club = Club.objects.create(
+            code="ghost-club",
+            name="Ghost Club",
+            active=True,
+            approved=False,
+            ghost=True,
+            visible_to_public=True,
+        )
+        # Create events for testing
+        cls.public_event = Event.objects.create(
+            code="public-event",
+            name="Public Event",
+            club=cls.public_club,
+        )
+        cls.private_club_event = Event.objects.create(
+            code="private-club-event",
+            name="Private Club Event",
+            club=cls.private_club,
+        )
+        cls.global_event = Event.objects.create(
+            code="global-event",
+            name="Global Event",
+            club=None,
+        )
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_sitemap_paths_returns_json(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["Content-Type"], "application/json")
+        self.assertIsInstance(resp.json(), list)
+
+    def test_sitemap_paths_includes_public_clubs(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertIn("/club/public-club/", paths)
+
+    def test_sitemap_paths_includes_ghost_clubs(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertIn("/club/ghost-club/", paths)
+
+    def test_sitemap_paths_excludes_private_clubs(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertNotIn("/club/private-club/", paths)
+
+    def test_sitemap_paths_excludes_inactive_clubs(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertNotIn("/club/inactive-club/", paths)
+
+    def test_sitemap_paths_excludes_archived_clubs(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertNotIn("/club/archived-club/", paths)
+
+    def test_sitemap_paths_excludes_unapproved_clubs(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertNotIn("/club/unapproved-club/", paths)
+
+    def test_sitemap_paths_includes_public_club_events(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertIn(f"/events/{self.public_event.id}/", paths)
+
+    def test_sitemap_paths_includes_global_events(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertIn(f"/events/{self.global_event.id}/", paths)
+
+    def test_sitemap_paths_excludes_private_club_events(self):
+        resp = self.client.get("/api/sitemap-paths/")
+        paths = resp.json()
+        self.assertNotIn(f"/events/{self.private_club_event.id}/", paths)
+
+
 class SearchTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):

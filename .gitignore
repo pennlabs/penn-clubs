@@ -13,6 +13,9 @@ build/
 dist/
 *.egg-info/
 backend/static/
+# Auto-generated sitemap and robots.txt files
+/frontend/public/sitemap*.xml
+/frontend/public/robots.txt
 
 # Code testing/coverage
 .tox

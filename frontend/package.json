@@ -38,6 +38,7 @@
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.48",
     "next": "~15.2.7",
+    "next-sitemap": "^4.2.3",
     "react": "^19.2.2",
     "react-beautiful-dnd": "^13.1.1",
     "react-big-calendar": "^1.19.4",
@@ -68,6 +69,7 @@
     "dev": "bunx next --turbo",
     "ssl-proxy": "bunx local-ssl-proxy --source 3001 --target 3000 --key localhost+2-key.pem --cert localhost+2.pem",
     "build": "env NODE_ENV=production bunx next build",
+    "postbuild": "next-sitemap",
     "start": "env NODE_ENV=production bunx next start",
     "storybook": "start-storybook -s ./public -p 6006",
     "build-storybook": "build-storybook -o public/storybook"
