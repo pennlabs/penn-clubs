@@ -61,17 +61,24 @@ class SitemapPathsView(APIView):
         for code in visible_clubs.values_list("code", flat=True):
             paths.append(f"/club/{code}/")
 
-        # Query events from visible clubs (or global events with club=null)
-        # Same visibility logic as EventViewSet for public viewers
+        # Query events matching EventViewSet.get_queryset() for public viewers
+        # FAIR events can come from clubs not in visible_clubs, so we can't
+        # restrict to club__in=visible_clubs first
         events = (
             Event.objects.filter(
-                Q(club__in=visible_clubs) | Q(club__isnull=True),
+                # Must not be archived
+                Q(club__isnull=True) | Q(club__archived=False),
             )
             .filter(
-                Q(club__isnull=True)
-                | Q(club__approved=True)
+                # Approval/type filter (same as EventViewSet lines 3218-3223)
+                Q(club__approved=True)
                 | Q(type=Event.FAIR)
                 | Q(club__ghost=True)
+                | Q(club__isnull=True),
+            )
+            .filter(
+                # Public viewer filter (same as EventViewSet line 3228)
+                Q(club__isnull=True) | Q(club__visible_to_public=True),
             )
             .values_list("id", flat=True)
         )

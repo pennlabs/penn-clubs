@@ -25,12 +25,7 @@ module.exports = {
   // Fetch dynamic club and event URLs from backend
   additionalPaths: async (config) => {
     try {
-      const apiUrl = process.env.DOMAIN
-        ? process.env.DOMAIN.startsWith('http')
-          ? process.env.DOMAIN
-          : `https://${process.env.DOMAIN}`
-        : 'https://pennclubs.com'
-      const res = await fetch(`${apiUrl}/api/sitemap-paths/`)
+      const res = await fetch(`${config.siteUrl}/api/sitemap-paths/`)
       if (!res.ok) {
         return []
       }
@@ -56,6 +51,10 @@ module.exports = {
           '/create',
           '/renew',
           '/invite/',
+          '/applications',
+          '/user/',
+          '/wharton/',
+          '/health',
         ],
       },
     ],
