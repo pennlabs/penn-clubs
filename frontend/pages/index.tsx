@@ -86,9 +86,9 @@ const displayClubs = (clubs) => {
         <ClubInfo>
           <ClubName>{club.name}</ClubName>
           <ClubTags>
-            {club.tags?.slice(0, 3).map((tag) => (
-              <ClubTag key={tag.id}>{tag.name}</ClubTag>
-            ))}
+            {club.tags
+              ?.slice(0, 3)
+              .map((tag) => <ClubTag key={tag.id}>{tag.name}</ClubTag>)}
           </ClubTags>
         </ClubInfo>
       </ClubResult>

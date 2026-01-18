@@ -9,10 +9,10 @@ import {
   WideContainer,
 } from 'components/common'
 import DisplayButtons from 'components/DisplayButtons'
-import DropdownFilter from 'components/DropdownFilter'
 import { FuseTag } from 'components/FilterSearch'
 import { ActionLink } from 'components/Header/Feedback'
 import PaginatedClubDisplay from 'components/PaginatedClubDisplay'
+import { RadioFilter } from 'components/RadioFilter'
 import SearchBar, {
   Collapsible,
   SearchBarCheckboxItem,
@@ -71,7 +71,7 @@ const ClearAllLink = styled.span`
   color: ${CLUBS_GREY_LIGHT};
   text-decoration: none !important;
   background: transparent !important;
-  fontsize: 0.7em;
+  font-size: 0.7em;
   margin: 5px;
 
   &:hover {
@@ -83,7 +83,7 @@ const ResultsText = styled.div`
   color: ${CLUBS_GREY_LIGHT};
   text-decoration: none !important;
   background: transparent !important;
-  fontsize: 0.7em;
+  font-size: 0.7em;
   margin: 5px;
 
   ${mediaMaxWidth(PHONE)} {
@@ -695,9 +695,19 @@ const Splash = (props: SplashProps): ReactElement<any> => {
       searchInput.classification_group.length > 0
         ? searchInput.classification_group
         : 'all'
-    return classificationGroupDropdownOptions.filter(
+    const selected = classificationGroupDropdownOptions.filter(
       (opt) => opt.value === current,
     )
+    // Ensure 'all' (Both) is selected by default if nothing is found
+    if (
+      selected.length === 0 &&
+      classificationGroupDropdownOptions.length > 0
+    ) {
+      return classificationGroupDropdownOptions.filter(
+        (opt) => opt.value === 'all',
+      )
+    }
+    return selected
   }, [classificationGroupDropdownOptions, searchInput.classification_group])
 
   const yearOptions = props.years.map(({ id, name }) => ({
@@ -745,7 +755,7 @@ const Splash = (props: SplashProps): ReactElement<any> => {
           <SearchBarOptionItem param="ordering" label="Ordering" />
           {classificationGroupDropdownOptions.length > 0 && (
             <Collapsible name="Student Level">
-              <DropdownFilter
+              <RadioFilter
                 name="classification_group"
                 options={classificationGroupDropdownOptions}
                 selected={classificationGroupSelected}
