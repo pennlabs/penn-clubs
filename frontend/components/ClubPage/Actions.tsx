@@ -289,20 +289,18 @@ const Actions = ({
                 updateRequests={updateRequests}
               />
             )}
-          {SHOW_APPLICATIONS &&
-            !isMembershipOpen &&
-            (!inClub || club.is_wharton) && (
-              <Link
-                legacyBehavior
-                href={CLUB_APPLY_ROUTE()}
-                as={CLUB_APPLY_ROUTE(code)}
-                passHref
-              >
-                <ActionButton className="button is-success">
-                  <Icon name="edit" /> Apply
-                </ActionButton>
-              </Link>
-            )}
+          {SHOW_APPLICATIONS && !isMembershipOpen && (
+            <Link
+              legacyBehavior
+              href={CLUB_APPLY_ROUTE()}
+              as={CLUB_APPLY_ROUTE(code)}
+              passHref
+            >
+              <ActionButton className="button is-success">
+                <Icon name="edit" /> {inClub ? 'Reapply' : 'Apply'}
+              </ActionButton>
+            </Link>
+          )}
           {canEdit && (
             <Link
               legacyBehavior
