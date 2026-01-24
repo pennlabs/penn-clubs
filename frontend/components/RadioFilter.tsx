@@ -105,6 +105,11 @@ export const RadioFilter = ({
                 name={name}
                 value={String(tag.value)}
                 checked={isSelected(tag)}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  logEvent('filter', name)
+                  updateTag(tag, name)
+                }}
                 aria-checked={isSelected(tag) ? 'true' : 'false'}
               />
               <span>
