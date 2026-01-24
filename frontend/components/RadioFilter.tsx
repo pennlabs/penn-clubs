@@ -93,7 +93,7 @@ export const RadioFilter = ({
         {options.map((tag: SelectableTag & { color?: string }) => (
           <RadioRow
             key={tag.label}
-            color={color}
+            $color={color}
             onClick={() => {
               logEvent('filter', name)
               updateTag(tag, name)
@@ -105,10 +105,6 @@ export const RadioFilter = ({
                 name={name}
                 value={String(tag.value)}
                 checked={isSelected(tag)}
-                onChange={() => {
-                  logEvent('filter', name)
-                  updateTag(tag, name)
-                }}
                 aria-checked={isSelected(tag) ? 'true' : 'false'}
               />
               <span>
