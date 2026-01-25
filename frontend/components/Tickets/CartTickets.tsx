@@ -1,10 +1,9 @@
 import { css } from '@emotion/react'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { EmptyState, Modal, Subtitle, Text } from '~/components/common'
-import PaymentForm from '~/components/Tickets/PaymentForm'
 import { TicketCard } from '~/components/Tickets/TicketCard'
 import { BORDER, BORDER_RADIUS, mediaMaxWidth, SM, WHITE } from '~/constants'
 import { CountedEventTicket, EventTicket } from '~/types'
@@ -130,54 +129,65 @@ const combineTickets = (tickets: EventTicket[]): CountedEventTicketStatus[] =>
   )
 
 const useCheckout = (paid: boolean) => {
-  const [showModal, setShowModal] = useState(false)
-  const [captureContext, setCaptureContext] = useState<string>()
+  const [isProcessing, setIsProcessing] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const [paymentParams, setPaymentParams] = useState<Record<string, string>>({})
+  const [cybersourceUrl, setCybersourceUrl] = useState<string>('')
   const navigate = useRouter()
 
-  const onModalClose = (force: boolean) => {
-    if (force) {
-      setShowModal(false)
-      return
-    }
-    const confirmed = confirm(
-      'Are you sure you want to exit the checkout process? You could lose items in your cart!',
-    )
-    if (confirmed) {
-      setShowModal(false)
+  const initiateCheckout = async () => {
+    setIsProcessing(true)
+    try {
+      const res = await doApiRequest(
+        `/tickets/initiate_checkout/?format=json`,
+        {
+          method: 'POST',
+          body: null,
+        },
+      )
+      const data = await res.json()
+
+      if (!data.success) {
+        toast.error(data.detail)
+        setIsProcessing(false)
+        return
+      }
+
+      if (data.sold_free_tickets) {
+        toast.success('Free tickets purchased successfully!')
+        setTimeout(() => {
+          navigate.push('/settings#Tickets')
+        }, 500)
+        setIsProcessing(false)
+        return
+      }
+
+      // For paid tickets, set up form and submit to CyberSource
+      setCybersourceUrl(data.cybersource_url)
+      setPaymentParams(data.payment_params)
+    } catch (error) {
+      toast.error('An error occurred initiating checkout. Please try again.')
+      setIsProcessing(false)
     }
   }
 
-  const fetchToken = async () => {
-    const res = await doApiRequest(`/tickets/initiate_checkout/?format=json`, {
-      method: 'POST',
-      body: null,
-    })
-    const data = await res.json()
-    if (!data.success) {
-      // TODO: handle free ticket case
-      toast.error(data.detail)
-    } else if (data.sold_free_tickets) {
-      onModalClose(true)
-      toast.success('Free tickets purchased successfully!')
-      setTimeout(() => {
-        navigate.push('/settings#Tickets')
-      }, 500)
+  // Submit form when params are set
+  useEffect(() => {
+    if (
+      cybersourceUrl &&
+      Object.keys(paymentParams).length > 0 &&
+      formRef.current
+    ) {
+      formRef.current.submit()
     }
-    return data.detail
-  }
+  }, [cybersourceUrl, paymentParams])
 
   return {
-    showModal,
-    onClose: onModalClose,
-    checkout: async () => {
-      if (paid) {
-        // heuristic on frontend to skip modal if checking out free tickets
-        setShowModal(true)
-      }
-      const token = await fetchToken()
-      setCaptureContext(token)
-    },
-    captureContext,
+    isProcessing,
+    checkout: initiateCheckout,
+    formRef,
+    paymentParams,
+    cybersourceUrl,
   }
 }
 
@@ -186,7 +196,6 @@ interface CountedEventTicketStatus extends CountedEventTicket {
 }
 
 const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
-  const navigate = useRouter()
   const [removeModal, setRemoveModal] =
     useState<CountedEventTicketStatus | null>(null)
   const [countedTickets, setCountedTickets] = useState<
@@ -194,12 +203,8 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   >([])
 
   const atLeastOnePaid = tickets.some((ticket) => parseFloat(ticket.price) > 0)
-  const {
-    showModal,
-    onClose: onModalClose,
-    checkout,
-    captureContext,
-  } = useCheckout(atLeastOnePaid)
+  const { isProcessing, checkout, formRef, paymentParams, cybersourceUrl } =
+    useCheckout(atLeastOnePaid)
 
   useEffect(() => {
     setCountedTickets(combineTickets(tickets))
@@ -345,6 +350,17 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
   }
   return (
     <>
+      {/* Hidden form for CyberSource Secure Acceptance redirect */}
+      <form
+        ref={formRef}
+        action={cybersourceUrl}
+        method="POST"
+        style={{ display: 'none' }}
+      >
+        {Object.entries(paymentParams).map(([key, value]) => (
+          <input key={key} type="hidden" name={key} value={value} />
+        ))}
+      </form>
       <div>
         <Modal show={removeModal !== null}>
           <ModalContent>
@@ -381,7 +397,7 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
               ticket={ticket}
               hideActions
               removable
-              editable={!ticket.pendingEdit}
+              editable={!ticket.pendingEdit && !isProcessing}
               onChange={(count, propogateCount) => {
                 handleUpdateTicket(ticket, count, propogateCount)
               }}
@@ -393,42 +409,15 @@ const CartTickets: React.FC<CartTicketsProps> = ({ tickets, soldOut }) => {
         </div>
         <Summary tickets={countedTickets} />
         <button
-          className="button is-primary is-fullwidth mt-4"
+          className={`button is-primary is-fullwidth mt-4 ${isProcessing ? 'is-loading' : ''}`}
           onClick={() => {
             handleInitiateCheckout()
           }}
+          disabled={isProcessing}
         >
-          Proceed to Checkout
+          {isProcessing ? 'Processing...' : 'Proceed to Checkout'}
         </button>
       </div>
-      <Modal show={showModal} closeModal={() => onModalClose(false)}>
-        {captureContext && (
-          <PaymentForm
-            captureContext={captureContext}
-            onTrasientTokenReceived={async (transientToken) => {
-              const res = await doApiRequest(
-                '/tickets/complete_checkout/?format=json',
-                {
-                  method: 'POST',
-                  body: {
-                    transient_token: transientToken,
-                  },
-                },
-              )
-              const data = await res.json()
-              if (data.success) {
-                onModalClose(true)
-                toast.success('Tickets purchased successfully!')
-                setTimeout(() => {
-                  navigate.push('/settings#Tickets')
-                }, 500)
-              } else {
-                toast.error('An error occurred while processing your payment.')
-              }
-            }}
-          />
-        )}
-      </Modal>
     </>
   )
 }

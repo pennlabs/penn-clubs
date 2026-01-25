@@ -2169,8 +2169,10 @@ class Cart(models.Model):
     owner = models.OneToOneField(
         get_user_model(), related_name="cart", on_delete=models.CASCADE
     )
-    # Capture context from Cybersource should be 8297 chars
-    checkout_context = models.CharField(max_length=8297, blank=True, null=True)
+    # Transaction UUID for looking up the cart when CyberSource POSTs back
+    pending_transaction_uuid = models.UUIDField(
+        null=True, blank=True, db_index=True, unique=True
+    )
 
 
 class TicketQuerySet(models.query.QuerySet):
@@ -2196,15 +2198,31 @@ class TicketManager(models.Manager):
 
 class TicketTransactionRecord(models.Model):
     """
-    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    Represents an instance of a transaction record for a ticket, used for bookkeeping.
+    Stores payment information from CyberSource Secure Acceptance.
     """
 
-    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    # CyberSource transaction identifiers
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
+    request_id = models.CharField(max_length=100, null=True, blank=True)
+    reference_number = models.CharField(max_length=100, null=True, blank=True)
+    transaction_uuid = models.UUIDField(null=True, blank=True)
+
+    # Transaction result
+    decision = models.CharField(max_length=20, null=True, blank=True)
+    reason_code = models.CharField(max_length=10, null=True, blank=True)
+
+    # Payment details
     total_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    buyer_phone = PhoneNumberField(null=True, blank=True)
+
+    # Buyer information
     buyer_first_name = models.CharField(max_length=100)
     buyer_last_name = models.CharField(max_length=100)
     buyer_email = models.EmailField(blank=True, null=True)
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Ticket(models.Model):
