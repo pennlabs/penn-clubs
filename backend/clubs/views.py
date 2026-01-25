@@ -6977,7 +6977,8 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
         cart = (
-            Cart.objects.filter(pending_transaction_uuid=transaction_uuid)
+            Cart.objects.select_for_update()
+            .filter(pending_transaction_uuid=transaction_uuid)
             .prefetch_related("tickets")
             .first()
         )
