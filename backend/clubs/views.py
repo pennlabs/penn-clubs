@@ -7014,6 +7014,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
         # Payment was successful - verify tickets are still held
+        Ticket.objects.update_holds()
         tickets = cart.tickets.filter(holder=user, owner__isnull=True)
         if tickets.count() != cart.tickets.count():
             # Hold expired during payment - this is a race condition
@@ -7022,11 +7023,14 @@ class TicketViewSet(viewsets.ModelViewSet):
             cart.pending_transaction_uuid = None
             cart.save()
 
+            error_msg = (
+                "Your ticket hold expired during payment. "
+                "Please contact support with reference: "
+                f"{req_reference_number}"
+            )
+
             return HttpResponseRedirect(
-                f"{settings.FRONTEND_URL}/events/checkout?"
-                f"error={quote('Your ticket hold expired during payment. ')}"
-                f"error={quote('Please contact support with reference: ')}"
-                f"error={quote(req_reference_number)}"
+                f"{settings.FRONTEND_URL}/events/checkout?error={quote(error_msg)}"
             )
 
         # Build order info for _give_tickets
