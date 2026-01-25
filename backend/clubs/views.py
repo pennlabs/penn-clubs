@@ -12,7 +12,7 @@ import re
 import secrets
 import string
 import uuid
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from functools import wraps
 from urllib.parse import quote, urlparse
 
@@ -7034,9 +7034,17 @@ class TicketViewSet(viewsets.ModelViewSet):
                 f"{settings.FRONTEND_URL}/events/checkout?error={quote(error_msg)}"
             )
 
+        try:
+            total_amount = Decimal(params.get("req_amount", "0.00") or "0.00")
+        except (InvalidOperation, TypeError, ValueError):
+            return HttpResponseRedirect(
+                f"{settings.FRONTEND_URL}/events/checkout?"
+                f"error={quote('Invalid payment amount received')}"
+            )
+
         # Build order info for _give_tickets
         order_info = {
-            "total_amount": Decimal(params.get("req_amount", "0.00")),
+            "total_amount": total_amount,
             "first_name": params.get("req_bill_to_forename", ""),
             "last_name": params.get("req_bill_to_surname", ""),
             "email": params.get("req_bill_to_email", ""),
