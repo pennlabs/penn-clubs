@@ -21,12 +21,11 @@ EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
 # Allow http callback for DLA
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-# Cybersource settings
-CYBERSOURCE_CONFIG = {
-    "authentication_type": "http_signature",
-    "merchantid": "testrest",
-    "merchant_keyid": "08c94330-f618-42a3-b09d-e1e43be5efda",
-    "merchant_secretkey": "yBJxy6LjM2TmcPGu+GaJrHtkke25fPpUX+UY6/L/1tE=",
-    "run_environment": "apitest.cybersource.com",
-}
-CYBERSOURCE_TARGET_ORIGIN = "https://localhost:3001"
+# Cybersource Secure Acceptance Hosted Checkout settings (TEST environment)
+CYBERSOURCE_SA_PROFILE_ID = "test-profile-id"
+CYBERSOURCE_SA_ACCESS_KEY = "test-access-key"
+CYBERSOURCE_SA_SECRET_KEY = "test-secret-key"
+CYBERSOURCE_SA_URL = "https://testsecureacceptance.cybersource.com/pay"
+
+# Frontend URL for redirects
+FRONTEND_URL = "http://localhost:3000"

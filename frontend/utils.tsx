@@ -264,7 +264,8 @@ export function doApiRequest(
   data.credentials = 'include'
   if (typeof document !== 'undefined') {
     data.headers = data.headers || {}
-    if (!(data.body instanceof FormData)) {
+    // Only set Content-Type for requests with a body (not GET requests)
+    if (data.body && !(data.body instanceof FormData)) {
       data.headers['Content-Type'] = 'application/json'
     }
     data.headers['X-CSRFToken'] = (/csrftoken=(\w+)/.exec(document.cookie) || [
