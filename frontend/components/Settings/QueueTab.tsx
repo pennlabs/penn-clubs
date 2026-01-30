@@ -412,6 +412,28 @@ const QueueSettingsButtonStack = styled.div<{ direction: 'column' | 'row' }>`
   gap: 0.5rem;
 `
 
+const Tooltip = styled.span`
+  position: relative;
+  cursor: pointer;
+
+  &:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+  }
+`
+
+// ...existing code...
+
 const QueueSettingsButton = ({
   open,
   for: queueType,
@@ -550,8 +572,6 @@ const QueueSchedulerModal = ({
       setRegistrationQueueSettings(refreshedSettings)
       toast.success('Successfully updated queue settings.')
     } catch (err) {}
-    // setApprove(true)
-    // setShowModal(true)
     closeModal()
   }
 
@@ -618,7 +638,6 @@ const QueueSchedulerModal = ({
             </>
           )}{' '}
         </div>
-        {/* <label>Date and Time</label> */}
         <label>
           Schedule when the{' '}
           <b>
@@ -636,7 +655,6 @@ const QueueSchedulerModal = ({
         <ModalDatePickerWrapper>
           <DatePicker
             selected={selectedDate}
-            // onCalendarOpen={() => {setSelectedDate(new Date)}}
             onChange={(date: Date) => {
               if (date <= now) {
                 date = getNextValidDateTime()
@@ -645,7 +663,6 @@ const QueueSchedulerModal = ({
             }}
             onChangeRaw={(e) => {
               e.preventDefault() // Currently prevents manual text input. If implement, add checking for valid times
-              // const dateStr = e.target.value.trim()
             }}
             showTimeSelect
             dateFormat="MM/dd/yyyy h:mm aa"
@@ -661,7 +678,6 @@ const QueueSchedulerModal = ({
             maxTime={maxTime}
             placeholderText="Select date and time"
             className="input"
-            // portalId="root-portal"
           />
           <button
             type="button"
@@ -674,16 +690,11 @@ const QueueSchedulerModal = ({
         </ModalDatePickerWrapper>
 
         <div className="buttons">
-          <button
-            className="button is-success"
-            // disabled={!selectedCodes.length || loading}
-            onClick={saveScheduledDate}
-          >
+          <button className="button is-success" onClick={saveScheduledDate}>
             <Icon name="check" /> Confirm
           </button>
           <button
             className="button is-danger"
-            // disabled={!selectedCodes.length || loading}
             onClick={() => {
               closeModal()
             }}
@@ -854,7 +865,19 @@ const QueueTab = (): ReactElement => {
         <>
           <QueueSectionHeader>
             <div>
-              <SmallTitle>Status</SmallTitle>
+              <div style={{ display: 'flex' }}>
+                <SmallTitle>Status</SmallTitle>
+                <Tooltip
+                  data-tooltip={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
+                >
+                  <Icon
+                    name="clock"
+                    className="ml-1"
+                    size="0.9rem"
+                    style={{ marginTop: '3px' }}
+                  />
+                </Tooltip>
+              </div>
               <div className="mb-3">
                 <div>
                   The <b>reapproval request queue</b> is currently
@@ -974,11 +997,6 @@ const QueueTab = (): ReactElement => {
                     </>
                   )}
                   .
-                  <span
-                    title={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
-                  >
-                    <Icon name="clock" className="ml-1" />
-                  </span>
                 </div>
               </div>
             </div>
