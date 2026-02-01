@@ -257,7 +257,15 @@ ZOOM_VERIFICATION_TOKEN = os.environ.get("ZOOM_VERIFICATION_TOKEN")
 PHONENUMBER_DB_FORMAT = "NATIONAL"
 PHONENUMBER_DEFAULT_REGION = "US"
 
-# Cybersource settings
-CYBERSOURCE_CLIENT_VERSION = "0.15"
+# Cybersource Secure Acceptance Hosted Checkout settings
+# These must be configured per-environment
+CYBERSOURCE_SA_PROFILE_ID = None
+CYBERSOURCE_SA_ACCESS_KEY = None
+CYBERSOURCE_SA_SECRET_KEY = None
+CYBERSOURCE_SA_URL = None  # Test or production URL
+CYBERSOURCE_SA_MERCHANT_ID = "upenn8504"
+
+# Frontend URL for redirects after payment
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://pennclubs.com")
 
 OSA_KEYS = None

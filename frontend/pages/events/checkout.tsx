@@ -1,5 +1,7 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next'
-import React from 'react'
+import { useRouter } from 'next/router'
+import React, { useEffect } from 'react'
+import { toast } from 'react-toastify'
 
 import { BaseLayout } from '~/components/BaseLayout'
 import { Container, Metadata, Title } from '~/components/common'
@@ -45,6 +47,30 @@ const TicketsCheckoutPage: React.FC<Props> = ({
   initialCart,
   soldOut,
 }) => {
+  const router = useRouter()
+  const { success, error, cancelled } = router.query
+
+  useEffect(() => {
+    // Handle payment result from CyberSource redirect
+    if (success === 'true') {
+      toast.success('Payment successful! Your tickets have been purchased.')
+      // Redirect to tickets page after showing success message
+      setTimeout(() => {
+        router.push('/settings#Tickets')
+      }, 1500)
+    } else if (error) {
+      // Display error message from payment failure
+      const errorMessage = Array.isArray(error) ? error.join('') : error
+      toast.error(errorMessage, { autoClose: false })
+      // Clean up URL
+      router.replace('/events/checkout', undefined, { shallow: true })
+    } else if (cancelled === 'true') {
+      toast.info('Payment was cancelled. Your cart has been preserved.')
+      // Clean up URL
+      router.replace('/events/checkout', undefined, { shallow: true })
+    }
+  }, [success, error, cancelled, router])
+
   if (!baseProps.auth.authenticated) {
     return (
       <BaseLayout {...baseProps} authRequired>
@@ -60,7 +86,16 @@ const TicketsCheckoutPage: React.FC<Props> = ({
         <BetaTag>
           <Title>Checkout</Title>
         </BetaTag>
-        <CartTickets tickets={initialCart} soldOut={soldOut} />
+        {success === 'true' ? (
+          <div className="notification is-success">
+            <p>
+              <strong>Payment successful!</strong> Redirecting to your
+              tickets...
+            </p>
+          </div>
+        ) : (
+          <CartTickets tickets={initialCart} soldOut={soldOut} />
+        )}
       </Container>
     </BaseLayout>
   )

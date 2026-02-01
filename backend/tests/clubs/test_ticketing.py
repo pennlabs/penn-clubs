@@ -1,10 +1,9 @@
-import json
-from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
-from unittest.mock import patch
+from uuid import uuid4
 
 import freezegun
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.db.models import Count
@@ -24,6 +23,7 @@ from clubs.models import (
     TicketTransactionRecord,
     TicketTransferRecord,
 )
+from clubs.views import generate_cybersource_signature
 
 
 def commonSetUp(self):
@@ -950,72 +950,56 @@ class TicketEventTestCase(TestCase):
 
 
 @dataclass
-class MockPaymentResponse:
-    status: str = "AUTHORIZED"
-    reconciliation_id: str = "abced"
+class MockCybersourceResponse:
+    """Mock response data from CyberSource Secure Acceptance"""
 
+    transaction_uuid: str = None
+    decision: str = "ACCEPT"
+    reason_code: str = "100"
+    transaction_id: str = "test_transaction_123"
+    request_id: str = "test_request_123"
+    amount: str = "20.00"
+    first_name: str = "Rohan"
+    last_name: str = "Gupta"
+    email: str = "r@g.com"
 
-@contextmanager
-def mock_cybersource_apis():
-    """Mock cybersource APIs and validate_transient_token"""
-    with (
-        patch(
-            ".".join(
+    def __post_init__(self):
+        if self.transaction_uuid is None:
+            self.transaction_uuid = str(uuid4())
+
+    def to_post_params(self) -> dict:
+        """Generate POST params as CyberSource would send them"""
+        params = {
+            "decision": self.decision,
+            "reason_code": self.reason_code,
+            "transaction_id": self.transaction_id,
+            "request_id": self.request_id,
+            "req_transaction_uuid": self.transaction_uuid,
+            "req_reference_number": self.transaction_uuid,
+            "req_amount": self.amount,
+            "req_bill_to_forename": self.first_name,
+            "req_bill_to_surname": self.last_name,
+            "req_bill_to_email": self.email,
+            "signed_field_names": ",".join(
                 [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
+                    "decision",
+                    "reason_code",
+                    "transaction_id",
+                    "request_id",
+                    "req_transaction_uuid",
+                    "req_reference_number",
+                    "req_amount",
+                    "req_bill_to_forename",
+                    "req_bill_to_surname",
+                    "req_bill_to_email",
                 ]
-            )
-        ) as fake_cap_context,
-        patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "TransientTokenDataApi",
-                    "get_transaction_for_transient_token",
-                ]
-            )
-        ) as fake_get_transaction,
-        patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "PaymentsApi",
-                    "create_payment",
-                ]
-            )
-        ) as fake_create_payment,
-        patch("clubs.views.validate_transient_token") as fake_validate_tt,
-    ):
-        fake_validate_tt.return_value = (True, "")
-        fake_cap_context.return_value = "abcde", 200, None
-        fake_get_transaction.return_value = (
-            "",
-            200,
-            json.dumps(
-                {
-                    "orderInformation": {
-                        "amountDetails": {
-                            "totalAmount": 20,
-                        },
-                        "billTo": {
-                            "firstName": "Rohan",
-                            "lastName": "Gupta",
-                            "phoneNumber": "3021239234",
-                            "email": "r@g.com",
-                        },
-                    }
-                }
             ),
+        }
+        # Sign the params
+        params["signature"] = generate_cybersource_signature(
+            params, settings.CYBERSOURCE_SA_SECRET_KEY
         )
-        fake_create_payment.return_value = MockPaymentResponse(), 200, ""
-        yield (
-            fake_cap_context,
-            fake_get_transaction,
-            fake_create_payment,
-            fake_validate_tt,
-        )
+        return params
 
 
 class TicketTestCase(TestCase):
@@ -1289,14 +1273,19 @@ class TicketTestCase(TestCase):
         cart.tickets.add(*tickets_to_add)
         cart.save()
 
+        transaction_uuid = uuid4()
         order_info = {
-            "amountDetails": {"totalAmount": TicketViewSet._calculate_cart_total(cart)},
-            "billTo": {
-                "firstName": self.user1.first_name,
-                "lastName": self.user1.last_name,
-                "phoneNumber": "3021239234",
-                "email": self.user1.email,
-            },
+            "total_amount": TicketViewSet._calculate_cart_total(cart),
+            "first_name": self.user1.first_name,
+            "last_name": self.user1.last_name,
+            "email": self.user1.email,
+            "phone": "3021239234",
+            "transaction_id": "test_txn_123",
+            "request_id": "test_req_123",
+            "reference_number": str(transaction_uuid),
+            "transaction_uuid": transaction_uuid,
+            "decision": "ACCEPT",
+            "reason_code": "100",
         }
 
         TicketViewSet._place_hold_on_tickets(self.user1, cart.tickets)
@@ -1304,7 +1293,7 @@ class TicketTestCase(TestCase):
             self.user1,
             order_info,
             cart,
-            reconciliation_id=MockPaymentResponse().reconciliation_id,
+            transaction_uuid,
         )
 
         # Check that tickets are assigned their owner
@@ -1317,7 +1306,7 @@ class TicketTestCase(TestCase):
 
         # Check that transaction record is created
         record_exists = TicketTransactionRecord.objects.filter(
-            reconciliation_id=MockPaymentResponse().reconciliation_id
+            transaction_uuid=transaction_uuid
         ).exists()
         self.assertTrue(record_exists)
 
@@ -1354,26 +1343,26 @@ class TicketTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # Initiate checkout
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            cap_context_data = "abcde"
-            fake_cap_context.return_value = cap_context_data, 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            # No free tickets should be sold
-            self.assertFalse(resp.data["sold_free_tickets"])
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
 
-        # Capture context should be tied to cart
+        # No free tickets should be sold
+        self.assertFalse(data["sold_free_tickets"])
+
+        # Verify response contains CyberSource payment params
+        self.assertTrue(data["success"])
+        self.assertIn("cybersource_url", data)
+        self.assertIn("payment_params", data)
+        self.assertIn("signature", data["payment_params"])
+        self.assertIn("transaction_uuid", data["payment_params"])
+
+        transaction_uuid = data["payment_params"]["transaction_uuid"]
+
+        # Transaction UUID should be tied to cart
         cart = Cart.objects.filter(owner=self.user1).first()
-        self.assertIsNotNone(cart.checkout_context)
-        self.assertEqual(cart.checkout_context, cap_context_data)
+        self.assertIsNotNone(cart.pending_transaction_uuid)
+        self.assertEqual(str(cart.pending_transaction_uuid), transaction_uuid)
 
         # Tickets should be held
         held_tickets = Ticket.objects.filter(holder=self.user1)
@@ -1404,26 +1393,26 @@ class TicketTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # Initiate checkout
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            cap_context_data = "abcde"
-            fake_cap_context.return_value = cap_context_data, 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            # Free ticket should be sold with non-free tickets if purchased together
-            self.assertFalse(resp.data["sold_free_tickets"])
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
 
-        # Capture context should be tied to cart
+        # Free ticket should be sold with non-free tickets if purchased together
+        self.assertFalse(data["sold_free_tickets"])
+
+        # Verify response contains CyberSource payment params
+        self.assertTrue(data["success"])
+        self.assertIn("cybersource_url", data)
+        self.assertIn("payment_params", data)
+        self.assertIn("signature", data["payment_params"])
+        self.assertIn("transaction_uuid", data["payment_params"])
+
+        transaction_uuid = data["payment_params"]["transaction_uuid"]
+
+        # Transaction UUID should be tied to cart
         cart = Cart.objects.filter(owner=self.user1).first()
-        self.assertIsNotNone(cart.checkout_context)
-        self.assertEqual(cart.checkout_context, cap_context_data)
+        self.assertIsNotNone(cart.pending_transaction_uuid)
+        self.assertEqual(str(cart.pending_transaction_uuid), transaction_uuid)
 
         # Tickets should be held
         held_tickets = Ticket.objects.filter(holder=self.user1)
@@ -1457,22 +1446,13 @@ class TicketTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        # Initiate checkout
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            cap_context_data = "abcde"
-            fake_cap_context.return_value = cap_context_data, 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            # check that free tickets were sold
-            self.assertTrue(resp.data["sold_free_tickets"])
+        # Initiate checkout - free tickets are sold immediately
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
+
+        # check that free tickets were sold
+        self.assertTrue(data["sold_free_tickets"])
 
         # Ownership transferred
         owned_tickets = Ticket.objects.filter(owner=self.user1)
@@ -1486,9 +1466,10 @@ class TicketTestCase(TestCase):
         held_tickets = Ticket.objects.filter(holder=self.user1)
         self.assertEqual(held_tickets.count(), 0, held_tickets)
 
-        # Check that transaction record is created
+        # Check that transaction record is created with null transaction_uuid
+        # (free tickets don't go through CyberSource)
         record_exists = TicketTransactionRecord.objects.filter(
-            reconciliation_id="None"
+            transaction_uuid__isnull=True
         ).exists()
         self.assertTrue(record_exists)
 
@@ -1523,21 +1504,10 @@ class TicketTestCase(TestCase):
         )
         self.event_showing1.save()
 
-        # Initiate checkout
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            cap_context_data = "abcde"
-            fake_cap_context.return_value = cap_context_data, 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            # Ticket should not be checked out
-            self.assertEqual(resp.status_code, 403, resp.content)
+        # Initiate checkout - should fail because ticket drop time hasn't passed
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        # Ticket should not be checked out
+        self.assertEqual(resp.status_code, 403, resp.content)
 
     def test_initiate_concurrent_checkouts(self):
         self.client.login(username=self.user1.username, password="test")
@@ -1560,43 +1530,27 @@ class TicketTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
         # Initiate first checkout
-        cap_context_data = "abc"
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            fake_cap_context.return_value = cap_context_data, 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
+        transaction_uuid_1 = data["payment_params"]["transaction_uuid"]
 
         cart = Cart.objects.filter(owner=self.user1).first()
-        cap_context_1 = cart.checkout_context
+        stored_uuid_1 = str(cart.pending_transaction_uuid)
+        self.assertEqual(stored_uuid_1, transaction_uuid_1)
 
         # Initiate second checkout
-        cap_context_data = "def"  # simulate capture context changing between checkouts
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            fake_cap_context.return_value = cap_context_data, 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
+        transaction_uuid_2 = data["payment_params"]["transaction_uuid"]
 
-        cart = Cart.objects.filter(owner=self.user1).first()
-        cap_context_2 = cart.checkout_context
+        cart.refresh_from_db()
+        stored_uuid_2 = str(cart.pending_transaction_uuid)
+        self.assertEqual(stored_uuid_2, transaction_uuid_2)
 
-        # Stored capture context should change between checkouts
-        self.assertNotEqual(cap_context_1, cap_context_2)
+        # Stored transaction UUID should change between checkouts
+        self.assertNotEqual(stored_uuid_1, stored_uuid_2)
 
     def test_initiate_checkout_fails_with_empty_cart(self):
         self.client.login(username=self.user1.username, password="test")
@@ -1605,20 +1559,10 @@ class TicketTestCase(TestCase):
         cart, created = Cart.objects.get_or_create(owner=self.user1)
         self.assertTrue(created)
 
-        # Initiate checkout, fail with 400
+        # Initiate checkout, fail with 400 (cart is empty)
         # NOTE: If the cart does not exist, we will have a 404
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            fake_cap_context.return_value = "abcde", 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertEqual(resp.status_code, 400, resp.content)
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertEqual(resp.status_code, 400, resp.content)
 
         # Tickets are not held
         held_tickets = Ticket.objects.filter(holder=self.user1)
@@ -1640,37 +1584,28 @@ class TicketTestCase(TestCase):
         sniped_ticket.save()
 
         # Initiate checkout for the first time
-        with patch(
-            ".".join(
-                [
-                    "CyberSource",
-                    "UnifiedCheckoutCaptureContextApi",
-                    "generate_unified_checkout_capture_context_with_http_info",
-                ]
-            )
-        ) as fake_cap_context:
-            fake_cap_context.return_value = "abcde", 200, None
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertEqual(resp.status_code, 403, resp.content)
-            self.assertIn("Cart is stale", resp.data["detail"], resp.data)
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertIn("Cart is stale", resp.data["detail"], resp.data)
 
-            # Tickets are not held
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 0, held_tickets)
+        # Tickets are not held
+        held_tickets = Ticket.objects.filter(holder=self.user1)
+        self.assertEqual(held_tickets.count(), 0, held_tickets)
 
-            # Ok, so now we call /api/tickets/cart to refresh
-            resp = self.client.get(reverse("tickets-cart"), format="json")
+        # Ok, so now we call /api/tickets/cart to refresh
+        resp = self.client.get(reverse("tickets-cart"), format="json")
 
-            # Initiate checkout again...this should work
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
+        # Initiate checkout again...this should work
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
 
-            # Tickets are held
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertNotIn(sniped_ticket, held_tickets, held_tickets)
-            self.assertEqual(held_tickets.count(), 5, held_tickets)
+        # Tickets are held
+        held_tickets = Ticket.objects.filter(holder=self.user1)
+        self.assertNotIn(sniped_ticket, held_tickets, held_tickets)
+        self.assertEqual(held_tickets.count(), 5, held_tickets)
 
     def test_complete_checkout(self):
+        """Test the complete checkout flow with Secure Acceptance"""
         self.client.login(username=self.user1.username, password="test")
 
         # Add a few tickets to cart
@@ -1690,41 +1625,63 @@ class TicketTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
-        with mock_cybersource_apis():
-            # Initiate checkout
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 2, held_tickets)
+        # Initiate checkout
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
 
-            # Complete checkout
-            resp = self.client.post(
-                reverse("tickets-complete-checkout"),
-                {"transient_token": "abcdefg"},
-                format="json",
-            )
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            self.assertIn("Payment successful", resp.data["detail"], resp.data)
+        # Verify response contains CyberSource payment params
+        self.assertTrue(data["success"])
+        self.assertFalse(data["sold_free_tickets"])
+        self.assertIn("cybersource_url", data)
+        self.assertIn("payment_params", data)
+        self.assertIn("signature", data["payment_params"])
+        self.assertIn("transaction_uuid", data["payment_params"])
 
-            # Ownership transferred
-            owned_tickets = Ticket.objects.filter(owner=self.user1)
-            self.assertEqual(owned_tickets.count(), 2, owned_tickets)
+        # Get the transaction UUID for later
+        transaction_uuid = data["payment_params"]["transaction_uuid"]
 
-            # Cart empty
-            user_cart = Cart.objects.get(owner=self.user1)
-            self.assertEqual(user_cart.tickets.count(), 0, user_cart)
+        # Verify tickets are held
+        held_tickets = Ticket.objects.filter(holder=self.user1)
+        self.assertEqual(held_tickets.count(), 2, held_tickets)
 
-            # Tickets held is 0
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 0, held_tickets)
+        # Verify cart has pending transaction UUID
+        user_cart = Cart.objects.get(owner=self.user1)
+        self.assertEqual(str(user_cart.pending_transaction_uuid), transaction_uuid)
 
-            # Check that transaction record is created
-            record_exists = TicketTransactionRecord.objects.filter(
-                reconciliation_id=MockPaymentResponse().reconciliation_id
-            ).exists()
-            self.assertTrue(record_exists)
+        # Simulate CyberSource callback with payment_complete
+        mock_response = MockCybersourceResponse(transaction_uuid=transaction_uuid)
+        resp = self.client.post(
+            reverse("tickets-payment-complete"),
+            mock_response.to_post_params(),
+        )
 
-    def test_complete_checkout_stale_cart(self):
+        # Should redirect to success
+        self.assertEqual(resp.status_code, 302, resp.content)
+        self.assertIn("success=true", resp.url)
+
+        # Ownership transferred
+        owned_tickets = Ticket.objects.filter(owner=self.user1)
+        self.assertEqual(owned_tickets.count(), 2, owned_tickets)
+
+        # Cart empty
+        user_cart.refresh_from_db()
+        self.assertEqual(user_cart.tickets.count(), 0, user_cart)
+        self.assertIsNone(user_cart.pending_transaction_uuid)
+
+        # Tickets held is 0
+        held_tickets = Ticket.objects.filter(holder=self.user1)
+        self.assertEqual(held_tickets.count(), 0, held_tickets)
+
+        # Check that transaction record is created
+        record = TicketTransactionRecord.objects.filter(
+            transaction_uuid=transaction_uuid
+        ).first()
+        self.assertIsNotNone(record)
+        self.assertEqual(record.decision, "ACCEPT")
+
+    def test_payment_complete_stale_cart(self):
+        """Test payment completion when hold has expired"""
         self.client.login(username=self.user1.username, password="test")
 
         # Add a few tickets to cart
@@ -1734,111 +1691,115 @@ class TicketTestCase(TestCase):
             cart.tickets.add(ticket)
         cart.save()
 
-        with mock_cybersource_apis():
-            # Initiate checkout
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 2, held_tickets)
+        # Initiate checkout
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        data = resp.json()
+        transaction_uuid = data["payment_params"]["transaction_uuid"]
 
-            # Make holds expire prematurely, creating a stale cart
-            for ticket in held_tickets:
-                ticket.holding_expiration = timezone.now() - timedelta(minutes=1)
-                ticket.save()
+        held_tickets = Ticket.objects.filter(holder=self.user1)
+        self.assertEqual(held_tickets.count(), 2, held_tickets)
 
-            # Invoking this API endpoint causes all holds to be expired
-            resp = self.client.post(
-                reverse("tickets-complete-checkout"),
-                {"transient_token": "abcdefg"},
-                format="json",
-            )
-            self.assertEqual(resp.status_code, 403, resp.content)
-            self.assertIn("Cart is stale", resp.data["detail"], resp.content)
+        # Make holds expire prematurely, creating a stale cart
+        for ticket in held_tickets:
+            ticket.holding_expiration = timezone.now() - timedelta(minutes=1)
+            ticket.save()
 
-            # Ownership not transferred
-            owned_tickets = Ticket.objects.filter(owner=self.user1)
-            self.assertEqual(owned_tickets.count(), 0, owned_tickets)
+        # Trigger hold expiration
+        Ticket.objects.update_holds()
 
-    def test_complete_checkout_validate_token_fails(self):
+        # Now simulate CyberSource callback - payment was successful but hold expired
+        mock_response = MockCybersourceResponse(transaction_uuid=transaction_uuid)
+        resp = self.client.post(
+            reverse("tickets-payment-complete"),
+            mock_response.to_post_params(),
+        )
+
+        # Should redirect with error about hold expiring
+        self.assertEqual(resp.status_code, 302, resp.content)
+        self.assertIn("error", resp.url)
+        self.assertIn("expired", resp.url.lower())
+
+        # Ownership not transferred
+        owned_tickets = Ticket.objects.filter(owner=self.user1)
+        self.assertEqual(owned_tickets.count(), 0, owned_tickets)
+
+    def test_payment_complete_invalid_signature(self):
+        """Test payment completion with invalid signature"""
         self.client.login(username=self.user1.username, password="test")
 
-        # Add a few tickets to cart
+        # Add tickets and initiate checkout
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
         tickets_to_add = self.tickets1[:2]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
 
-        with mock_cybersource_apis() as (_, _, _, fake_validate_token):
-            # Initiate checkout
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 2, held_tickets)
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        data = resp.json()
+        transaction_uuid = data["payment_params"]["transaction_uuid"]
 
-            fake_validate_token.return_value = (False, "Validation failed")
+        # Create response with invalid signature
+        mock_response = MockCybersourceResponse(transaction_uuid=transaction_uuid)
+        params = mock_response.to_post_params()
+        params["signature"] = "invalid_signature"
 
-            # Try to complete
-            resp = self.client.post(
-                reverse("tickets-complete-checkout"),
-                {"transient_token": "abcdefg"},
-                format="json",
-            )
+        resp = self.client.post(
+            reverse("tickets-payment-complete"),
+            params,
+        )
 
-            # Fails because token validation failed
-            self.assertEqual(resp.status_code, 500, resp.content)
-            self.assertIn("Validation failed", resp.data["detail"], resp.content)
+        # Should redirect with error
+        self.assertEqual(resp.status_code, 302, resp.content)
+        self.assertIn("error", resp.url)
+        self.assertIn("signature", resp.url.lower())
 
-            # Ownership not transferred
-            owned_tickets = Ticket.objects.filter(owner=self.user1)
-            self.assertEqual(owned_tickets.count(), 0, owned_tickets)
+        # Ownership not transferred
+        owned_tickets = Ticket.objects.filter(owner=self.user1)
+        self.assertEqual(owned_tickets.count(), 0, owned_tickets)
 
-            # Hold cancelled
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 0, held_tickets)
-
-    def test_complete_checkout_cybersource_fails(self):
+    def test_payment_complete_declined(self):
+        """Test payment completion when payment is declined"""
         self.client.login(username=self.user1.username, password="test")
 
-        # Add a few tickets to cart
+        # Add tickets and initiate checkout
         cart, _ = Cart.objects.get_or_create(owner=self.user1)
         tickets_to_add = self.tickets1[:2]
         for ticket in tickets_to_add:
             cart.tickets.add(ticket)
         cart.save()
 
-        with mock_cybersource_apis() as (_, fake_create_payment, _, _):
-            # Initiate checkout
-            resp = self.client.post(reverse("tickets-initiate-checkout"))
-            self.assertIn(resp.status_code, [200, 201], resp.content)
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 2, held_tickets)
+        resp = self.client.post(reverse("tickets-initiate-checkout"))
+        data = resp.json()
+        transaction_uuid = data["payment_params"]["transaction_uuid"]
 
-            fake_create_payment.return_value = (
-                MockPaymentResponse(status="UNAUTHORIZED"),
-                400,
-                "",
-            )
+        # Create response with DECLINE decision
+        mock_response = MockCybersourceResponse(
+            transaction_uuid=transaction_uuid,
+            decision="DECLINE",
+            reason_code="200",
+        )
+        resp = self.client.post(
+            reverse("tickets-payment-complete"),
+            mock_response.to_post_params(),
+        )
 
-            # Try to complete
-            resp = self.client.post(
-                reverse("tickets-complete-checkout"),
-                {"transient_token": "abcdefg"},
-                format="json",
-            )
+        # Should redirect with error
+        self.assertEqual(resp.status_code, 302, resp.content)
+        self.assertIn("error", resp.url)
+        self.assertIn("declined", resp.url.lower())
 
-            # Fails because cybersource fails
-            self.assertEqual(resp.status_code, 500, resp.content)
-            self.assertIn("Transaction failed", resp.data["detail"], resp.content)
-            self.assertIn("HTTP status 400", resp.data["detail"], resp.content)
+        # Ownership not transferred
+        owned_tickets = Ticket.objects.filter(owner=self.user1)
+        self.assertEqual(owned_tickets.count(), 0, owned_tickets)
 
-            # Ownership not transferred
-            owned_tickets = Ticket.objects.filter(owner=self.user1)
-            self.assertEqual(owned_tickets.count(), 0, owned_tickets)
+        # Hold released
+        held_tickets = Ticket.objects.filter(holder=self.user1)
+        self.assertEqual(held_tickets.count(), 0, held_tickets)
 
-            # Hold cancelled
-            held_tickets = Ticket.objects.filter(holder=self.user1)
-            self.assertEqual(held_tickets.count(), 0, held_tickets)
+        # Cart transaction UUID cleared
+        cart.refresh_from_db()
+        self.assertIsNone(cart.pending_transaction_uuid)
 
     def test_transfer_ticket(self):
         self.client.login(username=self.user1.username, password="test")
