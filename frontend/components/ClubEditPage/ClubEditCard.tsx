@@ -433,7 +433,7 @@ export default function ClubEditCard({
       school: Array<[string, { checked?: boolean; detail?: string }]>
     }
 
-    const target_years =
+    const targetYears =
       exclusives.year
         ?.filter(([_, value]) => value?.checked)
         .map(([key, value]) => {
@@ -444,7 +444,7 @@ export default function ClubEditCard({
           }
         }) ?? []
 
-    const student_types =
+    const studentTypes =
       exclusives.student_type
         ?.filter(([_, value]) => value?.checked)
         .map(([key, value]) => {
@@ -473,7 +473,7 @@ export default function ClubEditCard({
             (year) => year[0].split(':')[2] === target_year.id.toString(),
           ) === undefined
         ) {
-          target_years.push(target_year)
+          targetYears.push(target_year)
         }
       })
 
@@ -485,7 +485,7 @@ export default function ClubEditCard({
               target_student_type.id.toString(),
           ) === undefined
         ) {
-          student_types.push(target_student_type)
+          studentTypes.push(target_student_type)
         }
       })
 
@@ -501,15 +501,15 @@ export default function ClubEditCard({
 
       body = {
         ...Object.fromEntries(withoutExclusiveEntries),
-        target_years,
-        student_types,
+        target_years: targetYears,
+        student_types: studentTypes,
         target_schools,
       }
     } else {
       body = {
         ...Object.fromEntries(withoutExclusiveEntries),
-        target_years,
-        student_types,
+        target_years: targetYears,
+        student_types: studentTypes,
         target_schools,
       }
     }
