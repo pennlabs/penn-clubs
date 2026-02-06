@@ -21,6 +21,7 @@ from clubs.models import (
     Membership,
     Note,
     OwnershipRequest,
+    RegistrationQueueSettings,
     Tag,
     Year,
     send_mail_helper,
@@ -493,3 +494,47 @@ class OwnershipRequestTestCase(TestCase):
         )
         self.assertTrue(can_request)
         self.assertEqual(reason, "No recent request found")
+
+
+class RegistrationQueueSettingsTestCase(TestCase):
+    def setUp(self):
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = True
+        queue_settings.new_approval_queue_open = True
+        queue_settings.save()
+
+    def test_apply_only_reapproval(self):
+        queue_settings = RegistrationQueueSettings.get()
+        past_date = timezone.now() - datetime.timedelta(hours=1)
+        future_date = timezone.now() + datetime.timedelta(hours=1)
+
+        queue_settings.reapproval_date_of_next_flip = past_date
+        queue_settings.new_approval_date_of_next_flip = future_date
+        queue_settings.save()
+
+        # reapproval flip should be applied bc in the past
+        # new approval flip should not be applied bc in the future
+        queue_settings.check_and_apply_scheduled_flips()
+        updated_settings = RegistrationQueueSettings.get()
+        self.assertFalse(updated_settings.reapproval_queue_open)
+        self.assertEqual(updated_settings.reapproval_date_of_next_flip, None)
+
+        self.assertTrue(updated_settings.new_approval_queue_open)
+        self.assertEqual(updated_settings.new_approval_date_of_next_flip, future_date)
+
+    def test_apply_only_new_approval(self):
+        queue_settings = RegistrationQueueSettings.get()
+        past_date = timezone.now() - datetime.timedelta(hours=1)
+        future_date = timezone.now() + datetime.timedelta(hours=1)
+
+        queue_settings.reapproval_date_of_next_flip = future_date
+        queue_settings.new_approval_date_of_next_flip = past_date
+        queue_settings.save()
+
+        queue_settings.check_and_apply_scheduled_flips()
+        queue_settings.refresh_from_db()
+        self.assertTrue(queue_settings.reapproval_queue_open)
+        self.assertEqual(queue_settings.reapproval_date_of_next_flip, future_date)
+
+        self.assertFalse(queue_settings.new_approval_queue_open)
+        self.assertEqual(queue_settings.new_approval_date_of_next_flip, None)

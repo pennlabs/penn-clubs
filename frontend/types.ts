@@ -505,6 +505,8 @@ export type RegistrationQueueSettings = {
   new_approval_queue_open: boolean
   updated_at: string
   updated_by: string
+  new_approval_date_of_next_flip: string | null
+  reapproval_date_of_next_flip: string | null
 }
 
 export type OwnershipRequest = {
