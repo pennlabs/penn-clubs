@@ -3534,21 +3534,32 @@ class ApprovalHistorySerializer(serializers.ModelSerializer):
     approved_on = serializers.DateTimeField()
     approved_by = serializers.SerializerMethodField("get_approved_by")
     approved_comment = serializers.CharField()
+    active = serializers.BooleanField()
     history_date = serializers.DateTimeField()
+    history_change_reason = serializers.CharField(allow_null=True, required=False)
+    history_user = serializers.SerializerMethodField("get_history_user")
 
     def get_approved_by(self, obj):
         if obj.approved_by is None:
             return "Unknown"
         return obj.approved_by.get_full_name()
 
+    def get_history_user(self, obj):
+        if obj.history_user is None:
+            return None
+        return obj.history_user.get_full_name()
+
     class Meta:
         model = Club
         fields = (
+            "active",
             "approved",
             "approved_on",
             "approved_by",
             "approved_comment",
             "history_date",
+            "history_change_reason",
+            "history_user",
         )
 
 
