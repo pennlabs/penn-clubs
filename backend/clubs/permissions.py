@@ -48,6 +48,18 @@ def find_membership_helper(user, club):
     return membership_instance
 
 
+def is_officer_or_above(user, club):
+    """
+    Check if user is an officer or above (owner) for the given club.
+    Returns True if user has clubs.manage_club permission OR is an officer+ of the club.
+    """
+    if user.has_perm("clubs.manage_club"):
+        return True
+
+    membership = find_membership_helper(user, club)
+    return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+
 class ReadOnly(permissions.BasePermission):
     """
     Only allow read access. Deny write access to everyone.
