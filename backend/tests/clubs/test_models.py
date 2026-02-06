@@ -503,7 +503,7 @@ class RegistrationQueueSettingsTestCase(TestCase):
         queue_settings.new_approval_queue_open = True
         queue_settings.save()
 
-    def test_apply_scheduled_flips(self):
+    def test_apply_only_reapproval(self):
         queue_settings = RegistrationQueueSettings.get()
         past_date = timezone.now() - datetime.timedelta(hours=1)
         future_date = timezone.now() + datetime.timedelta(hours=1)
@@ -521,3 +521,20 @@ class RegistrationQueueSettingsTestCase(TestCase):
 
         self.assertTrue(updated_settings.new_approval_queue_open)
         self.assertEqual(updated_settings.new_approval_date_of_next_flip, future_date)
+
+    def test_apply_only_new_approval(self):
+        queue_settings = RegistrationQueueSettings.get()
+        past_date = timezone.now() - datetime.timedelta(hours=1)
+        future_date = timezone.now() + datetime.timedelta(hours=1)
+
+        queue_settings.reapproval_date_of_next_flip = future_date
+        queue_settings.new_approval_date_of_next_flip = past_date
+        queue_settings.save()
+
+        queue_settings.check_and_apply_scheduled_flips()
+        queue_settings.refresh_from_db()
+        self.assertTrue(queue_settings.reapproval_queue_open)
+        self.assertEqual(queue_settings.reapproval_date_of_next_flip, future_date)
+
+        self.assertFalse(queue_settings.new_approval_queue_open)
+        self.assertEqual(queue_settings.new_approval_date_of_next_flip, None)
