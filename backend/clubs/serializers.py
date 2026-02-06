@@ -3626,6 +3626,8 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
             "new_approval_queue_open",
             "updated_at",
             "updated_by",
+            "reapproval_date_of_next_flip",
+            "new_approval_date_of_next_flip",
         ]
         read_only_fields = ["updated_at", "updated_by"]
 
