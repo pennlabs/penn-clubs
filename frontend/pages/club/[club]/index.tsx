@@ -41,6 +41,7 @@ import {
   OBJECT_NAME_SINGULAR,
   SHOW_ADDITIONAL_LINKS,
   SHOW_MEMBERS,
+  SHOW_OWNERSHIP_REQUESTS,
   SITE_NAME,
 } from 'utils/branding'
 
@@ -244,7 +245,7 @@ const ClubPage = ({
               }}
             >
               <RenewalRequest club={club} />
-              {!club.is_member && userInfo && (
+              {SHOW_OWNERSHIP_REQUESTS && !club.is_member && userInfo && (
                 <div className="mt-4">
                   <p style={{ color: 'white' }}>
                     If you want to take over this club, click the button below:
