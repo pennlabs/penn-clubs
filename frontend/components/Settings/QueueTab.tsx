@@ -414,7 +414,7 @@ const QueueSettingsButtonStack = styled.div<{ direction: 'column' | 'row' }>`
 
 const Tooltip = styled.span`
   position: relative;
-  cursor: pointer;
+  cursor: default;
 
   &:hover::after {
     content: attr(data-tooltip);
@@ -431,8 +431,6 @@ const Tooltip = styled.span`
     z-index: 1000;
   }
 `
-
-// ...existing code...
 
 const QueueSettingsButton = ({
   open,
@@ -490,8 +488,49 @@ const ModalDatePickerWrapper = styled.div`
   }
 
   display: flex;
-  margin-bottom: 3rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+  gap: 0.5rem;
   overflow: visible;
+`
+
+const QueueSchedulerContent = styled.div`
+  max-width: 40rem;
+`
+
+const QueueSchedulerSummary = styled.div`
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+`
+
+const QueueSchedulerTitle = styled.p`
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+`
+
+const QueueSchedulerLabel = styled.p`
+  margin-bottom: 0;
+  font-size: 1.05rem;
+`
+
+const QueueSchedulerHelpText = styled.p`
+  color: #6b7280;
+  font-size: 0.92rem;
+  margin-bottom: 0.75rem;
+`
+
+const QueueSchedulerClearButton = styled.button`
+  min-width: 3rem;
+`
+
+const QueueSchedulerActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
 `
 
 type QueueSchedulerModalProps = {
@@ -587,121 +626,124 @@ const QueueSchedulerModal = ({
       overflow="visible"
     >
       <ModalContent>
-        <div className="mb3" style={{ marginBottom: '2rem' }}>
-          The{' '}
-          <b>
-            {queueType === 'reapproval'
-              ? 'reapproval request'
-              : 'new approval request'}{' '}
-            queue
-          </b>{' '}
-          is currently
-          <b className={queueState ? 'has-text-success' : 'has-text-danger'}>
-            {' '}
-            {queueState ? ' open' : ' closed'}
-          </b>{' '}
-          and is{' '}
-          {scheduledDate == null ? (
-            <>
-              not scheduled to
+        <QueueSchedulerContent>
+          <QueueSchedulerSummary>
+            <QueueSchedulerTitle>
+              {queueType === 'reapproval'
+                ? 'Reapproval request queue'
+                : 'New approval request queue'}
+            </QueueSchedulerTitle>
+            <p>
+              This queue is currently{' '}
               <b
-                className={
-                  desiredState ? 'has-text-success' : 'has-text-danger'
-                }
+                className={queueState ? 'has-text-success' : 'has-text-danger'}
               >
-                {desiredState ? ' open. ' : ' close. '}
-              </b>
-            </>
-          ) : (
-            <>
-              {' '}
-              scheduled to{' '}
-              <b
-                className={
-                  desiredState ? 'has-text-success' : 'has-text-danger'
-                }
-              >
-                {desiredState ? ' open ' : ' close '}
-              </b>
-              at{' '}
-              <b>
-                {new Date(scheduledDate).toLocaleString(undefined, {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true,
-                })}
-              </b>
-              .
-            </>
-          )}{' '}
-        </div>
-        <label>
-          Schedule when the{' '}
-          <b>
-            {queueType === 'reapproval'
-              ? 'reapproval request'
-              : 'new approval request'}{' '}
-            queue
-          </b>{' '}
-          should{' '}
-          <b className={desiredState ? 'has-text-success' : 'has-text-danger'}>
-            {desiredState ? 'open' : 'close'}
-          </b>
-          !
-        </label>
-        <ModalDatePickerWrapper>
-          <DatePicker
-            selected={selectedDate}
-            onChange={(date: Date) => {
-              if (date <= now) {
-                date = getNextValidDateTime()
-              }
-              setSelectedDate(date)
-            }}
-            onChangeRaw={(e) => {
-              e.preventDefault() // Currently prevents manual text input. If implement, add checking for valid times
-            }}
-            showTimeSelect
-            dateFormat="MM/dd/yyyy h:mm aa"
-            timeIntervals={TIME_INTERVAL}
-            minDate={now}
-            minTime={
-              !selectedDate ||
-              (selectedDate && selectedDate.toDateString()) ===
-                now.toDateString()
-                ? now
-                : new Date().setHours(0, 0)
-            }
-            maxTime={maxTime}
-            placeholderText="Select date and time"
-            className="input"
-          />
-          <button
-            type="button"
-            className="button is-right"
-            title="Clear Date"
-            onClick={() => setSelectedDate(null)}
-          >
-            <Icon name="x" className="has-text-dark" size="20" />
-          </button>
-        </ModalDatePickerWrapper>
+                {queueState ? 'open' : 'closed'}
+              </b>{' '}
+              and is{' '}
+              {scheduledDate == null ? (
+                <>
+                  not scheduled to{' '}
+                  <b
+                    className={
+                      desiredState ? 'has-text-success' : 'has-text-danger'
+                    }
+                  >
+                    {desiredState ? 'open' : 'close'}
+                  </b>
+                  .
+                </>
+              ) : (
+                <>
+                  scheduled to{' '}
+                  <b
+                    className={
+                      desiredState ? 'has-text-success' : 'has-text-danger'
+                    }
+                  >
+                    {desiredState ? 'open' : 'close'}
+                  </b>{' '}
+                  at{' '}
+                  <b>
+                    {new Date(scheduledDate).toLocaleString(undefined, {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    })}
+                  </b>
+                  .
+                </>
+              )}
+            </p>
+          </QueueSchedulerSummary>
 
-        <div className="buttons">
-          <button className="button is-success" onClick={saveScheduledDate}>
-            <Icon name="check" /> Confirm
-          </button>
-          <button
-            className="button is-danger"
-            onClick={() => {
-              closeModal()
-            }}
-          >
-            <Icon name="x" /> Cancel
-          </button>
-        </div>
+          <QueueSchedulerLabel>
+            Schedule when this queue should{' '}
+            <b
+              className={desiredState ? 'has-text-success' : 'has-text-danger'}
+            >
+              {desiredState ? 'open' : 'close'}
+            </b>
+            .
+          </QueueSchedulerLabel>
+          <QueueSchedulerHelpText>
+            Leave blank and confirm to clear any scheduled flip.
+          </QueueSchedulerHelpText>
+
+          <ModalDatePickerWrapper>
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date: Date) => {
+                if (date <= now) {
+                  date = getNextValidDateTime()
+                }
+                setSelectedDate(date)
+              }}
+              onChangeRaw={(e) => {
+                e.preventDefault() // Currently prevents manual text input. If implement, add checking for valid times
+              }}
+              showTimeSelect
+              dateFormat="MM/dd/yyyy h:mm aa"
+              timeIntervals={TIME_INTERVAL}
+              minDate={now}
+              minTime={
+                !selectedDate ||
+                (selectedDate && selectedDate.toDateString()) ===
+                  now.toDateString()
+                  ? now
+                  : new Date().setHours(0, 0)
+              }
+              maxTime={maxTime}
+              placeholderText="Select date and time"
+              className="input"
+            />
+            <QueueSchedulerClearButton
+              type="button"
+              className="button"
+              title="Clear date"
+              onClick={() => setSelectedDate(null)}
+            >
+              <Icon name="x" className="has-text-dark" size="20" />
+            </QueueSchedulerClearButton>
+          </ModalDatePickerWrapper>
+
+          <QueueSchedulerActions>
+            <button className="button is-success" onClick={saveScheduledDate}>
+              <Icon name="check" /> Confirm
+            </button>
+            <button
+              className="button is-light"
+              onClick={() => {
+                closeModal()
+              }}
+            >
+              Cancel
+            </button>
+          </QueueSchedulerActions>
+        </QueueSchedulerContent>
       </ModalContent>
     </Modal>
   )
@@ -866,7 +908,7 @@ const QueueTab = (): ReactElement => {
           <QueueSectionHeader>
             <div>
               <div style={{ display: 'flex' }}>
-                <SmallTitle>Status</SmallTitle>
+                <SmallTitle>Queue Status</SmallTitle>
                 <Tooltip
                   data-tooltip={`Queue settings last updated at ${new Date(registrationQueueSettings.updated_at).toLocaleString()} by ${registrationQueueSettings.updated_by}`}
                 >
@@ -906,7 +948,7 @@ const QueueTab = (): ReactElement => {
                           ? 'close'
                           : 'open'}
                       </b>
-                      {' at '}
+                      {' on '}
                       <b>
                         {new Date(
                           registrationQueueSettings.reapproval_date_of_next_flip,
@@ -965,7 +1007,7 @@ const QueueTab = (): ReactElement => {
                           ? 'close'
                           : 'open'}
                       </b>
-                      {' at '}
+                      {' on '}
                       <b>
                         {new Date(
                           registrationQueueSettings.new_approval_date_of_next_flip,
@@ -1015,6 +1057,7 @@ const QueueTab = (): ReactElement => {
                 <Icon
                   name="calendar"
                   size="20"
+                  style={{ cursor: 'pointer' }}
                   onClick={() => {
                     setShowQSModal(true)
                     setQSModalQueueType('reapproval')
@@ -1046,6 +1089,7 @@ const QueueTab = (): ReactElement => {
                 <Icon
                   name="calendar"
                   size="20"
+                  style={{ cursor: 'pointer' }}
                   onClick={() => {
                     setShowQSModal(true)
                     setQSModalQueueType('new')
