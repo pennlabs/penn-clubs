@@ -26,12 +26,12 @@ const ModalWrapper = styled.div<{ $show?: boolean; $width?: string }>`
   animation-duration: ${LONG_ANIMATION_DURATION};
 `
 
-const ModalCard = styled.div<{ $width?: string }>`
+const ModalCard = styled.div<{ $width?: string; $overflow?: string }>`
   border-radius: ${BORDER_RADIUS_LG};
   border: 0 !important;
   box-shadow: none !important;
   height: auto;
-  overflow: auto;
+  overflow: ${({ $overflow }) => $overflow || 'auto'};
   width: ${({ $width }) => $width ?? '35%'};
 
   ${({ $width }) =>
@@ -70,6 +70,7 @@ export const Modal = ({
   children,
   closeModal,
   marginBottom = true,
+  overflow = 'auto',
   width,
 }: ModalProps): ReactElement<any> => {
   const focusRef = useRef<HTMLDivElement>(null)
@@ -102,7 +103,12 @@ export const Modal = ({
       $show={show}
     >
       <Shade className="modal-background" onClick={closeModal} $show={show} />
-      <ModalCard className="card" onClick={noop} $width={width}>
+      <ModalCard
+        className="card"
+        onClick={noop}
+        $width={width}
+        $overflow={overflow}
+      >
         <CloseModalIcon name="x" alt="&#215;" onClick={closeModal} />
         <ModalContentWrapper $marginBottom={marginBottom}>
           {children}
@@ -116,6 +122,7 @@ type ModalProps = React.PropsWithChildren<{
   show: boolean
   marginBottom?: boolean
   width?: string
+  overflow?: string
   closeModal?: () => void
 }>
 

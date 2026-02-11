@@ -2438,6 +2438,15 @@ class RegistrationQueueSettings(models.Model):
     new_approval_queue_open = models.BooleanField(
         default=True, help_text="Controls whether new clubs can submit for approval"
     )
+    reapproval_date_of_next_flip = models.DateTimeField(
+        null=True,
+        help_text="Date when reapproval queue will next flip state",
+    )
+    new_approval_date_of_next_flip = models.DateTimeField(
+        null=True,
+        help_text="Date when new approval queue will next flip state",
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         get_user_model(),
@@ -2462,6 +2471,36 @@ class RegistrationQueueSettings(models.Model):
         if self.pk and self.pk == self.SINGLETON_PK:
             raise ValueError("Cannot delete singleton instance")
 
+    def check_and_apply_scheduled_flips(self):
+        """
+        Check if any scheduled flips should be applied and update state accordingly.
+        Also handles edge case where manual flip happened before scheduled time.
+        """
+
+        now = timezone.now()
+        changed = False
+
+        if (
+            self.reapproval_date_of_next_flip
+            and self.reapproval_date_of_next_flip <= now
+        ):
+            self.reapproval_queue_open = not self.reapproval_queue_open
+            self.reapproval_date_of_next_flip = None
+            changed = True
+
+        if (
+            self.new_approval_date_of_next_flip
+            and self.new_approval_date_of_next_flip <= now
+        ):
+            self.new_approval_queue_open = not self.new_approval_queue_open
+            self.new_approval_date_of_next_flip = None
+            changed = True
+
+        if changed:
+            self.save()
+
+        return changed
+
     @classmethod
     def create(cls, **kwargs):
         """
@@ -2477,6 +2516,7 @@ class RegistrationQueueSettings(models.Model):
         if cls.objects.count() > 1:
             raise ValueError("Multiple instances of RegistrationQueueSettings found")
         obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+        obj.check_and_apply_scheduled_flips()
         return obj
 
 

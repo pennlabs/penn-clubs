@@ -23,7 +23,7 @@ import requests
 from analytics.entries import FuncEntry
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from dateutil.parser import parse
+from dateutil.parser import ParserError, parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -9394,6 +9394,12 @@ class RegistrationQueueSettingsView(APIView):
                                     format: date-time
                                 updated_by:
                                     type: string
+                                reapproval_date_of_next_flip:
+                                    type: string
+                                    format: date-time
+                                new_approval_date_of_next_flip:
+                                    type: string
+                                    format: date-time
             "400":
                 content:
                     application/json:
@@ -9404,7 +9410,74 @@ class RegistrationQueueSettingsView(APIView):
                                     type: string
         ---
         """
+
+        def validate_scheduled_flip_datetime(date_of_next_flip, queue_name):
+            date = request.data.get(date_of_next_flip)
+            if not date or not isinstance(date, str):
+                return None
+
+            try:
+                parsed_date = parse(date)
+            except (ParserError, OverflowError):
+                return Response(
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must be a valid datetime."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if timezone.is_naive(parsed_date):
+                return Response(
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must include "
+                            "timezone information."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if parsed_date < timezone.now():
+                return Response(
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must be in the future."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            return None
+
+        validation_response = validate_scheduled_flip_datetime(
+            "reapproval_date_of_next_flip", "Reapproval"
+        )
+
+        # return if error
+        if validation_response:
+            return validation_response
+
+        validation_response = validate_scheduled_flip_datetime(
+            "new_approval_date_of_next_flip", "New approval"
+        )
+
+        # return if error
+        if validation_response:
+            return validation_response
+
         queue_setting = RegistrationQueueSettings.get()
+
+        # If manually flip state, clear the scheduled flip date (if any)
+        reapproval_queue_desired = request.data.get("reapproval_queue_open")
+        if reapproval_queue_desired is not None:
+            queue_setting.reapproval_date_of_next_flip = None
+
+        new_approval_queue_desired = request.data.get("new_approval_queue_open")
+        if new_approval_queue_desired is not None:
+            queue_setting.new_approval_date_of_next_flip = None
+
         serializer = RegistrationQueueSettingsSerializer(
             queue_setting, data=request.data, partial=True
         )
