@@ -23,7 +23,7 @@ import requests
 from analytics.entries import FuncEntry
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from dateutil.parser import parse
+from dateutil.parser import ParserError, parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -9411,26 +9411,62 @@ class RegistrationQueueSettingsView(APIView):
         ---
         """
 
-        # Validate that any provided scheduled dates are in the future
-        reapproval_date = request.data.get("reapproval_date_of_next_flip")
-        if reapproval_date and isinstance(reapproval_date, str):
-            reapproval_date = parse(reapproval_date)
-            now = timezone.now()
-            if reapproval_date < now:
+        def validate_scheduled_flip_datetime(date_of_next_flip, queue_name):
+            date = request.data.get(date_of_next_flip)
+            if not date or not isinstance(date, str):
+                return None
+
+            try:
+                parsed_date = parse(date)
+            except (ParserError, OverflowError):
                 return Response(
-                    {"error": "Reapproval date of next flip must be in the future."},
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must be a valid datetime."
+                        )
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        new_approval_date = request.data.get("new_approval_date_of_next_flip")
-        if new_approval_date and isinstance(new_approval_date, str):
-            new_approval_date = parse(new_approval_date)
-            now = timezone.now()
-            if new_approval_date < now:
+            if timezone.is_naive(parsed_date):
                 return Response(
-                    {"error": "New approval date of next flip must be in the future."},
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must include "
+                            "timezone information."
+                        )
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+            if parsed_date < timezone.now():
+                return Response(
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must be in the future."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            return None
+
+        validation_response = validate_scheduled_flip_datetime(
+            "reapproval_date_of_next_flip", "Reapproval"
+        )
+
+        # return if error
+        if validation_response:
+            return validation_response
+
+        validation_response = validate_scheduled_flip_datetime(
+            "new_approval_date_of_next_flip", "New approval"
+        )
+
+        # return if error
+        if validation_response:
+            return validation_response
+
         queue_setting = RegistrationQueueSettings.get()
 
         # If manually flip state, clear the scheduled flip date (if any)

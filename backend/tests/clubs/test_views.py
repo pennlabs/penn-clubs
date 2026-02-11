@@ -5437,6 +5437,25 @@ class RegistrationQueueSettingsTestCase(TestCase):
         self.assertEqual(manual_flip_resp.data["reapproval_date_of_next_flip"], None)
         self.assertEqual(manual_flip_resp.data["new_approval_date_of_next_flip"], None)
 
+    def test_schedule_queue_flips_rejects_invalid_datetime_values(self):
+        self.client.login(username="super", password="password")
+
+        malformed_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"reapproval_date_of_next_flip": "not-a-date"}),
+            content_type="application/json",
+        )
+        self.assertEqual(malformed_resp.status_code, 400, malformed_resp.content)
+        self.assertIn("error", malformed_resp.json())
+
+        naive_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"new_approval_date_of_next_flip": "2026-02-12T10:00:00"}),
+            content_type="application/json",
+        )
+        self.assertEqual(naive_resp.status_code, 400, naive_resp.content)
+        self.assertIn("error", naive_resp.json())
+
 
 class EventShowingTestCase(TestCase):
     """
