@@ -3259,6 +3259,60 @@ class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
     pass
 
 
+class UserApplicationSubmissionSerializer(serializers.ModelSerializer):
+    committee = serializers.SerializerMethodField()
+
+    def get_committee(self, obj):
+        return obj.committee.name if obj.committee else "General Member"
+
+    class Meta:
+        model = ApplicationSubmission
+        fields = ("pk", "created_at", "committee")
+
+
+class UserApplicationSerializer(serializers.ModelSerializer):
+    club_name = serializers.CharField(source="club.name", read_only=True)
+    club_code = serializers.CharField(source="club.code", read_only=True)
+    name = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
+    application_link = serializers.SerializerMethodField()
+    submissions = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return obj.name if obj.name else f"{obj.club.name} Application"
+
+    def get_is_active(self, obj):
+        now = timezone.now()
+        if obj.application_start_time > now:
+            return False
+        if obj.application_end_time >= now:
+            return True
+        # At most one extension exists per (user, application) due to unique constraint
+        ext = next(iter(getattr(obj, "user_extensions", [])), None)
+        return ext is not None and ext.end_time >= now
+
+    def get_application_link(self, obj):
+        return f"/club/{obj.club.code}/application/{obj.pk}/"
+
+    def get_submissions(self, obj):
+        subs = getattr(obj, "user_submissions", [])
+        return UserApplicationSubmissionSerializer(subs, many=True).data
+
+    class Meta:
+        model = ClubApplication
+        fields = (
+            "id",
+            "name",
+            "club_name",
+            "club_code",
+            "application_end_time",
+            "is_active",
+            "application_link",
+            "external_url",
+            "submissions",
+        )
+
+
 class WhartonApplicationStatusSerializer(serializers.Serializer):
     club = serializers.CharField(source="annotated_club")
     committee = serializers.CharField(source="annotated_committee")

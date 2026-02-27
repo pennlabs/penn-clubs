@@ -62,6 +62,7 @@ from clubs.views import (
     TestimonialViewSet,
     TicketViewSet,
     TypeViewSet,
+    UserApplicationsView,
     UserGroupAPIView,
     UserPermissionAPIView,
     UserUpdateAPIView,
@@ -232,6 +233,11 @@ urlpatterns = [
         r"whartonapplications/status/",
         WhartonApplicationStatusAPIView.as_view(),
         name="wharton-applications-status",
+    ),
+    path(
+        r"user-applications/",
+        UserApplicationsView.as_view(),
+        name="user-applications",
     ),
     path(r"health/", HealthView.as_view(), name="health"),
     path(

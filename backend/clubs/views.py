@@ -226,6 +226,7 @@ from clubs.serializers import (
     TestimonialSerializer,
     TicketSerializer,
     TypeSerializer,
+    UserApplicationSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -8381,6 +8382,86 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
         Cache responses for 20 minutes. Vary cache by user.
         """
         return super().list(*args, **kwargs)
+
+
+class UserApplicationsView(generics.ListAPIView):
+    """
+    get: Return a unified list of applications relevant to the current user.
+
+    Each application is annotated with the user's own submissions.
+
+    Query parameters:
+    - active_only: (optional, default false) When true, return only currently
+      active applications from clubs the user has bookmarked or subscribed to.
+      When false (default), also include any applications the user has
+      previously submitted to, regardless of active status.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserApplicationSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        now = timezone.now()
+        active_only = (
+            self.request.query_params.get("active_only", "false").lower() == "true"
+        )
+
+        fav_club_ids = Favorite.objects.filter(person=user).values_list(
+            "club_id", flat=True
+        )
+        sub_club_ids = Subscribe.objects.filter(person=user).values_list(
+            "club_id", flat=True
+        )
+        saved_club_ids = set(fav_club_ids) | set(sub_club_ids)
+
+        # Applications open by base deadline for saved clubs
+        base_active_ids = set(
+            ClubApplication.objects.filter(
+                club_id__in=saved_club_ids,
+                application_start_time__lte=now,
+                application_end_time__gte=now,
+            ).values_list("pk", flat=True)
+        )
+        # Applications where the user has a personal extension still open
+        extension_active_ids = set(
+            ApplicationExtension.objects.filter(
+                user=user,
+                application__club_id__in=saved_club_ids,
+                application__application_start_time__lte=now,
+                end_time__gte=now,
+            ).values_list("application_id", flat=True)
+        )
+        active_ids = base_active_ids | extension_active_ids
+
+        if active_only:
+            all_ids = active_ids
+        else:
+            submitted_ids = set(
+                ApplicationSubmission.objects.filter(
+                    user=user, application__isnull=False
+                ).values_list("application_id", flat=True)
+            )
+            all_ids = active_ids | submitted_ids
+
+        return (
+            ClubApplication.objects.filter(pk__in=all_ids)
+            .select_related("club")
+            .prefetch_related(
+                Prefetch(
+                    "submissions",
+                    queryset=ApplicationSubmission.objects.filter(
+                        user=user
+                    ).select_related("committee"),
+                    to_attr="user_submissions",
+                ),
+                Prefetch(
+                    "extensions",
+                    queryset=ApplicationExtension.objects.filter(user=user),
+                    to_attr="user_extensions",
+                ),
+            )
+        )
 
 
 class WhartonApplicationStatusAPIView(generics.ListAPIView):

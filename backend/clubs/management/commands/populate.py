@@ -815,19 +815,19 @@ class Command(BaseCommand):
 
         # Create application cycles
         fall_cycle, _ = ApplicationCycle.objects.get_or_create(
-            name="Fall 2024",
+            name="Fall 2025",
             defaults={
-                "start_date": datetime.datetime(2024, 9, 1, 0, 0, tzinfo=eastern),
-                "end_date": datetime.datetime(2024, 11, 30, 23, 59, tzinfo=eastern),
-                "release_date": datetime.datetime(2024, 12, 15, 0, 0, tzinfo=eastern),
+                "start_date": datetime.datetime(2025, 9, 1, 0, 0, tzinfo=eastern),
+                "end_date": datetime.datetime(2025, 11, 30, 23, 59, tzinfo=eastern),
+                "release_date": datetime.datetime(2025, 12, 15, 0, 0, tzinfo=eastern),
             },
         )
         spring_cycle, _ = ApplicationCycle.objects.get_or_create(
-            name="Spring 2025",
+            name="Spring 2026",
             defaults={
-                "start_date": datetime.datetime(2025, 1, 15, 0, 0, tzinfo=eastern),
-                "end_date": datetime.datetime(2025, 3, 31, 23, 59, tzinfo=eastern),
-                "release_date": datetime.datetime(2025, 4, 15, 0, 0, tzinfo=eastern),
+                "start_date": datetime.datetime(2026, 1, 15, 0, 0, tzinfo=eastern),
+                "end_date": datetime.datetime(2026, 3, 31, 23, 59, tzinfo=eastern),
+                "release_date": datetime.datetime(2026, 4, 15, 0, 0, tzinfo=eastern),
             },
         )
 
