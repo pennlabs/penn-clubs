@@ -3287,7 +3287,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
             return False
         if obj.application_end_time >= now:
             return True
-        # At most one extension exists per (user, application) due to unique constraint
+
         ext = next(iter(getattr(obj, "user_extensions", [])), None)
         return ext is not None and ext.end_time >= now
 
