@@ -1464,6 +1464,9 @@ class Membership(models.Model):
 
     class Meta:
         unique_together = (("club", "person"),)
+        indexes = [
+            models.Index(fields=["person", "role", "club"]),
+        ]
 
 
 def get_token():

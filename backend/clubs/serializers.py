@@ -2507,6 +2507,16 @@ class UserSerializer(serializers.ModelSerializer):
     )
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
+    is_owner_or_officer_of_active_club = serializers.SerializerMethodField(
+        "get_is_owner_or_officer_of_active_club"
+    )
+
+    def get_is_owner_or_officer_of_active_club(self, obj):
+        return Membership.objects.filter(
+            person=obj,
+            role__in=[Membership.ROLE_OWNER, Membership.ROLE_OFFICER],
+            club__active=True,
+        ).exists()
 
     def validate_graduation_year(self, value):
         if not value:
@@ -2575,6 +2585,7 @@ class UserSerializer(serializers.ModelSerializer):
             "share_bookmarks",
             "show_profile",
             "username",
+            "is_owner_or_officer_of_active_club",
         ]
 
 

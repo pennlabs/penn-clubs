@@ -25,6 +25,7 @@ from clubs.models import (
     Year,
     send_mail_helper,
 )
+from clubs.serializers import UserSerializer
 
 
 class YearTestCase(TestCase):
@@ -122,14 +123,68 @@ class ClubTestCase(TestCase):
 
 
 class ProfileTestCase(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            "user", "user@example.com", "test"
+        )
+        self.active_club = Club.objects.create(
+            code="active", name="Active Club", active=True
+        )
+        self.inactive_club = Club.objects.create(
+            code="inactive", name="Inactive Club", active=False
+        )
+
     def test_profile_creation(self):
         """
         Ensure that a Profile object is created when the user is created.
         """
-        self.person = get_user_model().objects.create_user(
-            "test", "test@example.com", "test"
+        self.assertTrue(self.user.profile)
+
+    def test_is_member_of_active_club(self):
+        Membership.objects.create(
+            person=self.user, club=self.active_club, role=Membership.ROLE_MEMBER
         )
-        self.assertTrue(self.person.profile)
+        serializer = UserSerializer(self.user)
+        self.assertFalse(serializer.data["is_owner_or_officer_of_active_club"])
+
+    def test_is_officer_of_active_club(self):
+        Membership.objects.create(
+            person=self.user, club=self.active_club, role=Membership.ROLE_OFFICER
+        )
+        serializer = UserSerializer(self.user)
+        self.assertTrue(serializer.data["is_owner_or_officer_of_active_club"])
+
+    def test_is_owner_of_active_club(self):
+        Membership.objects.create(
+            person=self.user, club=self.active_club, role=Membership.ROLE_OWNER
+        )
+        serializer = UserSerializer(self.user)
+        self.assertTrue(serializer.data["is_owner_or_officer_of_active_club"])
+
+    def test_is_member_of_inactive_club(self):
+        Membership.objects.create(
+            person=self.user, club=self.inactive_club, role=Membership.ROLE_MEMBER
+        )
+        serializer = UserSerializer(self.user)
+        self.assertFalse(serializer.data["is_owner_or_officer_of_active_club"])
+
+    def test_is_officer_of_inactive_club(self):
+        Membership.objects.create(
+            person=self.user, club=self.inactive_club, role=Membership.ROLE_OFFICER
+        )
+        serializer = UserSerializer(self.user)
+        self.assertFalse(serializer.data["is_owner_or_officer_of_active_club"])
+
+    def test_is_owner_of_inactive_club(self):
+        Membership.objects.create(
+            person=self.user, club=self.inactive_club, role=Membership.ROLE_OWNER
+        )
+        serializer = UserSerializer(self.user)
+        self.assertFalse(serializer.data["is_owner_or_officer_of_active_club"])
+
+    def test_no_memberships(self):
+        serializer = UserSerializer(self.user)
+        self.assertFalse(serializer.data["is_owner_or_officer_of_active_club"])
 
 
 class EventTestCase(TestCase):
