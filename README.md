@@ -28,6 +28,25 @@ In production, you will need to set the following environment variables:
 - `LABS_CLIENT_ID` (from Platform)
 - `LABS_CLIENT_SECRET` (from Platform)
 
+#### Ticketing/Payment Environment Variables
+
+For ticketing functionality with CyberSource Secure Acceptance Hosted Checkout, you will need:
+
+- `CYBERSOURCE_SA_PROFILE_ID` - Your Secure Acceptance profile ID from the CyberSource Business Center
+- `CYBERSOURCE_SA_ACCESS_KEY` - Access key for the Secure Acceptance profile
+- `CYBERSOURCE_SA_SECRET_KEY` - Secret key for signing requests (keep this secure!)
+- `FRONTEND_URL` (optional) - Base URL for redirects after payment (defaults to `https://pennclubs.com`)
+
+The merchant ID (`upenn8504`) and CyberSource endpoint URLs are configured in the settings files:
+- **Production**: `https://secureacceptance.cybersource.com/pay`
+- **Development/Test**: `https://testsecureacceptance.cybersource.com/pay`
+
+To obtain these credentials:
+1. Log into the [CyberSource Business Center](https://businesscenter.cybersource.com)
+2. Navigate to Payment Configuration → Secure Acceptance Settings
+3. Create or select a Hosted Checkout profile
+4. Generate security keys and note the Profile ID, Access Key, and Secret Key
+
 To run the server, `cd` to the folder where you cloned `penn-clubs`. Then run:
 
 - `cd backend`
@@ -81,10 +100,63 @@ Click `Login` to log in as a test user. The `./manage.py populate` command creat
 
 #### Ticketing
 
-To test ticketing locally, you will need to [install](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) `mkcert`, enter the `frontend` directory, and run the following commands:
+Penn Clubs uses CyberSource Secure Acceptance Hosted Checkout for payment processing. This redirects users to a CyberSource-hosted payment page rather than embedding a payment form.
 
-- `$ mkcert -install`
-- `$ mkcert localhost 127.0.0.1 ::1`
-- `$ export DOMAIN=https://localhost:3001 NODE_TLS_REJECT_UNAUTHORIZED=0`
+**Payment Flow:**
+1. User initiates checkout → Backend generates signed payment parameters
+2. Frontend submits a form POST to CyberSource with the signed parameters
+3. User enters payment details on CyberSource's hosted page
+4. CyberSource POSTs results back to `/api/tickets/payment_complete/`
+5. Backend validates the signature, processes the payment, and redirects user
 
-Then, after the frontend is running, run `bun run ssl-proxy` **in a new terminal window** and access the application at [https://localhost:3001](https://localhost:3001).
+**Local Development with ngrok:**
+
+CyberSource needs to POST payment results back to your server, which requires a publicly accessible URL. Use [ngrok](https://ngrok.com/) to create a tunnel to your local development server.
+
+1. **Install ngrok:**
+   ```bash
+   # Ubuntu/Debian
+   curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+     | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+     && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
+     | sudo tee /etc/apt/sources.list.d/ngrok.list \
+     && sudo apt update && sudo apt install ngrok
+
+   # Or via snap
+   sudo snap install ngrok
+
+   # Mac
+   brew install ngrok
+   ```
+
+2. **Start ngrok** (in a separate terminal):
+   ```bash
+   ngrok http 3000
+   ```
+   Copy the HTTPS forwarding URL (e.g., `https://abc123.ngrok-free.app`)
+
+3. **Create a `.env` file** in the `backend` directory with your CyberSource test credentials:
+   ```bash
+   CYBERSOURCE_SA_PROFILE_ID=your-test-profile-id
+   CYBERSOURCE_SA_ACCESS_KEY=your-test-access-key
+   CYBERSOURCE_SA_SECRET_KEY=your-test-secret-key
+   NGROK_URL=https://abc123.ngrok-free.app
+   ```
+
+4. **Start the backend:**
+   ```bash
+   cd backend
+   DJANGO_SETTINGS_MODULE=pennclubs.settings.development uv run ./manage.py runserver
+   ```
+
+5. **Start the frontend** (in another terminal):
+   ```bash
+   cd frontend
+   bun dev
+   ```
+
+6. **Access the app** at `http://localhost:3000` (NOT the ngrok URL)
+
+The `NGROK_URL` environment variable configures the CyberSource callback URL and adds the ngrok URL to `CSRF_TRUSTED_ORIGINS`. Keep the browser on `http://localhost:3000` for login and redirects; do not set `DOMAIN` when running the frontend for this flow.
+
+Note: In development, the backend uses the CyberSource test endpoint (`testsecureacceptance.cybersource.com`). Use [CyberSource test card numbers](https://developer.cybersource.com/hello-world/testing-guide.html) for testing.

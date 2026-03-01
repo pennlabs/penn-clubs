@@ -328,6 +328,11 @@ class Club(models.Model):
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
     email = models.EmailField(blank=True, null=True)
     email_public = models.BooleanField(default=True)
+    visible_to_public = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="If false, hide the club from unauthenticated users.",
+    )
     facebook = models.URLField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     twitter = models.URLField(blank=True, null=True)
@@ -1035,6 +1040,12 @@ class EventShowing(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=255, null=True, blank=True)
+    location_visible_to_public = models.BooleanField(
+        default=False,
+        help_text=(
+            "If false, hide this showing's location from unauthenticated users."
+        ),
+    )
     ticket_order_limit = models.IntegerField(default=10)
     ticket_drop_time = models.DateTimeField(null=True, blank=True)
 
@@ -2161,8 +2172,10 @@ class Cart(models.Model):
     owner = models.OneToOneField(
         get_user_model(), related_name="cart", on_delete=models.CASCADE
     )
-    # Capture context from Cybersource should be 8297 chars
-    checkout_context = models.CharField(max_length=8297, blank=True, null=True)
+    # Transaction UUID for looking up the cart when CyberSource POSTs back
+    pending_transaction_uuid = models.UUIDField(
+        null=True, blank=True, db_index=True, unique=True
+    )
 
 
 class TicketQuerySet(models.query.QuerySet):
@@ -2188,15 +2201,31 @@ class TicketManager(models.Manager):
 
 class TicketTransactionRecord(models.Model):
     """
-    Represents an instance of a transaction record for an ticket, used for bookkeeping
+    Represents an instance of a transaction record for a ticket, used for bookkeeping.
+    Stores payment information from CyberSource Secure Acceptance.
     """
 
-    reconciliation_id = models.CharField(max_length=100, null=True, blank=True)
+    # CyberSource transaction identifiers
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
+    request_id = models.CharField(max_length=100, null=True, blank=True)
+    reference_number = models.CharField(max_length=100, null=True, blank=True)
+    transaction_uuid = models.UUIDField(null=True, blank=True)
+
+    # Transaction result
+    decision = models.CharField(max_length=20, null=True, blank=True)
+    reason_code = models.CharField(max_length=10, null=True, blank=True)
+
+    # Payment details
     total_amount = models.DecimalField(max_digits=5, decimal_places=2)
-    buyer_phone = PhoneNumberField(null=True, blank=True)
+
+    # Buyer information
     buyer_first_name = models.CharField(max_length=100)
     buyer_last_name = models.CharField(max_length=100)
     buyer_email = models.EmailField(blank=True, null=True)
+    buyer_phone = PhoneNumberField(null=True, blank=True)
+
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Ticket(models.Model):
@@ -2412,6 +2441,15 @@ class RegistrationQueueSettings(models.Model):
     new_approval_queue_open = models.BooleanField(
         default=True, help_text="Controls whether new clubs can submit for approval"
     )
+    reapproval_date_of_next_flip = models.DateTimeField(
+        null=True,
+        help_text="Date when reapproval queue will next flip state",
+    )
+    new_approval_date_of_next_flip = models.DateTimeField(
+        null=True,
+        help_text="Date when new approval queue will next flip state",
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         get_user_model(),
@@ -2436,6 +2474,36 @@ class RegistrationQueueSettings(models.Model):
         if self.pk and self.pk == self.SINGLETON_PK:
             raise ValueError("Cannot delete singleton instance")
 
+    def check_and_apply_scheduled_flips(self):
+        """
+        Check if any scheduled flips should be applied and update state accordingly.
+        Also handles edge case where manual flip happened before scheduled time.
+        """
+
+        now = timezone.now()
+        changed = False
+
+        if (
+            self.reapproval_date_of_next_flip
+            and self.reapproval_date_of_next_flip <= now
+        ):
+            self.reapproval_queue_open = not self.reapproval_queue_open
+            self.reapproval_date_of_next_flip = None
+            changed = True
+
+        if (
+            self.new_approval_date_of_next_flip
+            and self.new_approval_date_of_next_flip <= now
+        ):
+            self.new_approval_queue_open = not self.new_approval_queue_open
+            self.new_approval_date_of_next_flip = None
+            changed = True
+
+        if changed:
+            self.save()
+
+        return changed
+
     @classmethod
     def create(cls, **kwargs):
         """
@@ -2451,6 +2519,7 @@ class RegistrationQueueSettings(models.Model):
         if cls.objects.count() > 1:
             raise ValueError("Multiple instances of RegistrationQueueSettings found")
         obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+        obj.check_and_apply_scheduled_flips()
         return obj
 
 

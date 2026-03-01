@@ -112,6 +112,14 @@ const ClubForm = ({
 
   const router = useRouter()
 
+  // Reset state when clubId changes (e.g., navigating from edit page to create page)
+  useEffect(() => {
+    setIsEdit(typeof clubId !== 'undefined')
+    if (typeof clubId === 'undefined') {
+      setClub(null)
+    }
+  }, [clubId])
+
   const notify = (
     msg: string | ReactElement<any>,
     type: TypeOptions = 'info',
@@ -181,6 +189,7 @@ const ClubForm = ({
         method: 'POST',
         body: {
           club: club.code,
+          // eslint-disable-next-line camelcase -- API expects snake_case
           visit_type: VisitType.ManagePage,
         },
       })
@@ -259,6 +268,7 @@ const ClubForm = ({
             types={types}
             statuses={statuses}
             groupActivityOptions={groupActivityOptions}
+            userInfo={userInfo}
             club={club}
             onSubmit={submit}
           />

@@ -28,7 +28,7 @@ const ORDERINGS = [
     icon: 'list',
   },
   {
-    key: '-favorite_count',
+    key: 'bookmarks',
     name: 'Bookmarks',
     icon: 'bookmark',
   },
@@ -105,10 +105,12 @@ const OrderingChevronWrapper = styled.div`
 
 const OrderInput = ({
   onChange,
+  value,
 }: {
   onChange: (key: string) => void
+  value?: string
 }): ReactElement<any> => {
-  const [ordering, setOrdering] = useState<string>('featured')
+  const [ordering, setOrdering] = useState<string>(value || 'featured')
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const selectedOrdering = ORDERINGS.find((order) => order.key === ordering)
 
@@ -134,6 +136,15 @@ const OrderInput = ({
     () => () => document.removeEventListener('click', dropdownBlurListener),
     [],
   )
+
+  useEffect(() => {
+    if (value && value !== ordering) {
+      setOrdering(value)
+    }
+    if (!value && ordering !== 'featured') {
+      setOrdering('featured')
+    }
+  }, [value])
 
   return (
     <OrderingWrapper className={`dropdown ${isOpen ? 'is-active' : ''}`}>

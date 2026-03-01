@@ -37,7 +37,11 @@ type HistoricItem = {
   approved_on: string | null
   approved_by: string | null
   approved_comment: string | null
+  active?: boolean | null
   history_date: string
+  history_change_reason?: string | null
+  history_user?: string | null
+  pending_label?: string
 }
 
 const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
@@ -61,6 +65,21 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
       )
     ) : (
       'No reason provided'
+    )
+  }
+  const renderMeta = (item: HistoricItem): ReactNode => {
+    if (!item.history_change_reason && !item.history_user) {
+      return null
+    }
+    return (
+      <div className="mt-1">
+        {item.history_change_reason && (
+          <div>Reason: {item.history_change_reason}</div>
+        )}
+        {item.history_user && item.approved == null && (
+          <div>Changed by: {item.history_user}</div>
+        )}
+      </div>
     )
   }
   return (
@@ -106,6 +125,7 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
                     .tz('America/New_York')
                     .format('LLL')}{' '}
                   - {getReason(item)}
+                  {renderMeta(item)}
                 </TextQuote>
               ) : item.approved === false ? (
                 <TextQuote className="py-0">
@@ -114,13 +134,15 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
                     .tz('America/New_York')
                     .format('LLL')}{' '}
                   - {getReason(item)}
+                  {renderMeta(item)}
                 </TextQuote>
               ) : (
                 <TextQuote className="py-0">
-                  <b>Submitted for approval</b> on{' '}
+                  <b>{item.pending_label || 'Pending approval'}</b> on{' '}
                   {moment(item.history_date)
                     .tz('America/New_York')
                     .format('LLL')}
+                  {renderMeta(item)}
                 </TextQuote>
               )}
             </div>
@@ -177,8 +199,28 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
             const item = data[i]
             const lastItem = lastVersions[lastVersions.length - 1]
 
-            if (item.approved !== lastItem?.approved || !lastItem) {
-              lastVersions.push(item)
+            const pendingMetaChanged =
+              item.approved == null &&
+              (item.history_change_reason !== lastItem?.history_change_reason ||
+                item.history_user !== lastItem?.history_user)
+
+            const renewalActivated =
+              item.approved == null &&
+              lastItem?.approved == null &&
+              lastItem?.active === false &&
+              item.active === true
+
+            if (
+              !lastItem ||
+              item.approved !== lastItem.approved ||
+              pendingMetaChanged ||
+              renewalActivated
+            ) {
+              const normalizedItem: HistoricItem = { ...item }
+              if (renewalActivated) {
+                normalizedItem.pending_label = 'Renewal submitted'
+              }
+              lastVersions.push(normalizedItem)
             }
           }
           lastVersions.reverse() // Avoids O(n^2) of unshift() method

@@ -3,17 +3,19 @@ import base64
 import collections
 import datetime
 import functools
+import hashlib
+import hmac
 import io
 import json
 import os
 import re
 import secrets
 import string
+import uuid
+from decimal import Decimal, InvalidOperation
 from functools import wraps
-from typing import Tuple
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
-import jwt
 import pandas as pd
 import pytz
 import qrcode
@@ -21,13 +23,7 @@ import requests
 from analytics.entries import FuncEntry
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from CyberSource import (
-    PaymentsApi,
-    TransientTokenDataApi,
-    UnifiedCheckoutCaptureContextApi,
-)
-from CyberSource.rest import ApiException
-from dateutil.parser import parse
+from dateutil.parser import ParserError, parse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -38,6 +34,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.core.validators import validate_email
 from django.db import transaction
 from django.db.models import (
@@ -59,7 +56,7 @@ from django.db.models import (
 )
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
@@ -245,6 +242,116 @@ from clubs.utils import fuzzy_lookup_club, html_to_text
 from pennclubs.analytics import LabsAnalytics
 
 
+CLUBS_LIST_CACHE_VERSION_KEY = "clubs:list:anon:version"
+
+
+def _bump_clubs_list_cache_version():
+    """
+    Bump anonymous club list cache version so clubs removed from public view don't
+    remain visible due to cached list responses.
+    """
+    try:
+        cache.incr(CLUBS_LIST_CACHE_VERSION_KEY)
+    except ValueError:
+        cache.set(CLUBS_LIST_CACHE_VERSION_KEY, 2, None)
+
+
+def _get_clubs_list_cache_version() -> int:
+    return int(cache.get(CLUBS_LIST_CACHE_VERSION_KEY, 1))
+
+
+def is_public_viewer(request) -> bool:
+    """
+    Return True if the request should be treated as a public viewer
+    (unauthenticated), meaning access should be restricted to clubs explicitly
+    marked visible to the public.
+    """
+    user = getattr(request, "user", None)
+    return not (user is not None and getattr(user, "is_authenticated", False))
+
+
+class ClubPublicVisibilityMagicLinkView(APIView):
+    """
+    A signed, time-limited magic link endpoint to toggle a club's public visibility.
+    Intended to be used from email buttons; does not require authentication.
+    """
+
+    authentication_classes = []
+    permission_classes = []
+
+    max_age_seconds = 60 * 60 * 24 * 14  # 14 days
+
+    def _redirect_to_edit(self, club_code: str, error: str):
+        edit_url = settings.EDIT_URL.format(
+            domain=settings.DEFAULT_DOMAIN, club=club_code
+        )
+        return HttpResponseRedirect(f"{edit_url}?visibility_link={error}")
+
+    def get(self, request, club_code: str, token: str, *args, **kwargs):
+        """
+        Toggle a club's public visibility via a signed, time-limited link.
+
+        This endpoint always responds with a redirect:
+        - On success, redirects to the club page with
+          `visibility_updated=public|private`.
+        - On error (expired/invalid/missing), redirects to the club edit page with
+          `visibility_link=expired|invalid|missing`.
+        ---
+        parameters:
+          - name: visible
+            in: query
+            required: true
+            description: Set the club's public visibility.
+            schema:
+              type: string
+              enum: ["true", "false", "yes", "no", "y", "n"]
+        responses:
+          "302":
+            description: Redirect to club page or club edit page.
+            content:
+              text/html:
+                schema:
+                  type: string
+          "404":
+            description: Club not found.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    detail:
+                      type: string
+        ---
+        """
+        signer = TimestampSigner(salt=f"club-public-visibility:{club_code}")
+        try:
+            payload = signer.unsign(token, max_age=self.max_age_seconds)
+        except SignatureExpired:
+            return self._redirect_to_edit(club_code, "expired")
+        except BadSignature:
+            return self._redirect_to_edit(club_code, "invalid")
+
+        if payload != "ok":
+            return self._redirect_to_edit(club_code, "invalid")
+
+        visible = parse_boolean(request.query_params.get("visible"))
+        if visible is None:
+            return self._redirect_to_edit(club_code, "missing")
+
+        club = get_object_or_404(Club.objects.filter(archived=False), code=club_code)
+        club.visible_to_public = visible
+        club.save(update_fields=["visible_to_public"])
+
+        cache.delete(f"clubs:{club.id}-anon")
+        _bump_clubs_list_cache_version()
+
+        state = "public" if club.visible_to_public else "private"
+        club_url = settings.VIEW_URL.format(
+            domain=settings.DEFAULT_DOMAIN, club=club.code
+        )
+        return HttpResponseRedirect(f"{club_url}?visibility_updated={state}")
+
+
 def update_holds(func):
     """
     Decorator to update ticket holds
@@ -371,22 +478,45 @@ def hour_to_string_helper(hour):
     return hour_string
 
 
-def validate_transient_token(cc: str, tt: str) -> Tuple[bool, str]:
-    """Validate the integrity of the transient token using
-    the public key (JWK) obtained from the capture context"""
+def generate_cybersource_signature(params: dict, secret_key: str) -> str:
+    """
+    Generate HMAC-SHA256 signature for CyberSource Secure Acceptance.
 
-    try:
-        _, body, _ = cc.split(".")
-        decoded_body = json.loads(base64.b64decode(body + "==="))
-        jwk = decoded_body["flx"]["jwk"]
+    The signature is generated by:
+    1. Creating a comma-separated string of "key=value" pairs
+       for all fields listed in signed_field_names
+    2. Computing HMAC-SHA256 of that string using the secret key
+    3. Base64 encoding the result
+    """
+    signed_field_names = params.get("signed_field_names", "")
+    data_to_sign = ",".join(
+        f"{field}={params.get(field, '')}" for field in signed_field_names.split(",")
+    )
+    signature = hmac.new(
+        secret_key.encode("utf-8"), data_to_sign.encode("utf-8"), hashlib.sha256
+    ).digest()
+    return base64.b64encode(signature).decode("utf-8")
 
-        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-        # This will throw if the key is invalid
-        jwt.decode(tt, key=public_key, algorithms=["RS256"])
-        return (True, "Successfully decoded the JWT")
 
-    except Exception as e:
-        return (False, str(e))
+def verify_cybersource_signature(params: dict, secret_key: str) -> bool:
+    """
+    Verify the signature from CyberSource response.
+    """
+    received_signature = params.get("signature", "")
+    expected_signature = generate_cybersource_signature(params, secret_key)
+    return hmac.compare_digest(received_signature, expected_signature)
+
+
+def _is_public_https_url(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    return parsed.scheme == "https" and hostname not in {
+        "localhost",
+        "127.0.0.1",
+        "::1",
+    }
 
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -411,6 +541,53 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         params = request.GET.dict()
+
+        classification_group = params.pop("classification_group", "").strip().lower()
+        if classification_group:
+            group_values = [
+                val.strip().replace(" ", "_")
+                for val in classification_group.split(",")
+                if val.strip()
+            ]
+            normalized_group = group_values[0] if group_values else ""
+
+            if {"undergraduate", "graduate"} <= set(group_values):
+                normalized_group = ""
+
+            if normalized_group in {"all", "both"}:
+                normalized_group = ""
+            elif normalized_group in {"undergrad", "undergraduate", "ug"}:
+                normalized_group = "undergraduate"
+            elif normalized_group in {"grad", "graduate", "g"}:
+                normalized_group = "graduate"
+
+            if queryset.model == Club:
+                classification_field = "classification__id__in"
+            else:
+                classification_field = "club__classification__id__in"
+
+            classifications = Classification.objects.all()
+            classification_ids = []
+
+            if normalized_group == "undergraduate":
+                classification_ids = list(
+                    classifications.filter(
+                        Q(symbol__istartswith="ug") | Q(name__icontains="undergrad")
+                    ).values_list("id", flat=True)
+                )
+            elif normalized_group == "graduate":
+                classification_ids = list(
+                    classifications.filter(
+                        Q(symbol__istartswith="g") | Q(name__icontains="graduate")
+                    )
+                    .exclude(
+                        Q(symbol__istartswith="ug") | Q(name__icontains="undergrad")
+                    )
+                    .values_list("id", flat=True)
+                )
+
+            if classification_ids:
+                queryset = queryset.filter(**{classification_field: classification_ids})
 
         def parse_year(field, value, operation, queryset):
             if value.isdigit():
@@ -519,6 +696,7 @@ class ClubsSearchFilter(filters.BaseFilterBackend):
             "available_virtually": parse_boolean,
             "badges": parse_badges,
             "code": parse_string,
+            "classification": parse_int,
             "enables_subscription": parse_boolean,
             "favorite_count": parse_int,
             "founded": parse_year,
@@ -1261,6 +1439,10 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if not (is_superuser or has_special_perms):
                 queryset = queryset.filter(active=True)
 
+        # Restrict unauthenticated viewers to explicitly public clubs.
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(visible_to_public=True)
+
         # filter by approved clubs
         if (
             self.request.user.has_perm("clubs.see_pending_clubs")
@@ -1334,7 +1516,12 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             if club.image is not None
             else queue_settings.approval_queue_open
         )
-        if not request.user.has_perm("clubs.approve_club") and not relevant_queue_open:
+        if (
+            not (
+                request.user.is_superuser or request.user.has_perm("clubs.approve_club")
+            )
+            and not relevant_queue_open
+        ):
             raise PermissionDenied(
                 "The approval queue is not currently open for editing club images."
             )
@@ -1358,6 +1545,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                     "ghost",
                 ]
             )
+            _bump_clubs_list_cache_version()
 
             # create thumbnail
             club.create_thumbnail(request)
@@ -1900,12 +2088,15 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         operationId: Club Directory List
         ---
         """
-        serializer = ClubMinimalSerializer(
+        queryset = (
             Club.objects.all()
             .exclude((~Q(approved=True) & Q(ghost=False)) | Q(archived=True))
-            .order_by(Lower("name")),
-            many=True,
+            .order_by(Lower("name"))
         )
+        if is_public_viewer(request):
+            queryset = queryset.filter(visible_to_public=True)
+
+        serializer = ClubMinimalSerializer(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
@@ -2198,11 +2389,21 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
         bypass = self.request.query_params.get("bypass", "").lower() == "true"
 
-        use_cache = not is_superuser and not has_special_perms and not bypass
+        # Cache only for anonymous users to avoid leaking user-specific data
+        # or stale is_favorite / is_subscribed
+        use_cache = (
+            (not user.is_authenticated)
+            and (not is_superuser)
+            and (not has_special_perms)
+            and (not bypass)
+        )
 
         key = None
         if use_cache:
-            key = self.request.build_absolute_uri()
+            key = (
+                f"clubs:list:anon:v{_get_clubs_list_cache_version()}:"
+                f"{self.request.build_absolute_uri()}"
+            )
             cached_object = cache.get(key)
             if cached_object:
                 return Response(cached_object)
@@ -2221,13 +2422,16 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         club = self.get_object()
 
+        # Avoid caching for authenticated users.
+        # Responses include user-specific fields.
+        if self.request.user.is_authenticated:
+            return super().retrieve(*args, **kwargs)
+
         # don't cache if user has elevated view perms
         if self._has_elevated_view_perms(club):
             return super().retrieve(*args, **kwargs)
 
-        key = f"""clubs:{club.id}-{
-            "authed" if self.request.user.is_authenticated else "anon"
-        }"""
+        key = f"clubs:{club.id}-anon"
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -2243,6 +2447,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_approval_permission(request)
         cache.delete(f"clubs:{self.get_object().id}-authed")
         cache.delete(f"clubs:{self.get_object().id}-anon")
+        _bump_clubs_list_cache_version()
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
@@ -2252,6 +2457,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         self.check_approval_permission(request)
         cache.delete(f"clubs:{self.get_object().id}-authed")
         cache.delete(f"clubs:{self.get_object().id}-anon")
+        _bump_clubs_list_cache_version()
         return super().partial_update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
@@ -2264,6 +2470,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         instance.archived_by = self.request.user
         instance.archived_on = timezone.now()
         instance.save()
+        _bump_clubs_list_cache_version()
 
         # Send notice to club officers and executor
         context = {
@@ -2904,6 +3111,13 @@ class ClubEventViewSet(viewsets.ModelViewSet):
         start_time = parse(event_data.pop("start_time"))
         end_time = parse(event_data.pop("end_time"))
         location = event_data.pop("location", None)
+        location_visible_to_public = parse_boolean(
+            event_data.pop("location_visible_to_public", False)
+        )
+        if location_visible_to_public is None:
+            raise DRFValidationError(
+                detail="location_visible_to_public must be a boolean value"
+            )
 
         # offset and end_date default to create a single event
         offset = event_data.pop("offset", 1)
@@ -2929,6 +3143,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     "start_time": current_start,
                     "end_time": current_end,
                     "location": location,
+                    "location_visible_to_public": location_visible_to_public,
                     "event": event.id,
                 }
                 showing_serializer = EventShowingWriteSerializer(
@@ -2984,8 +3199,15 @@ class ClubEventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Event.objects.all()
+        public_viewer = is_public_viewer(self.request)
         is_club_specific = self.kwargs.get("club_code") is not None
         if is_club_specific:
+            if public_viewer and self.action in {"list", "retrieve"}:
+                get_object_or_404(
+                    Club.objects.filter(archived=False),
+                    code=self.kwargs["club_code"],
+                    visible_to_public=True,
+                )
             qs = qs.filter(club__code=self.kwargs["club_code"])
             # Check if the user is an officer or admin
             if not self.request.user.is_authenticated or (
@@ -3020,6 +3242,10 @@ class ClubEventViewSet(viewsets.ModelViewSet):
                     | Q(club__isnull=True),
                     Q(club__isnull=True) | Q(club__archived=False),
                 )
+
+        if public_viewer:
+            qs = qs.filter(Q(club__isnull=True) | Q(club__visible_to_public=True))
+
         # Order events by their earliest showing's start time
         return (
             qs.select_related("club", "creator")
@@ -3152,7 +3378,7 @@ class EventViewSet(ClubEventViewSet):
 
         # cache the response for this endpoint with short timeout
         if date is None:
-            key = f"events:fair:directory:{request.user.is_authenticated}:{fair}"
+            key = f"events:fair:directory:{is_public_viewer(request)}:{fair}"
             cached = cache.get(key)
             if cached:
                 return Response(cached)
@@ -3177,6 +3403,8 @@ class EventViewSet(ClubEventViewSet):
         events = Event.objects.filter(
             type=Event.FAIR, club__badges__purpose="fair", club__badges__fair=fair
         )
+        if is_public_viewer(request):
+            events = events.filter(club__visible_to_public=True)
 
         # Get event showings for these events
         event_showings = EventShowing.objects.filter(event__in=events)
@@ -5181,7 +5409,10 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
     http_methods_names = ["get", "post"]
 
     def get_queryset(self):
-        return ClubFairBooth.objects.all()
+        queryset = ClubFairBooth.objects.all()
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(club__visible_to_public=True)
+        return queryset
 
     @action(detail=False, methods=["get"])
     def live(self, *args, **kwargs):
@@ -5227,6 +5458,8 @@ class ClubBoothsViewSet(viewsets.ModelViewSet):
             .order_by("start_time")
             .all()
         )
+        if is_public_viewer(self.request):
+            booths = booths.filter(club__visible_to_public=True)
 
         return Response(ClubBoothSerializer(booths, many=True).data)
 
@@ -6446,13 +6679,14 @@ class TicketViewSet(viewsets.ModelViewSet):
     @LabsAnalytics.record_api_function(FuncEntry(name="checkout_initiated"))
     def initiate_checkout(self, request, *args, **kwargs):
         """
-        Checkout all tickets in cart and create a Cybersource capture context
+        Initiate checkout for all tickets in cart using CyberSource
+        Secure Acceptance Hosted Checkout.
 
         NOTE: this does NOT buy tickets, it simply initiates a checkout process
-        which includes a 10-minute ticket hold
+        which includes a 10-minute ticket hold.
 
-        Once the user has entered their payment details and submitted the form
-        the request will be routed to complete_checkout
+        Returns signed parameters for the frontend to POST to CyberSource's
+        hosted checkout page.
 
         403 implies a stale cart.
         ---
@@ -6464,12 +6698,39 @@ class TicketViewSet(viewsets.ModelViewSet):
                         schema:
                            type: object
                            properties:
-                                detail:
-                                    type: string
                                 success:
                                     type: boolean
                                 sold_free_tickets:
                                     type: boolean
+                                cybersource_url:
+                                    type: string
+                                payment_params:
+                                    type: object
+                                    properties:
+                                        access_key:
+                                            type: string
+                                        profile_id:
+                                            type: string
+                                        transaction_uuid:
+                                            type: string
+                                        signed_field_names:
+                                            type: string
+                                        unsigned_field_names:
+                                            type: string
+                                        signed_date_time:
+                                            type: string
+                                        locale:
+                                            type: string
+                                        transaction_type:
+                                            type: string
+                                        reference_number:
+                                            type: string
+                                        amount:
+                                            type: string
+                                        currency:
+                                            type: string
+                                        signature:
+                                            type: string
             "403":
                 content:
                     application/json:
@@ -6526,13 +6787,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         # If all tickets are free, we can skip the payment process
         if not cart_total:
             order_info = {
-                "amountDetails": {"totalAmount": "0.00"},
-                "billTo": {
-                    "firstName": self.request.user.first_name,
-                    "lastName": self.request.user.last_name,
-                    "phoneNumber": None,
-                    "email": self.request.user.email,
-                },
+                "total_amount": Decimal("0.00"),
+                "first_name": self.request.user.first_name,
+                "last_name": self.request.user.last_name,
+                "email": self.request.user.email,
+                "phone": None,
             }
 
             # Place hold on tickets for 10 mins
@@ -6548,197 +6807,262 @@ class TicketViewSet(viewsets.ModelViewSet):
                 }
             )
 
-        capture_context_request = {
-            "_target_origins": [settings.CYBERSOURCE_TARGET_ORIGIN],
-            "_client_version": settings.CYBERSOURCE_CLIENT_VERSION,
-            "_allowed_card_networks": [
-                "VISA",
-                "MASTERCARD",
-                "AMEX",
-                "DISCOVER",
-            ],
-            "_allowed_payment_types": ["PANENTRY", "SRC"],
-            "_country": "US",
-            "_locale": "en_US",
-            "_capture_mandate": {
-                "_billing_type": "FULL",
-                "_request_email": True,
-                "_request_phone": True,
-                "_request_shipping": True,
-                "_show_accepted_network_icons": True,
-            },
-            "_order_information": {
-                "_amount_details": {
-                    "_total_amount": f"{cart_total:.2f}",
-                    "_currency": "USD",
-                }
-            },
-        }
+        # Generate unique transaction UUID for this checkout
+        transaction_uuid = uuid.uuid4()
 
-        try:
-            context, http_status, _ = UnifiedCheckoutCaptureContextApi(
-                settings.CYBERSOURCE_CONFIG
-            ).generate_unified_checkout_capture_context_with_http_info(
-                json.dumps(capture_context_request)
-            )
-            if not context or http_status >= 400:
-                raise ApiException(
-                    reason=f"Received {context} with HTTP status {http_status}",
-                )
+        # Build CyberSource Secure Acceptance parameters
+        # Reference: https://developer.cybersource.com/docs/cybs/en-us/
+        # secure-acceptance-hosted-checkout/developer/all/so/sa-hc/
+        signed_date_time = timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            # Tie generated capture context to user cart
-            if cart.checkout_context != context:
-                cart.checkout_context = context
-                cart.save()
+        callback_base = getattr(settings, "CYBERSOURCE_CALLBACK_BASE", None)
+        if callback_base:
+            callback_base = callback_base.rstrip("/")
+        else:
+            callback_base = request.build_absolute_uri("/").rstrip("/")
 
-            # Place hold on tickets for 10 mins
-            self._place_hold_on_tickets(self.request.user, tickets)
-
-            return Response(
-                {
-                    "success": True,
-                    "detail": context,
-                    "sold_free_tickets": False,
-                }
-            )
-
-        except ApiException as e:
-            return Response(
-                {
-                    "success": False,
-                    "detail": f"Unable to generate capture context: {e}",
-                    "sold_free_tickets": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-    @action(detail=False, methods=["post"])
-    @update_holds
-    @transaction.atomic
-    @LabsAnalytics.record_api_function(FuncEntry(name="complete_checkout"))
-    def complete_checkout(self, request, *args, **kwargs):
-        """
-        Complete the checkout after the user has entered their payment details
-        and obtained a transient token on the frontend.
-
-        403 implies a stale cart.
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            transient_token:
-                                type: string
-        responses:
-            "200":
-                content:
-                    application/json:
-                        schema:
-                           type: object
-                           properties:
-                                detail:
-                                    type: string
-                                success:
-                                    type: boolean
-        ---
-        """
-        tt = request.data.get("transient_token")
-        cart = get_object_or_404(
-            Cart.objects.prefetch_related("tickets"), owner=self.request.user
+        receipt_url = f"{callback_base}/api/tickets/payment_complete/"
+        cancel_url = (
+            f"{settings.FRONTEND_URL.rstrip('/')}/events/checkout?cancelled=true"
         )
 
-        cc = cart.checkout_context
-        if cc is None:
-            return Response(
-                {"success": False, "detail": "Associated capture context not found"},
-                status=status.HTTP_500_BAD_REQUEST,
-            )
+        include_receipt_override = _is_public_https_url(receipt_url)
+        include_cancel_override = _is_public_https_url(cancel_url)
 
-        ok, message = validate_transient_token(cc, tt)
-        if not ok:
-            # Cleanup state since the purchase failed
-            cart.tickets.update(holder=None, owner=None)
-            cart.checkout_context = None
-            cart.save()
-            return Response(
-                {"success": False, "detail": message},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        # Fields that will be signed (order matters for signature generation)
+        signed_field_names = [
+            "access_key",
+            "profile_id",
+            "transaction_uuid",
+            "signed_field_names",
+            "unsigned_field_names",
+            "signed_date_time",
+            "locale",
+            "transaction_type",
+            "reference_number",
+            "amount",
+            "currency",
+        ]
 
-        # Guard against holds expiring before the capture context
-        tickets = cart.tickets.filter(holder=self.request.user, owner__isnull=True)
-        if tickets.count() != cart.tickets.count():
-            return Response(
-                {
-                    "success": False,
-                    "detail": "Cart is stale, invoke /api/tickets/cart to refresh",
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        if include_receipt_override:
+            signed_field_names.append("override_custom_receipt_page")
+        if include_cancel_override:
+            signed_field_names.append("override_custom_cancel_page")
 
-        try:
-            _, http_status, transaction_data = TransientTokenDataApi(
-                settings.CYBERSOURCE_CONFIG
-            ).get_transaction_for_transient_token(tt)
+        signed_field_names.extend(
+            [
+                "bill_to_forename",
+                "bill_to_surname",
+                "bill_to_email",
+                "bill_to_address_line1",
+                "bill_to_address_city",
+                "bill_to_address_state",
+                "bill_to_address_country",
+                "bill_to_address_postal_code",
+            ]
+        )
 
-            if not transaction_data or http_status >= 400:
-                raise ApiException(
-                    reason=f"Received {transaction_data} with HTTP status {http_status}"
-                )
-            transaction_data = json.loads(transaction_data)
-        except ApiException as e:
-            # Cleanup state since the purchase failed
-            cart.tickets.update(holder=None, owner=None)
-            cart.checkout_context = None
-            cart.save()
+        # Reference number is used to identify the transaction in CyberSource
+        # Using transaction_uuid to correlate with our database
+        reference_number = str(transaction_uuid)
 
-            return Response(
-                {
-                    "success": False,
-                    "detail": f"Transaction failed: {e}",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        # Build base payment parameters
+        payment_params = {
+            "access_key": settings.CYBERSOURCE_SA_ACCESS_KEY,
+            "profile_id": settings.CYBERSOURCE_SA_PROFILE_ID,
+            "transaction_uuid": str(transaction_uuid),
+            "signed_field_names": ",".join(signed_field_names),
+            "unsigned_field_names": "",
+            "signed_date_time": signed_date_time,
+            "locale": "en-us",
+            "transaction_type": "sale",
+            "reference_number": reference_number,
+            "amount": f"{cart_total:.2f}",
+            "currency": "USD",
+            # Pre-fill billing info from user profile
+            "bill_to_forename": self.request.user.first_name or "Guest",
+            "bill_to_surname": self.request.user.last_name or "User",
+            "bill_to_email": self.request.user.email,
+            # CyberSource requires address fields even if not validating
+            "bill_to_address_line1": "3401 Walnut Street",
+            "bill_to_address_city": "Philadelphia",
+            "bill_to_address_state": "PA",
+            "bill_to_address_country": "US",
+            "bill_to_address_postal_code": "19104",
+        }
 
-        create_payment_request = {"tokenInformation": {"transientTokenJwt": tt}}
+        if include_receipt_override:
+            payment_params["override_custom_receipt_page"] = receipt_url
+        if include_cancel_override:
+            payment_params["override_custom_cancel_page"] = cancel_url
 
-        try:
-            payment_response, http_status, _ = PaymentsApi(
-                settings.CYBERSOURCE_CONFIG
-            ).create_payment(json.dumps(create_payment_request))
+        # Generate signature
+        payment_params["signature"] = generate_cybersource_signature(
+            payment_params, settings.CYBERSOURCE_SA_SECRET_KEY
+        )
 
-            if payment_response.status != "AUTHORIZED":
-                raise ApiException(reason="Payment response status is not authorized")
-            reconciliation_id = payment_response.reconciliation_id
+        # Store the transaction UUID in cart for lookup when CyberSource POSTs back
+        cart.pending_transaction_uuid = transaction_uuid
+        cart.save()
 
-            if not payment_response or http_status >= 400:
-                raise ApiException(
-                    reason=f"Received {payment_response} with HTTP status {http_status}"
-                )
-        except ApiException as e:
-            # Cleanup state since the purchase failed
-            cart.tickets.update(holder=None, owner=None)
-            cart.checkout_context = None
-            cart.save()
-
-            return Response(
-                {
-                    "success": False,
-                    "detail": f"Transaction failed: {e}",
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-        order_info = transaction_data["orderInformation"]
-        self._give_tickets(self.request.user, order_info, cart, reconciliation_id)
+        # Place hold on tickets for 10 mins
+        self._place_hold_on_tickets(self.request.user, tickets)
 
         return Response(
             {
                 "success": True,
-                "detail": "Payment successful.",
+                "sold_free_tickets": False,
+                "cybersource_url": settings.CYBERSOURCE_SA_URL,
+                "payment_params": payment_params,
             }
+        )
+
+    @action(
+        detail=False,
+        methods=["post"],
+        authentication_classes=[],
+        permission_classes=[AllowAny],
+    )
+    @transaction.atomic
+    @LabsAnalytics.record_api_function(FuncEntry(name="payment_complete"))
+    def payment_complete(self, request, *args, **kwargs):
+        """
+        Handle the POST from CyberSource Secure Acceptance after payment.
+
+        CyberSource POSTs payment results to this endpoint. We verify the
+        signature, process the payment, and redirect the user to the frontend
+        with success/error query parameters.
+
+        This endpoint is CSRF exempt because CyberSource POSTs directly.
+        ---
+        requestBody:
+            content:
+                application/x-www-form-urlencoded:
+                    schema:
+                        type: object
+        responses:
+            "302":
+                description: Redirect to frontend checkout page
+                content:
+                    text/html:
+                        schema:
+                            type: string
+        ---
+        """
+        # Convert POST data to dict for signature verification
+        params = dict(request.POST.items())
+
+        # Verify signature to ensure request is from CyberSource
+        if not verify_cybersource_signature(params, settings.CYBERSOURCE_SA_SECRET_KEY):
+            return HttpResponseRedirect(
+                f"{settings.FRONTEND_URL}/events/checkout?"
+                f"error={quote('Invalid payment signature')}"
+            )
+
+        # Extract key fields from CyberSource response
+        decision = params.get("decision", "")
+        reason_code = params.get("reason_code", "")
+        transaction_id = params.get("transaction_id", "")
+        req_transaction_uuid = params.get("req_transaction_uuid", "")
+        req_reference_number = params.get("req_reference_number", "")
+        request_id = params.get("request_id", "")
+
+        # Look up cart by transaction UUID
+        try:
+            transaction_uuid = uuid.UUID(req_transaction_uuid)
+        except (ValueError, TypeError):
+            return HttpResponseRedirect(
+                f"{settings.FRONTEND_URL}/events/checkout?"
+                f"error={quote('Invalid transaction identifier')}"
+            )
+
+        cart = (
+            Cart.objects.select_for_update()
+            .filter(pending_transaction_uuid=transaction_uuid)
+            .prefetch_related("tickets")
+            .first()
+        )
+
+        if not cart:
+            return HttpResponseRedirect(
+                f"{settings.FRONTEND_URL}/events/checkout?"
+                f"error={quote('Transaction not found or already processed')}"
+            )
+
+        user = cart.owner
+
+        # Check if payment was accepted
+        if decision != "ACCEPT":
+            # Payment was declined or errored
+            # Release holds on tickets
+            cart.tickets.update(holder=None)
+            cart.pending_transaction_uuid = None
+            cart.save()
+
+            # Build user-friendly error message
+            error_messages = {
+                "DECLINE": "Your payment was declined. Please try a different card.",
+                "REVIEW": "Your payment requires review. Please contact support.",
+                "ERROR": "A payment processing error occurred. Please try again.",
+                "CANCEL": "Payment was cancelled.",
+            }
+            error_msg = error_messages.get(
+                decision, f"Payment failed (code: {reason_code})"
+            )
+
+            return HttpResponseRedirect(
+                f"{settings.FRONTEND_URL}/events/checkout?error={quote(error_msg)}"
+            )
+
+        # Payment was successful - verify tickets are still held
+        Ticket.objects.update_holds()
+        tickets = cart.tickets.filter(holder=user, owner__isnull=True)
+        if tickets.count() != cart.tickets.count():
+            # Hold expired during payment - this is a race condition
+            # The payment was charged but we can't give the tickets
+            # Log this for manual reconciliation
+            cart.pending_transaction_uuid = None
+            cart.save()
+
+            error_msg = (
+                "Your ticket hold expired during payment. "
+                "Please contact support with reference: "
+                f"{req_reference_number}"
+            )
+
+            return HttpResponseRedirect(
+                f"{settings.FRONTEND_URL}/events/checkout?error={quote(error_msg)}"
+            )
+
+        try:
+            total_amount = Decimal(params.get("req_amount", "0.00") or "0.00")
+        except (InvalidOperation, TypeError, ValueError):
+            return HttpResponseRedirect(
+                f"{settings.FRONTEND_URL}/events/checkout?"
+                f"error={quote('Invalid payment amount received')}"
+            )
+
+        # Build order info for _give_tickets
+        order_info = {
+            "total_amount": total_amount,
+            "first_name": params.get("req_bill_to_forename", ""),
+            "last_name": params.get("req_bill_to_surname", ""),
+            "email": params.get("req_bill_to_email", ""),
+            "phone": params.get("req_bill_to_phone", None),
+            # CyberSource transaction details for record
+            "transaction_id": transaction_id,
+            "request_id": request_id,
+            "reference_number": req_reference_number,
+            "transaction_uuid": transaction_uuid,
+            "decision": decision,
+            "reason_code": reason_code,
+        }
+
+        # Give tickets to user
+        self._give_tickets(user, order_info, cart, transaction_uuid)
+
+        return HttpResponseRedirect(
+            f"{settings.FRONTEND_URL}/events/checkout?success=true"
         )
 
     @action(detail=True, methods=["get"])
@@ -6849,10 +7173,21 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Ticket.objects.filter(owner=self.request.user.id)
 
     @staticmethod
-    def _give_tickets(user, order_info, cart, reconciliation_id):
+    def _give_tickets(user, order_info, cart, transaction_uuid):
         """
         Helper function that gives user/buyer their held tickets
-        and archives the transaction data
+        and archives the transaction data.
+
+        Args:
+            user: The user purchasing the tickets
+            order_info: Dict with payment details:
+                - total_amount: Decimal amount
+                - first_name, last_name, email, phone: Buyer info
+                - transaction_id, request_id, reference_number: CyberSource IDs
+                - transaction_uuid: Our transaction UUID
+                - decision, reason_code: CyberSource result codes
+            cart: The user's cart
+            transaction_uuid: UUID for this transaction (also in order_info)
         """
 
         # At this point, we have validated that the payment was authorized
@@ -6862,19 +7197,27 @@ class TicketViewSet(viewsets.ModelViewSet):
         # Archive transaction data for historical purposes.
         # We're explicitly using the response data over what's in self.request.user
         transaction_record = TicketTransactionRecord.objects.create(
-            reconciliation_id=str(reconciliation_id),
-            total_amount=float(order_info["amountDetails"]["totalAmount"]),
-            buyer_first_name=order_info["billTo"]["firstName"],
-            buyer_last_name=order_info["billTo"]["lastName"],
-            # TODO: investigate why phone numbers don't show in test API
-            buyer_phone=order_info["billTo"].get("phoneNumber", None),
-            buyer_email=order_info["billTo"]["email"],
+            # CyberSource identifiers
+            transaction_id=order_info.get("transaction_id"),
+            request_id=order_info.get("request_id"),
+            reference_number=order_info.get("reference_number"),
+            transaction_uuid=order_info.get("transaction_uuid"),
+            # Transaction result
+            decision=order_info.get("decision"),
+            reason_code=order_info.get("reason_code"),
+            # Payment amount
+            total_amount=order_info["total_amount"],
+            # Buyer info
+            buyer_first_name=order_info["first_name"],
+            buyer_last_name=order_info["last_name"],
+            buyer_email=order_info["email"],
+            buyer_phone=order_info.get("phone"),
         )
         tickets.update(owner=user, holder=None, transaction_record=transaction_record)
 
         cart.tickets.clear()
         Ticket.objects.update_holds()
-        cart.checkout_context = None
+        cart.pending_transaction_uuid = None
         cart.save()
 
         tickets = Ticket.objects.filter(
@@ -6979,12 +7322,24 @@ class ExternalMemberListViewSet(viewsets.ModelViewSet):
     http_method_names = ["get"]
     serializer_class = ExternalMemberListSerializer
 
+    def list(self, request, *args, **kwargs):
+        if is_public_viewer(request):
+            get_object_or_404(
+                Club.objects.filter(archived=False),
+                code=self.kwargs["code"],
+                visible_to_public=True,
+            )
+        return super().list(request, *args, **kwargs)
+
     def get_queryset(self):
-        return (
+        queryset = (
             Membership.objects.all()
             .select_related("person", "club")
             .filter(club__code=self.kwargs["code"])
         )
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(club__visible_to_public=True)
+        return queryset
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -8434,7 +8789,12 @@ class BadgeClubViewSet(viewsets.ModelViewSet):
         return Response({"success": True})
 
     def get_queryset(self):
-        return Club.objects.filter(badges__id=self.kwargs["badge_pk"]).order_by("name")
+        queryset = Club.objects.filter(badges__id=self.kwargs["badge_pk"]).order_by(
+            "name"
+        )
+        if is_public_viewer(self.request):
+            queryset = queryset.filter(visible_to_public=True)
+        return queryset
 
 
 class MassInviteAPIView(APIView):
@@ -9034,6 +9394,12 @@ class RegistrationQueueSettingsView(APIView):
                                     format: date-time
                                 updated_by:
                                     type: string
+                                reapproval_date_of_next_flip:
+                                    type: string
+                                    format: date-time
+                                new_approval_date_of_next_flip:
+                                    type: string
+                                    format: date-time
             "400":
                 content:
                     application/json:
@@ -9044,7 +9410,74 @@ class RegistrationQueueSettingsView(APIView):
                                     type: string
         ---
         """
+
+        def validate_scheduled_flip_datetime(date_of_next_flip, queue_name):
+            date = request.data.get(date_of_next_flip)
+            if not date or not isinstance(date, str):
+                return None
+
+            try:
+                parsed_date = parse(date)
+            except (ParserError, OverflowError):
+                return Response(
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must be a valid datetime."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if timezone.is_naive(parsed_date):
+                return Response(
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must include "
+                            "timezone information."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if parsed_date < timezone.now():
+                return Response(
+                    {
+                        "error": (
+                            f"{queue_name} date of next flip must be in the future."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            return None
+
+        validation_response = validate_scheduled_flip_datetime(
+            "reapproval_date_of_next_flip", "Reapproval"
+        )
+
+        # return if error
+        if validation_response:
+            return validation_response
+
+        validation_response = validate_scheduled_flip_datetime(
+            "new_approval_date_of_next_flip", "New approval"
+        )
+
+        # return if error
+        if validation_response:
+            return validation_response
+
         queue_setting = RegistrationQueueSettings.get()
+
+        # If manually flip state, clear the scheduled flip date (if any)
+        reapproval_queue_desired = request.data.get("reapproval_queue_open")
+        if reapproval_queue_desired is not None:
+            queue_setting.reapproval_date_of_next_flip = None
+
+        new_approval_queue_desired = request.data.get("new_approval_queue_open")
+        if new_approval_queue_desired is not None:
+            queue_setting.new_approval_date_of_next_flip = None
+
         serializer = RegistrationQueueSettingsSerializer(
             queue_setting, data=request.data, partial=True
         )

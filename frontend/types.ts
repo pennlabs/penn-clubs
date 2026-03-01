@@ -76,6 +76,7 @@ export interface EventShowing {
   start_time: string
   end_time: string
   location: string | null
+  location_visible_to_public?: boolean
   ticket_order_limit: number
   ticket_drop_time?: string | null
   ticketed: boolean
@@ -228,6 +229,7 @@ export interface Club {
   designation?: Designation
   eligibility: Eligibility[]
   email: string
+  visible_to_public?: boolean
   enables_subscription: boolean
   events: ClubEvent[]
   facebook: string
@@ -504,6 +506,8 @@ export type RegistrationQueueSettings = {
   new_approval_queue_open: boolean
   updated_at: string
   updated_by: string
+  new_approval_date_of_next_flip: string | null
+  reapproval_date_of_next_flip: string | null
 }
 
 export type OwnershipRequest = {

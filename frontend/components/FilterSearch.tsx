@@ -15,7 +15,7 @@ import {
   WHITE,
 } from '../constants/colors'
 import { MD, mediaMaxWidth } from '../constants/measurements'
-import { Icon, SelectedTag, Tag } from './common'
+import { Icon, Tag } from './common'
 
 const SearchWrapper = styled.div`
   margin-bottom: 30px;
@@ -101,11 +101,22 @@ const Search = ({
         border: `1px solid ${BORDER}`,
         background: isEmphasized ? FOCUS_GRAY : background,
         boxShadow: 'none',
+        minHeight: '42px',
+        alignItems: 'center',
         '&:hover': {
           background: FOCUS_GRAY,
         },
       }
     },
+    valueContainer: (base) => ({
+      ...base,
+      alignItems: 'center',
+      padding: '2px',
+    }),
+    multiValue: (base) => ({
+      ...base,
+      alignItems: 'center',
+    }),
     option: ({ background, ...base }, { isFocused, isSelected }) => {
       const isEmphasized = isFocused || isSelected
       return {
@@ -124,47 +135,43 @@ const Search = ({
   const components = {
     IndicatorSeparator: () => null,
     DropdownIndicator: () => <SearchIcon name="tag" />,
-    MultiValueContainer: ({ innerProps, children }) => {
-      const backgroundColor = TAG_BACKGROUND_COLOR_MAP[param]
-      const foregroundColor = TAG_TEXT_COLOR_MAP[param] ?? 'white'
+    MultiValueContainer: ({ data }) => {
+      const raw = data?.color as string | undefined
+      const tagName = data?.name ?? param
+      const background = raw
+        ? raw.startsWith('#')
+          ? raw
+          : `#${raw}`
+        : tagName
+          ? TAG_BACKGROUND_COLOR_MAP[tagName]
+          : undefined
+      const text = tagName ? TAG_TEXT_COLOR_MAP[tagName] : undefined
 
-      if (backgroundColor != null) {
-        return (
-          <Tag
-            {...innerProps}
-            color={backgroundColor}
-            foregroundColor={foregroundColor}
-            className="tag is-rounded"
-          >
-            {children}
-          </Tag>
-        )
+      const handleRemove = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        updateTag(data, name)
       }
 
       return (
-        <SelectedTag {...innerProps} className="tag is-rounded">
-          {children}
-        </SelectedTag>
+        <Tag
+          color={background}
+          foregroundColor={text}
+          className="tag is-rounded"
+          style={{
+            margin: 3,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3em',
+          }}
+        >
+          <span>{data.label}</span>
+          <button className="delete is-small" onClick={handleRemove} />
+        </Tag>
       )
     },
-    MultiValueLabel: ({ data: { label } }) => label,
-    MultiValueRemove: ({ data, innerProps }) => {
-      const removeGenerator = (func) => {
-        return (e) => {
-          func(e)
-          updateTag(data, name)
-        }
-      }
-      return (
-        <button
-          {...innerProps}
-          onClick={removeGenerator(innerProps.onClick)}
-          onTouchEnd={removeGenerator(innerProps.onTouchEnd)}
-          onMouseDown={removeGenerator(innerProps.onMouseDown)}
-          className="delete is-small"
-        />
-      )
-    },
+    MultiValueLabel: () => null,
+    MultiValueRemove: () => null,
   }
   const selectId = `club-search-${name.toLowerCase()}`
 

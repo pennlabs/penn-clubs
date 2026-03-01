@@ -289,7 +289,7 @@ const Actions = ({
                 updateRequests={updateRequests}
               />
             )}
-          {SHOW_APPLICATIONS && !isMembershipOpen && !inClub && (
+          {SHOW_APPLICATIONS && !isMembershipOpen && (
             <Link
               legacyBehavior
               href={CLUB_APPLY_ROUTE()}
@@ -297,7 +297,7 @@ const Actions = ({
               passHref
             >
               <ActionButton className="button is-success">
-                <Icon name="edit" /> Apply
+                <Icon name="edit" /> {inClub ? 'Reapply' : 'Apply'}
               </ActionButton>
             </Link>
           )}

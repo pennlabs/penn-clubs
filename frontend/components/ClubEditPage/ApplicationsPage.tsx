@@ -214,6 +214,7 @@ const NotificationModal = (props: {
   updateSubmissions: (arr: Array<ApplicationSubmission>) => void
 }): ReactElement<any> => {
   const { submissions, club, application, updateSubmissions } = props
+  // eslint-disable-next-line camelcase -- form field name for API
   const initialValues = { dry_run: true }
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement<any> | null
@@ -425,7 +426,7 @@ export default function ApplicationsPage({
         if (applications.length !== 0) {
           setCurrentApplication({
             ...applications[applications.length - 1],
-            name: format_app_name(applications[applications.length - 1]),
+            name: formatAppName(applications[applications.length - 1]),
           })
         }
       })
@@ -451,6 +452,7 @@ export default function ApplicationsPage({
                   APPLICATION_STATUS_TYPES.find(
                     (status) => status.value === response.status,
                   )?.label + (response.notified ? ' (notified)' : ''),
+                // eslint-disable-next-line camelcase -- display key from API
                 created_at: moment(response.created_at)
                   .tz('America/New_York')
                   .format('LLL'),
@@ -601,7 +603,7 @@ export default function ApplicationsPage({
     }
   }
 
-  const format_app_name: (application: Application) => any = (application) => (
+  const formatAppName: (application: Application) => any = (application) => (
     <span>
       {application.name} {' - '}
       <span className="has-text-weight-semibold">
@@ -635,7 +637,7 @@ export default function ApplicationsPage({
               return {
                 ...application,
                 value: application.id,
-                label: format_app_name(application),
+                label: formatAppName(application),
               }
             })}
             value={

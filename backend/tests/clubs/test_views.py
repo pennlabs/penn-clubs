@@ -2,15 +2,18 @@ import datetime
 import io
 import json
 import os
+import time
 from collections import Counter
 from unittest.mock import MagicMock, patch
 
+from dateutil.parser import isoparse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
 from django.core.management import call_command
+from django.core.signing import TimestampSigner
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -57,7 +60,13 @@ class SearchTestCase(TestCase):
     def setUpTestData(cls):
         Club.objects.bulk_create(
             [
-                Club(code=f"club-{i}", name=f"Club #{i}", active=True, approved=True)
+                Club(
+                    code=f"club-{i}",
+                    name=f"Club #{i}",
+                    active=True,
+                    approved=True,
+                    visible_to_public=True,
+                )
                 for i in range(0, 100)
             ]
         )
@@ -210,6 +219,7 @@ class ClubTestCase(TestCase):
             approved=True,
             active=True,
             email="example@example.com",
+            visible_to_public=True,
         )
 
         self.wc = Club.objects.create(
@@ -218,6 +228,7 @@ class ClubTestCase(TestCase):
             approved=True,
             active=True,
             email="example@example.com",
+            visible_to_public=True,
         )
 
         # some tests (e.g. directory) implicitly assume some constant number of clubs
@@ -1260,6 +1271,206 @@ class ClubTestCase(TestCase):
         self.assertIn("The approval queue is not currently open.", str(resp.content))
         self.assertFalse(Club.objects.filter(code="new-club").exists())
 
+    def test_club_create_new_approval_queue_closed_superuser_can_create(self):
+        """
+        Superusers can create clubs even when the new approval queue is closed.
+        """
+        self.client.login(username=self.user5.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "super-club",
+                "name": "Superuser Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "superclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="super-club")
+        self.assertFalse(club.approved)
+        self.assertEqual(club.approved_by, self.user5)
+        self.assertEqual(
+            club.approved_comment,
+            "Placeholder club - must edit with real details for approval",
+        )
+        self.assertTrue(club.active)
+
+    def test_club_create_queue_closed_with_approve_permission(self):
+        """
+        Users with approve_club permission can create clubs when the queue is closed.
+        """
+        self.client.login(username=self.user4.username, password="test")
+
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "approver-club",
+                "name": "Approver Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "approverclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="approver-club")
+        self.assertFalse(club.approved)
+        self.assertEqual(club.approved_by, self.user4)
+        self.assertEqual(
+            club.approved_comment,
+            "Placeholder club - must edit with real details for approval",
+        )
+        self.assertTrue(club.active)
+
+    def test_club_create_queue_closed_superuser_can_choose_to_approve(self):
+        self.client.login(username=self.user5.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "super-approved-club",
+                "name": "Superuser Approved Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "superapprovedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="super-approved-club")
+        self.assertTrue(club.approved)
+        self.assertEqual(club.approved_by, self.user5)
+        self.assertTrue(club.active)
+
+    def test_club_create_queue_closed_with_approve_permission_can_choose_to_approve(
+        self,
+    ):
+        self.client.login(username=self.user4.username, password="test")
+
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "approver-approved-club",
+                "name": "Approver Approved Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "approverapprovedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="approver-approved-club")
+        self.assertTrue(club.approved)
+        self.assertEqual(club.approved_by, self.user4)
+        self.assertTrue(club.active)
+
+    def test_club_create_queue_closed_with_approve_permission_can_choose_to_reject(
+        self,
+    ):
+        self.client.login(username=self.user4.username, password="test")
+
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.new_approval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "approver-rejected-club",
+                "name": "Approver Rejected Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "approverrejectedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": False,
+            },
+            content_type="application/json",
+        )
+
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = Club.objects.get(code="approver-rejected-club")
+        self.assertFalse(club.approved)
+        self.assertEqual(club.approved_by, self.user4)
+        self.assertEqual(
+            club.approved_comment,
+            "Placeholder club - must edit with real details for approval",
+        )
+        self.assertTrue(club.active)
+
+    def test_club_create_non_admin_cannot_set_approved(self):
+        self.client.login(username=self.user4.username, password="test")
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            {
+                "code": "non-admin-approved-club",
+                "name": "Non Admin Approved Club",
+                "description": "This is a new club.",
+                "tags": [{"name": "Undergraduate"}],
+                "email": "nonadminapprovedclub@example.com",
+                "category": {"name": "Academic & Pre-Professional"},
+                "classification": {"name": "Graduate"},
+                "approved": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("approved", resp.json())
+        self.assertFalse(Club.objects.filter(code="non-admin-approved-club").exists())
+
     def test_club_approve(self):
         """
         Test approving an existing unapproved club.
@@ -1617,6 +1828,7 @@ class ClubTestCase(TestCase):
         """
         with open(os.devnull, "w") as f:
             call_command("populate", stdout=f)
+        Club.objects.update(visible_to_public=True)
 
         prof_tag_id = Tag.objects.filter(name="Professional").first().id
         athl_tag_id = Tag.objects.filter(name="Athletics").first().id
@@ -1651,6 +1863,73 @@ class ClubTestCase(TestCase):
             data = json.loads(resp.content.decode("utf-8"))
             codes = [club["code"] for club in data]
             self.assertEqual(set(codes), set(query["results"]), (query, resp.content))
+
+    def test_club_list_classification_group_filter(self):
+        """
+        Ensure graduate vs undergraduate grouping filters classification variants.
+        """
+        undergrad = Classification.objects.get_or_create(
+            symbol="UG", defaults={"name": "Undergraduate"}
+        )[0]
+        undergrad_open = Classification.objects.get_or_create(
+            symbol="UGo", defaults={"name": "Undergraduate Open"}
+        )[0]
+        grad_open = Classification.objects.get_or_create(
+            symbol="Go", defaults={"name": "Graduate Open"}
+        )[0]
+
+        Club.objects.create(
+            code="undergrad-club",
+            name="Undergrad Club",
+            classification=undergrad,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="undergrad@example.com",
+            visible_to_public=True,
+        )
+        Club.objects.create(
+            code="undergrad-open-club",
+            name="Undergrad Open Club",
+            classification=undergrad_open,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="undergrad-open@example.com",
+            visible_to_public=True,
+        )
+        Club.objects.create(
+            code="grad-open-club",
+            name="Graduate Open Club",
+            classification=grad_open,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="grad-open@example.com",
+            visible_to_public=True,
+        )
+
+        resp = self.client.get(
+            reverse("clubs-list"), {"classification_group": "undergraduate"}
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("undergrad-club", codes)
+        self.assertIn("undergrad-open-club", codes)
+        self.assertNotIn("test-club", codes)
+        self.assertNotIn("grad-open-club", codes)
+
+        resp = self.client.get(
+            reverse("clubs-list"), {"classification_group": "graduate"}
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn("test-club", codes)
+        self.assertIn("grad-open-club", codes)
+        self.assertNotIn("undergrad-club", codes)
+        self.assertNotIn("undergrad-open-club", codes)
 
     def test_club_list_filters_inactive_clubs_for_regular_users(self):
         """
@@ -1777,6 +2056,160 @@ class ClubTestCase(TestCase):
         self.club1.save()
         self.wc.active = True
         self.wc.save()
+
+    def test_public_visibility_hides_clubs_from_anonymous(self):
+        private = Club.objects.create(
+            code="private-club",
+            name="Private Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="private@example.com",
+            visible_to_public=False,
+        )
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertNotIn(private.code, codes)
+
+        resp = self.client.get(reverse("clubs-detail", args=(private.code,)))
+        self.assertEqual(resp.status_code, 404)
+
+        resp = self.client.get(reverse("clubs-list") + "?search=Private")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertNotIn(private.code, codes)
+
+    def test_public_visibility_allows_penn_users(self):
+        private = Club.objects.create(
+            code="private-club",
+            name="Private Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="private@example.com",
+            visible_to_public=False,
+        )
+
+        self.client.login(username=self.user1.username, password="test")
+
+        resp = self.client.get(reverse("clubs-detail", args=(private.code,)))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["code"], private.code)
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn(private.code, codes)
+
+    def test_public_visibility_allows_authenticated_users(self):
+        private = Club.objects.create(
+            code="private-club",
+            name="Private Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="private@example.com",
+            visible_to_public=False,
+        )
+
+        external = get_user_model().objects.create_user(
+            "external", "external@example.com", "test"
+        )
+        self.client.login(username=external.username, password="test")
+
+        resp = self.client.get(reverse("clubs-detail", args=(private.code,)))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["code"], private.code)
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.content.decode("utf-8"))
+        codes = [club["code"] for club in data]
+        self.assertIn(private.code, codes)
+
+    def test_public_visibility_magic_link_sets_value(self):
+        club = Club.objects.create(
+            code="magic-club",
+            name="Magic Club",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="magic@example.com",
+            visible_to_public=False,
+        )
+
+        signer = TimestampSigner(salt=f"club-public-visibility:{club.code}")
+        token = signer.sign("ok")
+
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token)) + "?visible=true"
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_updated=public", resp["Location"])
+        club.refresh_from_db()
+        self.assertTrue(club.visible_to_public)
+
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token))
+            + "?visible=false"
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_updated=private", resp["Location"])
+        club.refresh_from_db()
+        self.assertFalse(club.visible_to_public)
+
+        resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_public_visibility_magic_link_redirects_on_errors(self):
+        club = Club.objects.create(
+            code="magic-club-error",
+            name="Magic Club Error",
+            classification=self.classification1,
+            category=self.category1,
+            approved=True,
+            active=True,
+            email="magic@example.com",
+            visible_to_public=False,
+        )
+
+        signer = TimestampSigner(salt=f"club-public-visibility:{club.code}")
+        token = signer.sign("ok")
+
+        # Invalid signature
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token + "x"))
+            + "?visible=true"
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_link=invalid", resp["Location"])
+
+        # Missing desired value
+        resp = self.client.get(
+            reverse("club-public-visibility", args=(club.code, token))
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("visibility_link=missing", resp["Location"])
+
+        # Expired token
+        with patch("clubs.views.ClubPublicVisibilityMagicLinkView.max_age_seconds", 0):
+            expired_token = signer.sign("ok")
+            time.sleep(1)
+            resp = self.client.get(
+                reverse("club-public-visibility", args=(club.code, expired_token))
+                + "?visible=true"
+            )
+            self.assertEqual(resp.status_code, 302)
+            self.assertIn("visibility_link=expired", resp["Location"])
 
     def test_club_list_bypass_includes_inactive_clubs(self):
         """
@@ -2903,6 +3336,57 @@ class ClubTestCase(TestCase):
 
         # ensure club is still marked as approved
         club.refresh_from_db()
+        self.assertTrue(club.approved)
+
+    def test_sensitive_field_edit_queue_closed_superuser_allowed(self):
+        club = self.club1
+        self.assertTrue(club.approved)
+
+        self.client.login(username=self.user5.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"name": "Superuser Rename"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        club.refresh_from_db()
+        self.assertEqual(club.name, "Superuser Rename")
+        self.assertTrue(club.approved)
+
+    def test_sensitive_field_edit_queue_closed_with_approve_permission(self):
+        club = self.club1
+        self.assertTrue(club.approved)
+
+        Membership.objects.create(
+            person=self.user4, club=club, role=Membership.ROLE_OFFICER
+        )
+        content_type = ContentType.objects.get_for_model(Club)
+        perm = Permission.objects.get(
+            codename="approve_club", content_type=content_type
+        )
+        self.user4.user_permissions.add(perm)
+
+        self.client.login(username=self.user4.username, password="test")
+
+        queue_settings = RegistrationQueueSettings.get()
+        queue_settings.reapproval_queue_open = False
+        queue_settings.save()
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"name": "Approver Rename"},
+            content_type="application/json",
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+
+        club.refresh_from_db()
+        self.assertEqual(club.name, "Approver Rename")
         self.assertTrue(club.approved)
 
     def test_club_detail_endpoints_unauth(self):
@@ -4872,7 +5356,7 @@ class RegistrationQueueSettingsTestCase(TestCase):
         self.assertIn("reapproval_queue_open", data)
         self.assertIn("new_approval_queue_open", data)
 
-    def test_update_settings(self):
+    def test_update_settings(self):  # manual non-scheduled updates
         # non-superusers can't update
         self.client.login(username="user", password="password")
         resp = self.client.patch(
@@ -4902,6 +5386,75 @@ class RegistrationQueueSettingsTestCase(TestCase):
         data = resp.json()
         self.assertFalse(data["reapproval_queue_open"])
         self.assertFalse(data["new_approval_queue_open"])
+
+    def test_schedule_queue_flips(self):
+        self.client.login(username="super", password="password")
+        past_time = timezone.now() - timezone.timedelta(hours=1)
+
+        # setting schedule date with past datetime fails
+        reapproval_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"reapproval_date_of_next_flip": past_time.isoformat()}),
+            content_type="application/json",
+        )
+        new_approval_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"new_approval_date_of_next_flip": past_time.isoformat()}),
+            content_type="application/json",
+        )
+        self.assertEqual(reapproval_resp.status_code, 400, reapproval_resp.content)
+        self.assertEqual(new_approval_resp.status_code, 400, new_approval_resp.content)
+
+        # settings with future datetime works and changes database accordingly
+        valid_time = timezone.now() + timezone.timedelta(hours=1)
+        resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {
+                    "reapproval_date_of_next_flip": valid_time.isoformat(),
+                    "new_approval_date_of_next_flip": valid_time.isoformat(),
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(
+            isoparse(resp.data["reapproval_date_of_next_flip"]), valid_time
+        )
+        self.assertEqual(
+            isoparse(resp.data["new_approval_date_of_next_flip"]), valid_time
+        )
+
+        manual_flip_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {"reapproval_queue_open": False, "new_approval_queue_open": False}
+            ),
+            content_type="application/json",
+        )
+        # manual flips clear scheduled dates
+        self.assertEqual(manual_flip_resp.status_code, 200, manual_flip_resp.content)
+        self.assertEqual(manual_flip_resp.data["reapproval_date_of_next_flip"], None)
+        self.assertEqual(manual_flip_resp.data["new_approval_date_of_next_flip"], None)
+
+    def test_schedule_queue_flips_rejects_invalid_datetime_values(self):
+        self.client.login(username="super", password="password")
+
+        malformed_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"reapproval_date_of_next_flip": "not-a-date"}),
+            content_type="application/json",
+        )
+        self.assertEqual(malformed_resp.status_code, 400, malformed_resp.content)
+        self.assertIn("error", malformed_resp.json())
+
+        naive_resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps({"new_approval_date_of_next_flip": "2026-02-12T10:00:00"}),
+            content_type="application/json",
+        )
+        self.assertEqual(naive_resp.status_code, 400, naive_resp.content)
+        self.assertIn("error", naive_resp.json())
 
 
 class EventShowingTestCase(TestCase):
@@ -4966,7 +5519,7 @@ class EventShowingTestCase(TestCase):
         response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["location"], "Test Location")
+        self.assertIsNone(response.data[0]["location"])
 
         # Test member
         self.client.login(username=self.user2.username, password="password")
@@ -4982,15 +5535,23 @@ class EventShowingTestCase(TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["location"], "Test Location")
 
+        # Test authenticated non-Penn user
+        self.client.login(username=self.user3.username, password="password")
+        response = self.client.get(reverse("event-showings-list", args=[self.event.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["location"], "Test Location")
+
     def test_retrieve_showing(self):
         """
         Test that anyone can retrieve a specific event showing.
         """
+        self.client.logout()
         response = self.client.get(
             reverse("event-showings-detail", args=[self.event.id, self.showing.id])
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["location"], "Test Location")
+        self.assertIsNone(response.data["location"])
 
     def test_create_showing_permissions(self):
         """

@@ -108,7 +108,7 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
   }, [events])
 
   return (
-    <BaseLayout {...baseProps} authRequired>
+    <BaseLayout {...baseProps}>
       <MainWrapper>
         <Metadata title="Events" />
         <Title>Live Events</Title>

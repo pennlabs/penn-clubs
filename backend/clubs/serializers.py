@@ -420,6 +420,18 @@ class EventShowingSerializer(serializers.ModelSerializer):
     def get_ticketed(self, obj):
         return obj.tickets.exists()
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        user = getattr(request, "user", None) if request is not None else None
+        if (
+            not (user is not None and getattr(user, "is_authenticated", False))
+            and not instance.location_visible_to_public
+            and instance.location
+        ):
+            data["location"] = None
+        return data
+
     class Meta:
         model = EventShowing
         fields = [
@@ -428,6 +440,7 @@ class EventShowingSerializer(serializers.ModelSerializer):
             "start_time",
             "end_time",
             "location",
+            "location_visible_to_public",
             "ticket_order_limit",
             "ticket_drop_time",
             "ticketed",
@@ -1598,14 +1611,63 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Ensure new clubs follow certain invariants.
         """
-        # New clubs created through the API must always be approved.
-        validated_data["approved"] = None
-
+        placeholder_rejection_reason = (
+            "Placeholder club - must edit with real details for approval"
+        )
         request = self.context.get("request", None)
-        perms = request and request.user.has_perm("clubs.approve_club")
-
+        can_skip_queue = request and (
+            request.user.is_superuser or request.user.has_perm("clubs.approve_club")
+        )
         queue_settings = RegistrationQueueSettings.get()
-        if not perms and (
+
+        if not can_skip_queue:
+            requested_approval = validated_data.get("approved")
+            if requested_approval is True or requested_approval is False:
+                raise serializers.ValidationError(
+                    {"approved": "You do not have permission to approve clubs."}
+                )
+
+        if can_skip_queue:
+            validated_data["active"] = True
+
+            approved_provided = hasattr(self, "initial_data") and (
+                "approved" in self.initial_data
+            )
+            requested_approval = (
+                validated_data.get("approved") if approved_provided else False
+            )
+
+            if requested_approval is True:
+                validated_data["approved"] = True
+                validated_data["approved_by"] = request.user
+                validated_data["approved_on"] = timezone.now()
+                validated_data["ghost"] = False
+            elif requested_approval is None:
+                validated_data["approved"] = None
+                validated_data["approved_by"] = None
+                validated_data["approved_on"] = None
+                validated_data["ghost"] = False
+            elif requested_approval is False:
+                validated_data["approved"] = False
+                validated_data["approved_by"] = request.user
+                validated_data["approved_on"] = timezone.now()
+                validated_data["ghost"] = False
+                if not validated_data.get("approved_comment"):
+                    validated_data["approved_comment"] = placeholder_rejection_reason
+            else:
+                raise serializers.ValidationError(
+                    {
+                        "approved": (
+                            "New clubs can only be created as approved (true) "
+                            "rejected (false), or pending approval (null)."
+                        )
+                    }
+                )
+        else:
+            # New clubs created through the API start unapproved.
+            validated_data["approved"] = None
+
+        if not can_skip_queue and (
             not queue_settings.reapproval_queue_open
             or not queue_settings.new_approval_queue_open
         ):
@@ -1860,7 +1922,10 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
         # if the editing user has approval permissions, skip the approval process
         request = self.context.get("request", None)
-        if request and request.user.has_perm("clubs.approve_club"):
+        can_skip_queue = request and (
+            request.user.is_superuser or request.user.has_perm("clubs.approve_club")
+        )
+        if can_skip_queue:
             needs_reapproval = False
 
         queue_settings = RegistrationQueueSettings.get()
@@ -2637,6 +2702,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     fairs = serializers.SerializerMethodField("get_fairs")
     email = serializers.EmailField()
     email_public = serializers.BooleanField(default=True)
+    visible_to_public = serializers.BooleanField(default=False, required=False)
     advisor_set = AdvisorSerializer(many=True, required=False)
     owners = serializers.SerializerMethodField("get_owners")
     officers = serializers.SerializerMethodField("get_officers")
@@ -2660,6 +2726,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + [
             "email_public",
+            "visible_to_public",
             "fairs",
             "files",
             "ics_import_url",
@@ -3478,21 +3545,32 @@ class ApprovalHistorySerializer(serializers.ModelSerializer):
     approved_on = serializers.DateTimeField()
     approved_by = serializers.SerializerMethodField("get_approved_by")
     approved_comment = serializers.CharField()
+    active = serializers.BooleanField()
     history_date = serializers.DateTimeField()
+    history_change_reason = serializers.CharField(allow_null=True, required=False)
+    history_user = serializers.SerializerMethodField("get_history_user")
 
     def get_approved_by(self, obj):
         if obj.approved_by is None:
             return "Unknown"
         return obj.approved_by.get_full_name()
 
+    def get_history_user(self, obj):
+        if obj.history_user is None:
+            return None
+        return obj.history_user.get_full_name()
+
     class Meta:
         model = Club
         fields = (
+            "active",
             "approved",
             "approved_on",
             "approved_by",
             "approved_comment",
             "history_date",
+            "history_change_reason",
+            "history_user",
         )
 
 
@@ -3559,6 +3637,8 @@ class RegistrationQueueSettingsSerializer(serializers.ModelSerializer):
             "new_approval_queue_open",
             "updated_at",
             "updated_by",
+            "reapproval_date_of_next_flip",
+            "new_approval_date_of_next_flip",
         ]
         read_only_fields = ["updated_at", "updated_by"]
 

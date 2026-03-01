@@ -23,6 +23,7 @@ import { NAV_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import {
   Affiliation,
+  Classification,
   Club,
   School,
   StudentType,
@@ -33,14 +34,11 @@ import {
 import {
   cache,
   doApiRequest,
-  getCurrentRelativePath,
   isClubFieldShown,
-  isDevelopment,
-  LOGIN_URL,
   OptionsContext,
   PermissionsContext,
 } from './utils'
-import { LOGIN_REQUIRED_ALL, SITE_ID } from './utils/branding'
+import { SITE_ID } from './utils/branding'
 import { logException } from './utils/sentry'
 
 export const ToastStyle = styled.div`
@@ -207,9 +205,6 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
         const { props, state, closeModal } = this
         const { modal } = state
         const { authenticated, userInfo } = props
-        if (LOGIN_REQUIRED_ALL && !isDevelopment() && !authenticated) {
-          window.location.href = `${LOGIN_URL}?next=${getCurrentRelativePath()}`
-        }
         return (
           <>
             <OptionsContext.Provider value={this.props.options}>
@@ -391,6 +386,7 @@ export type PaginatedClubPage = {
 type ListPageProps = {
   affiliations: Affiliation[]
   clubs: PaginatedClubPage
+  classifications: Classification[]
   schools: School[]
   studentTypes: StudentType[]
   tags: Tag[]
@@ -417,6 +413,7 @@ const getPublicCachedContent = async () => {
         schoolRequest,
         yearRequest,
         studentTypesRequest,
+        classificationRequest,
       ] = await Promise.all([
         doApiRequest('/tags/?format=json'),
         doApiRequest('/badges/?format=json'),
@@ -425,6 +422,7 @@ const getPublicCachedContent = async () => {
         isClubFieldShown('student_types')
           ? doApiRequest('/student_types/?format=json')
           : Promise.resolve(null),
+        doApiRequest('/classifications/?format=json'),
       ])
 
       const [
@@ -433,6 +431,7 @@ const getPublicCachedContent = async () => {
         schoolResponse,
         yearResponse,
         studentTypesResponse,
+        classificationsResponse,
       ] = await Promise.all([
         tagsRequest.json(),
         affiliationsRequest.json(),
@@ -441,10 +440,12 @@ const getPublicCachedContent = async () => {
         studentTypesRequest != null
           ? studentTypesRequest.json()
           : Promise.resolve([]),
+        classificationRequest.json(),
       ])
 
       return {
         affiliations: affiliationsResponse as Affiliation[],
+        classifications: classificationsResponse as Classification[],
         schools: schoolResponse as School[],
         studentTypes: studentTypesResponse as StudentType[],
         tags: tagsResponse as Tag[],

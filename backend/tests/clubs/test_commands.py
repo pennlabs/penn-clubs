@@ -772,6 +772,7 @@ class RenewalTestCase(TestCase):
 
         with open(os.devnull, "w") as f:
             call_command("populate", stdout=f)
+        Club.objects.update(visible_to_public=True)
 
         club = Club.objects.first()
 
@@ -1057,3 +1058,38 @@ class SyncBadgesTestCase(TestCase):
 
         # Check that badge_count is 2 (parent_org and child2 got the badge)
         self.assertEqual(badge_count, 2)
+
+
+class NotifyPublicVisibilityTestCase(TestCase):
+    def setUp(self):
+        self.club = Club.objects.create(
+            code="visibility",
+            name="Visibility Club",
+            active=True,
+            approved=True,
+            email="contact@example.com",
+            visible_to_public=False,
+        )
+        self.user = get_user_model().objects.create_user(
+            "officer", "officer@seas.upenn.edu", "test"
+        )
+        Membership.objects.create(
+            club=self.club, person=self.user, role=Membership.ROLE_OFFICER, active=True
+        )
+
+    def test_notify_public_visibility_dry_run(self):
+        call_command("notify_public_visibility", "--dry-run")
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_notify_public_visibility_sends_email(self):
+        call_command("notify_public_visibility")
+        self.assertEqual(len(mail.outbox), 1)
+        msg = mail.outbox[0]
+        self.assertIn("Set public visibility", msg.subject)
+        html = next(
+            content for content, mimetype in msg.alternatives if mimetype == "text/html"
+        )
+        self.assertIn("/club/visibility/edit", html)
+        self.assertGreaterEqual(html.count("public-visibility"), 2)
+        self.assertIn("?visible=true", html)
+        self.assertIn("?visible=false", html)

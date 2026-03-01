@@ -53,6 +53,7 @@ const sites = {
       'application_required',
       'affiliations',
       'email_public',
+      'visible_to_public',
       'founded',
       'github',
       'linkedin',
@@ -202,6 +203,7 @@ const sites = {
     CLUB_FIELDS: [
       'appointment_needed',
       'available_virtually',
+      'visible_to_public',
       'signature_events',
       'student_types',
       'target_schools',
