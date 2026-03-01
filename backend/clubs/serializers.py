@@ -3288,8 +3288,8 @@ class UserApplicationSerializer(serializers.ModelSerializer):
         if obj.application_end_time >= now:
             return True
 
-        ext = next(iter(getattr(obj, "user_extensions", [])), None)
-        return ext is not None and ext.end_time >= now
+        user_extensions = getattr(obj, "user_extensions", [])
+        return any(ext.end_time >= now for ext in user_extensions)
 
     def get_application_link(self, obj):
         return f"/club/{obj.club.code}/application/{obj.pk}/"
@@ -3308,7 +3308,6 @@ class UserApplicationSerializer(serializers.ModelSerializer):
             "application_end_time",
             "is_active",
             "application_link",
-            "external_url",
             "submissions",
         )
 
