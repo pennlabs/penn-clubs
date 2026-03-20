@@ -2349,22 +2349,28 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
     def check_approval_permission(self, request):
         """
-        Only users with specific permissions can modify the approval field.
+        Additional validation for approval-related and fair-related requests.
+        Permission to modify approval fields is enforced by serializer selection,
+        but we still validate that admins modify approval fields in isolation.
         """
-        if (
-            request.data.get("approved", None) is not None
-            or request.data.get("approved_comment", None) is not None
-        ):
-            # users without approve permission cannot approve
-            if not request.user.has_perm("clubs.approve_club"):
-                raise PermissionDenied
+        # Check if approval fields are being modified
+        approval_fields = {"approved_comment", "status_id"}
+        provided_approval_fields = approval_fields & set(request.data.keys())
 
-            # an approval request must not modify any other fields
-            if set(request.data.keys()) - {"approved", "approved_comment"}:
-                raise DRFValidationError(
-                    "You can only pass the approved and approved_comment fields "
-                    "when performing club approval."
-                )
+        if provided_approval_fields:
+            # Admins must ONLY modify approval fields in a single request
+            # (They cannot modify approval + other fields simultaneously)
+            if request.user.has_perm("clubs.approve_club"):
+                non_approval_fields = set(request.data.keys()) - approval_fields
+                if non_approval_fields:
+                    raise DRFValidationError(
+                        f"When modifying approval fields ({', '.join(approval_fields)})"
+                        " you cannot modify other club fields in the same request. "
+                        "Please make separate requests."
+                    )
+            # For non-Admins like Officers, we handle the logic in the serializer.
+            # We don't turn them away here as they could be setting
+            # status to "Under Review" for renewal requests.
 
         if request.data.get("fair", None) is not None:
             if set(request.data.keys()) - {"fair"}:
@@ -2782,6 +2788,11 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         if self.request is not None and self.request.user.is_authenticated:
             if self.request.user.is_superuser:
+                return AdminClubSerializer
+
+            # Users with approve_club permission should use AdminClubSerializer
+            # to allow setting any status, not just "Under Review"
+            if self.request.user.has_perm("clubs.approve_club"):
                 return AdminClubSerializer
 
             see_pending = self.request.user.has_perm("clubs.see_pending_clubs")
