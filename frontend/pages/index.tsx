@@ -27,6 +27,12 @@ import {
   PHONE,
 } from '~/constants/measurements'
 import { ClubEvent, UserInfo } from '~/types'
+
+import {
+  classify,
+  fetchEventsInRange,
+  getDefaultDateRange,
+} from '../utils/events'
 // displayEvents
 const displayEvents = (events) => {
   if (!events || events.length === 0) {
@@ -597,23 +603,6 @@ function formatEventDateRange(startISO, endISO) {
   }
 }
 
-// same default date range used by pages/events
-const getDefaultDateRange = () => ({
-  start: DateTime.local().startOf('day').minus({ days: 6 }),
-  end: DateTime.local().startOf('day').plus({ month: 1, days: 6 }),
-})
-
-const classify = <T, K>(arr: T[], predicate: (item: T) => K): Map<K, T[]> => {
-  const map = new Map<K, T[]>()
-  for (const item of arr) {
-    const key = predicate(item)
-    const list = map.get(key) || []
-    list.push(item)
-    map.set(key, list)
-  }
-  return map
-}
-
 type SplashProps = {
   userInfo?: UserInfo
 }
@@ -660,19 +649,12 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const { start, end } = getDefaultDateRange()
-        // is currently lax on timings: doesn't technically check if a single EventShowing actually happens in the time range
-        // only that there are events in the vincinity (edge case where time range is between two events in the past and distant future)
-        const params = new URLSearchParams({
-          // eslint-disable-next-line camelcase
-          latest_start_time__gte: start.toISO(),
-          // eslint-disable-next-line camelcase
-          earliest_end_time__lte: end.toISO(),
-          format: 'json',
-        })
-        const data = await doApiRequest(`/events/?${params.toString()}`, {
-          method: 'GET',
-        }).then((resp) => resp.json() as Promise<ClubEvent[]>)
+        const dateRange = getDefaultDateRange()
+        const data = await fetchEventsInRange(
+          dateRange.start,
+          dateRange.end,
+          doApiRequest,
+        )
         setAllEvents(data)
         setEventsError(null)
       } catch (error) {
