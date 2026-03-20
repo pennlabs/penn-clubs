@@ -26,7 +26,7 @@ import {
   mediaMaxWidth,
   PHONE,
 } from '~/constants/measurements'
-import { UserInfo } from '~/types'
+import { ClubEvent, UserInfo } from '~/types'
 // displayEvents
 const displayEvents = (events) => {
   if (!events || events.length === 0) {
@@ -603,12 +603,23 @@ const getDefaultDateRange = () => ({
   end: DateTime.local().startOf('day').plus({ month: 1, days: 6 }),
 })
 
+const classify = <T, K>(arr: T[], predicate: (item: T) => K): Map<K, T[]> => {
+  const map = new Map<K, T[]>()
+  for (const item of arr) {
+    const key = predicate(item)
+    const list = map.get(key) || []
+    list.push(item)
+    map.set(key, list)
+  }
+  return map
+}
+
 type SplashProps = {
   userInfo?: UserInfo
 }
 
 const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
-  const [trendingEvents, setTrendingEvents] = useState([])
+  const [allEvents, setAllEvents] = useState<ClubEvent[]>([])
   const [clubs, setClubs] = useState([])
   const [clubsError, setClubsError] = useState<string | null>(null)
   const [eventsError, setEventsError] = useState<string | null>(null)
@@ -638,7 +649,7 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
       const response = await doApiRequest('/events/')
       if (response.ok) {
         const data = await response.json()
-        setTrendingEvents(data)
+        setAllEvents(data)
       } else {
         setEventsError('Could not load events. Please try again.')
       }
@@ -647,7 +658,7 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
     }
   }
   useEffect(() => {
-    const fetchTrendingEvents = async () => {
+    const fetchEvents = async () => {
       try {
         const { start, end } = getDefaultDateRange()
         // is currently lax on timings: doesn't technically check if a single EventShowing actually happens in the time range
@@ -659,20 +670,35 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
           earliest_end_time__lte: end.toISO(),
           format: 'json',
         })
-        const response = await doApiRequest(`/events/?${params.toString()}`, {
+        const data = await doApiRequest(`/events/?${params.toString()}`, {
           method: 'GET',
-        })
-        const data = await response.json()
-        setTrendingEvents(data)
+        }).then((resp) => resp.json() as Promise<ClubEvent[]>)
+        setAllEvents(data)
         setEventsError(null)
       } catch (error) {
         // Handle error silently or show user-friendly message
-        setTrendingEvents([])
+        setAllEvents([])
         setEventsError('Could not load events. Server may be down.')
       }
     }
-    fetchTrendingEvents()
+    fetchEvents()
   }, [])
+
+  const { pastEvents, liveEvents, upcomingEvents } = React.useMemo(() => {
+    const map = classify(allEvents, (event) => {
+      const now = DateTime.local()
+      const startDate = DateTime.fromISO(event.earliest_start_time!)
+      const endDate = DateTime.fromISO(event.latest_end_time!)
+      if (endDate < now) return 'past'
+      if (startDate <= now && now <= endDate) return 'live'
+      return 'upcoming'
+    })
+    return {
+      pastEvents: map.get('past') || [],
+      liveEvents: map.get('live') || [],
+      upcomingEvents: map.get('upcoming') || [],
+    }
+  }, [allEvents])
 
   // Debounced club search
   useEffect(() => {
@@ -814,7 +840,7 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
               <RetryButton onClick={retryEvents}>Retry</RetryButton>
             </ErrorBanner>
           ) : (
-            displayEvents(trendingEvents)
+            displayEvents(upcomingEvents)
           )}
         </TrendingSection>
       </PageContainer>
