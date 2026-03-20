@@ -26,6 +26,7 @@ import {
   mediaMaxWidth,
   PHONE,
 } from '~/constants/measurements'
+import { UserInfo } from '~/types'
 // displayEvents
 const displayEvents = (events) => {
   if (!events || events.length === 0) {
@@ -602,7 +603,11 @@ const getDefaultDateRange = () => ({
   end: DateTime.local().startOf('day').plus({ month: 1, days: 6 }),
 })
 
-const Splash = (): ReactElement<any> => {
+type SplashProps = {
+  userInfo?: UserInfo
+}
+
+const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
   const [trendingEvents, setTrendingEvents] = useState([])
   const [clubs, setClubs] = useState([])
   const [clubsError, setClubsError] = useState<string | null>(null)
@@ -613,7 +618,6 @@ const Splash = (): ReactElement<any> => {
   const [clubsChanged, setClubsChanged] = useState(false)
   const searchTimeout = useRef<number | null>(null)
   const router = useRouter()
-
   const retryClubs = async () => {
     setClubsError(null)
     try {
@@ -747,6 +751,7 @@ const Splash = (): ReactElement<any> => {
     }
     setClubSearchInput(text)
   }
+
   return (
     <>
       <Metadata

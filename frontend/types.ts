@@ -310,6 +310,7 @@ export interface UserInfo {
   share_bookmarks: boolean
   show_profile: boolean
   username: string
+  is_owner_or_officer_of_active_club: boolean
 }
 
 export interface UserProfile {
