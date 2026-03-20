@@ -16,7 +16,7 @@ const QRCode = styled.img`
 `
 
 export enum QRCodeType {
-  CLUB = 'club',
+  CLUB = 'clubs',
   TICKET = 'tickets',
 }
 
