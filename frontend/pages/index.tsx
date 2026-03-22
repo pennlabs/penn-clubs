@@ -26,7 +26,13 @@ import {
   mediaMaxWidth,
   PHONE,
 } from '~/constants/measurements'
-import { UserInfo } from '~/types'
+import { ClubEvent, UserInfo } from '~/types'
+
+import {
+  classify,
+  fetchEventsInRange,
+  getDefaultDateRange,
+} from '../utils/events'
 // displayEvents
 const displayEvents = (events) => {
   if (!events || events.length === 0) {
@@ -597,18 +603,12 @@ function formatEventDateRange(startISO, endISO) {
   }
 }
 
-// same default date range used by pages/events
-const getDefaultDateRange = () => ({
-  start: DateTime.local().startOf('day').minus({ days: 6 }),
-  end: DateTime.local().startOf('day').plus({ month: 1, days: 6 }),
-})
-
 type SplashProps = {
   userInfo?: UserInfo
 }
 
 const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
-  const [trendingEvents, setTrendingEvents] = useState([])
+  const [allEvents, setAllEvents] = useState<ClubEvent[]>([])
   const [clubs, setClubs] = useState([])
   const [clubsError, setClubsError] = useState<string | null>(null)
   const [eventsError, setEventsError] = useState<string | null>(null)
@@ -638,7 +638,7 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
       const response = await doApiRequest('/events/')
       if (response.ok) {
         const data = await response.json()
-        setTrendingEvents(data)
+        setAllEvents(data)
       } else {
         setEventsError('Could not load events. Please try again.')
       }
@@ -647,32 +647,40 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
     }
   }
   useEffect(() => {
-    const fetchTrendingEvents = async () => {
+    const fetchEvents = async () => {
       try {
-        const { start, end } = getDefaultDateRange()
-        // is currently lax on timings: doesn't technically check if a single EventShowing actually happens in the time range
-        // only that there are events in the vincinity (edge case where time range is between two events in the past and distant future)
-        const params = new URLSearchParams({
-          // eslint-disable-next-line camelcase
-          latest_start_time__gte: start.toISO(),
-          // eslint-disable-next-line camelcase
-          earliest_end_time__lte: end.toISO(),
-          format: 'json',
-        })
-        const response = await doApiRequest(`/events/?${params.toString()}`, {
-          method: 'GET',
-        })
-        const data = await response.json()
-        setTrendingEvents(data)
+        const dateRange = getDefaultDateRange()
+        const data = await fetchEventsInRange(
+          dateRange.start,
+          dateRange.end,
+          doApiRequest,
+        )
+        setAllEvents(data)
         setEventsError(null)
       } catch (error) {
         // Handle error silently or show user-friendly message
-        setTrendingEvents([])
+        setAllEvents([])
         setEventsError('Could not load events. Server may be down.')
       }
     }
-    fetchTrendingEvents()
+    fetchEvents()
   }, [])
+
+  const { pastEvents, liveEvents, upcomingEvents } = React.useMemo(() => {
+    const map = classify(allEvents, (event) => {
+      const now = DateTime.local()
+      const startDate = DateTime.fromISO(event.earliest_start_time!)
+      const endDate = DateTime.fromISO(event.latest_end_time!)
+      if (endDate < now) return 'past'
+      if (startDate <= now && now <= endDate) return 'live'
+      return 'upcoming'
+    })
+    return {
+      pastEvents: map.get('past') || [],
+      liveEvents: map.get('live') || [],
+      upcomingEvents: map.get('upcoming') || [],
+    }
+  }, [allEvents])
 
   // Debounced club search
   useEffect(() => {
@@ -814,7 +822,7 @@ const Splash = ({ userInfo }: SplashProps): ReactElement<any> => {
               <RetryButton onClick={retryEvents}>Retry</RetryButton>
             </ErrorBanner>
           ) : (
-            displayEvents(trendingEvents)
+            displayEvents(upcomingEvents)
           )}
         </TrendingSection>
       </PageContainer>

@@ -7,18 +7,15 @@ import styled from 'styled-components'
 import { BaseLayout } from '~/components/BaseLayout'
 import { Metadata, Title } from '~/components/common'
 import EventCard from '~/components/EventPage/EventCard'
-import { Club, ClubEvent } from '~/types'
+import { Club } from '~/types'
 import { doApiRequest } from '~/utils'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
 
-/**
- * Return the default date range for events in the calendar view.
- * Returns the events for a month with a little bit of padding on both edges (6 days).
- */
-const getDefaultDateRange = () => ({
-  start: DateTime.local().startOf('day').minus({ days: 6 }),
-  end: DateTime.local().startOf('day').plus({ month: 1, days: 6 }),
-})
+import {
+  classify,
+  fetchEventsInRange,
+  getDefaultDateRange,
+} from '../../utils/events'
 
 const getBaseProps = createBasePropFetcher()
 
@@ -27,24 +24,12 @@ export const getServerSideProps = (async (ctx) => {
     headers: ctx.req ? { cookie: ctx.req.headers.cookie } : undefined,
   }
   const dateRange = getDefaultDateRange()
-
-  // is currently lax on timings: doesn't technically check if a single EventShowing actually happens in the time range
-  // only that there are events in the vincinity (edge case where time range is between two events in the past and distant future)
-  const params = new URLSearchParams({
-    // eslint-disable-next-line camelcase
-    latest_start_time__gte: dateRange.start.toISO(),
-    // eslint-disable-next-line camelcase
-    earliest_end_time__lte: dateRange.end.toISO(),
-    format: 'json',
-  })
   const [baseProps, clubs, events] = await Promise.all([
     getBaseProps(ctx),
     doApiRequest('/clubs/directory/?format=json', data).then(
       (resp) => resp.json() as Promise<Club[]>,
     ),
-    doApiRequest(`/events/?${params.toString()}`, data).then(
-      (resp) => resp.json() as Promise<ClubEvent[]>,
-    ),
+    fetchEventsInRange(dateRange.start, dateRange.end, doApiRequest, data),
   ])
   const clubMap = new Map(clubs.map((club) => [club.code, club]))
   const eventsWithClubs = events.map((event) => ({
@@ -61,17 +46,6 @@ export const getServerSideProps = (async (ctx) => {
 }) satisfies GetServerSideProps
 
 type EventsPageProps = InferGetServerSidePropsType<typeof getServerSideProps>
-
-const classify = <T, K>(arr: T[], predicate: (item: T) => K): Map<K, T[]> => {
-  const map = new Map<K, T[]>()
-  for (const item of arr) {
-    const key = predicate(item)
-    const list = map.get(key) || []
-    list.push(item)
-    map.set(key, list)
-  }
-  return map
-}
 
 const MainWrapper = styled.main`
   margin: 0 auto;
@@ -106,7 +80,6 @@ const EventsPage: React.FC<EventsPageProps> = ({ baseProps, events }) => {
       upcomingEvents: map.get('upcoming') || [],
     }
   }, [events])
-
   return (
     <BaseLayout {...baseProps}>
       <MainWrapper>
