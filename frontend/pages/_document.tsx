@@ -94,6 +94,7 @@ class BaseDocument extends Document {
             rel="stylesheet"
             key="editor-css"
           />
+          <script src="https://status.pennlabs.org/banner.js" defer />
         </Head>
         <body>
           <Main />
