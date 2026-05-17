@@ -2725,6 +2725,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 {"detail": "Content must be specified"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        subject = request.data.get("subject", "").strip()
 
         target_role = roles[target]
 
@@ -2736,7 +2737,7 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
 
         send_mail_helper(
             name="blast",
-            subject=f"Update from {settings.BRANDING_SITE_NAME}",
+            subject=subject or f"Update from {settings.BRANDING_SITE_NAME}",
             emails=emails,
             context={
                 "sender": settings.BRANDING_SITE_NAME,

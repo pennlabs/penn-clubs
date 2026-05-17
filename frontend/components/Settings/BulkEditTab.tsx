@@ -9,6 +9,7 @@ import {
   OBJECT_NAME_SINGULAR,
   OBJECT_NAME_TITLE,
   OBJECT_NAME_TITLE_SINGULAR,
+  SITE_NAME,
 } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import { DateTimeField, SelectField, TextField } from '../FormComponents'
@@ -94,13 +95,13 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
         <Text>
           Sends an email blast to the selected group of users. Select a target
           group and provide the message content. All active users with roles
-          equivalent to or higher than the selected group will be notified. The
-          subject line is nondescriptive, so it is recommended to explicitly
-          state the sender within the email body.
+          equivalent to or higher than the selected group will be notified.
+          Leave the subject blank to use the default subject line.
         </Text>
         <Formik
           initialValues={{
             target: { id: 'leaders', name: 'Leaders' },
+            subject: '',
             content: '',
           }}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
@@ -111,19 +112,23 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
                   method: 'POST',
                   body: {
                     target: values.target.id,
+                    subject: values.subject,
                     content: values.content,
                   },
                 },
               )
               const data = await resp.json()
-              if (data.error) {
-                toast.error(data.error, { hideProgressBar: true })
-              } else if (data.detail) {
+              if (resp.ok) {
                 toast.success(data.detail, { hideProgressBar: true })
+                resetForm()
+              } else {
+                toast.error(
+                  data.detail || data.error || 'Failed to send email blast.',
+                  { hideProgressBar: true },
+                )
               }
             } finally {
               setSubmitting(false)
-              resetForm()
             }
           }}
         >
@@ -138,6 +143,12 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
                   { value: 'all', label: 'All' },
                 ]}
                 label="Target Group"
+              />
+              <Field
+                name="subject"
+                as={TextField}
+                label="Subject"
+                helpText={`Leave blank to use "Update from ${SITE_NAME}" as the subject line.`}
               />
               <Field
                 name="content"
