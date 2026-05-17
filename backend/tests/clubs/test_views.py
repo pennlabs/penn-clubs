@@ -7,6 +7,7 @@ from collections import Counter
 from unittest.mock import MagicMock, patch
 
 from dateutil.parser import isoparse
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -4725,23 +4726,35 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 1 recipients", resp.data["detail"])
         self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[-1].subject, f"Update from {settings.BRANDING_SITE_NAME}"
+        )
+
         resp = self.client.post(
             reverse("clubs-email-blast"),
-            {"target": "officers", "content": "test"},
+            {
+                "target": "officers",
+                "subject": "Custom Blast Subject",
+                "content": "test",
+            },
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 2 recipients", resp.data["detail"])
         self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[-1].subject, "Custom Blast Subject")
 
         resp = self.client.post(
             reverse("clubs-email-blast"),
-            {"target": "all", "content": "test"},
+            {"target": "all", "subject": "   ", "content": "test"},
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
         self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(
+            mail.outbox[-1].subject, f"Update from {settings.BRANDING_SITE_NAME}"
+        )
 
     def test_application_submission_requires_complete_profile(self):
         """
