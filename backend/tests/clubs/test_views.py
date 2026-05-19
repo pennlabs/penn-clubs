@@ -1,9 +1,11 @@
 import datetime
+import inspect
 import io
 import json
 import os
 import time
 from collections import Counter
+from smtplib import SMTPServerDisconnected
 from unittest.mock import MagicMock, patch
 
 from dateutil.parser import isoparse
@@ -16,7 +18,7 @@ from django.core.cache import cache
 from django.core.management import call_command
 from django.core.signing import TimestampSigner
 from django.test import Client, TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils import timezone
 from ics import Calendar
 
@@ -4672,7 +4674,7 @@ class ClubTestCase(TestCase):
             0,
         )
 
-    def test_email_blast(self):
+    def _create_email_blast_memberships(self):
         Membership.objects.create(
             club=self.club1, person=self.user1, role=Membership.ROLE_OWNER, active=True
         )
@@ -4692,40 +4694,136 @@ class ClubTestCase(TestCase):
             active=False,
         )
 
-        # Need staff perms to send blasts
+    def test_email_blast_permissions_and_invalid_requests(self):
+        # anonymous users cannot send email blasts
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "test"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(len(mail.outbox), 0)
+
+        self._create_email_blast_memberships()
+
+        # regular club member cannot send email blasts
         self.client.login(username=self.user1.username, password="test")
         resp = self.client.post(
             reverse("clubs-email-blast"),
             {"target": "leaders", "content": "test"},
             content_type="application/json",
         )
+
         self.assertEqual(resp.status_code, 403)
+        self.assertEqual(len(mail.outbox), 0)
 
+        # staff users can send email blasts
+        staff_user = get_user_model().objects.create_user(
+            "email-blast-staff",
+            "email-blast-staff@example.com",
+            "test",
+        )
+        staff_user.is_staff = True
+        staff_user.save()
+
+        self.assertFalse(staff_user.is_superuser)
+        self.client.login(username=staff_user.username, password="test")
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "test"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        mail.outbox.clear()
+
+        # users with the manage_club permission can send email blasts
+        manage_club = Permission.objects.get(
+            codename="manage_club", content_type__app_label="clubs"
+        )
+        self.user2.user_permissions.add(manage_club)
+
+        self.assertFalse(self.user2.is_staff)
+        self.assertFalse(self.user2.is_superuser)
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "test"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        mail.outbox.clear()
+
+        # superusers can send email blasts
+        superuser = get_user_model().objects.create_user(
+            "email-blast-superuser",
+            "email-blast-superuser@example.com",
+            "test",
+        )
+        superuser.is_superuser = True
+        superuser.save()
+
+        self.assertFalse(superuser.is_staff)
+        self.client.login(username=superuser.username, password="test")
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "test"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        mail.outbox.clear()
+
+        # test all required fields
         self.client.login(username=self.user5.username, password="test")
-
-        # All fields are required
         resp = self.client.post(
             reverse("clubs-email-blast"),
             {"content": "test"},
             content_type="application/json",
         )
+
         self.assertEqual(resp.status_code, 400)
+        self.assertEqual(len(mail.outbox), 0)
 
         resp = self.client.post(
             reverse("clubs-email-blast"),
             {"target": "leaders"},
             content_type="application/json",
         )
-        self.assertEqual(resp.status_code, 400)
 
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_email_blast_targets_recipients_by_role(self):
+        self._create_email_blast_memberships()
+        user_without_email = get_user_model().objects.create_user(
+            "blank-email-user", "", "test"
+        )
+        Membership.objects.create(
+            club=self.club1,
+            person=user_without_email,
+            role=Membership.ROLE_OWNER,
+            active=True,
+        )
+
+        self.client.login(username=self.user5.username, password="test")
         resp = self.client.post(
             reverse("clubs-email-blast"),
             {"target": "leaders", "content": "test"},
             content_type="application/json",
         )
+
         self.assertEqual(resp.status_code, 200)
-        self.assertIn("Blast sent to 1 recipients", resp.data["detail"])
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Blast sent to 1 recipient in 1 batch", resp.data["detail"])
+        self.assertEqual(mail.outbox[-1].to, [settings.BRANDING_SITE_EMAIL])
+        self.assertEqual(mail.outbox[-1].bcc, [self.user1.email])
+        self.assertNotIn("", mail.outbox[-1].bcc)
+
         self.assertEqual(
             mail.outbox[-1].subject, f"Update from {settings.BRANDING_SITE_NAME}"
         )
@@ -4739,9 +4837,14 @@ class ClubTestCase(TestCase):
             },
             content_type="application/json",
         )
+
         self.assertEqual(resp.status_code, 200)
-        self.assertIn("Blast sent to 2 recipients", resp.data["detail"])
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn("Blast sent to 2 recipients in 1 batch", resp.data["detail"])
+        self.assertEqual(mail.outbox[-1].to, [settings.BRANDING_SITE_EMAIL])
+        self.assertEqual(
+            set(mail.outbox[-1].bcc),
+            {self.user1.email, self.user2.email},
+        )
         self.assertEqual(mail.outbox[-1].subject, "Custom Blast Subject")
 
         resp = self.client.post(
@@ -4749,11 +4852,129 @@ class ClubTestCase(TestCase):
             {"target": "all", "subject": "   ", "content": "test"},
             content_type="application/json",
         )
+
         self.assertEqual(resp.status_code, 200)
-        self.assertIn("Blast sent to 3 recipients", resp.data["detail"])
-        self.assertEqual(len(mail.outbox), 3)
+        self.assertIn("Blast sent to 3 recipients in 1 batch", resp.data["detail"])
+        self.assertEqual(mail.outbox[-1].to, [settings.BRANDING_SITE_EMAIL])
+        self.assertEqual(
+            set(mail.outbox[-1].bcc),
+            {self.user1.email, self.user2.email, self.user3.email},
+        )
         self.assertEqual(
             mail.outbox[-1].subject, f"Update from {settings.BRANDING_SITE_NAME}"
+        )
+
+    def test_email_blast_view_is_async(self):
+        view_func = resolve(reverse("clubs-email-blast")).func
+        self.assertEqual(view_func.actions, {"post": "email_blast"})
+        self.assertTrue(inspect.iscoroutinefunction(view_func.cls.email_blast))
+
+    def test_email_blast_batches_recipients(self):
+        users = [
+            get_user_model().objects.create_user(
+                f"batch{i}", f"batch{i}@example.com", "test"
+            )
+            for i in range(5)
+        ]
+        Membership.objects.bulk_create(
+            [
+                Membership(
+                    club=self.club1,
+                    person=user,
+                    role=Membership.ROLE_OFFICER,
+                    active=True,
+                )
+                for user in users
+            ]
+        )
+
+        self.client.login(username=self.user5.username, password="test")
+        with (
+            patch("clubs.views.EMAIL_BLAST_BCC_BATCH_SIZE", 2),
+            patch("clubs.views.logger") as mocked_logger,
+        ):
+            resp = self.client.post(
+                reverse("clubs-email-blast"),
+                {"target": "officers", "content": "test"},
+                content_type="application/json",
+            )
+
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertIn("Blast sent to 5 recipients in 3 batches", data["detail"])
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual([len(email.bcc) for email in mail.outbox], [2, 2, 1])
+        self.assertEqual(
+            [email.to for email in mail.outbox],
+            [
+                [settings.BRANDING_SITE_EMAIL],
+                [settings.BRANDING_SITE_EMAIL],
+                [settings.BRANDING_SITE_EMAIL],
+            ],
+        )
+        self.assertEqual(
+            mocked_logger.info.call_args.kwargs["extra"],
+            {
+                "target": "officers",
+                "recipient_count": 5,
+                "batch_count": 3,
+                "sent_count": 5,
+                "failed_count": 0,
+            },
+        )
+
+    def test_email_blast_logs_failed_batch(self):
+        users = [
+            get_user_model().objects.create_user(
+                f"failbatch{i}", f"failbatch{i}@example.com", "test"
+            )
+            for i in range(5)
+        ]
+        Membership.objects.bulk_create(
+            [
+                Membership(
+                    club=self.club1,
+                    person=user,
+                    role=Membership.ROLE_OFFICER,
+                    active=True,
+                )
+                for user in users
+            ]
+        )
+
+        self.client.login(username=self.user5.username, password="test")
+        with (
+            patch("clubs.views.EMAIL_BLAST_BCC_BATCH_SIZE", 2),
+            patch(
+                "clubs.views.send_mail_helper",
+                side_effect=[None, SMTPServerDisconnected("failed")],
+            ) as mocked_send,
+            patch("clubs.views.logger") as mocked_logger,
+        ):
+            resp = self.client.post(
+                reverse("clubs-email-blast"),
+                {"target": "officers", "content": "test"},
+                content_type="application/json",
+            )
+
+        self.assertEqual(resp.status_code, 502)
+        data = resp.json()
+        self.assertEqual(data["batch_count"], 3)
+        self.assertEqual(data["failed_batch"], 2)
+        self.assertEqual(data["sent_count"], 2)
+        self.assertEqual(mocked_send.call_count, 2)
+        log_extra = mocked_logger.exception.call_args.kwargs["extra"]
+        self.assertEqual(
+            log_extra,
+            {
+                "target": "officers",
+                "recipient_count": 5,
+                "batch_count": 3,
+                "batch_index": 2,
+                "batch_size": 2,
+                "sent_count": 2,
+                "failed_count": 3,
+            },
         )
 
     def test_application_submission_requires_complete_profile(self):

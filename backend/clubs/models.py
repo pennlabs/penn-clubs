@@ -53,8 +53,24 @@ def get_mail_type_annotation(name):
     return None
 
 
+def clean_email_list(emails, arg_name):
+    if emails is None:
+        return []
+    emails = list(emails)
+    if not all(isinstance(email, str) for email in emails):
+        raise ValueError(f"The {arg_name} email argument must be a list of strings!")
+    return list(dict.fromkeys(email for email in emails if email))
+
+
 def send_mail_helper(
-    name, subject, emails, context, attachment=None, reply_to=None, num_retries=2
+    name,
+    subject,
+    emails,
+    context,
+    attachment=None,
+    reply_to=None,
+    num_retries=2,
+    bcc=None,
 ):
     """
     A helper to send out an email given the template name, subject, to emails,
@@ -63,11 +79,9 @@ def send_mail_helper(
 
     All emails should go through this function.
     """
-    if not all(isinstance(email, str) for email in emails):
-        raise ValueError("The to email argument must be a list of strings!")
-
     # emulate django behavior of silently returning without recipients
-    emails = [email for email in emails if email]
+    emails = clean_email_list(emails, "to")
+    bcc_emails = clean_email_list(bcc, "bcc")
     if not emails:
         return False
 
@@ -103,7 +117,12 @@ def send_mail_helper(
     text_content = html_to_text(html_content)
 
     msg = EmailMultiAlternatives(
-        subject, text_content, settings.FROM_EMAIL, list(set(emails)), reply_to=reply_to
+        subject,
+        text_content,
+        settings.FROM_EMAIL,
+        emails,
+        reply_to=reply_to,
+        bcc=bcc_emails,
     )
 
     if attachment is not None:

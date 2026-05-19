@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "adrf",
     "simple_history",
     "accounts.apps.AccountsConfig",
     "clubs.apps.ClubsConfig",
