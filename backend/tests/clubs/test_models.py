@@ -343,6 +343,20 @@ class UtilsTestCase(TestCase):
 
             self.assertEqual(mocked_send.call_count, 3)
 
+    def test_send_mail_helper_bcc_support(self):
+        with mock.patch("clubs.models.EmailMultiAlternatives") as mocked_message:
+            send_mail_helper(
+                name="base",
+                subject="Test Subject",
+                emails=["to@example.com"],
+                bcc=["bcc@example.com", "bcc@example.com", ""],
+                context={},
+            )
+
+            args, kwargs = mocked_message.call_args
+            self.assertEqual(args[3], ["to@example.com"])
+            self.assertEqual(kwargs["bcc"], ["bcc@example.com"])
+
 
 class OwnershipRequestTestCase(TestCase):
     """Test cases for OwnershipRequest model methods"""

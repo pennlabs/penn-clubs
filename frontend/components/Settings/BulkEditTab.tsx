@@ -127,6 +127,8 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
                   { hideProgressBar: true },
                 )
               }
+            } catch {
+              toast.error('Failed to send email blast. Please check the logs.')
             } finally {
               setSubmitting(false)
             }

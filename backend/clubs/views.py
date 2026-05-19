@@ -7,6 +7,7 @@ import hashlib
 import hmac
 import io
 import json
+import logging
 import os
 import re
 import secrets
@@ -14,14 +15,17 @@ import string
 import uuid
 from decimal import Decimal, InvalidOperation
 from functools import wraps
+from itertools import batched
+from smtplib import SMTPException
 from urllib.parse import quote, urlparse
 
 import pandas as pd
 import pytz
 import qrcode
 import requests
+from adrf.viewsets import ViewSet as AsyncViewSet
 from analytics.entries import FuncEntry
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from dateutil.parser import ParserError, parse
 from django.conf import settings
@@ -243,6 +247,133 @@ from pennclubs.analytics import LabsAnalytics
 
 
 CLUBS_LIST_CACHE_VERSION_KEY = "clubs:list:anon:version"
+EMAIL_BLAST_BCC_BATCH_SIZE = 999
+
+logger = logging.getLogger(__name__)
+
+
+def _get_email_blast_recipients(target_role):
+    return list(
+        Membership.objects.filter(role__lte=target_role, active=True)
+        .exclude(person__email__isnull=True)
+        .exclude(person__email="")
+        .values_list("person__email", flat=True)
+        .distinct()
+    )
+
+
+class EmailBlastViewSet(AsyncViewSet):
+    permission_classes = [ClubPermission | IsSuperuser]
+
+    async def email_blast(self, request, *args, **kwargs):
+        data = request.data
+        if "target" not in data:
+            return Response(
+                {"detail": "Target must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        target = data.get("target").lower().strip()
+        roles = {
+            "leaders": Membership.ROLE_OWNER,
+            "officers": Membership.ROLE_OFFICER,
+            "all": Membership.ROLE_MEMBER,
+        }
+
+        if target not in roles:
+            return Response(
+                {"detail": "Target must be one of: leaders, officers, all"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        content = data.get("content", "").strip()
+        if not content:
+            return Response(
+                {"detail": "Content must be specified"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        emails = await sync_to_async(
+            _get_email_blast_recipients, thread_sensitive=True
+        )(roles[target])
+        reply_emails = settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL]
+        to_emails = [settings.BRANDING_SITE_EMAIL]
+        batch_count = (
+            len(emails) + EMAIL_BLAST_BCC_BATCH_SIZE - 1
+        ) // EMAIL_BLAST_BCC_BATCH_SIZE
+        subject = data.get("subject", "").strip() or (
+            f"Update from {settings.BRANDING_SITE_NAME}"
+        )
+        sent_count = 0
+
+        for batch_index, batch in enumerate(
+            batched(emails, EMAIL_BLAST_BCC_BATCH_SIZE), start=1
+        ):
+            try:
+                await sync_to_async(send_mail_helper, thread_sensitive=True)(
+                    name="blast",
+                    subject=subject,
+                    emails=to_emails,
+                    context={
+                        "sender": settings.BRANDING_SITE_NAME,
+                        "content": content,
+                        "reply_emails": reply_emails,
+                    },
+                    reply_to=reply_emails,
+                    bcc=batch,
+                )
+            except SMTPException:
+                logger.exception(
+                    "Email blast batch failed",
+                    extra={
+                        "target": target,
+                        "recipient_count": len(emails),
+                        "batch_count": batch_count,
+                        "batch_index": batch_index,
+                        "batch_size": len(batch),
+                        "sent_count": sent_count,
+                        "failed_count": len(emails) - sent_count,
+                    },
+                )
+                return Response(
+                    {
+                        "detail": (
+                            f"Email blast failed while sending batch {batch_index} "
+                            f"of {batch_count}. Check server logs/Sentry for details."
+                        ),
+                        "success": False,
+                        "recipient_count": len(emails),
+                        "batch_count": batch_count,
+                        "failed_batch": batch_index,
+                        "sent_count": sent_count,
+                    },
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+            sent_count += len(batch)
+
+        logger.info(
+            "Email blast sent",
+            extra={
+                "target": target,
+                "recipient_count": len(emails),
+                "batch_count": batch_count,
+                "sent_count": sent_count,
+                "failed_count": 0,
+            },
+        )
+
+        recipient_label = "recipient" if len(emails) == 1 else "recipients"
+        batch_label = "batch" if batch_count == 1 else "batches"
+
+        return Response(
+            {
+                "detail": (
+                    f"Blast sent to {len(emails)} {recipient_label} "
+                    f"in {batch_count} {batch_label}"
+                ),
+                "success": True,
+            }
+        )
 
 
 def _bump_clubs_list_cache_version():
@@ -2651,103 +2782,6 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         )
 
         return Response(fields)
-
-    @action(detail=False, methods=["post"])
-    @LabsAnalytics.record_api_function(
-        FuncEntry("email_blast_to_club_active_members"),
-    )
-    def email_blast(self, request, *args, **kwargs):
-        """
-        Send email blast to targeted (active) club members.
-        ---
-        requestBody:
-            content:
-                application/json:
-                    schema:
-                        type: object
-                        properties:
-                            content:
-                                type: string
-                                description: The content of the email blast to send
-                            target:
-                                type: string
-                                description: Must be one of leaders, officers, or all
-                        required:
-                            - content
-                            - target
-        responses:
-            "200":
-                description: Email blast was sent successfully
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                detail:
-                                    type: string
-                                    description: A message indicating how many
-                                        recipients received the blast
-            "400":
-                description: Content or target field was empty or missing
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                detail:
-                                    type: string
-                                    description: Error message indicating content
-                                        or target was not provided correctly
-        ---
-        """
-        if "target" not in request.data:
-            return Response(
-                {"detail": "Target must be specified"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        target = request.data.get("target").lower().strip()
-        roles = {
-            "leaders": Membership.ROLE_OWNER,
-            "officers": Membership.ROLE_OFFICER,
-            "all": Membership.ROLE_MEMBER,
-        }
-
-        if target not in roles:
-            return Response(
-                {"detail": "Target must be one of: leaders, officers, all"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        content = request.data.get("content", "").strip()
-        if not content:
-            return Response(
-                {"detail": "Content must be specified"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        subject = request.data.get("subject", "").strip()
-
-        target_role = roles[target]
-
-        emails = list(
-            Membership.objects.filter(role__lte=target_role, active=True)
-            .values_list("person__email", flat=True)
-            .distinct()
-        )
-
-        send_mail_helper(
-            name="blast",
-            subject=subject or f"Update from {settings.BRANDING_SITE_NAME}",
-            emails=emails,
-            context={
-                "sender": settings.BRANDING_SITE_NAME,
-                "content": content,
-                "reply_emails": settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
-            },
-            reply_to=settings.OSA_EMAILS + [settings.BRANDING_SITE_EMAIL],
-        )
-
-        return Response({"detail": (f"Blast sent to {len(emails)} recipients")})
 
     def get_serializer_class(self):
         """
