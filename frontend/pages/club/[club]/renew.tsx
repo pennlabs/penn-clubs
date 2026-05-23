@@ -8,6 +8,7 @@ import { Contact, Container, Icon, InfoPageTitle } from 'components/common'
 import AuthPrompt from 'components/common/AuthPrompt'
 import ResourceCreationPage from 'components/ResourceCreationPage'
 import { DARK_GRAY, GREEN, MEDIUM_GRAY } from 'constants/colors'
+import { UNDER_REVIEW_STATUS } from 'constants/status'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
@@ -637,10 +638,22 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
       name: 'Complete',
       onEnterTab: async () => {
         try {
+          // Fetch the "Under Review" status
+          const statusesResp = await doApiRequest('/statuses/?format=json')
+          const statusesData = await statusesResp.json()
+          const underReviewStatus = statusesData.find(
+            (s: Status) => s.name.toUpperCase() === UNDER_REVIEW_STATUS,
+          )
+
+          if (!underReviewStatus) {
+            setChangeStatusError('Could not find "Under Review" status')
+            return
+          }
+
           await doApiRequest(`/clubs/${club.code}/?format=json`, {
             method: 'PATCH',
             body: {
-              active: true,
+              status_id: underReviewStatus.id,
             },
           }).then((resp) => {
             if (resp.ok) {

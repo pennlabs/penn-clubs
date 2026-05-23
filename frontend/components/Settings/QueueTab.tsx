@@ -7,7 +7,11 @@ import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { CLUB_ROUTE } from '../../constants'
-import { Club, RegistrationQueueSettings, Template } from '../../types'
+import {
+  getStatusActionInfo,
+  UNDER_REVIEW_STATUS,
+} from '../../constants/status'
+import { Club, RegistrationQueueSettings, Status, Template } from '../../types'
 import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   OBJECT_NAME_PLURAL,
@@ -39,9 +43,9 @@ type ClubDiff = {
 type QueueTableModalProps = {
   show: boolean
   closeModal: () => void
-  bulkAction: (comment: string) => void
-  isApproving: boolean
+  bulkAction: (comment: string, statusId?: number) => void
   templates: Template[]
+  statuses: Status[]
 }
 
 type OwnershipRequest = {
@@ -57,11 +61,12 @@ const QueueTableModal = ({
   show,
   closeModal,
   bulkAction,
-  isApproving,
   templates,
+  statuses,
 }: QueueTableModalProps): ReactElement => {
   const [comment, setComment] = useState<string>('')
   const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
+  const [selectedStatus, setSelectedStatus] = useState<Status | null>(null)
 
   useEffect(() => {
     setComment(
@@ -81,9 +86,8 @@ const QueueTableModal = ({
     >
       <ModalContent>
         <div className="mb-3">
-          Enter bulk {isApproving ? 'approval' : 'rejection'} notes here! Your
-          notes will be emailed to the requesters when you{' '}
-          {isApproving ? 'approve' : 'reject'} these requests.
+          Enter bulk status change notes here! Your notes will be emailed to the
+          requesters when you change their status.
         </div>
         <Select
           isMulti
@@ -119,18 +123,56 @@ const QueueTableModal = ({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="textarea my-2"
-          placeholder={`${isApproving ? 'approval' : 'rejection'} notes`}
+          placeholder="Status change notes"
         ></textarea>
-        <button
-          className={`mb-2 button ${isApproving ? 'is-success' : 'is-danger'}`}
-          onClick={() => {
-            closeModal()
-            bulkAction(comment)
-          }}
-        >
-          <Icon name={isApproving ? 'check' : 'x'} />
-          {isApproving ? 'Approve' : 'Reject'} and Send Message
-        </button>
+        <div className="field mb-3">
+          <label className="label">Status</label>
+          <div className="control">
+            <Select
+              placeholder="Select status"
+              options={statuses.map((status) => ({
+                value: status.id,
+                label: status.name,
+              }))}
+              value={
+                selectedStatus
+                  ? {
+                      value: selectedStatus.id,
+                      label: selectedStatus.name,
+                    }
+                  : null
+              }
+              onChange={(selectedOption) => {
+                if (selectedOption) {
+                  const status = statuses.find(
+                    (s) => s.id === selectedOption.value,
+                  )
+                  setSelectedStatus(status || null)
+                } else {
+                  setSelectedStatus(null)
+                }
+              }}
+            />
+          </div>
+          <p className="help">Select a status to set for the clubs.</p>
+        </div>
+        {(() => {
+          const actionInfo = getStatusActionInfo(selectedStatus?.name || '')
+
+          return (
+            <button
+              className={`mb-2 button ${actionInfo.buttonClass}`}
+              disabled={!selectedStatus}
+              onClick={() => {
+                closeModal()
+                bulkAction(comment, selectedStatus?.id)
+              }}
+            >
+              <Icon name={actionInfo.icon} />
+              {actionInfo.label} and Send Message
+            </button>
+          )
+        })()}
       </ModalContent>
     </Modal>
   )
@@ -140,6 +182,7 @@ type QueueTableProps = {
   clubs: Club[] | null
   refetchClubs?: () => void
   templates: Template[]
+  statuses: Status[]
 }
 /* TODO: refactor with Table component when render and search
 functionality are disconnected */
@@ -147,15 +190,17 @@ const QueueTable = ({
   clubs,
   refetchClubs,
   templates,
+  statuses,
 }: QueueTableProps): ReactElement => {
   const router = useRouter()
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
-  const [approve, setApprove] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
   const allClubsSelected = selectedCodes.length === (clubs || []).length
 
-  const bulkAction = (comment: string) => {
+  const bulkAction = (comment: string, statusId?: number) => {
+    if (!statusId) return
+
     setLoading(true)
     Promise.all(
       (clubs || [])
@@ -166,9 +211,9 @@ const QueueTable = ({
           doApiRequest(`/clubs/${club.code}/?format=json`, {
             method: 'PATCH',
             body: {
-              approved: approve,
               approved_comment:
                 comment || '(Administrator did not include a comment.)',
+              status_id: statusId,
             },
           }),
         ),
@@ -186,8 +231,8 @@ const QueueTable = ({
         show={showModal}
         closeModal={() => setShowModal(false)}
         bulkAction={bulkAction}
-        isApproving={approve}
         templates={templates}
+        statuses={statuses}
       />
       <QueueSectionHeader>
         <QueueSectionHeaderText>
@@ -201,24 +246,11 @@ const QueueTable = ({
         </QueueSectionHeaderText>
         <div className="buttons">
           <button
-            className="button is-success"
+            className="button is-primary"
             disabled={!selectedCodes.length || loading}
-            onClick={() => {
-              setApprove(true)
-              setShowModal(true)
-            }}
+            onClick={() => setShowModal(true)}
           >
-            <Icon name="check" /> Approve
-          </button>
-          <button
-            className="button is-danger"
-            disabled={!selectedCodes.length || loading}
-            onClick={() => {
-              setApprove(false)
-              setShowModal(true)
-            }}
-          >
-            <Icon name="x" /> Reject
+            <Icon name="edit" /> Change Status
           </button>
         </div>
       </QueueSectionHeader>
@@ -759,6 +791,7 @@ const QueueTab = (): ReactElement => {
   const [inactiveClubs, setInactiveClubs] = useState<Club[] | null>(null)
   const [allClubs, setAllClubs] = useState<boolean[] | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
+  const [statuses, setStatuses] = useState<Status[]>([])
   const [registrationQueueSettings, setRegistrationQueueSettings] =
     useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club')
@@ -791,6 +824,16 @@ const QueueTab = (): ReactElement => {
     doApiRequest('/templates/?format=json')
       .then((resp) => resp.json())
       .then(setTemplates)
+
+    // Fetch statuses and filter out "Under Review"
+    doApiRequest('/statuses/?format=json')
+      .then((resp) => resp.json())
+      .then((data: Status[]) => {
+        const filteredStatuses = data.filter(
+          (status) => status.name.toUpperCase() !== UNDER_REVIEW_STATUS,
+        )
+        setStatuses(filteredStatuses)
+      })
 
     doApiRequest('/settings/queue/?format=json')
       .then((resp) => resp.json())
@@ -1104,6 +1147,7 @@ const QueueTab = (): ReactElement => {
         clubs={pendingClubs}
         refetchClubs={refetchClubs}
         templates={templates}
+        statuses={statuses}
       />
       {SHOW_OWNERSHIP_REQUESTS && (
         <>
