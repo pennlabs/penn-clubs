@@ -92,9 +92,12 @@ function useFieldWrapper<T extends FieldWrapperProps>(
 ): (props: T) => ReactElement<any> {
   return (props: any) => {
     const { label, noLabel, helpText, ...other } = props
-    const { status } = useFormikContext()
+    const { errors, status, submitCount } = useFormikContext<any>()
     const actualLabel = label ?? titleize(props.name)
-    const errorMessage = status && status[props.name]
+    // Prefer server/status errors; after submit, also show Formik validate errors.
+    const errorMessage =
+      status?.[props.name] ??
+      (submitCount > 0 ? errors?.[props.name] : undefined)
     const fieldContext = useContext(FormFieldClassContext)
     const isHorizontal = fieldContext.includes('is-horizontal')
 
@@ -117,7 +120,7 @@ function useFieldWrapper<T extends FieldWrapperProps>(
     )
 
     return (
-      <div className={`field ${fieldContext}`}>
+      <div className={`field ${fieldContext}`} data-field-name={props.name}>
         {noLabel ||
           (isHorizontal ? (
             <div className="field-label">{fieldLabel}</div>
@@ -585,7 +588,6 @@ export const TextField = useFieldWrapper(
       return (
         <textarea
           value={value ?? ''}
-          required={props.required}
           {...other}
           className={`textarea ${isError ? 'is-danger' : ''}`}
           readOnly={readOnly ?? false}
@@ -645,6 +647,7 @@ export const FileField = useFieldWrapper(
     isImage = false,
     canDelete = false,
     disabled = false,
+    accept,
   }: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
 
@@ -693,6 +696,8 @@ export const FileField = useFieldWrapper(
               className="file-input"
               type="file"
               name={name}
+              accept={accept}
+              disabled={disabled}
               onChange={(e) => {
                 if (e.target.files) {
                   setFieldValue(name, e.target.files[0])
@@ -868,9 +873,10 @@ export const SelectField = useFieldWrapper(
 export const CheckboxField = (
   props: BasicFormField & AnyHack,
 ): ReactElement<any> => {
-  const { label, value, onChange, helpText, ...other } = props
-  const { status, setFieldValue } = useFormikContext()
-  const errorMessage = status && status[props.name]
+  const { label, value, onChange, helpText, required, ...other } = props
+  const { errors, status, submitCount, setFieldValue } = useFormikContext<any>()
+  const errorMessage =
+    status?.[props.name] ?? (submitCount > 0 ? errors?.[props.name] : undefined)
   const fieldContext = useContext(FormFieldClassContext)
   const isHorizontal = fieldContext.includes('is-horizontal')
 
@@ -895,7 +901,7 @@ export const CheckboxField = (
   )
 
   return (
-    <div className={`field ${fieldContext}`}>
+    <div className={`field ${fieldContext}`} data-field-name={props.name}>
       {isHorizontal ? (
         <>
           <div className="field-label">

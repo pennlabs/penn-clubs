@@ -1001,6 +1001,23 @@ class ClubMinimalSerializer(serializers.ModelSerializer):
         fields = ["name", "code", "approved"]
 
 
+def validate_constitution_file(data):
+    if not data.name.lower().endswith((".pdf", ".doc", ".docx")):
+        raise serializers.ValidationError(
+            "Constitution must be a PDF, DOC, or DOCX file."
+        )
+
+    if data.size <= settings.MAX_FILE_SIZE:
+        return data
+
+    max_file_size_in_gb = round(settings.MAX_FILE_SIZE / settings.FILE_SIZE_ONE_GB, 3)
+    raise serializers.ValidationError(
+        "You cannot upload a file that is more than {} GB of space!".format(
+            max_file_size_in_gb
+        )
+    )
+
+
 class ClubConstitutionSerializer(ClubMinimalSerializer):
     """
     Return the minimal information, as well as the files that the club has uploaded.
@@ -1015,17 +1032,14 @@ class ClubConstitutionSerializer(ClubMinimalSerializer):
             has_member = bool(obj.user_membership_set)
         else:
             has_member = False
-        if hasattr(obj, "prefetch_asset_set"):
-            return [
-                {
-                    "name": asset.name if perm or has_member else None,
-                    "url": asset.file.url if perm or has_member else None,
-                }
-                for asset in obj.prefetch_asset_set
-                if asset.name.endswith((".docx", ".doc", ".pdf"))
-                or "constitution" in asset.name.lower()
-            ]
-        return None
+        if not obj.constitution:
+            return []
+        return [
+            {
+                "name": obj.constitution.name if perm or has_member else None,
+                "url": obj.constitution.file.url if perm or has_member else None,
+            }
+        ]
 
     class Meta(ClubMinimalSerializer.Meta):
         fields = ClubMinimalSerializer.Meta.fields + ["files"]
@@ -1498,6 +1512,7 @@ class GroupActivityOptionSerializer(serializers.ModelSerializer):
 class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     members = MembershipSerializer(many=True, source="membership_set", read_only=True)
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
+    constitution = serializers.FileField(write_only=True, required=False)
     badges = BadgeSerializer(many=True, required=False)
     testimonials = TestimonialSerializer(many=True, read_only=True)
     events = serializers.SerializerMethodField("get_events")
@@ -1831,9 +1846,13 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         return social_validation_helper(value, ["youtube.com", "youtu.be"])
 
+    def validate_constitution(self, data):
+        return validate_constitution_file(data)
+
     def validate_active(self, value):
         """
         Only officers, owners, and superusers may change the active status of a club.
+        On club creation, the club creator can set the initial active status.
         """
         user = self.context["request"].user
 
@@ -1841,9 +1860,12 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         if user.has_perm("clubs.approve_club"):
             return value
 
+        # the club creator can set the initial active status on registration
+        club = self.instance
+        if club is None:
+            return value
+
         # check if at least an officer
-        club_code = self.context["view"].kwargs.get("code")
-        club = Club.objects.get(code=club_code)
         membership = Membership.objects.filter(person=user, club=club).first()
         if membership and membership.role <= Membership.ROLE_OFFICER:
             return value
@@ -1855,14 +1877,37 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate(self, data):
         """
-        Enforce presence of category and classification on creation.
+        Enforce required fields on club creation and renewal (reactivation).
         """
-        if self.instance is None:
-            for field in ("category", "classification"):
-                if field not in data:
-                    raise serializers.ValidationError(
-                        {field: "This field is required."}
-                    )
+        is_creation = self.instance is None
+        is_renewal = self.instance is not None and data.get("active") is True
+
+        if not (is_creation or is_renewal):
+            return super().validate(data)
+
+        user = self.context["request"].user
+        # superusers and users with approve permissions can skip required fields
+        if user.is_superuser or user.has_perm("clubs.approve_club"):
+            return super().validate(data)
+
+        required_fields = ["category", "classification", "constitution"]
+        errors = {}
+
+        for field in required_fields:
+            has_incoming_value = field in data and bool(data.get(field))
+            if field == "constitution":
+                has_existing_value = bool(
+                    self.instance and self.instance.constitution_id
+                )
+            else:
+                has_existing_value = bool(getattr(self.instance, field, None))
+
+            if not has_incoming_value and not has_existing_value:
+                errors[field] = f"{field.capitalize()} is required."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
         return super().validate(data)
 
     def format_members_for_spreadsheet(self, value):
@@ -1875,7 +1920,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         Override save in order to replace code with slugified name if not specified.
         """
-        if "beta" in self.validated_data:
+        if hasattr(self, "initial_data") and "beta" in self.initial_data:
             raise serializers.ValidationError(
                 "The beta field is not allowed to be set by clubs."
             )
@@ -1892,6 +1937,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             del self.validated_data["code"]
 
         approval_email_required = False
+        constitution = self.validated_data.pop("constitution", None)
 
         # if key fields were edited, require re-approval
         needs_reapproval = False
@@ -1905,7 +1951,8 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         # vacuously needs re-approval if approval now set to None
         # relevant for closing queue to re-approval requests without content
         if (
-            "approved" in self.validated_data
+            self.instance
+            and "approved" in self.validated_data
             and self.validated_data["approved"] is None
         ):
             needs_reapproval = True
@@ -1973,6 +2020,15 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
                 self.validated_data["ghost"] = False
 
         obj = super().save()
+        if constitution:
+            request = self.context.get("request", None)
+            obj.constitution = Asset.objects.create(
+                creator=request.user if request else None,
+                club=obj,
+                file=constitution,
+                name=constitution.name,
+            )
+            obj.save(update_fields=["constitution"])
 
         # remove small version if large one is gone
         if not obj.image and obj.image_small:
@@ -2105,6 +2161,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "badges",
             "beta",
             "category",
+            "constitution",
             "designation",
             "eligibility",
             "type",
@@ -2657,6 +2714,7 @@ class UserSerializer(serializers.ModelSerializer):
 class AssetSerializer(serializers.ModelSerializer):
     creator = serializers.HiddenField(default=serializers.CurrentUserDefault())
     file_url = serializers.SerializerMethodField("get_file_url")
+    is_constitution = serializers.SerializerMethodField("get_is_constitution")
     file = serializers.FileField(write_only=True)
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
     name = serializers.CharField(max_length=255, required=True)
@@ -2670,6 +2728,9 @@ class AssetSerializer(serializers.ModelSerializer):
             return self.context["request"].build_absolute_uri(obj.file.url)
         else:
             return obj.file.url
+
+    def get_is_constitution(self, obj):
+        return bool(obj.club and obj.club.constitution_id == obj.id)
 
     # Cannot exceed maximum upload size
     def validate_file(self, data):
@@ -2687,7 +2748,16 @@ class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ("id", "file_url", "file", "creator", "club", "name", "created_at")
+        fields = (
+            "id",
+            "file_url",
+            "file",
+            "creator",
+            "club",
+            "name",
+            "is_constitution",
+            "created_at",
+        )
 
 
 class AuthenticatedClubSerializer(ClubSerializer):
@@ -2701,11 +2771,24 @@ class AuthenticatedClubSerializer(ClubSerializer):
     files = AssetSerializer(many=True, source="asset_set", read_only=True)
     fairs = serializers.SerializerMethodField("get_fairs")
     email = serializers.EmailField()
-    email_public = serializers.BooleanField(default=True)
+    email_public = serializers.BooleanField(default=False)
     visible_to_public = serializers.BooleanField(default=False, required=False)
     advisor_set = AdvisorSerializer(many=True, required=False)
     owners = serializers.SerializerMethodField("get_owners")
     officers = serializers.SerializerMethodField("get_officers")
+    constitution_url = serializers.SerializerMethodField("get_constitution_url")
+
+    def get_constitution_url(self, obj):
+        constitution = obj.constitution
+        if not constitution or not constitution.file:
+            return None
+        url = constitution.file.url
+        if url.startswith("http"):
+            return url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(url)
+        else:
+            return url
 
     def get_owners(self, obj):
         return MinimalUserProfileSerializer(
@@ -2725,6 +2808,7 @@ class AuthenticatedClubSerializer(ClubSerializer):
 
     class Meta(ClubSerializer.Meta):
         fields = ClubSerializer.Meta.fields + [
+            "constitution_url",
             "email_public",
             "visible_to_public",
             "fairs",

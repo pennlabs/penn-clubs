@@ -45,6 +45,14 @@ const InfoBox = (props: InfoBoxProps): ReactElement<any> | null => {
     // Admin-only fields
     ...(isAdmin
       ? [
+          {
+            field: 'constitution_url',
+            icon: props.club.constitution_url ? 'check-circle' : 'x-circle',
+            text: `Constitution: ${
+              props.club.constitution_url ? 'Uploaded' : 'Not uploaded'
+            }`,
+          },
+          // TODO: reach out to OSA about fields
           // ...(props.club.status?.name
           //   ? [
           //       {

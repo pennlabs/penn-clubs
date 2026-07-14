@@ -298,9 +298,6 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     null,
   )
   const { settings: queueSettings } = useRegistrationQueueSettings()
-  const [submitMessage, setSubmitMessage] = useState<
-    string | ReactElement<any> | null
-  >(null)
   const [arePoliciesAccepted, setPoliciesAccepted] = useState<boolean>(false)
 
   const hasPermission = apiCheckPermission(`clubs.manage_club:${club.code}`)
@@ -316,13 +313,13 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
     { field: 'name', label: 'Club Name' },
     { field: 'category', label: 'Category' },
     { field: 'classification', label: 'Classification' },
-    // { field: 'tags', label: 'Tags' },
     { field: 'description', label: 'Club Mission' },
-    { field: 'email', label: 'Contact Email' },
+    { field: 'constitution_url', label: 'Constitution' },
     { field: 'size', label: 'Club Size' },
+    { field: 'group_activity_assessment', label: 'Group Activity Assessment' },
+    { field: 'email', label: 'Contact Email' },
     { field: 'application_required', label: 'Membership Process' },
     { field: 'recruiting_cycle', label: 'Recruiting Cycle' },
-    { field: 'group_activity_assessment', label: 'Group Activity Assessment' },
   ]
 
   const validateRequiredFields = (): Array<{
@@ -572,18 +569,11 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
               if (message !== undefined) {
                 if (typeof message === 'string') {
                   notify(message, 'success')
-                } else {
-                  setSubmitMessage(message)
                 }
               }
               return Promise.resolve(undefined)
             }}
           />
-          {submitMessage !== null && (
-            <div className="mt-3 mb-3 notification is-info">
-              {submitMessage}
-            </div>
-          )}
           <p className="mt-3 mb-3">
             If you have made any changes to your {OBJECT_NAME_SINGULAR}, please
             make sure you have pressed the "Submit" button above before pressing

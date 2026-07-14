@@ -1,7 +1,6 @@
 import { Field, Form, Formik, useField, useFormikContext } from 'formik'
 import Link from 'next/link'
-import React, { ReactElement, useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import React, { ReactElement, useEffect, useRef, useState } from 'react'
 
 import { BLACK } from '~/constants'
 import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
@@ -75,7 +74,7 @@ const GroupActivityAssessmentField: React.FC<{
   options: GroupActivityOption[]
 }> = ({ name, label = 'Group Activity Assessment', helpText, options }) => {
   const [field, meta] = useField(name)
-  const { setFieldValue, setFieldTouched } = useFormikContext()
+  const { setFieldValue, setFieldTouched, submitCount } = useFormikContext()
 
   const currentValues = field.value || []
   const selectedIds: number[] = currentValues.map((v) =>
@@ -123,7 +122,7 @@ const GroupActivityAssessmentField: React.FC<{
   const isOptionSelected = (optionId: number) => selectedIds.includes(optionId)
 
   return (
-    <div className="field">
+    <div className="field" data-field-name={name}>
       <label className="label">
         {label}
         <span style={{ color: 'red' }}>*</span>
@@ -154,9 +153,54 @@ const GroupActivityAssessmentField: React.FC<{
         </div>
       </div>
       {helpText && <p className="help">{helpText}</p>}
-      {meta.error && <p className="help is-danger">{meta.error}</p>}
+      {submitCount > 0 && meta.error && (
+        <p className="help is-danger">{meta.error}</p>
+      )}
     </div>
   )
+}
+
+/**
+ * After submit, scroll to the first invalid field in form order
+ * (client errors first, then server/status errors).
+ */
+const ScrollToFirstError = ({ fieldOrder }: { fieldOrder: string[] }): null => {
+  const { errors, status, submitCount, isSubmitting } =
+    useFormikContext<Record<string, unknown>>()
+  const lastScrolledSubmitCount = useRef(0)
+
+  useEffect(() => {
+    // Wait until submit finishes so server status errors are included.
+    if (
+      isSubmitting ||
+      submitCount < 1 ||
+      submitCount === lastScrolledSubmitCount.current
+    ) {
+      return
+    }
+
+    const firstErrorField = fieldOrder.find(
+      (name) => Boolean(errors?.[name]) || Boolean(status?.[name]),
+    )
+    if (!firstErrorField) {
+      return
+    }
+
+    lastScrolledSubmitCount.current = submitCount
+    const el = document.querySelector(
+      `[data-field-name="${firstErrorField}"]`,
+    ) as HTMLElement | null
+    if (!el) {
+      return
+    }
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const focusable = el.querySelector(
+      'input, textarea, select, button, [tabindex]',
+    ) as HTMLElement | null
+    focusable?.focus?.({ preventScroll: true })
+  }, [errors, fieldOrder, isSubmitting, status, submitCount])
+
+  return null
 }
 
 export const CLUB_APPLICATIONS = [
@@ -408,10 +452,70 @@ export default function ClubEditCard({
     setIsClient(true)
   }, [])
 
+  const appendFormValue = (
+    formData: FormData,
+    key: string,
+    value: unknown,
+  ): void => {
+    if (value === undefined || value === null) {
+      return
+    }
+    if (value instanceof File) {
+      formData.append(key, value)
+      return
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        if (
+          typeof item === 'object' &&
+          item !== null &&
+          !(item instanceof Date)
+        ) {
+          Object.entries(item as Record<string, unknown>).forEach(
+            ([childKey, childValue]) =>
+              appendFormValue(
+                formData,
+                `${key}[${index}]${childKey}`,
+                childValue,
+              ),
+          )
+        } else {
+          appendFormValue(formData, key, item)
+        }
+      })
+      return
+    }
+    if (value instanceof Date) {
+      formData.append(key, value.toISOString())
+      return
+    }
+    if (typeof value === 'object') {
+      Object.entries(value as Record<string, unknown>).forEach(
+        ([childKey, childValue]) =>
+          appendFormValue(formData, `${key}.${childKey}`, childValue),
+      )
+      return
+    }
+    formData.append(key, String(value))
+  }
+
+  const buildClubFormData = (body: object, constitution: File): FormData => {
+    const formData = new FormData()
+    Object.entries(body).forEach(([key, value]) => {
+      appendFormValue(formData, key, value)
+    })
+    formData.append('constitution', constitution)
+    return formData
+  }
+
   const submit = (data, { setSubmitting, setStatus }): Promise<void> => {
     const photo = data.image
-    if (photo !== null) {
+    if (photo !== null && photo !== undefined) {
       delete data.image
+    }
+    const constitution = data.constitution
+    if (constitution !== null && constitution !== undefined) {
+      delete data.constitution
     }
 
     const entries = Object.entries(data)
@@ -515,27 +619,59 @@ export default function ClubEditCard({
     }
 
     const requestedApproval = (body as { approved?: boolean }).approved === true
+    const requestBody =
+      !isEdit && hasQueueOverride
+        ? {
+            ...body,
+            approved: requestedApproval,
+            ...(requestedApproval
+              ? {}
+              : { approved_comment: placeholderRejectionReason }),
+          }
+        : body
 
-    const req =
-      isEdit && club !== null
-        ? doApiRequest(`/clubs/${club.code}/?format=json`, {
-            method: 'PATCH',
-            body,
-          })
-        : doApiRequest('/clubs/?format=json', {
-            method: 'POST',
-            body: hasQueueOverride
-              ? {
-                  ...body,
-                  approved: requestedApproval,
-                  ...(requestedApproval
-                    ? {}
-                    : { approved_comment: placeholderRejectionReason }),
-                }
-              : body,
-          })
+    // Create must send constitution in the same multipart request (backend
+    // validates it on POST). Edits upload constitution separately so other
+    // fields can stay JSON and empty arrays still clear correctly.
+    const uploadConstitutionFile = async (
+      clubCode: string,
+      file: File,
+    ): Promise<Response> => {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('is_constitution', 'true')
+      return doApiRequest(`/clubs/${clubCode}/upload_file/?format=json`, {
+        method: 'POST',
+        body: formData,
+      })
+    }
 
-    return req.then((resp) => {
+    const runClubRequest = async (): Promise<Response> => {
+      if (isEdit && club?.code && constitution instanceof File) {
+        const uploadResp = await uploadConstitutionFile(club.code, constitution)
+        if (!uploadResp.ok) {
+          return uploadResp
+        }
+      }
+
+      const bodyForRequest =
+        !isEdit && constitution instanceof File
+          ? buildClubFormData(requestBody, constitution)
+          : requestBody
+
+      if (isEdit && club?.code) {
+        return doApiRequest(`/clubs/${club.code}/?format=json`, {
+          method: 'PATCH',
+          body: bodyForRequest,
+        })
+      }
+      return doApiRequest('/clubs/?format=json', {
+        method: 'POST',
+        body: bodyForRequest,
+      })
+    }
+
+    return runClubRequest().then((resp) => {
       if (resp.ok) {
         return resp.json().then((info) => {
           let clubCode: string | null = null
@@ -701,7 +837,6 @@ export default function ClubEditCard({
           type: 'multiselect',
           label: 'Tags',
           help: 'Select tags that describe your organization. These are optional and permit multiple choices.',
-          // required: true,
           placeholder: 'Select tags...',
           choices: tags,
         },
@@ -737,6 +872,26 @@ export default function ClubEditCard({
           accept: 'image/*',
           type: 'image',
           label: `${OBJECT_NAME_TITLE_SINGULAR} Logo`,
+          disabled: !isReapprovalOpen && !hasQueueOverride,
+        },
+        {
+          name: 'constitution',
+          help: club.constitution_url ? (
+            <>
+              Current constitution:{' '}
+              <a href={club.constitution_url} target="_blank">
+                Download
+              </a>
+              . Upload a PDF, DOC, or DOCX file to replace it.
+            </>
+          ) : (
+            'Upload a PDF, DOC, or DOCX file containing your club constitution.'
+          ),
+          accept:
+            '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          type: 'file',
+          required: !hasQueueOverride && !club.constitution_url,
+          label: `${OBJECT_NAME_TITLE_SINGULAR} Constitution`,
           disabled: !isReapprovalOpen && !hasQueueOverride,
         },
         {
@@ -1123,7 +1278,6 @@ export default function ClubEditCard({
                 name: 'status',
                 type: 'select',
                 label: 'Status',
-                // required: true,
                 help: 'Select the current status of this organization.',
                 choices: statuses,
                 placeholder: 'Select a status...',
@@ -1133,7 +1287,6 @@ export default function ClubEditCard({
                 name: 'type',
                 type: 'select',
                 label: 'Type',
-                // required: true,
                 help: 'Select the type that best describes this organization.',
                 choices: types,
                 placeholder: 'Select a type...',
@@ -1143,7 +1296,6 @@ export default function ClubEditCard({
                 name: 'eligibility',
                 type: 'multiselect',
                 label: 'Eligibility',
-                // required: true,
                 help: 'Select the eligibility categories that apply to this club for funding and other administrative purposes.',
                 placeholder: 'Select eligibility categories...',
                 choices: eligibilities,
@@ -1158,7 +1310,7 @@ export default function ClubEditCard({
   const creationDefaults = {
     subtitle: '',
     email: '',
-    email_public: true,
+    email_public: false,
     visible_to_public: true,
     accepting_members: false,
     size: CLUB_SIZES[0].value,
@@ -1181,6 +1333,34 @@ export default function ClubEditCard({
     ? doFormikInitialValueFixes(removeNonFieldAttributes(club, editingFields))
     : creationDefaults
 
+  const isMissingRequiredValue = (value: unknown, type?: string): boolean => {
+    if (value === null || value === undefined) {
+      return true
+    }
+    if (Array.isArray(value)) {
+      return value.length === 0
+    }
+    if (typeof value === 'string') {
+      const text =
+        type === 'html'
+          ? value
+              .replace(/<[^>]*>/g, '')
+              .replace(/&nbsp;/g, '')
+              .trim()
+          : value.trim()
+      return text.length === 0
+    }
+    return false
+  }
+
+  const fieldOrder = fields.flatMap(({ hidden, fields: groupFields }) =>
+    hidden
+      ? []
+      : groupFields
+          .filter((field: any) => field.name && !field.hidden)
+          .map((field: any) => field.name as string),
+  )
+
   return (
     <Formik
       initialValues={initialValues}
@@ -1189,30 +1369,43 @@ export default function ClubEditCard({
       }
       enableReinitialize
       validate={(values) => {
-        const errors: {
-          email?: string
-          group_activity_assessment?: string
-        } = {}
-        if (values.email.includes('upenn.edu') && !emailModal) {
+        const formValues = values as Record<string, unknown>
+        const errors: Record<string, string> = {}
+
+        // Validate top-to-bottom so inline errors and scroll target match form order.
+        for (const group of fields) {
+          if (group.hidden) {
+            continue
+          }
+          for (const field of group.fields as any[]) {
+            if (field.hidden || field.disabled || !field.required) {
+              continue
+            }
+            if (isMissingRequiredValue(formValues[field.name], field.type)) {
+              errors[field.name] = 'This field is required.'
+            }
+          }
+        }
+
+        // Only prompt for email confirmation after all required fields are filled.
+        if (
+          Object.keys(errors).length === 0 &&
+          typeof values.email === 'string' &&
+          values.email.includes('upenn.edu') &&
+          !emailModal
+        ) {
           showEmailModal(true)
           errors.email = 'Please confirm your email'
         }
-        if (
-          !values.group_activity_assessment ||
-          values.group_activity_assessment.length === 0
-        ) {
-          const errorMessage =
-            'Group Activity Assessment is required. Please select at least one activity or "None of the above"'
-          errors.group_activity_assessment = errorMessage
-          toast.error(errorMessage)
-        }
+
         return errors
       }}
       validateOnChange={false}
       validateOnBlur={false}
     >
       {({ dirty, isSubmitting, setFieldValue, submitForm, values }) => (
-        <Form>
+        <Form noValidate>
+          <ScrollToFirstError fieldOrder={fieldOrder} />
           {emailModal && (
             <EmailModal
               closeModal={() => showEmailModal(false)}
@@ -1326,6 +1519,7 @@ export default function ClubEditCard({
                               multiselect: SelectField,
                               select: SelectField,
                               image: FileField,
+                              file: FileField,
                               address: FormikAddressField,
                               checkboxText: CheckboxTextField,
                               creatableMultiSelect:

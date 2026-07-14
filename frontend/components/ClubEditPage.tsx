@@ -376,7 +376,7 @@ const ClubForm = ({
         content: (
           <>
             <MemberExperiencesCard club={club} />
-            <FilesCard club={club} />
+            <FilesCard club={club} onUpdate={reloadClub} />
           </>
         ),
       },
