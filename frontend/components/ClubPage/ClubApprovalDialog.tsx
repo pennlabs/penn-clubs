@@ -358,13 +358,20 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
                     <div className="mb-3">
                       <b>Club Files:</b>
                       <ul>
-                        {club.files.map(({ name, file_url }, i) => (
-                          <li key={i}>
-                            <a target="_blank" href={file_url}>
-                              {name}
-                            </a>
-                          </li>
-                        ))}
+                        {club.files.map(
+                          ({ name, file_url, is_constitution }, i) => (
+                            <li key={i}>
+                              <a target="_blank" href={file_url}>
+                                {name}
+                              </a>
+                              {is_constitution && (
+                                <span className="tag is-info is-light ml-2">
+                                  Constitution
+                                </span>
+                              )}
+                            </li>
+                          ),
+                        )}
                       </ul>
                     </div>
                   ) : (

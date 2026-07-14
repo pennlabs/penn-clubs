@@ -24,7 +24,14 @@ const FilesList = ({ club }: Props): ReactElement<any> => {
           files.length &&
           files.map((file) => (
             <tr key={`${file.id}`}>
-              <td>{file.name}</td>
+              <td>
+                {file.name}{' '}
+                {file.is_constitution && (
+                  <span className="tag is-info is-light ml-2">
+                    Constitution
+                  </span>
+                )}
+              </td>
               <td>
                 <TimeAgo date={file.created_at} />
               </td>

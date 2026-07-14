@@ -1,5 +1,5 @@
 import { Field, Form, Formik } from 'formik'
-import { ReactElement, useState } from 'react'
+import { ReactElement, useEffect, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
 import { Club, File } from '../../types'
@@ -15,13 +15,25 @@ import BaseCard from './BaseCard'
 
 type FilesCardProps = {
   club: Club
+  onUpdate?: () => void
 }
 
 /**
  * A card that allows club officers to view, download, delete, and add files to the club.
  */
-export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
+export default function FilesCard({
+  club,
+  onUpdate,
+}: FilesCardProps): ReactElement<any> {
   const [files, setFiles] = useState<File[]>(club.files)
+  const [constitutionUrl, setConstitutionUrl] = useState<string | null>(
+    club.constitution_url,
+  )
+
+  useEffect(() => {
+    setFiles(club.files)
+    setConstitutionUrl(club.constitution_url)
+  }, [club.files, club.constitution_url])
 
   const reloadFiles = async (): Promise<void> => {
     await doApiRequest(`/clubs/${club.code}/assets/?format=json`)
@@ -30,18 +42,37 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
   }
 
   const submitForm = (data, { setSubmitting, resetForm, setStatus }) => {
+    if (!data.file) {
+      setStatus({ file: 'Please select a file to upload.' })
+      setSubmitting(false)
+      return
+    }
+
     const formData = new FormData()
     formData.append('file', data.file)
+    formData.append('is_constitution', data.is_constitution ? 'true' : 'false')
     doApiRequest(`/clubs/${club.code}/upload_file/?format=json`, {
       method: 'POST',
       body: formData,
     })
-      .then((resp) => {
+      .then(async (resp) => {
         if (resp.ok) {
+          const payload = await resp.json()
           reloadFiles()
+          if (data.is_constitution) {
+            setConstitutionUrl(`/api/clubs/${club.code}/assets/${payload.id}/`)
+            onUpdate?.()
+          }
           resetForm()
         } else {
-          setStatus({ file: 'An error occured while uploading your file.' })
+          const err = await resp.json()
+          setStatus({
+            file:
+              err.constitution?.[0] ||
+              err.file?.[0] ||
+              err.detail ||
+              'An error occured while uploading your file.',
+          })
         }
       })
       .finally(() => {
@@ -56,6 +87,19 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
         {OBJECT_NAME_SINGULAR} members and {SITE_NAME} administrators.{' '}
         {OBJECT_TAB_FILES_DESCRIPTION}
       </Text>
+      <div className="notification is-light py-3 mb-4">
+        <strong>Constitution status:</strong>{' '}
+        {constitutionUrl ? (
+          <>
+            <span className="tag is-success is-light">Uploaded</span>{' '}
+            <a href={constitutionUrl} target="_blank">
+              View current constitution
+            </a>
+          </>
+        ) : (
+          <span className="tag is-warning is-light">Not uploaded</span>
+        )}
+      </div>
       <table className="table is-fullwidth">
         <thead>
           <tr>
@@ -68,7 +112,14 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
           {files && files.length ? (
             files.map((a) => (
               <tr key={`${a.id}-${a.name}`}>
-                <td>{a.name}</td>
+                <td>
+                  {a.name}{' '}
+                  {a.is_constitution && (
+                    <span className="tag is-info is-light ml-2">
+                      Constitution
+                    </span>
+                  )}
+                </td>
                 <td>
                   <TimeAgo date={a.created_at} />
                 </td>
@@ -82,6 +133,10 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
                           { method: 'DELETE' },
                         ).then(() => {
                           reloadFiles()
+                          if (a.is_constitution) {
+                            setConstitutionUrl(null)
+                            onUpdate?.()
+                          }
                         })
                       }
                     >
@@ -107,13 +162,23 @@ export default function FilesCard({ club }: FilesCardProps): ReactElement<any> {
           )}
         </tbody>
       </table>
-      <Formik initialValues={{}} onSubmit={submitForm}>
-        {({ dirty, isSubmitting }) => (
+      <Formik
+        initialValues={{ file: null, is_constitution: false }}
+        onSubmit={submitForm}
+      >
+        {({ dirty, isSubmitting, status, values }) => (
           <Form>
             <Field name="file" as={FileField} />
+            <label className="checkbox is-block mb-3">
+              <Field type="checkbox" name="is_constitution" /> This file is the{' '}
+              {OBJECT_NAME_SINGULAR} constitution
+            </label>
+            {status?.file && (
+              <p className="help is-danger mb-3">{status.file}</p>
+            )}
             <button
               type="submit"
-              disabled={!dirty || isSubmitting}
+              disabled={!dirty || !values.file || isSubmitting}
               className="button is-primary"
             >
               <Icon name="upload" alt="upload" />{' '}

@@ -15,9 +15,11 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.signing import TimestampSigner
 from django.test import Client, TestCase
+from django.test.client import BOUNDARY, MULTIPART_CONTENT, encode_multipart
 from django.urls import resolve, reverse
 from django.utils import timezone
 from ics import Calendar
@@ -294,6 +296,26 @@ class ClubTestCase(TestCase):
             visibility=Advisor.ADVISOR_VISIBILITY_ALL,
         )
 
+    def constitution_upload(self, name="constitution.pdf"):
+        return SimpleUploadedFile(
+            name, b"test constitution", content_type="application/pdf"
+        )
+
+    def club_registration_data(self, overrides=None, **extra):
+        data = {
+            "code": "penn-labs",
+            "name": "Penn Labs",
+            "description": "This is an example description.",
+            "email": "example@example.com",
+            "category.name": "Academic & Pre-Professional",
+            "classification.name": "Graduate",
+            "constitution": self.constitution_upload(),
+        }
+        if overrides:
+            data.update(overrides)
+        data.update(extra)
+        return data
+
     def test_directory(self):
         """
         Test retrieving the club directory.
@@ -429,6 +451,47 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
+        resp = self.client.post(
+            reverse("clubs-upload-file", args=(self.club1.code,)),
+            {
+                "file": self.constitution_upload(),
+                "is_constitution": "true",
+            },
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        asset = Asset.objects.get(pk=resp.json()["id"])
+        self.assertTrue(resp.json()["is_constitution"])
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.constitution_id, asset.id)
+        self.assertEqual(self.club1.constitution.file.name, asset.file.name)
+
+        resp = self.client.get(reverse("club-assets-list", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+        serialized_assets = resp.json()
+        self.assertEqual(
+            {item["id"]: item["is_constitution"] for item in serialized_assets},
+            {item["id"]: item["id"] == asset.id for item in serialized_assets},
+        )
+
+        asset_count = Asset.objects.count()
+        resp = self.client.post(
+            reverse("clubs-upload-file", args=(self.club1.code,)),
+            {
+                "file": self.constitution_upload("constitution.txt"),
+                "is_constitution": "true",
+            },
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("constitution", resp.json())
+        self.assertEqual(Asset.objects.count(), asset_count)
+
+        resp = self.client.delete(
+            reverse("club-assets-detail", args=(self.club1.code, asset.id))
+        )
+        self.assertIn(resp.status_code, [200, 204], resp.content)
+        self.club1.refresh_from_db()
+        self.assertIsNone(self.club1.constitution)
+
         # ensure cleanup doesn't throw error
         self.club1.delete()
 
@@ -535,18 +598,7 @@ class ClubTestCase(TestCase):
         # create club as superuser
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "description": "We code stuff.",
-                "tags": [{"name": "Graduate"}],
-                "email": "example@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "status": {"name": self.status1.name},
-                "type": {"name": self.type1.name},
-                "eligibility": [{"name": self.eligibility1.name}],
-            },
-            content_type="application/json",
+            self.club_registration_data(description="We code stuff."),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -1001,18 +1053,7 @@ class ClubTestCase(TestCase):
         # create club
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "description": "We code stuff.",
-                "tags": [{"name": "Graduate"}],
-                "email": "example@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "status": {"name": self.status1.name},
-                "type": {"name": self.type1.name},
-                "eligibility": [{"name": self.eligibility1.name}],
-            },
-            content_type="application/json",
+            self.club_registration_data(description="We code stuff."),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -1197,6 +1238,53 @@ class ClubTestCase(TestCase):
         resp = self.client.delete(reverse("tags-detail", args=(1,)))
         self.assertIn(resp.status_code, [400, 403, 405], resp.content)
 
+    def test_club_create_requires_constitution(self):
+        """
+        Normal users must upload a constitution when registering a club.
+        """
+        self.client.login(username=self.user4.username, password="test")
+        data = self.club_registration_data()
+        del data["constitution"]
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            data,
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("constitution", resp.json())
+
+    def test_club_create_requires_category_and_classification(self):
+        """
+        Users must include required taxonomy fields when registering a club.
+        """
+        self.client.login(username=self.user4.username, password="test")
+        data = self.club_registration_data()
+        del data["category.name"]
+        del data["classification.name"]
+
+        resp = self.client.post(reverse("clubs-list"), data)
+
+        self.assertEqual(resp.status_code, 400, resp.content)
+        errors = resp.json()
+        self.assertIn("category", errors)
+        self.assertIn("classification", errors)
+        self.assertNotIn("constitution", errors)
+
+    def test_club_create_rejects_invalid_constitution_extension(self):
+        """
+        Constitution uploads must be PDF, DOC, or DOCX files.
+        """
+        self.client.login(username=self.user4.username, password="test")
+
+        resp = self.client.post(
+            reverse("clubs-list"),
+            self.club_registration_data(
+                {"constitution": self.constitution_upload("constitution.txt")}
+            ),
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("constitution", resp.json())
+
     def test_club_create_empty(self):
         """
         Test creating a club with empty fields.
@@ -1205,22 +1293,14 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "code": "penn-labs",
-                "name": "Penn Labs",
-                "description": "This is an example description.",
-                "tags": [{"name": "Graduate"}],
-                "email": "example@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "facebook": "",
-                "twitter": "",
-                "instagram": "",
-                "website": "",
-                "linkedin": "",
-                "github": "",
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                facebook="",
+                twitter="",
+                instagram="",
+                website="",
+                linkedin="",
+                github="",
+            ),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -1258,16 +1338,12 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "code": "new-club",
-                "name": "New Club",
-                "description": "This is a new club.",
-                "tags": [{"name": "Undergraduate"}],
-                "email": "newclub@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                code="new-club",
+                name="New Club",
+                description="This is a new club.",
+                email="newclub@example.com",
+            ),
         )
 
         self.assertEqual(resp.status_code, 400, resp.content)
@@ -1290,10 +1366,7 @@ class ClubTestCase(TestCase):
                 "code": "super-club",
                 "name": "Superuser Club",
                 "description": "This is a new club.",
-                "tags": [{"name": "Undergraduate"}],
                 "email": "superclub@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1330,10 +1403,7 @@ class ClubTestCase(TestCase):
                 "code": "approver-club",
                 "name": "Approver Club",
                 "description": "This is a new club.",
-                "tags": [{"name": "Undergraduate"}],
                 "email": "approverclub@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
             },
             content_type="application/json",
         )
@@ -1357,17 +1427,13 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "code": "super-approved-club",
-                "name": "Superuser Approved Club",
-                "description": "This is a new club.",
-                "tags": [{"name": "Undergraduate"}],
-                "email": "superapprovedclub@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "approved": True,
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                code="super-approved-club",
+                name="Superuser Approved Club",
+                description="This is a new club.",
+                email="superapprovedclub@example.com",
+                approved="true",
+            ),
         )
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1393,17 +1459,13 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "code": "approver-approved-club",
-                "name": "Approver Approved Club",
-                "description": "This is a new club.",
-                "tags": [{"name": "Undergraduate"}],
-                "email": "approverapprovedclub@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "approved": True,
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                code="approver-approved-club",
+                name="Approver Approved Club",
+                description="This is a new club.",
+                email="approverapprovedclub@example.com",
+                approved="true",
+            ),
         )
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1429,17 +1491,13 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "code": "approver-rejected-club",
-                "name": "Approver Rejected Club",
-                "description": "This is a new club.",
-                "tags": [{"name": "Undergraduate"}],
-                "email": "approverrejectedclub@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "approved": False,
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                code="approver-rejected-club",
+                name="Approver Rejected Club",
+                description="This is a new club.",
+                email="approverrejectedclub@example.com",
+                approved="false",
+            ),
         )
 
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1457,17 +1515,13 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "code": "non-admin-approved-club",
-                "name": "Non Admin Approved Club",
-                "description": "This is a new club.",
-                "tags": [{"name": "Undergraduate"}],
-                "email": "nonadminapprovedclub@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "approved": True,
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                code="non-admin-approved-club",
+                name="Non Admin Approved Club",
+                description="This is a new club.",
+                email="nonadminapprovedclub@example.com",
+                approved="true",
+            ),
         )
 
         self.assertEqual(resp.status_code, 400, resp.content)
@@ -1560,17 +1614,15 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "name": "Bad Club",
-                "tags": [],
-                "facebook": exploit_string,
-                "twitter": exploit_string,
-                "instagram": exploit_string,
-                "website": exploit_string,
-                "linkedin": exploit_string,
-                "github": exploit_string,
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                name="Bad Club",
+                facebook=exploit_string,
+                twitter=exploit_string,
+                instagram=exploit_string,
+                website=exploit_string,
+                linkedin=exploit_string,
+                github=exploit_string,
+            ),
         )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
@@ -1596,18 +1648,7 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "tags": [{"name": "Undergraduate"}],
-                "description": test_good_string,
-                "email": "example@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "status": {"name": self.status1.name},
-                "type": {"name": self.type1.name},
-                "eligibility": [{"name": self.eligibility1.name}],
-            },
-            content_type="application/json",
+            self.club_registration_data(description=test_good_string),
         )
         cache.clear()
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1628,18 +1669,7 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "name": "Penn Labs",
-                "tags": [{"name": "Graduate"}],
-                "description": test_bad_string,
-                "email": "example@example.com",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "status": {"name": self.status1.name},
-                "type": {"name": self.type1.name},
-                "eligibility": [{"name": self.eligibility1.name}],
-            },
-            content_type="application/json",
+            self.club_registration_data(description=test_bad_string),
         )
         cache.clear()
         self.assertIn(resp.status_code, [200, 201], resp.content)
@@ -1781,19 +1811,19 @@ class ClubTestCase(TestCase):
 
         resp = self.client.post(
             reverse("clubs-list"),
-            data={
-                "name": "Test Club Non-Admin",
-                "description": "A test club by non-superuser",
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "youtube": "https://youtu.be/dQw4w9WgXcQ",
-                "github": "https://github.com/pennlabs",
-                # admin fields
-                "status": {"name": self.status1.name},
-                "type": {"name": self.type1.name},
-                "eligibility": [{"name": self.eligibility1.name}],
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                {
+                    # admin fields
+                    "status.name": self.status1.name,
+                    "type.name": self.type1.name,
+                    "eligibility[0]name": self.eligibility1.name,
+                },
+                code="test-club-non-admin",
+                name="Test Club Non-Admin",
+                description="A test club by non-superuser",
+                youtube="https://youtu.be/dQw4w9WgXcQ",
+                github="https://github.com/pennlabs",
+            ),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
@@ -1802,6 +1832,13 @@ class ClubTestCase(TestCase):
         self.assertIsNone(club.status)
         self.assertIsNone(club.type)
         self.assertEqual(club.eligibility.count(), 0)
+        self.assertIsNotNone(club.constitution_id)
+        self.assertEqual(club.asset_set.count(), 1)
+        self.assertEqual(club.constitution, club.asset_set.get())
+
+        resp = self.client.get(reverse("clubs-detail", args=(club.code,)))
+        self.assertIn(resp.status_code, [200], resp.content)
+        self.assertTrue(resp.json()["constitution_url"])
 
     def test_club_create_duplicate(self):
         """
@@ -3490,16 +3527,88 @@ class ClubTestCase(TestCase):
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
 
-        # mark the club as active (student side renewal)
+        # renewing without a new constitution should fail
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            {"active": True},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("constitution", resp.json())
+        self.assertEqual(len(mail.outbox), mail_count, mail.outbox)
+        club.refresh_from_db()
+        self.assertFalse(club.active)
+
+        # mark the club as active with a new constitution (student side renewal)
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(club.code,)),
+            encode_multipart(
+                BOUNDARY,
+                {
+                    "active": "true",
+                    "constitution": self.constitution_upload("renewal.pdf"),
+                },
+            ),
+            content_type=MULTIPART_CONTENT,
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club.refresh_from_db()
+        self.assertIsNotNone(club.constitution_id)
+        self.assertEqual(club.constitution.name, "renewal.pdf")
+
+        # ensure a confirmation email was sent
+        self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
+
+        # renewing again can omit required fields already present on the instance
+        club.active = False
+        club.save(update_fields=["active"])
+        existing_constitution_id = club.constitution_id
+        mail_count = len(mail.outbox)
+
         resp = self.client.patch(
             reverse("clubs-detail", args=(club.code,)),
             {"active": True},
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
+        club.refresh_from_db()
+        self.assertTrue(club.active)
+        self.assertEqual(club.constitution_id, existing_constitution_id)
 
-        # ensure a confirmation email was sent
-        self.assertEqual(len(mail.outbox), mail_count + 1, mail.outbox)
+        # Renewal still requires category and classification on the existing club.
+        club_missing_required_fields = Club.objects.create(
+            code="missing-required-fields-club",
+            name="Missing Required Fields Club",
+            active=False,
+            approved=None,
+        )
+        club_missing_required_fields.constitution = Asset.objects.create(
+            name="missing-required-fields-club.pdf",
+            club=club_missing_required_fields,
+            file=self.constitution_upload("missing-required-fields-club.pdf"),
+        )
+        club_missing_required_fields.save(update_fields=["constitution"])
+        Membership.objects.create(
+            person=self.user4,
+            club=club_missing_required_fields,
+            role=Membership.ROLE_OFFICER,
+        )
+
+        resp = self.client.patch(
+            reverse(
+                "clubs-detail",
+                args=(club_missing_required_fields.code,),
+            ),
+            {"active": True},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        errors = resp.json()
+        self.assertIn("category", errors)
+        self.assertIn("classification", errors)
+        self.assertNotIn("constitution", errors)
+        club_missing_required_fields.refresh_from_db()
+        self.assertFalse(club_missing_required_fields.active)
 
         # reinit the count
         mail_count = len(mail.outbox)
@@ -3691,8 +3800,12 @@ class ClubTestCase(TestCase):
         badge, _ = Badge.objects.get_or_create(label="SAC")
         self.club1.badges.add(badge)
 
-        # add a file to the club
-        Asset.objects.create(name="constitution.pdf", club=self.club1)
+        # legacy assets no longer satisfy the constitution requirement
+        Asset.objects.create(
+            name="constitution.pdf",
+            club=self.club1,
+            file=self.constitution_upload(),
+        )
 
         # add officer to club
         Membership.objects.create(
@@ -3701,6 +3814,24 @@ class ClubTestCase(TestCase):
 
         # login to officer account
         self.client.login(username=self.user4.username, password="test")
+
+        # registering for the fair should fail without Club.constitution
+        resp = self.client.post(
+            reverse("clubfairs-register", args=(fair.id,)),
+            {"status": True, "club": self.club1.code, "answers": ["red"]},
+        )
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertFalse(resp.data["success"], resp.content)
+        self.assertFalse(
+            ClubFairRegistration.objects.filter(club=self.club1, fair=fair).exists()
+        )
+
+        self.club1.constitution = Asset.objects.create(
+            name="test-club.pdf",
+            club=self.club1,
+            file=self.constitution_upload("test-club.pdf"),
+        )
+        self.club1.save(update_fields=["constitution"])
 
         # register for the fair
         resp = self.client.post(
@@ -5239,18 +5370,12 @@ class ClubTestCase(TestCase):
         # 1. Test failing creation with long description
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "name": "Long Desc Club",
-                "description": long_description,
-                "email": "long@example.com",
-                "tags": [{"name": "Graduate"}],
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "status": {"name": self.status1.name},
-                "type": {"name": self.type1.name},
-                "eligibility": [{"name": self.eligibility1.name}],
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                code="long-desc-club",
+                name="Long Desc Club",
+                description=long_description,
+                email="long@example.com",
+            ),
         )
         self.assertEqual(resp.status_code, 400, resp.content)
         self.assertIn("cannot exceed 150 words", str(resp.content))
@@ -5258,19 +5383,12 @@ class ClubTestCase(TestCase):
         # 2. Test successful creation with short description
         resp = self.client.post(
             reverse("clubs-list"),
-            {
-                "name": "Short Desc Club",
-                "code": "short-desc-club",
-                "description": short_description,
-                "email": "short@example.com",
-                "tags": [{"name": "Graduate"}],
-                "category": {"name": "Academic & Pre-Professional"},
-                "classification": {"name": "Graduate"},
-                "status": {"name": self.status1.name},
-                "type": {"name": self.type1.name},
-                "eligibility": [{"name": self.eligibility1.name}],
-            },
-            content_type="application/json",
+            self.club_registration_data(
+                name="Short Desc Club",
+                code="short-desc-club",
+                description=short_description,
+                email="short@example.com",
+            ),
         )
         self.assertIn(resp.status_code, [200, 201], resp.content)
         club = Club.objects.get(code="short-desc-club")

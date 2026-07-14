@@ -225,6 +225,7 @@ export interface Club {
   classification: Classification
   beta: boolean
   code: string
+  constitution_url: string | null
   description: string
   designation?: Designation
   eligibility: Eligibility[]
@@ -296,6 +297,7 @@ export interface File {
   name: string
   created_at: string
   file_url: string
+  is_constitution: boolean
 }
 
 export interface UserInfo {

@@ -241,6 +241,7 @@ from clubs.serializers import (
     WritableClubApplicationSerializer,
     WritableClubFairSerializer,
     YearSerializer,
+    validate_constitution_file,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
 from pennclubs.analytics import LabsAnalytics
@@ -499,18 +500,38 @@ def update_holds(func):
 def file_upload_endpoint_helper(request, code):
     obj = get_object_or_404(Club, code=code)
     if "file" in request.data and isinstance(request.data["file"], UploadedFile):
+        uploaded_file = request.data["file"]
+        is_constitution = parse_boolean(request.data.get("is_constitution")) is True
+
+        if is_constitution:
+            try:
+                validate_constitution_file(uploaded_file)
+            except serializers.ValidationError as exc:
+                return Response(
+                    {"constitution": exc.detail}, status=status.HTTP_400_BAD_REQUEST
+                )
+
         asset = Asset.objects.create(
             creator=request.user,
             club=obj,
-            file=request.data["file"],
-            name=request.data["file"].name,
+            file=uploaded_file,
+            name=uploaded_file.name,
         )
+        if is_constitution:
+            obj.constitution = asset
+            obj.save(update_fields=["constitution"])
     else:
         return Response(
             {"detail": "No image file was uploaded!"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    return Response({"detail": "Club file uploaded!", "id": asset.id})
+    return Response(
+        {
+            "detail": "Club file uploaded!",
+            "id": asset.id,
+            "is_constitution": is_constitution,
+        }
+    )
 
 
 def upload_endpoint_helper(request, cls, keyword, field, save=True, **kwargs):
@@ -1346,11 +1367,11 @@ class ClubFairViewSet(viewsets.ModelViewSet):
             and fair.organization == "Student Activities Council"
             and club.badges.filter(label="SAC").exists()
         ):
-            if club.asset_set.count() <= 0 or not any(
-                asset.name.lower().endswith((".pdf", ".doc", ".docx"))
-                for asset in club.asset_set.all()
-            ):
-                if not request.user.is_superuser:
+            if not club.constitution_id:
+                if not (
+                    request.user.is_superuser
+                    or request.user.has_perm("clubs.approve_club")
+                ):
                     return Response(
                         {
                             "success": False,
@@ -2241,12 +2262,8 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         """
         badge = Badge.objects.filter(label="SAC").first()
         if badge:
-            query = (
-                Club.objects.filter(badges=badge, archived=False)
-                .order_by(Lower("name"))
-                .prefetch_related(
-                    Prefetch("asset_set", to_attr="prefetch_asset_set"),
-                )
+            query = Club.objects.filter(badges=badge, archived=False).order_by(
+                Lower("name")
             )
             if request.user.is_authenticated:
                 query = query.prefetch_related(
@@ -5234,8 +5251,17 @@ class AssetViewSet(viewsets.ModelViewSet):
         resp["Content-Disposition"] = "attachment; filename={}".format(obj.name)
         return resp
 
+    def perform_destroy(self, instance):
+        club = instance.club
+        if club and club.constitution_id == instance.id:
+            club.constitution = None
+            club.save(update_fields=["constitution"])
+        instance.delete()
+
     def get_queryset(self):
-        return Asset.objects.filter(club__code=self.kwargs["club_code"])
+        return Asset.objects.select_related("club").filter(
+            club__code=self.kwargs["club_code"]
+        )
 
 
 class NoteViewSet(viewsets.ModelViewSet):

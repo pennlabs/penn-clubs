@@ -346,7 +346,7 @@ class Club(models.Model):
     founded = models.DateField(blank=True, null=True)
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
     email = models.EmailField(blank=True, null=True)
-    email_public = models.BooleanField(default=True)
+    email_public = models.BooleanField(default=False)
     visible_to_public = models.BooleanField(
         default=False,
         db_index=True,
@@ -374,6 +374,13 @@ class Club(models.Model):
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
     image_small = models.ImageField(
         upload_to=get_club_small_file_name, null=True, blank=True
+    )
+    constitution = models.ForeignKey(
+        "Asset",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="constitution_for_clubs",
     )
     tags = models.ManyToManyField("Tag", blank=True)
     classification = models.ForeignKey(
