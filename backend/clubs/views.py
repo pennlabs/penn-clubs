@@ -5828,7 +5828,9 @@ class MeetingZoomWebhookAPIView(APIView):
     get: Given an event id, return the number of people on the Zoom call.
 
     post: Trigger this webhook. Should be triggered when a Zoom event occurs.
-    Not available to the public, requires Zoom verification token.
+    Not available to the public — requests are verified using Zoom's HMAC
+    signature scheme (x-zm-signature / x-zm-request-timestamp headers) and
+    the ZOOM_WEBHOOK_SECRET_TOKEN setting.
     """
 
     def get(self, request):
@@ -5911,17 +5913,47 @@ class MeetingZoomWebhookAPIView(APIView):
         )
 
     def post(self, request):
-        # security check to make sure request contains zoom provided token
-        if settings.ZOOM_VERIFICATION_TOKEN:
-            authorization = request.META.get("HTTP_AUTHORIZATION")
-            if authorization != settings.ZOOM_VERIFICATION_TOKEN:
+        # Verify the request came from Zoom using HMAC-SHA256 signature.
+        # Zoom deprecated the old plain verification token in favour of this
+        # scheme (x-zm-signature + x-zm-request-timestamp headers).
+        # See: https://developers.zoom.us/docs/api/webhooks/#verify-webhook-events
+        if settings.ZOOM_WEBHOOK_SECRET_TOKEN:
+            timestamp = request.META.get("HTTP_X_ZM_REQUEST_TIMESTAMP", "")
+            signature = request.META.get("HTTP_X_ZM_SIGNATURE", "")
+            # Reconstruct the raw request body as Zoom signed it.
+            raw_body = request.body.decode("utf-8")
+            message = f"v0:{timestamp}:{raw_body}"
+            expected = (
+                "v0="
+                + hmac.new(
+                    settings.ZOOM_WEBHOOK_SECRET_TOKEN.encode("utf-8"),
+                    message.encode("utf-8"),
+                    hashlib.sha256,
+                ).hexdigest()
+            )
+            if not hmac.compare_digest(expected, signature):
                 return Response(
                     {
-                        "detail": "Your authorization token is invalid!",
+                        "detail": "Webhook signature verification failed.",
                         "success": False,
                     },
                     status=status.HTTP_403_FORBIDDEN,
                 )
+
+        # Handle Zoom's endpoint URL validation challenge-response check (CRC).
+        # Zoom sends this on initial setup and every 72 hours to revalidate.
+        # See: https://developers.zoom.us/docs/api/webhooks/#validate-your-webhook-endpoint
+        if request.data.get("event") == "endpoint.url_validation":
+            plain_token = request.data.get("payload", {}).get("plainToken", "")
+            encrypted_token = hmac.new(
+                settings.ZOOM_WEBHOOK_SECRET_TOKEN.encode("utf-8"),
+                plain_token.encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+            return Response(
+                {"plainToken": plain_token, "encryptedToken": encrypted_token},
+                status=status.HTTP_200_OK,
+            )
 
         action = request.data.get("event")
         event_id = None
