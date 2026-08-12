@@ -1,7 +1,7 @@
 import { Field, Form, Formik } from 'formik'
 import React, { ReactElement, useRef, useState } from 'react'
 
-import { doApiRequest, titleize } from '../../utils'
+import { apiCheckPermission, doApiRequest, titleize } from '../../utils'
 import { SITE_NAME } from '../../utils/branding'
 import { Icon, Text } from '../common'
 import { CheckboxField, SelectField, TextField } from '../FormComponents'
@@ -117,6 +117,11 @@ export interface ScriptsTabProps {
 
 const ScriptsTab = ({ scripts }) => {
   const [useWs, setUseWs] = useState<boolean>(true)
+  const canRunScripts = apiCheckPermission('clubs.run_management_scripts')
+
+  if (!canRunScripts) {
+    return <Text>You do not have permission to run management scripts.</Text>
+  }
 
   return (
     <div>
@@ -154,9 +159,7 @@ const ScriptsTab = ({ scripts }) => {
             <ScriptBox key={script.name} script={script} useWs={useWs} />
           ))
       ) : (
-        <Text>
-          You do not have permissions to view the list of available scripts.
-        </Text>
+        <Text>The list of available scripts could not be loaded.</Text>
       )}
     </div>
   )

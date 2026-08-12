@@ -9,12 +9,18 @@ import { TextField } from '../FormComponents'
 import ModelForm from '../ModelForm'
 
 type TemplatesTabProps = {
+  canManageTemplates: boolean
   templates: Template[]
 }
 
 export default function TemplatesTab({
+  canManageTemplates,
   templates,
 }: TemplatesTabProps): ReactElement<any> {
+  if (!canManageTemplates) {
+    return <Text>You do not have permission to manage approval templates.</Text>
+  }
+
   return (
     <>
       <Text>

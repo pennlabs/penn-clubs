@@ -449,11 +449,9 @@ const Table = ({
             className="input is-small"
             style={{ maxWidth: 150, marginRight: '0.5rem' }}
           >
-            {pageOptions.map(
-              (idx: number): ReactElement<any> => (
-                <option value={idx}>Page {idx + 1}</option>
-              ),
-            )}
+            {pageOptions.map((idx: number): ReactElement<any> => (
+              <option value={idx}>Page {idx + 1}</option>
+            ))}
           </select>
           <button
             style={{ marginRight: '0.5rem' }}

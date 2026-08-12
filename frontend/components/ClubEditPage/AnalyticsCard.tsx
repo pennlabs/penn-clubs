@@ -123,7 +123,7 @@ function parse(obj, startRange: Date, endRange: Date, group: Group): LineData {
   } else if (group === Group.Month) {
     current = new Date(current.getFullYear(), current.getMonth(), 1)
   }
-  for (let i = current.getTime(); i <= endRange.getTime(); ) {
+  for (let i = current.getTime(); i <= endRange.getTime();) {
     current = new Date(i)
     output.push({ x: current, y: exists[i] ?? 0 })
 

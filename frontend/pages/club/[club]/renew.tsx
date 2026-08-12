@@ -781,6 +781,12 @@ const RenewPage = (props: RenewPageProps): ReactElement<any> => {
 
 RenewPage.permissions = ['clubs.approve_club', 'clubs.see_pending_clubs']
 
+RenewPage.getAdditionalPermissions = (ctx: NextPageContext): string[] => {
+  return typeof ctx.query.club === 'string'
+    ? [`clubs.manage_club:${ctx.query.club}`]
+    : []
+}
+
 RenewPage.getInitialProps = async ({
   query,
   req,
@@ -790,12 +796,6 @@ RenewPage.getInitialProps = async ({
   }
   const clubReq = await doApiRequest(`/clubs/${query.club}/?format=json`, data)
   const clubRes = await clubReq.json()
-
-  RenewPage.permissions = [
-    `clubs.manage_club:${query.club}`,
-    'clubs.approve_club',
-    'clubs.see_pending_clubs',
-  ]
 
   const endpoints: (string | [string, string])[] = [
     'tags',
@@ -823,7 +823,10 @@ RenewPage.getInitialProps = async ({
       return [name, response]
     }),
   ).then((values) => {
-    const output: any = { club: clubRes }
+    const output: any = {
+      club: clubRes,
+      clubId: typeof query.club === 'string' ? query.club : '',
+    }
     values.forEach((item) => {
       output[item[0]] = item[1]
     })

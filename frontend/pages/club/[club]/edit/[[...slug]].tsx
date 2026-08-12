@@ -81,6 +81,10 @@ Edit.getAdditionalPermissions = (ctx: NextPageContext): string[] => {
   ]
 }
 
-Edit.permissions = ['clubs.approve_club', 'clubs.see_pending_clubs']
+Edit.permissions = [
+  'clubs.approve_club',
+  'clubs.manage_club',
+  'clubs.see_pending_clubs',
+]
 
 export default renderPage(Edit)

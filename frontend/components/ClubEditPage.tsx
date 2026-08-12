@@ -68,6 +68,7 @@ import {
   InfoPageTitle,
   Loading,
   Metadata,
+  Text,
 } from './common'
 import AuthPrompt from './common/AuthPrompt'
 import { BrowserTabView } from './TabView'
@@ -207,6 +208,7 @@ const ClubForm = ({
     `clubs.manage_club:${club?.code ?? clubId}`,
     true,
   )
+  const canManageAdminNotes = apiCheckPermission('clubs.manage_club', true)
 
   if (authenticated === false) {
     return <AuthPrompt>{metadata}</AuthPrompt>
@@ -274,15 +276,15 @@ const ClubForm = ({
           />
         ),
       },
-      ...(userInfo !== undefined && userInfo.is_superuser
-        ? [
-            {
-              name: 'notes',
-              label: 'Administrator Notes',
-              content: <AdminNoteCard club={club} />,
-            },
-          ]
-        : []),
+      {
+        name: 'notes',
+        label: 'Administrator Notes',
+        content: canManageAdminNotes ? (
+          <AdminNoteCard club={club} />
+        ) : (
+          <Text>You do not have permission to view administrator notes.</Text>
+        ),
+      },
       {
         name: 'member',
         label: OBJECT_TAB_MEMBERSHIP_LABEL,

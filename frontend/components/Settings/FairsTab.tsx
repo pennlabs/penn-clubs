@@ -4,6 +4,7 @@ import React, { ReactElement } from 'react'
 
 import { FAIR_INFO_ROUTE } from '../../constants'
 import { ClubFair, MembershipRank } from '../../types'
+import { apiCheckPermission } from '../../utils'
 import {
   FAIR_NAME,
   MEMBERSHIP_ROLE_NAMES,
@@ -24,6 +25,12 @@ type FairsTabProps = {
 }
 
 const FairsTab = ({ fairs }: FairsTabProps): ReactElement<any> => {
+  const canManageFairs = apiCheckPermission('clubs.see_fair_status')
+
+  if (!canManageFairs) {
+    return <Text>You do not have permission to manage club fairs.</Text>
+  }
+
   return (
     <>
       <Text>

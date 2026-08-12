@@ -137,6 +137,7 @@ const QueueTableModal = ({
 }
 
 type QueueTableProps = {
+  canApprove: boolean
   clubs: Club[] | null
   refetchClubs?: () => void
   templates: Template[]
@@ -144,6 +145,7 @@ type QueueTableProps = {
 /* TODO: refactor with Table component when render and search
 functionality are disconnected */
 const QueueTable = ({
+  canApprove,
   clubs,
   refetchClubs,
   templates,
@@ -182,45 +184,54 @@ const QueueTable = ({
 
   return (
     <>
-      <QueueTableModal
-        show={showModal}
-        closeModal={() => setShowModal(false)}
-        bulkAction={bulkAction}
-        isApproving={approve}
-        templates={templates}
-      />
+      {canApprove && (
+        <QueueTableModal
+          show={showModal}
+          closeModal={() => setShowModal(false)}
+          bulkAction={bulkAction}
+          isApproving={approve}
+          templates={templates}
+        />
+      )}
       <QueueSectionHeader>
         <QueueSectionHeaderText>
           <SmallTitle>Pending Clubs</SmallTitle>
           <div className="mt-3 mb-3">
-            As an administrator of {SITE_NAME}, you can approve and reject{' '}
-            {OBJECT_NAME_SINGULAR} approval requests. The table below contains a
-            list of {OBJECT_NAME_PLURAL} pending your approval. Click on the{' '}
-            {OBJECT_NAME_SINGULAR} name to view the {OBJECT_NAME_SINGULAR}.
+            The table below contains a list of {OBJECT_NAME_PLURAL} pending
+            review. Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
+            {OBJECT_NAME_SINGULAR}.
           </div>
+          {!canApprove && (
+            <div className="has-text-info mb-3">
+              You do not have permission to approve or reject{' '}
+              {OBJECT_NAME_PLURAL}.
+            </div>
+          )}
         </QueueSectionHeaderText>
-        <div className="buttons">
-          <button
-            className="button is-success"
-            disabled={!selectedCodes.length || loading}
-            onClick={() => {
-              setApprove(true)
-              setShowModal(true)
-            }}
-          >
-            <Icon name="check" /> Approve
-          </button>
-          <button
-            className="button is-danger"
-            disabled={!selectedCodes.length || loading}
-            onClick={() => {
-              setApprove(false)
-              setShowModal(true)
-            }}
-          >
-            <Icon name="x" /> Reject
-          </button>
-        </div>
+        {canApprove && (
+          <div className="buttons">
+            <button
+              className="button is-success"
+              disabled={!selectedCodes.length || loading}
+              onClick={() => {
+                setApprove(true)
+                setShowModal(true)
+              }}
+            >
+              <Icon name="check" /> Approve
+            </button>
+            <button
+              className="button is-danger"
+              disabled={!selectedCodes.length || loading}
+              onClick={() => {
+                setApprove(false)
+                setShowModal(true)
+              }}
+            >
+              <Icon name="x" /> Reject
+            </button>
+          </div>
+        )}
       </QueueSectionHeader>
       {(() => {
         if (clubs === null)
@@ -236,15 +247,17 @@ const QueueTable = ({
             <thead>
               <tr>
                 <th>
-                  <Checkbox
-                    className="mr-3"
-                    checked={allClubsSelected}
-                    onChange={() =>
-                      setSelectedCodes(
-                        allClubsSelected ? [] : clubs.map(({ code }) => code),
-                      )
-                    }
-                  />
+                  {canApprove && (
+                    <Checkbox
+                      className="mr-3"
+                      checked={allClubsSelected}
+                      onChange={() =>
+                        setSelectedCodes(
+                          allClubsSelected ? [] : clubs.map(({ code }) => code),
+                        )
+                      }
+                    />
+                  )}
                   {OBJECT_NAME_TITLE_SINGULAR}
                 </th>
               </tr>
@@ -253,17 +266,19 @@ const QueueTable = ({
               {clubs.map((club) => (
                 <tr key={club.code}>
                   <TableRow>
-                    <Checkbox
-                      className="mr-3"
-                      checked={selectedCodes.includes(club.code)}
-                      onChange={() =>
-                        setSelectedCodes(
-                          selectedCodes.includes(club.code)
-                            ? selectedCodes.filter((c) => c !== club.code)
-                            : [...selectedCodes, club.code],
-                        )
-                      }
-                    />
+                    {canApprove && (
+                      <Checkbox
+                        className="mr-3"
+                        checked={selectedCodes.includes(club.code)}
+                        onChange={() =>
+                          setSelectedCodes(
+                            selectedCodes.includes(club.code)
+                              ? selectedCodes.filter((c) => c !== club.code)
+                              : [...selectedCodes, club.code],
+                          )
+                        }
+                      />
+                    )}
                     <QueueRowContent>
                       <ClubLink {...club} />
                       <ClubTags {...club} />
@@ -761,7 +776,14 @@ const QueueTab = (): ReactElement => {
   const [templates, setTemplates] = useState<Template[]>([])
   const [registrationQueueSettings, setRegistrationQueueSettings] =
     useState<RegistrationQueueSettings | null>(null)
-  const canApprove = apiCheckPermission('clubs.approve_club')
+  const canApprove = apiCheckPermission('clubs.approve_club') === true
+  const canSeePending = apiCheckPermission([
+    'clubs.approve_club',
+    'clubs.manage_club',
+    'clubs.see_pending_clubs',
+  ])
+  const canManageQueue =
+    apiCheckPermission('clubs.manage_registration_queue') === true
   const [showQSModal, setShowQSModal] = useState<boolean>(false)
   const [QSModalQueueType, setQSModalQueueType] = useState<
     'reapproval' | 'new'
@@ -787,32 +809,33 @@ const QueueTab = (): ReactElement => {
     doApiRequest('/clubs/directory/?format=json')
       .then((resp) => resp.json())
       .then((data) => setAllClubs(data.map((club: Club) => club.approved)))
-
-    doApiRequest('/templates/?format=json')
-      .then((resp) => resp.json())
-      .then(setTemplates)
-
-    doApiRequest('/settings/queue/?format=json')
-      .then((resp) => resp.json())
-      .then((data) => {
-        setRegistrationQueueSettings(data)
-      })
   }
 
   useEffect(() => {
-    if (canApprove) {
+    if (canSeePending) {
       refetchClubs()
+    }
+
+    if (canApprove) {
+      doApiRequest('/templates/?format=json')
+        .then((resp) => resp.json())
+        .then(setTemplates)
 
       doApiRequest('/clubs/any/ownershiprequests/all/?format=json')
         .then((resp) => resp.json())
         .then(setOwnershipRequests)
     }
-  }, [])
 
-  if (!canApprove)
-    return (
-      <div>You do not have permissions to approve {OBJECT_NAME_PLURAL}.</div>
-    )
+    if (canSeePending || canManageQueue) {
+      doApiRequest('/settings/queue/?format=json')
+        .then((resp) => resp.json())
+        .then(setRegistrationQueueSettings)
+    }
+  }, [canApprove, canManageQueue, canSeePending])
+
+  if (!canSeePending && !canManageQueue) {
+    return <div>You do not have permission to access the approval queue.</div>
+  }
 
   const inactiveClubsCount = inactiveClubs?.length ?? 0
   const pendingClubsCount = pendingClubs?.length ?? 0
@@ -862,47 +885,51 @@ const QueueTab = (): ReactElement => {
 
   return (
     <>
-      <SmallTitle>Overview</SmallTitle>
-      <div className="mb-3">
-        From the progress bar below, you can see the current approval status of
-        all {OBJECT_NAME_PLURAL} across {SITE_NAME}.
-      </div>
-      <MultiProgressBar className="has-background-light mb-3 is-clearfix">
-        {totalClubsCount > 0 && (
-          <>
-            <ProgressBarSegment
-              className="has-background-info"
-              size={inactiveClubsCount / totalClubsCount}
-            />
-            <ProgressBarSegment
-              className="has-background-warning"
-              size={pendingClubsCount / totalClubsCount}
-            />
-            <ProgressBarSegment
-              className="has-background-danger"
-              size={rejectedClubsCount / totalClubsCount}
-            />
-            <ProgressBarSegment
-              className="has-background-success"
-              size={approvedClubsCount / totalClubsCount}
-            />
-          </>
-        )}
-      </MultiProgressBar>
-      <ul>
-        <li className="has-text-info">
-          {inactiveClubsCount} Inactive {OBJECT_NAME_TITLE}
-        </li>
-        <li className="has-text-warning-dark">
-          {pendingClubsCount} Pending {OBJECT_NAME_TITLE}
-        </li>
-        <li className="has-text-danger">
-          {rejectedClubsCount} Rejected {OBJECT_NAME_TITLE}
-        </li>
-        <li className="has-text-success">
-          {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
-        </li>
-      </ul>
+      {canSeePending && (
+        <>
+          <SmallTitle>Overview</SmallTitle>
+          <div className="mb-3">
+            From the progress bar below, you can see the current approval status
+            of all {OBJECT_NAME_PLURAL} across {SITE_NAME}.
+          </div>
+          <MultiProgressBar className="has-background-light mb-3 is-clearfix">
+            {totalClubsCount > 0 && (
+              <>
+                <ProgressBarSegment
+                  className="has-background-info"
+                  size={inactiveClubsCount / totalClubsCount}
+                />
+                <ProgressBarSegment
+                  className="has-background-warning"
+                  size={pendingClubsCount / totalClubsCount}
+                />
+                <ProgressBarSegment
+                  className="has-background-danger"
+                  size={rejectedClubsCount / totalClubsCount}
+                />
+                <ProgressBarSegment
+                  className="has-background-success"
+                  size={approvedClubsCount / totalClubsCount}
+                />
+              </>
+            )}
+          </MultiProgressBar>
+          <ul>
+            <li className="has-text-info">
+              {inactiveClubsCount} Inactive {OBJECT_NAME_TITLE}
+            </li>
+            <li className="has-text-warning-dark">
+              {pendingClubsCount} Pending {OBJECT_NAME_TITLE}
+            </li>
+            <li className="has-text-danger">
+              {rejectedClubsCount} Rejected {OBJECT_NAME_TITLE}
+            </li>
+            <li className="has-text-success">
+              {approvedClubsCount} Approved {OBJECT_NAME_TITLE}
+            </li>
+          </ul>
+        </>
+      )}
       {registrationQueueSettings && (
         <>
           <QueueSectionHeader>
@@ -1043,186 +1070,206 @@ const QueueTab = (): ReactElement => {
               </div>
             </div>
           </QueueSectionHeader>
-          <QueueSettingsButtonStack direction="row">
-            <QueueSettingsButton
-              open={registrationQueueSettings.reapproval_queue_open}
-              for="reapproval_queue_open"
-              updateQueueSettings={setRegistrationQueueSettings}
-            />
-            <div
-              className="reapproval-datepicker-icon"
-              style={{ justifySelf: 'center', alignSelf: 'center' }}
-            >
-              <span title="Schedule reapproval queue open/close time">
-                <Icon
-                  name="calendar"
-                  size="20"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    setShowQSModal(true)
-                    setQSModalQueueType('reapproval')
-                  }}
-                />
-              </span>
-            </div>
+          {canManageQueue ? (
+            <QueueSettingsButtonStack direction="row">
+              <QueueSettingsButton
+                open={registrationQueueSettings.reapproval_queue_open}
+                for="reapproval_queue_open"
+                updateQueueSettings={setRegistrationQueueSettings}
+              />
+              <div
+                className="reapproval-datepicker-icon"
+                style={{ justifySelf: 'center', alignSelf: 'center' }}
+              >
+                <span title="Schedule reapproval queue open/close time">
+                  <Icon
+                    name="calendar"
+                    size="20"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      setShowQSModal(true)
+                      setQSModalQueueType('reapproval')
+                    }}
+                  />
+                </span>
+              </div>
 
-            <QueueSchedulerModal
-              show={showQSModal}
-              queueType={QSModalQueueType}
-              registrationQueueSettings={registrationQueueSettings}
-              showModal={showQSModal}
-              setRegistrationQueueSettings={setRegistrationQueueSettings}
-              closeModal={() => {
-                setShowQSModal(false)
-              }}
-            />
-            <QueueSettingsButton
-              open={registrationQueueSettings.new_approval_queue_open}
-              for="new_approval_queue_open"
-              updateQueueSettings={setRegistrationQueueSettings}
-            />
-            <div
-              className="new-approval-datepicker-icon"
-              style={{ justifySelf: 'center', alignSelf: 'center' }}
-            >
-              <span title="Schedule new approval queue open/close time">
-                <Icon
-                  name="calendar"
-                  size="20"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    setShowQSModal(true)
-                    setQSModalQueueType('new')
-                  }}
-                />
-              </span>
-            </div>
-          </QueueSettingsButtonStack>
-        </>
-      )}
-      <QueueTable
-        clubs={pendingClubs}
-        refetchClubs={refetchClubs}
-        templates={templates}
-      />
-      {SHOW_OWNERSHIP_REQUESTS && (
-        <>
-          <SmallTitle>Pending Ownership Requests</SmallTitle>
-          <div className="mt-3 mb-3">
-            These are user-submitted requests to take ownership of inactive
-            clubs. You can approve or reject each request individually.
-          </div>
-
-          {ownershipRequests.length === 0 ? (
-            <div className="has-text-info">
-              There are no ownership requests at this time.
-            </div>
+              <QueueSchedulerModal
+                show={showQSModal}
+                queueType={QSModalQueueType}
+                registrationQueueSettings={registrationQueueSettings}
+                showModal={showQSModal}
+                setRegistrationQueueSettings={setRegistrationQueueSettings}
+                closeModal={() => {
+                  setShowQSModal(false)
+                }}
+              />
+              <QueueSettingsButton
+                open={registrationQueueSettings.new_approval_queue_open}
+                for="new_approval_queue_open"
+                updateQueueSettings={setRegistrationQueueSettings}
+              />
+              <div
+                className="new-approval-datepicker-icon"
+                style={{ justifySelf: 'center', alignSelf: 'center' }}
+              >
+                <span title="Schedule new approval queue open/close time">
+                  <Icon
+                    name="calendar"
+                    size="20"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      setShowQSModal(true)
+                      setQSModalQueueType('new')
+                    }}
+                  />
+                </span>
+              </div>
+            </QueueSettingsButtonStack>
           ) : (
-            <table className="table is-fullwidth is-striped">
-              <thead>
-                <tr>
-                  <th>Club</th>
-                  <th>Requester</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ownershipRequests.map((req) => (
-                  <tr key={req.id}>
-                    <td>
-                      <Link href={`/club/${req.club}`} target="_blank">
-                        {req.club_name}
-                      </Link>
-                    </td>
-                    <td>{req.name || 'Unknown User'}</td>
-                    <td>
-                      {req.created_at
-                        ? new Date(req.created_at).toLocaleDateString()
-                        : 'Invalid Date'}
-                    </td>
-                    <td>
-                      <button
-                        className="button is-small is-success mr-2"
-                        onClick={() =>
-                          handleOwnershipDecision(req.club, req.username, true)
-                        }
-                      >
-                        Approve
-                      </button>
-                      <button
-                        className="button is-small is-danger"
-                        onClick={() =>
-                          handleOwnershipDecision(req.club, req.username, false)
-                        }
-                      >
-                        Reject
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="has-text-info">
+              You do not have permission to open, close, or schedule the
+              registration queues.
+            </div>
           )}
         </>
       )}
-      <SmallTitle>Other Clubs</SmallTitle>
-      <div className="mt-3 mb-3">
-        The table below shows a list of {OBJECT_NAME_PLURAL} that have been
-        marked as approved, rejected or that are inactive.
-      </div>
-      {/* TODO: refactor with Table component when render and search
-      functionality are disconnected */}
-      {(() => {
-        if (otherClubs === null)
-          return <div className="has-text-info">Loading table...</div>
-        if (!otherClubs.length)
-          return (
-            <div className="has-text-info">
-              There are no {OBJECT_NAME_PLURAL} in this table.
-            </div>
-          )
-        return (
-          <table className="table is-fullwidth is-striped">
-            <thead>
-              <tr>
-                <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {otherClubs.map((club) => (
-                <tr key={club.code}>
-                  <td>
-                    <ClubLink {...club} />
-                  </td>
-                  <td>
-                    {(() => {
-                      if (!club.active)
-                        return (
-                          <span className="has-text-primary">
-                            <Icon name="clock" /> Inactive
-                          </span>
-                        )
-                      if (club.approved)
-                        return (
-                          <span className="has-text-success">
-                            <Icon name="check" /> Approved
-                          </span>
-                        )
-                      return (
-                        <span className="has-text-danger">
-                          <Icon name="x" /> Rejected
-                        </span>
-                      )
-                    })()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )
-      })()}
+      {canSeePending && (
+        <>
+          <QueueTable
+            canApprove={canApprove}
+            clubs={pendingClubs}
+            refetchClubs={refetchClubs}
+            templates={templates}
+          />
+          {SHOW_OWNERSHIP_REQUESTS && canApprove && (
+            <>
+              <SmallTitle>Pending Ownership Requests</SmallTitle>
+              <div className="mt-3 mb-3">
+                These are user-submitted requests to take ownership of inactive
+                clubs. You can approve or reject each request individually.
+              </div>
+
+              {ownershipRequests.length === 0 ? (
+                <div className="has-text-info">
+                  There are no ownership requests at this time.
+                </div>
+              ) : (
+                <table className="table is-fullwidth is-striped">
+                  <thead>
+                    <tr>
+                      <th>Club</th>
+                      <th>Requester</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ownershipRequests.map((req) => (
+                      <tr key={req.id}>
+                        <td>
+                          <Link href={`/club/${req.club}`} target="_blank">
+                            {req.club_name}
+                          </Link>
+                        </td>
+                        <td>{req.name || 'Unknown User'}</td>
+                        <td>
+                          {req.created_at
+                            ? new Date(req.created_at).toLocaleDateString()
+                            : 'Invalid Date'}
+                        </td>
+                        <td>
+                          <button
+                            className="button is-small is-success mr-2"
+                            onClick={() =>
+                              handleOwnershipDecision(
+                                req.club,
+                                req.username,
+                                true,
+                              )
+                            }
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="button is-small is-danger"
+                            onClick={() =>
+                              handleOwnershipDecision(
+                                req.club,
+                                req.username,
+                                false,
+                              )
+                            }
+                          >
+                            Reject
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </>
+          )}
+          <SmallTitle>Other Clubs</SmallTitle>
+          <div className="mt-3 mb-3">
+            The table below shows a list of {OBJECT_NAME_PLURAL} that have been
+            marked as approved, rejected or that are inactive.
+          </div>
+          {/* TODO: refactor with Table component when render and search
+          functionality are disconnected */}
+          {(() => {
+            if (otherClubs === null)
+              return <div className="has-text-info">Loading table...</div>
+            if (!otherClubs.length)
+              return (
+                <div className="has-text-info">
+                  There are no {OBJECT_NAME_PLURAL} in this table.
+                </div>
+              )
+            return (
+              <table className="table is-fullwidth is-striped">
+                <thead>
+                  <tr>
+                    <th>{OBJECT_NAME_TITLE_SINGULAR}</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {otherClubs.map((club) => (
+                    <tr key={club.code}>
+                      <td>
+                        <ClubLink {...club} />
+                      </td>
+                      <td>
+                        {(() => {
+                          if (!club.active)
+                            return (
+                              <span className="has-text-primary">
+                                <Icon name="clock" /> Inactive
+                              </span>
+                            )
+                          if (club.approved)
+                            return (
+                              <span className="has-text-success">
+                                <Icon name="check" /> Approved
+                              </span>
+                            )
+                          return (
+                            <span className="has-text-danger">
+                              <Icon name="x" /> Rejected
+                            </span>
+                          )
+                        })()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          })()}
+        </>
+      )}
     </>
   )
 }
