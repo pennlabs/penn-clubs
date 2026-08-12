@@ -1851,13 +1851,14 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
 
     def validate_active(self, value):
         """
-        Only officers, owners, and superusers may change the active status of a club.
-        On club creation, the club creator can set the initial active status.
+        Only officers, owners, global club managers, and approvers may change the
+        active status of a club. On creation, the club creator can set the initial
+        active status.
+        `superusers can do anything.`
         """
         user = self.context["request"].user
 
-        # people with approve permissions can also change the active status of the club
-        if user.has_perm("clubs.approve_club"):
+        if user.has_perm("clubs.manage_club") or user.has_perm("clubs.approve_club"):
             return value
 
         # the club creator can set the initial active status on registration

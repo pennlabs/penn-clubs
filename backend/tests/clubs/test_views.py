@@ -2807,6 +2807,31 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [400, 403], resp.content)
 
+    def test_global_manager_can_renew_without_local_membership(self):
+        self.club1.active = False
+        self.club1.constitution = Asset.objects.create(
+            name="test-club.pdf",
+            club=self.club1,
+            file=self.constitution_upload("test-club.pdf"),
+        )
+        self.club1.save(update_fields=["active", "constitution"])
+        self.user2.user_permissions.add(
+            Permission.objects.get(
+                codename="manage_club", content_type__app_label="clubs"
+            )
+        )
+        self.client.login(username=self.user2.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"active": True},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.club1.refresh_from_db()
+        self.assertTrue(self.club1.active)
+
     def test_club_bypass_for_invite(self):
         """
         Test the bypass feature for retrieving a single club that is inactive.
