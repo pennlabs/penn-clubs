@@ -5658,6 +5658,9 @@ class UserGroupAPIView(APIView):
             "approve_club",
             "generate_reports",
             "manage_club",
+            "manage_registration_queue",
+            "run_management_scripts",
+            "send_club_email_blast",
             "see_fair_status",
             "see_pending_clubs",
         ]
@@ -9153,7 +9156,7 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = AdminNoteSerializer
-    permission_classes = [IsSuperuser]
+    permission_classes = [DjangoPermission("clubs.manage_club") | IsSuperuser]
     lookup_field = "id"
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
@@ -9177,7 +9180,9 @@ class ScriptExecutionView(APIView):
     View and execute Django management scripts using these endpoints.
     """
 
-    permission_classes = [DjangoPermission("clubs.manage_club") | IsSuperuser]
+    permission_classes = [
+        DjangoPermission("clubs.run_management_scripts") | IsSuperuser
+    ]
 
     def get(self, request):
         """
@@ -9387,17 +9392,17 @@ def email_preview(request):
 class RegistrationQueueSettingsView(APIView):
     """
     View to get and update registration queue settings.
-    Only superusers can update settings.
+    Only users with queue management permission can update settings.
     """
 
     def get_permissions(self):
         """
-        Allow any authenticated user to read settings,
-        but only superusers can update them.
+        Allow any authenticated user to read settings, but only users with
+        queue management permission can update them.
         """
         if self.request.method == "GET":
             return [IsAuthenticated()]
-        return [IsSuperuser()]
+        return [(DjangoPermission("clubs.manage_registration_queue") | IsSuperuser)()]
 
     def get(self, request):
         """

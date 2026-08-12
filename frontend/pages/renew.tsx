@@ -11,7 +11,12 @@ import { OBJECT_NAME_TITLE } from 'utils/branding'
 import { BG_GRADIENT, WHITE } from '~/constants/colors'
 
 function UserRenewal({ userInfo, authenticated }): ReactElement<any> {
-  const canApprove = apiCheckPermission('clubs.approve_club')
+  const canAccessQueue = apiCheckPermission([
+    'clubs.approve_club',
+    'clubs.manage_club',
+    'clubs.manage_registration_queue',
+    'clubs.see_pending_clubs',
+  ])
 
   if (authenticated === null) {
     return <div />
@@ -26,7 +31,7 @@ function UserRenewal({ userInfo, authenticated }): ReactElement<any> {
       name: 'Clubs',
       content: <RenewTab userInfo={userInfo} />,
     },
-    { name: 'Queue', content: <QueueTab />, disabled: !canApprove },
+    { name: 'Queue', content: <QueueTab />, disabled: !canAccessQueue },
   ]
 
   return (
@@ -46,6 +51,11 @@ function UserRenewal({ userInfo, authenticated }): ReactElement<any> {
   )
 }
 
-UserRenewal.permissions = ['clubs.approve_club']
+UserRenewal.permissions = [
+  'clubs.approve_club',
+  'clubs.manage_club',
+  'clubs.manage_registration_queue',
+  'clubs.see_pending_clubs',
+]
 
 export default renderPage(UserRenewal)

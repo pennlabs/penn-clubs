@@ -157,7 +157,11 @@ class ClubPermission(permissions.BasePermission):
         ):
             return True
 
-        if request.user.has_perm("clubs.manage_club"):
+        # DRF calls DELETE "destroy", although ClubViewSet soft-archives the club.
+        # Keep that action separate from global club management.
+        if request.user.has_perm("clubs.manage_club") and view.action not in {
+            "destroy"
+        }:
             return True
 
         # user must be in club or parent club to perform non-view actions
@@ -172,8 +176,8 @@ class ClubPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if view.action in {"email_blast"}:
-            return request.user.is_authenticated and (
-                request.user.is_staff or request.user.has_perm("clubs.manage_club")
+            return request.user.is_authenticated and request.user.has_perm(
+                "clubs.send_club_email_blast"
             )
 
         if view.action in {

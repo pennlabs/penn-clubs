@@ -3,7 +3,7 @@ import { ReactElement, useEffect, useState } from 'react'
 
 import { CLUB_ROUTE, FAIR_INFO_ROUTE, LIVE_EVENTS } from '../../constants'
 import { ClubFair } from '../../types'
-import { doApiRequest } from '../../utils'
+import { apiCheckPermission, doApiRequest } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
   FAIR_NAME,
@@ -40,6 +40,7 @@ const FairEventsTab = ({
   fairs: initialFairs,
   fair: initialSelection,
 }: Props): ReactElement<any> => {
+  const canManageFairs = apiCheckPermission('clubs.see_fair_status')
   const [fairs, setFairs] = useState<ClubFair[] | { detail: string } | null>(
     initialFairs ?? null,
   )
@@ -53,7 +54,7 @@ const FairEventsTab = ({
   >(null)
 
   useEffect(() => {
-    if (fairs == null) {
+    if (canManageFairs && fairs == null) {
       doApiRequest('/clubfairs/?format=json')
         .then((resp) => resp.json())
         .then((data) => {
@@ -63,16 +64,20 @@ const FairEventsTab = ({
           }
         })
     }
-  }, [fairs])
+  }, [canManageFairs, fairs])
 
   useEffect(() => {
-    if (selectedFair != null) {
+    if (canManageFairs && selectedFair != null) {
       setFairEvents(null)
       doApiRequest(`/clubfairs/${selectedFair}/events/?format=json`)
         .then((resp) => resp.json())
         .then((data) => setFairEvents(data))
     }
-  }, [selectedFair])
+  }, [canManageFairs, selectedFair])
+
+  if (!canManageFairs) {
+    return <Text>You do not have permission to manage fair events.</Text>
+  }
 
   if (fairs == null) {
     return <Loading />

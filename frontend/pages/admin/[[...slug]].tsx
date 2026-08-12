@@ -17,6 +17,17 @@ import { apiCheckPermission, doBulkLookup } from 'utils'
 import TemplatesTab from '~/components/Settings/TemplatesTab'
 import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
 
+const ADMIN_PERMISSIONS = [
+  'clubs.approve_club',
+  'clubs.generate_reports',
+  'clubs.manage_club',
+  'clubs.manage_registration_queue',
+  'clubs.run_management_scripts',
+  'clubs.see_fair_status',
+  'clubs.see_pending_clubs',
+  'clubs.send_club_email_blast',
+]
+
 function AdminPage({
   userInfo,
   tags,
@@ -29,10 +40,7 @@ function AdminPage({
 }): ReactElement<any> {
   if (!userInfo) {
     return <AuthPrompt />
-  } else if (
-    !apiCheckPermission(['clubs.approve_club', 'clubs.generate_reports']) &&
-    !userInfo.is_superuser
-  ) {
+  } else if (!apiCheckPermission(ADMIN_PERMISSIONS) && !userInfo.is_superuser) {
     return (
       <AuthPrompt title="Whoops!" hasLogin={false}>
         Admin permissions are required to access this page.
@@ -67,7 +75,12 @@ function AdminPage({
     {
       name: 'templates',
       label: 'Approval Templates',
-      content: () => <TemplatesTab templates={templates} />,
+      content: () => (
+        <TemplatesTab
+          canManageTemplates={userInfo.is_superuser}
+          templates={templates}
+        />
+      ),
     },
     {
       name: 'fair',
@@ -134,6 +147,6 @@ AdminPage.getInitialProps = async (ctx: NextPageContext) => {
   }
 }
 
-AdminPage.permissions = ['clubs.approve_club', 'clubs.generate_reports']
+AdminPage.permissions = ADMIN_PERMISSIONS
 
 export default renderPage(AdminPage)

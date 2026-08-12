@@ -1225,6 +1225,70 @@ class ClubTestCase(TestCase):
         )
         self.assertIn(resp.status_code, [200, 204], resp.content)
 
+    def test_global_manager_can_edit_membership_without_local_membership(self):
+        membership = Membership.objects.create(club=self.club1, person=self.user1)
+        self.user4.user_permissions.add(
+            Permission.objects.get(
+                codename="manage_club", content_type__app_label="clubs"
+            )
+        )
+        self.client.login(username=self.user4.username, password="test")
+
+        resp = self.client.patch(
+            reverse("club-members-detail", args=(self.club1.code, self.user1.username)),
+            {"title": "Treasurer", "role": Membership.ROLE_OFFICER},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        membership.refresh_from_db()
+        self.assertEqual(membership.title, "Treasurer")
+        self.assertEqual(membership.role, Membership.ROLE_OFFICER)
+
+    def test_admin_notes_require_global_manage_club(self):
+        Membership.objects.create(
+            club=self.club1, person=self.user1, role=Membership.ROLE_OWNER
+        )
+        notes_url = reverse("adminnotes-list", args=(self.club1.code,))
+
+        self.client.login(username=self.user1.username, password="test")
+        resp = self.client.post(
+            notes_url,
+            {"title": "Owner note", "content": "Not an admin note"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        self.user2.user_permissions.add(
+            Permission.objects.get(
+                codename="manage_club", content_type__app_label="clubs"
+            )
+        )
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            notes_url,
+            {"title": "Review", "content": "Needs follow-up"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+
+        note_url = reverse(
+            "adminnotes-detail", args=(self.club1.code, resp.json()["id"])
+        )
+        resp = self.client.patch(
+            note_url,
+            {"content": "Reviewed"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        resp = self.client.get(notes_url)
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.json()[0]["content"], "Reviewed")
+
+        resp = self.client.delete(note_url)
+        self.assertEqual(resp.status_code, 204, resp.content)
+
     def test_tag_views(self):
         # everyone can view the list of tags
         resp = self.client.get(reverse("tags-list"))
@@ -2660,7 +2724,10 @@ class ClubTestCase(TestCase):
         """
         Owners should be able to archive the club.
         """
-        self.client.login(username=self.user5.username, password="test")
+        Membership.objects.create(
+            club=self.club1, person=self.user1, role=Membership.ROLE_OWNER
+        )
+        self.client.login(username=self.user1.username, password="test")
 
         # archive club
         resp = self.client.delete(reverse("clubs-detail", args=(self.club1.code,)))
@@ -2671,7 +2738,7 @@ class ClubTestCase(TestCase):
         self.assertTrue(club is not None)
         self.assertEqual(club.code, self.club1.code)
         self.assertTrue(club.archived)
-        self.assertEqual(club.archived_by, self.user5)
+        self.assertEqual(club.archived_by, self.user1)
 
         # ensure club was taken off clubs endpoint
         resp = self.client.get(reverse("clubs-list"))
@@ -2691,6 +2758,23 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200], resp.content)
         codes = [club["code"] for club in resp.data]
         self.assertIn(self.club1.code, codes)
+
+    def test_manage_club_does_not_imply_delete_club(self):
+        manage_club = Permission.objects.get(
+            codename="manage_club", content_type__app_label="clubs"
+        )
+        delete_club = Permission.objects.get(
+            codename="delete_club", content_type__app_label="clubs"
+        )
+        self.user2.user_permissions.add(manage_club)
+        self.client.login(username=self.user2.username, password="test")
+
+        resp = self.client.delete(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        self.user2.user_permissions.add(delete_club)
+        resp = self.client.delete(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertEqual(resp.status_code, 204, resp.content)
 
     def test_club_deactivate(self):
         """
@@ -2722,6 +2806,31 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertIn(resp.status_code, [400, 403], resp.content)
+
+    def test_global_manager_can_renew_without_local_membership(self):
+        self.club1.active = False
+        self.club1.constitution = Asset.objects.create(
+            name="test-club.pdf",
+            club=self.club1,
+            file=self.constitution_upload("test-club.pdf"),
+        )
+        self.club1.save(update_fields=["active", "constitution"])
+        self.user2.user_permissions.add(
+            Permission.objects.get(
+                codename="manage_club", content_type__app_label="clubs"
+            )
+        )
+        self.client.login(username=self.user2.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"active": True},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.club1.refresh_from_db()
+        self.assertTrue(self.club1.active)
 
     def test_club_bypass_for_invite(self):
         """
@@ -3997,7 +4106,20 @@ class ClubTestCase(TestCase):
         self.assertEqual(len(data[str(now.year - 3)]), 2, resp.content)
 
     def test_execute_script(self):
-        self.client.login(username=self.user5.username, password="test")
+        manage_club = Permission.objects.get(
+            codename="manage_club", content_type__app_label="clubs"
+        )
+        self.user2.user_permissions.add(manage_club)
+        self.client.login(username=self.user2.username, password="test")
+
+        resp = self.client.get(reverse("scripts"))
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        run_scripts = Permission.objects.get(
+            codename="run_management_scripts", content_type__app_label="clubs"
+        )
+        self.user4.user_permissions.add(run_scripts)
+        self.client.login(username=self.user4.username, password="test")
 
         resp = self.client.get(reverse("scripts"))
         self.assertIn(resp.status_code, [200], resp.content)
@@ -4849,7 +4971,7 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
-        # staff users can send email blasts
+        # is_staff alone no longer grants email blast access
         staff_user = get_user_model().objects.create_user(
             "email-blast-staff",
             "email-blast-staff@example.com",
@@ -4866,11 +4988,10 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(len(mail.outbox), 1)
-        mail.outbox.clear()
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(len(mail.outbox), 0)
 
-        # users with the manage_club permission can send email blasts
+        # manage_club alone no longer grants email blast access
         manage_club = Permission.objects.get(
             codename="manage_club", content_type__app_label="clubs"
         )
@@ -4879,6 +5000,20 @@ class ClubTestCase(TestCase):
         self.assertFalse(self.user2.is_staff)
         self.assertFalse(self.user2.is_superuser)
         self.client.login(username=self.user2.username, password="test")
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "test"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(len(mail.outbox), 0)
+
+        # the resource-specific permission grants email blast access
+        send_email_blast = Permission.objects.get(
+            codename="send_club_email_blast", content_type__app_label="clubs"
+        )
+        self.user2.user_permissions.add(send_email_blast)
         resp = self.client.post(
             reverse("clubs-email-blast"),
             {"target": "leaders", "content": "test"},
@@ -5709,7 +5844,12 @@ class RegistrationQueueSettingsTestCase(TestCase):
         self.assertIn("new_approval_queue_open", data)
 
     def test_update_settings(self):  # manual non-scheduled updates
-        # non-superusers can't update
+        # manage_club alone cannot update queue settings
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename="manage_club", content_type__app_label="clubs"
+            )
+        )
         self.client.login(username="user", password="password")
         resp = self.client.patch(
             reverse("queue-settings"),
@@ -5719,6 +5859,22 @@ class RegistrationQueueSettingsTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 403, resp.content)
+
+        # resource-specific permission can update settings
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename="manage_registration_queue",
+                content_type__app_label="clubs",
+            )
+        )
+        resp = self.client.patch(
+            reverse("queue-settings"),
+            json.dumps(
+                {"reapproval_queue_open": False, "new_approval_queue_open": False}
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
 
         # superusers can update
         self.client.login(username="super", password="password")
@@ -5740,7 +5896,13 @@ class RegistrationQueueSettingsTestCase(TestCase):
         self.assertFalse(data["new_approval_queue_open"])
 
     def test_schedule_queue_flips(self):
-        self.client.login(username="super", password="password")
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename="manage_registration_queue",
+                content_type__app_label="clubs",
+            )
+        )
+        self.client.login(username="user", password="password")
         past_time = timezone.now() - timezone.timedelta(hours=1)
 
         # setting schedule date with past datetime fails
