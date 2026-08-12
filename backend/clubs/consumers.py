@@ -35,7 +35,7 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
     @log_errors
     async def connect(self):
         user = self.scope["user"]
-        if user.has_perm("clubs.manage_club"):
+        if await user.ahas_perm("clubs.run_management_scripts"):
             await self.accept()
         else:
             await self.close()
@@ -71,7 +71,7 @@ class ExecuteScriptConsumer(AsyncWebsocketConsumer):
             return
 
         # check user permissions
-        if not user.has_perm("clubs.manage_club"):
+        if not await user.ahas_perm("clubs.run_management_scripts"):
             await self.send(
                 json.dumps(
                     {"output": "You do not have permission to execute this script."}

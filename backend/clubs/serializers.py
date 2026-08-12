@@ -933,7 +933,7 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
             person=user, club__code=club_code
         ).first()
 
-        if not user.is_superuser and (
+        if not (user.is_superuser or user.has_perm("clubs.manage_club")) and (
             membership is None or membership.role > Membership.ROLE_OFFICER
         ):
             for field in data:

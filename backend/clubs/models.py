@@ -811,6 +811,12 @@ class Club(models.Model):
                 "See whether or not a club has registered for the SAC fair",
             ),
             ("manage_club", "Manipulate club object and related objects"),
+            ("run_management_scripts", "Can run management scripts"),
+            ("send_club_email_blast", "Can send club email blasts"),
+            (
+                "manage_registration_queue",
+                "Can manage registration queue settings",
+            ),
         ]
 
 
