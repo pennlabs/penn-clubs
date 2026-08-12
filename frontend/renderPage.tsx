@@ -100,18 +100,17 @@ export const RenderPageWrapper = styled.div`
   background-color: ${WHITE};
   font-family: ${BODY_FONT};
 
-  ${
-    SITE_ID !== 'clubs'
-      ? Object.entries({
-          primary: BULMA_PRIMARY,
-          link: BULMA_LINK,
-          info: BULMA_INFO,
-          success: BULMA_SUCCESS,
-          warning: BULMA_WARNING,
-          danger: BULMA_DANGER,
-        })
-          .map(([className, color]) => {
-            return `
+  ${SITE_ID !== 'clubs'
+    ? Object.entries({
+        primary: BULMA_PRIMARY,
+        link: BULMA_LINK,
+        info: BULMA_INFO,
+        success: BULMA_SUCCESS,
+        warning: BULMA_WARNING,
+        danger: BULMA_DANGER,
+      })
+        .map(([className, color]) => {
+          return `
     .button.is-${className}, .button.is-${className}[disabled], .notification.is-${className} {
       background-color: ${color};
     }
@@ -136,10 +135,9 @@ export const RenderPageWrapper = styled.div`
       color: ${color} !important;
     }
     `
-          })
-          .join('\n')
-      : ''
-  }
+        })
+        .join('\n')
+    : ''}
 `
 
 type RenderPageProps = {

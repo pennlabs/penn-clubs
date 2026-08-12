@@ -1013,8 +1013,11 @@ export default function ApplicationsPage({
                 setSubmissions(submissions)
               }
             }}
-            submissions={selectedSubmissions.map((i) =>
-              submissions[currentApplication!.id].find((sub) => sub.pk === i)!,
+            submissions={selectedSubmissions.map(
+              (i) =>
+                submissions[currentApplication!.id].find(
+                  (sub) => sub.pk === i,
+                )!,
             )}
           />
         </Modal>
