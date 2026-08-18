@@ -1616,6 +1616,130 @@ class ClubTestCase(TestCase):
         self.assertIsNotNone(self.club1.approved_on)
         self.assertIsNotNone(self.club1.approved_by)
 
+    def test_club_reject_permission_split_from_approve(self):
+        """
+        A user with only clubs.reject_club can reject a pending club, but
+        cannot approve one. A user with neither permission can do neither.
+        """
+        content_type = ContentType.objects.get_for_model(Club)
+        reject_club = Permission.objects.get(
+            codename="reject_club", content_type=content_type
+        )
+        self.user2.user_permissions.add(reject_club)
+
+        self.club1.approved = None
+        self.club1.save(update_fields=["approved"])
+
+        self.client.login(username=self.user2.username, password="test")
+
+        # reject-only user cannot approve
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": True, "approved_comment": "Looks great!"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.club1.refresh_from_db()
+        self.assertIsNone(self.club1.approved)
+
+        # reject-only user can reject
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": False, "approved_comment": "Needs more info."},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.club1.refresh_from_db()
+        self.assertFalse(self.club1.approved)
+        self.assertEqual(self.club1.approved_comment, "Needs more info.")
+        self.assertEqual(self.club1.approved_by, self.user2)
+        self.assertIsNotNone(self.club1.approved_on)
+
+        # reject permission does not grant general club editing
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"name": "Renamed By Reviewer"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+        # ...nor can other fields be smuggled alongside an approval change
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": None, "name": "Renamed By Reviewer"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.name, "Test Club")
+
+        # user with neither permission can do neither
+        self.club1.approved = None
+        self.club1.save(update_fields=["approved"])
+
+        self.user2.user_permissions.remove(reject_club)
+        self.client.login(username=self.user2.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": False, "approved_comment": "Needs more info."},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
+    def test_club_approve_permission_still_grants_rejection(self):
+        """
+        Splitting out clubs.reject_club must not remove the ability of existing
+        clubs.approve_club holders to reject clubs.
+        """
+        content_type = ContentType.objects.get_for_model(Club)
+        self.user2.user_permissions.add(
+            Permission.objects.get(codename="approve_club", content_type=content_type)
+        )
+        self.club1.approved = None
+        self.club1.save(update_fields=["approved"])
+
+        self.client.login(username=self.user2.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": False, "approved_comment": "Not this year."},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.club1.refresh_from_db()
+        self.assertFalse(self.club1.approved)
+
+    def test_club_officer_can_request_review_without_approval_perms(self):
+        """
+        Officers reset a rejected club to pending to request another review,
+        which must not require any approval permission.
+        """
+        self.club1.approved = False
+        self.club1.save(update_fields=["approved"])
+        Membership.objects.create(
+            person=self.user2, club=self.club1, role=Membership.ROLE_OFFICER
+        )
+
+        self.client.login(username=self.user2.username, password="test")
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": None},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.club1.refresh_from_db()
+        self.assertIsNone(self.club1.approved)
+
+        # but officers still cannot write the approval comment themselves
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved_comment": "Approved by me"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+
     def test_club_display_after_deactivation_for_permissioned_vs_non_permissioned(self):
         """
         Test club retrieval after deactivation script runs. Non-permissioned users

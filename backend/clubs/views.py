@@ -2498,14 +2498,31 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def check_approval_permission(self, request):
         """
         Only users with specific permissions can modify the approval field.
+
+        Approving a club (approved=True) requires clubs.approve_club. Rejecting
+        a club (approved=False) or writing the approval comment requires either
+        clubs.approve_club or clubs.reject_club.
+
+        Resetting a club to pending (approved=None) is deliberately left to the
+        regular object permissions, since club officers use it to request
+        another review after addressing a rejection.
         """
-        if (
-            request.data.get("approved", None) is not None
-            or request.data.get("approved_comment", None) is not None
-        ):
-            # users without approve permission cannot approve
-            if not request.user.has_perm("clubs.approve_club"):
-                raise PermissionDenied
+        approved_provided = "approved" in request.data
+        requested_approval = request.data.get("approved")
+        comment_provided = request.data.get("approved_comment", None) is not None
+
+        if approved_provided or comment_provided:
+            if requested_approval is True:
+                # only users with approve permission can approve
+                if not request.user.has_perm("clubs.approve_club"):
+                    raise PermissionDenied
+            elif requested_approval is False or comment_provided:
+                # rejecting a club or writing the approval comment
+                if not (
+                    request.user.has_perm("clubs.approve_club")
+                    or request.user.has_perm("clubs.reject_club")
+                ):
+                    raise PermissionDenied
 
             # an approval request must not modify any other fields
             if set(request.data.keys()) - {"approved", "approved_comment"}:
@@ -5656,6 +5673,7 @@ class UserGroupAPIView(APIView):
         """
         perms = [
             "approve_club",
+            "reject_club",
             "generate_reports",
             "manage_club",
             "manage_registration_queue",

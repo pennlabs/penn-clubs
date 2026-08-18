@@ -805,6 +805,7 @@ class Club(models.Model):
         ordering = ["name"]
         permissions = [
             ("approve_club", "Can approve pending clubs"),
+            ("reject_club", "Can reject pending clubs"),
             ("see_pending_clubs", "View pending clubs that are not one's own"),
             (
                 "see_fair_status",
