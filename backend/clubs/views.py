@@ -9185,9 +9185,26 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
 
 
 class ClubApprovalResponseTemplateViewSet(viewsets.ModelViewSet):
+    """
+    Templates are the canned reasons sent when a club is approved or rejected,
+    so anyone with approval authority needs to read them. Authoring them stays
+    with superusers.
+    """
+
     serializer_class = ClubApprovalResponseTemplateSerializer
     permission_classes = [IsSuperuser]
     lookup_field = "id"
+
+    def get_permissions(self):
+        if self.action in {"list", "retrieve"}:
+            return [
+                (
+                    DjangoPermission("clubs.approve_club")
+                    | DjangoPermission("clubs.reject_club")
+                    | IsSuperuser
+                )()
+            ]
+        return [IsSuperuser()]
 
     def get_queryset(self):
         return ClubApprovalResponseTemplate.objects.all().order_by("-created_at")

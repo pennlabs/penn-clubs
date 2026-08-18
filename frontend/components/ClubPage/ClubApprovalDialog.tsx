@@ -165,8 +165,9 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
   const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
 
   const canApprove = apiCheckPermission('clubs.approve_club')
-  const canReject = apiCheckPermission('clubs.reject_club')
-  const canApproveOrReject = canApprove || canReject
+  // approve_club carries rejection authority as well, so anyone who can
+  // approve can also reject
+  const canReject = canApprove || apiCheckPermission('clubs.reject_club')
   const seeFairStatus = apiCheckPermission('clubs.see_fair_status')
   const canDeleteClub = apiCheckPermission('clubs.delete_club')
 
@@ -184,7 +185,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
         .then(setFairs)
     }
 
-    if (canApproveOrReject) {
+    if (canReject) {
       // the templates endpoint is superuser only, so non-superuser reviewers
       // get an error object back rather than a list
       doApiRequest('/templates/?format=json')
@@ -192,7 +193,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
         .then((data) => setTemplates(Array.isArray(data) ? data : []))
     }
 
-    if (isOfficer || canApproveOrReject) {
+    if (isOfficer || canReject) {
       doApiRequest(`/clubs/${club.code}/history/?format=json`)
         .then((resp) => resp.json())
         .then((data) => {
@@ -343,9 +344,9 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
               </>
             )}
           </Text>
-          {(canApproveOrReject || canDeleteClub) && (
+          {(canReject || canDeleteClub) && (
             <>
-              {canApproveOrReject && club.active && (
+              {canReject && club.active && (
                 <>
                   <div className="mb-3">
                     As an administrator for {SITE_NAME}, you can{' '}

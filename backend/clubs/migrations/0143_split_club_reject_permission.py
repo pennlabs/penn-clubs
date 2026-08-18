@@ -27,15 +27,19 @@ def grant_reject_permission(apps, schema_editor):
     club_content_type, _ = ContentType.objects.using(database).get_or_create(
         app_label="clubs", model="club"
     )
-    reject_club, _ = Permission.objects.using(database).get_or_create(
+    # update_or_create rather than get_or_create: Django only ever creates
+    # missing permissions, so the label on an already-existing row is never
+    # refreshed from the model. approve_club exists on every deployed database
+    # already, and its label needs to say that it grants rejection too.
+    reject_club, _ = Permission.objects.using(database).update_or_create(
         content_type=club_content_type,
         codename="reject_club",
-        defaults={"name": "Can reject pending clubs"},
+        defaults={"name": "Can reject pending clubs (cannot approve)"},
     )
-    approve_club, _ = Permission.objects.using(database).get_or_create(
+    approve_club, _ = Permission.objects.using(database).update_or_create(
         content_type=club_content_type,
         codename="approve_club",
-        defaults={"name": "Can approve pending clubs"},
+        defaults={"name": "Can approve and reject pending clubs"},
     )
 
     # groups and users with approve_club keep the ability to reject clubs
@@ -63,8 +67,8 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ["name"],
                 "permissions": [
-                    ("approve_club", "Can approve pending clubs"),
-                    ("reject_club", "Can reject pending clubs"),
+                    ("approve_club", "Can approve and reject pending clubs"),
+                    ("reject_club", "Can reject pending clubs (cannot approve)"),
                     (
                         "see_pending_clubs",
                         "View pending clubs that are not one's own",

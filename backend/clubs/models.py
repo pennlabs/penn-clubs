@@ -804,8 +804,8 @@ class Club(models.Model):
     class Meta:
         ordering = ["name"]
         permissions = [
-            ("approve_club", "Can approve pending clubs"),
-            ("reject_club", "Can reject pending clubs"),
+            ("approve_club", "Can approve and reject pending clubs"),
+            ("reject_club", "Can reject pending clubs (cannot approve)"),
             ("see_pending_clubs", "View pending clubs that are not one's own"),
             (
                 "see_fair_status",

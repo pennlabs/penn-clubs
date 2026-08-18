@@ -153,7 +153,6 @@ const QueueTable = ({
   templates,
 }: QueueTableProps): ReactElement => {
   const router = useRouter()
-  const canApproveOrReject = canApprove || canReject
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [approve, setApprove] = useState<boolean>(false)
@@ -187,7 +186,7 @@ const QueueTable = ({
 
   return (
     <>
-      {canApproveOrReject && (
+      {canReject && (
         <QueueTableModal
           show={showModal}
           closeModal={() => setShowModal(false)}
@@ -204,14 +203,14 @@ const QueueTable = ({
             review. Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
             {OBJECT_NAME_SINGULAR}.
           </div>
-          {!canApproveOrReject && (
+          {!canReject && (
             <div className="has-text-info mb-3">
               You do not have permission to approve or reject{' '}
               {OBJECT_NAME_PLURAL}.
             </div>
           )}
         </QueueSectionHeaderText>
-        {canApproveOrReject && (
+        {canReject && (
           <div className="buttons">
             {canApprove && (
               <button
@@ -254,7 +253,7 @@ const QueueTable = ({
             <thead>
               <tr>
                 <th>
-                  {canApproveOrReject && (
+                  {canReject && (
                     <Checkbox
                       className="mr-3"
                       checked={allClubsSelected}
@@ -273,7 +272,7 @@ const QueueTable = ({
               {clubs.map((club) => (
                 <tr key={club.code}>
                   <TableRow>
-                    {canApproveOrReject && (
+                    {canReject && (
                       <Checkbox
                         className="mr-3"
                         checked={selectedCodes.includes(club.code)}
@@ -784,8 +783,10 @@ const QueueTab = (): ReactElement => {
   const [registrationQueueSettings, setRegistrationQueueSettings] =
     useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club') === true
-  const canReject = apiCheckPermission('clubs.reject_club') === true
-  const canApproveOrReject = canApprove || canReject
+  // approve_club carries rejection authority as well, so anyone who can
+  // approve can also reject
+  const canReject =
+    canApprove || apiCheckPermission('clubs.reject_club') === true
   const canSeePending = apiCheckPermission([
     'clubs.approve_club',
     'clubs.reject_club',
@@ -826,7 +827,7 @@ const QueueTab = (): ReactElement => {
       refetchClubs()
     }
 
-    if (canApproveOrReject) {
+    if (canReject) {
       // the templates endpoint is superuser only, so non-superuser reviewers
       // get an error object back rather than a list
       doApiRequest('/templates/?format=json')
