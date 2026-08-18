@@ -827,9 +827,11 @@ const QueueTab = (): ReactElement => {
     }
 
     if (canApproveOrReject) {
+      // the templates endpoint is superuser only, so non-superuser reviewers
+      // get an error object back rather than a list
       doApiRequest('/templates/?format=json')
         .then((resp) => resp.json())
-        .then(setTemplates)
+        .then((data) => setTemplates(Array.isArray(data) ? data : []))
     }
 
     if (canApprove) {
