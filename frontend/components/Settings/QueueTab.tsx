@@ -138,6 +138,7 @@ const QueueTableModal = ({
 
 type QueueTableProps = {
   canApprove: boolean
+  canReject: boolean
   clubs: Club[] | null
   refetchClubs?: () => void
   templates: Template[]
@@ -146,11 +147,13 @@ type QueueTableProps = {
 functionality are disconnected */
 const QueueTable = ({
   canApprove,
+  canReject,
   clubs,
   refetchClubs,
   templates,
 }: QueueTableProps): ReactElement => {
   const router = useRouter()
+  const canApproveOrReject = canApprove || canReject
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showModal, setShowModal] = useState<boolean>(false)
   const [approve, setApprove] = useState<boolean>(false)
@@ -184,7 +187,7 @@ const QueueTable = ({
 
   return (
     <>
-      {canApprove && (
+      {canApproveOrReject && (
         <QueueTableModal
           show={showModal}
           closeModal={() => setShowModal(false)}
@@ -201,35 +204,39 @@ const QueueTable = ({
             review. Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
             {OBJECT_NAME_SINGULAR}.
           </div>
-          {!canApprove && (
+          {!canApproveOrReject && (
             <div className="has-text-info mb-3">
               You do not have permission to approve or reject{' '}
               {OBJECT_NAME_PLURAL}.
             </div>
           )}
         </QueueSectionHeaderText>
-        {canApprove && (
+        {canApproveOrReject && (
           <div className="buttons">
-            <button
-              className="button is-success"
-              disabled={!selectedCodes.length || loading}
-              onClick={() => {
-                setApprove(true)
-                setShowModal(true)
-              }}
-            >
-              <Icon name="check" /> Approve
-            </button>
-            <button
-              className="button is-danger"
-              disabled={!selectedCodes.length || loading}
-              onClick={() => {
-                setApprove(false)
-                setShowModal(true)
-              }}
-            >
-              <Icon name="x" /> Reject
-            </button>
+            {canApprove && (
+              <button
+                className="button is-success"
+                disabled={!selectedCodes.length || loading}
+                onClick={() => {
+                  setApprove(true)
+                  setShowModal(true)
+                }}
+              >
+                <Icon name="check" /> Approve
+              </button>
+            )}
+            {canReject && (
+              <button
+                className="button is-danger"
+                disabled={!selectedCodes.length || loading}
+                onClick={() => {
+                  setApprove(false)
+                  setShowModal(true)
+                }}
+              >
+                <Icon name="x" /> Reject
+              </button>
+            )}
           </div>
         )}
       </QueueSectionHeader>
@@ -247,7 +254,7 @@ const QueueTable = ({
             <thead>
               <tr>
                 <th>
-                  {canApprove && (
+                  {canApproveOrReject && (
                     <Checkbox
                       className="mr-3"
                       checked={allClubsSelected}
@@ -266,7 +273,7 @@ const QueueTable = ({
               {clubs.map((club) => (
                 <tr key={club.code}>
                   <TableRow>
-                    {canApprove && (
+                    {canApproveOrReject && (
                       <Checkbox
                         className="mr-3"
                         checked={selectedCodes.includes(club.code)}
@@ -777,8 +784,11 @@ const QueueTab = (): ReactElement => {
   const [registrationQueueSettings, setRegistrationQueueSettings] =
     useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club') === true
+  const canReject = apiCheckPermission('clubs.reject_club') === true
+  const canApproveOrReject = canApprove || canReject
   const canSeePending = apiCheckPermission([
     'clubs.approve_club',
+    'clubs.reject_club',
     'clubs.manage_club',
     'clubs.see_pending_clubs',
   ])
@@ -816,11 +826,13 @@ const QueueTab = (): ReactElement => {
       refetchClubs()
     }
 
-    if (canApprove) {
+    if (canApproveOrReject) {
       doApiRequest('/templates/?format=json')
         .then((resp) => resp.json())
         .then(setTemplates)
+    }
 
+    if (canApprove) {
       doApiRequest('/clubs/any/ownershiprequests/all/?format=json')
         .then((resp) => resp.json())
         .then(setOwnershipRequests)
@@ -831,7 +843,7 @@ const QueueTab = (): ReactElement => {
         .then((resp) => resp.json())
         .then(setRegistrationQueueSettings)
     }
-  }, [canApprove, canManageQueue, canSeePending])
+  }, [canApprove, canReject, canManageQueue, canSeePending])
 
   if (!canSeePending && !canManageQueue) {
     return <div>You do not have permission to access the approval queue.</div>
@@ -1138,6 +1150,7 @@ const QueueTab = (): ReactElement => {
         <>
           <QueueTable
             canApprove={canApprove}
+            canReject={canReject}
             clubs={pendingClubs}
             refetchClubs={refetchClubs}
             templates={templates}

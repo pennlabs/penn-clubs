@@ -19,6 +19,7 @@ import { ADMIN_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
 
 const ADMIN_PERMISSIONS = [
   'clubs.approve_club',
+  'clubs.reject_club',
   'clubs.generate_reports',
   'clubs.manage_club',
   'clubs.manage_registration_queue',

@@ -13,6 +13,7 @@ import { BG_GRADIENT, WHITE } from '~/constants/colors'
 function UserRenewal({ userInfo, authenticated }): ReactElement<any> {
   const canAccessQueue = apiCheckPermission([
     'clubs.approve_club',
+    'clubs.reject_club',
     'clubs.manage_club',
     'clubs.manage_registration_queue',
     'clubs.see_pending_clubs',
@@ -53,6 +54,7 @@ function UserRenewal({ userInfo, authenticated }): ReactElement<any> {
 
 UserRenewal.permissions = [
   'clubs.approve_club',
+  'clubs.reject_club',
   'clubs.manage_club',
   'clubs.manage_registration_queue',
   'clubs.see_pending_clubs',

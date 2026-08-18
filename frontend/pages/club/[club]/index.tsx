@@ -426,6 +426,7 @@ ClubPage.getAdditionalPermissions = (ctx: NextPageContext): string[] => {
 
 ClubPage.permissions = [
   'clubs.approve_club',
+  'clubs.reject_club',
   'clubs.see_fair_status',
   'clubs.delete_club',
 ]
