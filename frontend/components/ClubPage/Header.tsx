@@ -36,7 +36,10 @@ type ClubDiff = {
 
 const Header = ({ club, style }: HeaderProps): ReactElement => {
   const { active, name, tags, affiliations, category, classification } = club
-  const canApprove = apiCheckPermission('clubs.approve_club')
+  // reviewers who can only reject still need to see what changed
+  const canReviewApproval =
+    apiCheckPermission('clubs.approve_club') ||
+    apiCheckPermission('clubs.reject_club')
 
   const NewHeader = () => {
     return (
@@ -56,7 +59,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
     )
   }
 
-  if (!canApprove || club.approved === false) {
+  if (!canReviewApproval || club.approved === false) {
     return <NewHeader />
   }
 
@@ -91,7 +94,7 @@ const Header = ({ club, style }: HeaderProps): ReactElement => {
     }, [club.code])
   }
 
-  if (diffs != null && canApprove) {
+  if (diffs != null && canReviewApproval) {
     const display = diffs.name.diff
     return (
       <div style={style}>

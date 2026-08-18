@@ -2498,21 +2498,61 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     def check_approval_permission(self, request):
         """
         Only users with specific permissions can modify the approval field.
-        """
-        if (
-            request.data.get("approved", None) is not None
-            or request.data.get("approved_comment", None) is not None
-        ):
-            # users without approve permission cannot approve
-            if not request.user.has_perm("clubs.approve_club"):
-                raise PermissionDenied
 
+        Approving a club (approved=True) requires clubs.approve_club. Rejecting
+        a pending club (approved=False) requires either clubs.approve_club or
+        clubs.reject_club.
+
+        Club officers may reset their own rejected club to pending
+        (approved=None) to request another review. Approvers may also reset an
+        approval status or edit an approval comment.
+        """
+        approved_provided = "approved" in request.data
+        comment_provided = "approved_comment" in request.data
+
+        if approved_provided or comment_provided:
             # an approval request must not modify any other fields
             if set(request.data.keys()) - {"approved", "approved_comment"}:
                 raise DRFValidationError(
                     "You can only pass the approved and approved_comment fields "
                     "when performing club approval."
                 )
+
+            club = self.get_object()
+            can_approve = request.user.has_perm("clubs.approve_club")
+            can_reject = request.user.has_perm("clubs.reject_club")
+
+            if not approved_provided:
+                # Rejecters provide comments as part of the pending -> rejected
+                # transition; only approvers may edit a comment independently.
+                if not can_approve:
+                    raise PermissionDenied
+                return
+
+            # Normalize before authorization. DRF accepts values such as 1 and
+            # "true" for BooleanFields, so checking raw request values with
+            # identity comparisons would allow those forms to bypass this gate.
+            requested_approval = serializers.BooleanField(
+                allow_null=True
+            ).run_validation(request.data.get("approved"))
+
+            if requested_approval is True:
+                if not can_approve:
+                    raise PermissionDenied
+            elif requested_approval is False:
+                # Rejection is only a valid transition from pending.
+                if club.approved is not None or not (can_approve or can_reject):
+                    raise PermissionDenied
+            elif not can_approve:
+                # Non-approvers may only reset their own rejected club after
+                # addressing the rejection. They may not alter the comment.
+                membership = find_membership_helper(request.user, club)
+                is_officer = (
+                    membership is not None
+                    and membership.role <= Membership.ROLE_OFFICER
+                )
+                if club.approved is not False or not is_officer or comment_provided:
+                    raise PermissionDenied
 
         if request.data.get("fair", None) is not None:
             if set(request.data.keys()) - {"fair"}:
@@ -5656,6 +5696,7 @@ class UserGroupAPIView(APIView):
         """
         perms = [
             "approve_club",
+            "reject_club",
             "generate_reports",
             "manage_club",
             "manage_registration_queue",
@@ -9167,9 +9208,26 @@ class AdminNoteViewSet(viewsets.ModelViewSet):
 
 
 class ClubApprovalResponseTemplateViewSet(viewsets.ModelViewSet):
+    """
+    Templates are the canned reasons sent when a club is approved or rejected,
+    so anyone with approval authority needs to read them. Authoring them stays
+    with superusers.
+    """
+
     serializer_class = ClubApprovalResponseTemplateSerializer
     permission_classes = [IsSuperuser]
     lookup_field = "id"
+
+    def get_permissions(self):
+        if self.action in {"list", "retrieve"}:
+            return [
+                (
+                    DjangoPermission("clubs.approve_club")
+                    | DjangoPermission("clubs.reject_club")
+                    | IsSuperuser
+                )()
+            ]
+        return [IsSuperuser()]
 
     def get_queryset(self):
         return ClubApprovalResponseTemplate.objects.all().order_by("-created_at")

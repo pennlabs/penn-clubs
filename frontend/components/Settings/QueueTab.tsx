@@ -138,6 +138,7 @@ const QueueTableModal = ({
 
 type QueueTableProps = {
   canApprove: boolean
+  canReject: boolean
   clubs: Club[] | null
   refetchClubs?: () => void
   templates: Template[]
@@ -146,6 +147,7 @@ type QueueTableProps = {
 functionality are disconnected */
 const QueueTable = ({
   canApprove,
+  canReject,
   clubs,
   refetchClubs,
   templates,
@@ -184,7 +186,7 @@ const QueueTable = ({
 
   return (
     <>
-      {canApprove && (
+      {canReject && (
         <QueueTableModal
           show={showModal}
           closeModal={() => setShowModal(false)}
@@ -201,35 +203,39 @@ const QueueTable = ({
             review. Click on the {OBJECT_NAME_SINGULAR} name to view the{' '}
             {OBJECT_NAME_SINGULAR}.
           </div>
-          {!canApprove && (
+          {!canReject && (
             <div className="has-text-info mb-3">
               You do not have permission to approve or reject{' '}
               {OBJECT_NAME_PLURAL}.
             </div>
           )}
         </QueueSectionHeaderText>
-        {canApprove && (
+        {canReject && (
           <div className="buttons">
-            <button
-              className="button is-success"
-              disabled={!selectedCodes.length || loading}
-              onClick={() => {
-                setApprove(true)
-                setShowModal(true)
-              }}
-            >
-              <Icon name="check" /> Approve
-            </button>
-            <button
-              className="button is-danger"
-              disabled={!selectedCodes.length || loading}
-              onClick={() => {
-                setApprove(false)
-                setShowModal(true)
-              }}
-            >
-              <Icon name="x" /> Reject
-            </button>
+            {canApprove && (
+              <button
+                className="button is-success"
+                disabled={!selectedCodes.length || loading}
+                onClick={() => {
+                  setApprove(true)
+                  setShowModal(true)
+                }}
+              >
+                <Icon name="check" /> Approve
+              </button>
+            )}
+            {canReject && (
+              <button
+                className="button is-danger"
+                disabled={!selectedCodes.length || loading}
+                onClick={() => {
+                  setApprove(false)
+                  setShowModal(true)
+                }}
+              >
+                <Icon name="x" /> Reject
+              </button>
+            )}
           </div>
         )}
       </QueueSectionHeader>
@@ -247,7 +253,7 @@ const QueueTable = ({
             <thead>
               <tr>
                 <th>
-                  {canApprove && (
+                  {canReject && (
                     <Checkbox
                       className="mr-3"
                       checked={allClubsSelected}
@@ -266,7 +272,7 @@ const QueueTable = ({
               {clubs.map((club) => (
                 <tr key={club.code}>
                   <TableRow>
-                    {canApprove && (
+                    {canReject && (
                       <Checkbox
                         className="mr-3"
                         checked={selectedCodes.includes(club.code)}
@@ -777,8 +783,13 @@ const QueueTab = (): ReactElement => {
   const [registrationQueueSettings, setRegistrationQueueSettings] =
     useState<RegistrationQueueSettings | null>(null)
   const canApprove = apiCheckPermission('clubs.approve_club') === true
+  // approve_club carries rejection authority as well, so anyone who can
+  // approve can also reject
+  const canReject =
+    canApprove || apiCheckPermission('clubs.reject_club') === true
   const canSeePending = apiCheckPermission([
     'clubs.approve_club',
+    'clubs.reject_club',
     'clubs.manage_club',
     'clubs.see_pending_clubs',
   ])
@@ -816,11 +827,15 @@ const QueueTab = (): ReactElement => {
       refetchClubs()
     }
 
-    if (canApprove) {
+    if (canReject) {
+      // the templates endpoint is superuser only, so non-superuser reviewers
+      // get an error object back rather than a list
       doApiRequest('/templates/?format=json')
         .then((resp) => resp.json())
-        .then(setTemplates)
+        .then((data) => setTemplates(Array.isArray(data) ? data : []))
+    }
 
+    if (canApprove) {
       doApiRequest('/clubs/any/ownershiprequests/all/?format=json')
         .then((resp) => resp.json())
         .then(setOwnershipRequests)
@@ -831,7 +846,7 @@ const QueueTab = (): ReactElement => {
         .then((resp) => resp.json())
         .then(setRegistrationQueueSettings)
     }
-  }, [canApprove, canManageQueue, canSeePending])
+  }, [canApprove, canReject, canManageQueue, canSeePending])
 
   if (!canSeePending && !canManageQueue) {
     return <div>You do not have permission to access the approval queue.</div>
@@ -1138,6 +1153,7 @@ const QueueTab = (): ReactElement => {
         <>
           <QueueTable
             canApprove={canApprove}
+            canReject={canReject}
             clubs={pendingClubs}
             refetchClubs={refetchClubs}
             templates={templates}
