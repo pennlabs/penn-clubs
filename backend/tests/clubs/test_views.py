@@ -1655,6 +1655,51 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club1.approved_by, self.user2)
         self.assertIsNotNone(self.club1.approved_on)
 
+        # reject-only users cannot reset a rejected club to pending
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": None},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.club1.refresh_from_db()
+        self.assertFalse(self.club1.approved)
+
+        # serializer-coercible boolean values cannot bypass the approval check
+        self.club1.approved = None
+        self.club1.save(update_fields=["approved"])
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": 1},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.club1.refresh_from_db()
+        self.assertIsNone(self.club1.approved)
+
+        # reject permission only applies to pending clubs
+        self.club1.approved = True
+        self.club1.approved_comment = "Original comment"
+        self.club1.save(update_fields=["approved", "approved_comment"])
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": False, "approved_comment": "Unauthorized rejection"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.club1.refresh_from_db()
+        self.assertTrue(self.club1.approved)
+
+        # ...and does not allow comments to be edited independently
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved_comment": "Tampered comment"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.approved_comment, "Original comment")
+
         # reject permission does not grant general club editing
         resp = self.client.patch(
             reverse("clubs-detail", args=(self.club1.code,)),
@@ -1739,6 +1784,17 @@ class ClubTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, 403, resp.content)
+
+        # DRF coerces numeric and string boolean values after permission checks;
+        # officers still must not be able to use those forms to self-approve.
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": 1},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.club1.refresh_from_db()
+        self.assertIsNone(self.club1.approved)
 
     def test_club_display_after_deactivation_for_permissioned_vs_non_permissioned(self):
         """

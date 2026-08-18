@@ -2500,36 +2500,59 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
         Only users with specific permissions can modify the approval field.
 
         Approving a club (approved=True) requires clubs.approve_club. Rejecting
-        a club (approved=False) or writing the approval comment requires either
-        clubs.approve_club or clubs.reject_club.
+        a pending club (approved=False) requires either clubs.approve_club or
+        clubs.reject_club.
 
-        Resetting a club to pending (approved=None) is deliberately left to the
-        regular object permissions, since club officers use it to request
-        another review after addressing a rejection.
+        Club officers may reset their own rejected club to pending
+        (approved=None) to request another review. Approvers may also reset an
+        approval status or edit an approval comment.
         """
         approved_provided = "approved" in request.data
-        requested_approval = request.data.get("approved")
-        comment_provided = request.data.get("approved_comment", None) is not None
+        comment_provided = "approved_comment" in request.data
 
         if approved_provided or comment_provided:
-            if requested_approval is True:
-                # only users with approve permission can approve
-                if not request.user.has_perm("clubs.approve_club"):
-                    raise PermissionDenied
-            elif requested_approval is False or comment_provided:
-                # rejecting a club or writing the approval comment
-                if not (
-                    request.user.has_perm("clubs.approve_club")
-                    or request.user.has_perm("clubs.reject_club")
-                ):
-                    raise PermissionDenied
-
             # an approval request must not modify any other fields
             if set(request.data.keys()) - {"approved", "approved_comment"}:
                 raise DRFValidationError(
                     "You can only pass the approved and approved_comment fields "
                     "when performing club approval."
                 )
+
+            club = self.get_object()
+            can_approve = request.user.has_perm("clubs.approve_club")
+            can_reject = request.user.has_perm("clubs.reject_club")
+
+            if not approved_provided:
+                # Rejecters provide comments as part of the pending -> rejected
+                # transition; only approvers may edit a comment independently.
+                if not can_approve:
+                    raise PermissionDenied
+                return
+
+            # Normalize before authorization. DRF accepts values such as 1 and
+            # "true" for BooleanFields, so checking raw request values with
+            # identity comparisons would allow those forms to bypass this gate.
+            requested_approval = serializers.BooleanField(
+                allow_null=True
+            ).run_validation(request.data.get("approved"))
+
+            if requested_approval is True:
+                if not can_approve:
+                    raise PermissionDenied
+            elif requested_approval is False:
+                # Rejection is only a valid transition from pending.
+                if club.approved is not None or not (can_approve or can_reject):
+                    raise PermissionDenied
+            elif not can_approve:
+                # Non-approvers may only reset their own rejected club after
+                # addressing the rejection. They may not alter the comment.
+                membership = find_membership_helper(request.user, club)
+                is_officer = (
+                    membership is not None
+                    and membership.role <= Membership.ROLE_OFFICER
+                )
+                if club.approved is not False or not is_officer or comment_provided:
+                    raise PermissionDenied
 
         if request.data.get("fair", None) is not None:
             if set(request.data.keys()) - {"fair"}:
