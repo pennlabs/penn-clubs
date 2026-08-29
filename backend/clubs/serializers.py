@@ -2628,6 +2628,7 @@ class UserSerializer(serializers.ModelSerializer):
     graduation_year = serializers.IntegerField(
         source="profile.graduation_year", allow_null=True
     )
+    affiliation = serializers.IntegerField(source="profile.affiliation")
     school = SchoolSerializer(many=True, source="profile.school")
     major = MajorSerializer(many=True, source="profile.major")
     is_owner_or_officer_of_active_club = serializers.SerializerMethodField(
@@ -2696,6 +2697,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = [
+            "affiliation",
             "email",
             "graduation_year",
             "has_been_prompted",
