@@ -476,6 +476,58 @@ export type ApplicationSubmission = {
   application_link: string
 }
 
+/**
+ * The shapes returned by /user-applications/, which backs the My Applications
+ * tab. Distinct from ApplicationSubmission, which is the older per-submission
+ * payload from /submissions/ and still used to load responses on demand.
+ */
+export type ApplicationOutcome =
+  | 'pending'
+  | 'accepted'
+  | 'rejected_after_written'
+  | 'rejected_after_interview'
+
+export type UserApplicationSubmission = {
+  pk: number
+  committee: string
+  created_at: string
+  outcome: ApplicationOutcome
+  outcome_released: boolean
+  questions_answered: number
+  questions_total: number
+}
+
+export type UserApplication = {
+  id: number
+  name: string
+  club_code: string
+  club_name: string
+  club_image_url: string | null
+  season: string
+  application_start_time: string
+  application_end_time: string
+  /** This user's extension, if one is still live. */
+  extension_end_time: string | null
+  /** The later of the club's deadline and this user's extension. */
+  effective_end_time: string
+  result_release_time: string
+  /** Open *for this user*, so it accounts for their extension. */
+  is_open: boolean
+  application_link: string
+  external_url: string | null
+  is_wharton_council: boolean
+  bookmarked: boolean
+  subscribed: boolean
+  /** Every committee open on this application, not just the ones applied to. */
+  committees: string[]
+  submissions: UserApplicationSubmission[]
+}
+
+export type UserApplicationsResponse = {
+  saved_club_count: number
+  results: UserApplication[]
+}
+
 export type ApplicationResponse = {
   text: string | null
   multiple_choice: {
