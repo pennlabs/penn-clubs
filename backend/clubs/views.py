@@ -8460,6 +8460,7 @@ class UserApplicationsView(generics.ListAPIView):
             ClubApplication.objects.filter(pk__in=application_ids)
             .select_related("club")
             .prefetch_related(
+                "committees",
                 Prefetch(
                     "submissions",
                     queryset=ApplicationSubmission.objects.filter(user=user)

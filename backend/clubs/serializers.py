@@ -3340,6 +3340,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
     external_url = serializers.SerializerMethodField()
     bookmarked = serializers.SerializerMethodField()
     subscribed = serializers.SerializerMethodField()
+    committees = serializers.SerializerMethodField()
     submissions = serializers.SerializerMethodField()
 
     def _live_extension_end_time(self, obj):
@@ -3403,6 +3404,14 @@ class UserApplicationSerializer(serializers.ModelSerializer):
     def get_subscribed(self, obj):
         return obj.club_id in self.context.get("subscribed_club_ids", set())
 
+    def get_committees(self, obj):
+        """
+        Every committee open on this application, which is what an applicant
+        who has not started yet needs to see. Which ones they actually applied
+        to is carried by `submissions`.
+        """
+        return [committee.name for committee in obj.committees.all()]
+
     def get_submissions(self, obj):
         submissions = getattr(obj, "user_submissions", [])
         questions = getattr(obj, "answerable_questions", [])
@@ -3443,6 +3452,7 @@ class UserApplicationSerializer(serializers.ModelSerializer):
             "is_wharton_council",
             "bookmarked",
             "subscribed",
+            "committees",
             "submissions",
         )
 

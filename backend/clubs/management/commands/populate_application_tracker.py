@@ -1,9 +1,12 @@
 import datetime
+import io
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
+from PIL import Image, ImageDraw, ImageFont
 
 from clubs.models import (
     ApplicationCommittee,
@@ -19,6 +22,45 @@ from clubs.models import (
 
 
 CODE_PREFIX = "tracker-demo-"
+
+# The profile-picture palette, so generated club images sit in the same family
+# as the rest of the site rather than looking like placeholders from elsewhere.
+LOGO_COLORS = [
+    ("#D0F0FD", "#03293F"),
+    ("#C2F5E9", "#022524"),
+    ("#D1F7C4", "#0B1F06"),
+    ("#FFEAB6", "#503914"),
+    ("#FFDDE5", "#541625"),
+    ("#EDE2FE", "#280A42"),
+]
+
+
+def make_logo(name, size=400):
+    """
+    Draw a club image locally instead of fetching one. populate pulls its
+    images from imgur, which leaves broken thumbnails whenever the network is
+    unavailable at seed time, and a tracker card is mostly logo.
+    """
+    initials = (
+        "".join(word[0] for word in name.split() if word[:1].isalpha())[:2].upper()
+        or "?"
+    )
+    background, foreground = LOGO_COLORS[
+        sum(ord(character) for character in name) % len(LOGO_COLORS)
+    ]
+    image = Image.new("RGB", (size, size), background)
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default(size=int(size * 0.42))
+    left, top, right, bottom = draw.textbbox((0, 0), initials, font=font)
+    draw.text(
+        ((size - right - left) / 2, (size - bottom - top) / 2),
+        initials,
+        font=font,
+        fill=foreground,
+    )
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 class Command(BaseCommand):
@@ -39,10 +81,12 @@ class Command(BaseCommand):
         )
 
     def _club(self, slug, name):
-        club, _ = Club.objects.get_or_create(
+        club, created = Club.objects.get_or_create(
             code=f"{CODE_PREFIX}{slug}",
             defaults={"name": name, "active": True, "approved": True},
         )
+        if created or not club.image:
+            club.image.save(f"{slug}.png", ContentFile(make_logo(name)), save=True)
         return club
 
     def _application(
@@ -74,13 +118,25 @@ class Command(BaseCommand):
         )
 
     def _questions(self, application, count, committee=None):
+        """
+        Numbering and precedence continue from whatever the application
+        already has. Restarting them per call gave every committee a question
+        called "Question 1" sharing precedence 0 with the shared one, which
+        rendered as duplicate prompts in an unstable order.
+        """
+        existing = ApplicationQuestion.objects.filter(application=application).count()
         questions = []
         for i in range(count):
+            number = existing + i + 1
             question = ApplicationQuestion.objects.create(
                 application=application,
                 question_type=ApplicationQuestion.FREE_RESPONSE,
-                prompt=f"Question {i + 1} for {application.name}",
-                precedence=i,
+                prompt=(
+                    f"Question {number} ({committee.name} only)"
+                    if committee is not None
+                    else f"Question {number} (all applicants)"
+                ),
+                precedence=existing + i,
                 word_limit=250,
                 committee_question=committee is not None,
             )
@@ -155,7 +211,7 @@ class Command(BaseCommand):
         day = datetime.timedelta(days=1)
 
         # 1. Bookmarked, open, closes in under a day, nothing submitted.
-        labs = self._club("labs", "Tracker Demo Labs")
+        labs = self._club("labs", "Penn Labs (demo)")
         Favorite.objects.get_or_create(person=user, club=labs)
         labs_app = self._application(
             labs, "Fall Application", now - 10 * day, now + day * 0.8, now + 14 * day
@@ -165,7 +221,7 @@ class Command(BaseCommand):
         self._questions(labs_app, 5)
 
         # 2. Subscribed, base deadline passed, personal extension still open.
-        wharton = self._club("wharton", "Tracker Demo Consulting Club")
+        wharton = self._club("wharton", "Wharton Consulting Club (demo)")
         Subscribe.objects.get_or_create(person=user, club=wharton)
         wharton_app = self._application(
             wharton,
@@ -182,7 +238,7 @@ class Command(BaseCommand):
         )
 
         # 3. Bookmarked, open, two committees, one partial and one complete.
-        review = self._club("review", "Tracker Demo Review")
+        review = self._club("review", "Sustainability Review (demo)")
         Favorite.objects.get_or_create(person=user, club=review)
         review_app = self._application(
             review, "Staff Application", now - 5 * day, now + 8 * day, now + 25 * day
@@ -215,7 +271,7 @@ class Command(BaseCommand):
 
         # 4. Closed and decided both ways on one application, to prove that
         #    outcome is per committee rather than per application.
-        appetit = self._club("appetit", "Tracker Demo Appetit")
+        appetit = self._club("appetit", "Food Magazine (demo)")
         Favorite.objects.get_or_create(person=user, club=appetit)
         appetit_app = self._application(
             appetit,
@@ -256,7 +312,7 @@ class Command(BaseCommand):
 
         # 5. Closed, submitted, status set but never sent: must still read as
         #    pending, since nobody told the applicant.
-        masala = self._club("masala", "Tracker Demo A Cappella")
+        masala = self._club("masala", "Masala A Cappella (demo)")
         Favorite.objects.get_or_create(person=user, club=masala)
         masala_app = self._application(
             masala, "Auditions", now - 20 * day, now - 3 * day, now + 10 * day
@@ -272,7 +328,7 @@ class Command(BaseCommand):
         )
 
         # 6. Submitted to a club the user never saved: in scope by submission.
-        unsaved = self._club("unsaved", "Tracker Demo Research Society")
+        unsaved = self._club("unsaved", "Undergraduate Research Society (demo)")
         unsaved_app = self._application(
             unsaved,
             "General Application",
@@ -313,7 +369,7 @@ class Command(BaseCommand):
 
         # 8. Open at a club the user does NOT follow: must stay out of the
         #    tracker, and is what the discovery count would pick up.
-        hidden = self._club("hidden", "Tracker Demo Unfollowed Club")
+        hidden = self._club("hidden", "Unfollowed Club (demo)")
         hidden_app = self._application(
             hidden, "Open Application", now - day, now + 5 * day, now + 30 * day
         )
@@ -322,14 +378,14 @@ class Command(BaseCommand):
         # 9. A second and third in-progress application, including one where
         #    nothing was answered at all - possible because the submit flow
         #    never checks completeness.
-        consult = self._club("consult", "Tracker Demo Consulting Group")
+        consult = self._club("consult", "Consulting Group (demo)")
         Favorite.objects.get_or_create(person=user, club=consult)
         consult_app = self._application(
             consult, "Fall Application", now - 6 * day, now + 11 * day, now + 30 * day
         )
         self._submit(user, consult_app, self._questions(consult_app, 6), 4)
 
-        outing = self._club("outing", "Tracker Demo Outing Club")
+        outing = self._club("outing", "Outing Club (demo)")
         Favorite.objects.get_or_create(person=user, club=outing)
         outing_app = self._application(
             outing,
@@ -344,11 +400,13 @@ class Command(BaseCommand):
         #     that is still open anyway (so the badge and the countdown have
         #     to agree on the later date), and one on an application the user
         #     has already submitted to.
-        design = self._club("design", "Tracker Demo Design Collective")
+        design = self._club("design", "Design Collective (demo)")
         Favorite.objects.get_or_create(person=user, club=design)
         design_app = self._application(
             design, "Studio Application", now - 8 * day, now + 3 * day, now + 30 * day
         )
+        for name in ("Graphics", "Motion", "Illustration"):
+            ApplicationCommittee.objects.create(application=design_app, name=name)
         self._questions(design_app, 4)
         ApplicationExtension.objects.create(
             user=user, application=design_app, end_time=now + 10 * day
@@ -362,14 +420,14 @@ class Command(BaseCommand):
         #     has to collapse, across the full range of deadline urgency. The
         #     last one is deliberately long enough to stress the layout.
         for slug, club_name, app_name, closes_in in [
-            ("physics", "Tracker Demo Physics Society", "Board Application", 2),
-            ("debate", "Tracker Demo Debate Union", "Fall Recruitment", 4),
-            ("finance", "Tracker Demo Finance Group", "Analyst Application", 5),
-            ("dance", "Tracker Demo Dance Company", "Company Auditions", 9),
-            ("robotics", "Tracker Demo Robotics Team", "Build Team Application", 16),
+            ("physics", "Physics Society (demo)", "Board Application", 2),
+            ("debate", "Debate Union (demo)", "Fall Recruitment", 4),
+            ("finance", "Finance Group (demo)", "Analyst Application", 5),
+            ("dance", "Dance Company (demo)", "Company Auditions", 9),
+            ("robotics", "Robotics Team (demo)", "Build Team Application", 16),
             (
                 "longname",
-                "Tracker Demo Society for the Study of Exceedingly Long Club Names",
+                "Society for the Study of Exceedingly Long Club Names (demo)",
                 "Application for the Committee on Exceedingly Long Application Names",
                 6,
             ),
@@ -385,9 +443,9 @@ class Command(BaseCommand):
         #     stay inside the current season - ClubApplication.season calls
         #     anything starting before August "Spring".
         for slug, club_name, app_name, closed_days in [
-            ("chorale", "Tracker Demo Chorale", "Auditions", 9),
-            ("gazette", "Tracker Demo Gazette", "Staff Application", 12),
-            ("chess", "Tracker Demo Chess Club", "Team Application", 15),
+            ("chorale", "University Chorale (demo)", "Auditions", 9),
+            ("gazette", "Weekly Gazette (demo)", "Staff Application", 12),
+            ("chess", "Chess Club (demo)", "Team Application", 15),
         ]:
             club = self._club(slug, club_name)
             Favorite.objects.get_or_create(person=user, club=club)
