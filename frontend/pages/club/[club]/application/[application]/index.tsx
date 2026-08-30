@@ -158,10 +158,23 @@ const ApplicationPage = ({
 
   const [errors, setErrors] = useState<string | null>(null)
   const [saved, setSaved] = useState<boolean>(false)
+  // A ?committee= in the URL preselects that committee, so a link from the
+  // applications tab opens straight onto the submission it belongs to rather
+  // than making the applicant find it in the dropdown again.
+  const requestedCommittee = Array.isArray(router.query.committee)
+    ? router.query.committee[0]
+    : router.query.committee
+  const preselected =
+    requestedCommittee != null &&
+    application?.committees?.some(
+      (committee) => committee.name === requestedCommittee,
+    )
+      ? { label: requestedCommittee, value: requestedCommittee }
+      : null
   const [currentCommittee, setCurrentCommittee] = useState<{
     label: string
     value: string
-  } | null>(null)
+  } | null>(preselected)
   const initialWordCounts: { id?: number } = {}
   questions.forEach((question) => {
     if (question.question_type === ApplicationQuestionType.FreeResponse) {
@@ -353,7 +366,7 @@ const ApplicationPage = ({
                   false,
                 )
                 return (
-                  <div>
+                  <div key={question.id}>
                     {input}
                     <br></br>
                   </div>
