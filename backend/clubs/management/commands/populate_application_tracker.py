@@ -45,7 +45,25 @@ class Command(BaseCommand):
         )
         return club
 
-    def _application(self, club, name, start, end, release, **kwargs):
+    def _application(
+        self, club, name, start, end, release, current_season=True, **kwargs
+    ):
+        """
+        ClubApplication.season buckets anything starting before August as
+        "Spring", so a current-season fixture has its start clamped to the
+        season boundary. Without it, running this command in early August
+        files half the data under last season.
+        """
+        if current_season:
+            boundary = start.replace(
+                month=8 if end.month >= 8 else 1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+            start = min(max(start, boundary), end - datetime.timedelta(days=1))
         return ClubApplication.objects.create(
             name=name,
             club=club,
@@ -71,15 +89,38 @@ class Command(BaseCommand):
             questions.append(question)
         return questions
 
-    def _submit(self, user, application, questions, answered, committee=None, **kwargs):
+    def _submit(
+        self,
+        user,
+        application,
+        questions,
+        answered,
+        committee=None,
+        days_before_close=2,
+        **kwargs,
+    ):
         """
         Create a submission and answer the first `answered` questions. A blank
         answer stores no response row, which is what the app itself does, so
         `answered` is literally how many rows get written.
+
+        created_at is auto_now_add, so it has to be rewritten afterwards.
+        Left alone, every submission is stamped with the moment this command
+        ran, and closed applications end up claiming they were submitted after
+        their own deadline.
         """
         submission = ApplicationSubmission.objects.create(
             user=user, application=application, committee=committee, **kwargs
         )
+        latest = min(application.application_end_time, timezone.now())
+        submitted_at = max(
+            latest - datetime.timedelta(days=days_before_close),
+            application.application_start_time + datetime.timedelta(hours=1),
+        )
+        ApplicationSubmission.objects.filter(pk=submission.pk).update(
+            created_at=submitted_at
+        )
+        submission.created_at = submitted_at
         for question in questions[:answered]:
             ApplicationQuestionResponse.objects.create(
                 question=question,
@@ -155,8 +196,22 @@ class Command(BaseCommand):
         )
         writing_qs = self._questions(review_app, 2, committee=writing)
         editing_qs = self._questions(review_app, 2, committee=editing)
-        self._submit(user, review_app, shared + writing_qs, 3, committee=writing)
-        self._submit(user, review_app, shared + editing_qs, 5, committee=editing)
+        self._submit(
+            user,
+            review_app,
+            shared + writing_qs,
+            3,
+            committee=writing,
+            days_before_close=6,
+        )
+        self._submit(
+            user,
+            review_app,
+            shared + editing_qs,
+            5,
+            committee=editing,
+            days_before_close=4,
+        )
 
         # 4. Closed and decided both ways on one application, to prove that
         #    outcome is per committee rather than per application.
@@ -182,6 +237,7 @@ class Command(BaseCommand):
             a_shared,
             4,
             committee=a_writing,
+            days_before_close=5,
             status=ApplicationSubmission.ACCEPTED,
             reason="Loved your piece on the stormwater fee.",
             notified=True,
@@ -192,6 +248,7 @@ class Command(BaseCommand):
             a_shared,
             2,
             committee=a_photo,
+            days_before_close=3,
             status=ApplicationSubmission.REJECTED_AFTER_INTERVIEW,
             reason="A very close call this cycle.",
             notified=True,
@@ -241,6 +298,7 @@ class Command(BaseCommand):
             now - 200 * day,
             now - 180 * day,
             now - 170 * day,
+            current_season=False,
         )
         past_qs = self._questions(past_app, 4)
         self._submit(
@@ -261,18 +319,130 @@ class Command(BaseCommand):
         )
         self._questions(hidden_app, 3)
 
+        # 9. A second and third in-progress application, including one where
+        #    nothing was answered at all - possible because the submit flow
+        #    never checks completeness.
+        consult = self._club("consult", "Tracker Demo Consulting Group")
+        Favorite.objects.get_or_create(person=user, club=consult)
+        consult_app = self._application(
+            consult, "Fall Application", now - 6 * day, now + 11 * day, now + 30 * day
+        )
+        self._submit(user, consult_app, self._questions(consult_app, 6), 4)
+
+        outing = self._club("outing", "Tracker Demo Outing Club")
+        Favorite.objects.get_or_create(person=user, club=outing)
+        outing_app = self._application(
+            outing,
+            "Trip Leader Application",
+            now - 4 * day,
+            now + 13 * day,
+            now + 35 * day,
+        )
+        self._submit(user, outing_app, self._questions(outing_app, 4), 0)
+
+        # 9b. Extensions in their other two shapes: one on an application
+        #     that is still open anyway (so the badge and the countdown have
+        #     to agree on the later date), and one on an application the user
+        #     has already submitted to.
+        design = self._club("design", "Tracker Demo Design Collective")
+        Favorite.objects.get_or_create(person=user, club=design)
+        design_app = self._application(
+            design, "Studio Application", now - 8 * day, now + 3 * day, now + 30 * day
+        )
+        self._questions(design_app, 4)
+        ApplicationExtension.objects.create(
+            user=user, application=design_app, end_time=now + 10 * day
+        )
+
+        ApplicationExtension.objects.create(
+            user=user, application=consult_app, end_time=now + 18 * day
+        )
+
+        # 10. Enough untouched open applications that the Action needed section
+        #     has to collapse, across the full range of deadline urgency. The
+        #     last one is deliberately long enough to stress the layout.
+        for slug, club_name, app_name, closes_in in [
+            ("physics", "Tracker Demo Physics Society", "Board Application", 2),
+            ("debate", "Tracker Demo Debate Union", "Fall Recruitment", 4),
+            ("finance", "Tracker Demo Finance Group", "Analyst Application", 5),
+            ("dance", "Tracker Demo Dance Company", "Company Auditions", 9),
+            ("robotics", "Tracker Demo Robotics Team", "Build Team Application", 16),
+            (
+                "longname",
+                "Tracker Demo Society for the Study of Exceedingly Long Club Names",
+                "Application for the Committee on Exceedingly Long Application Names",
+                6,
+            ),
+        ]:
+            club = self._club(slug, club_name)
+            Favorite.objects.get_or_create(person=user, club=club)
+            app = self._application(
+                club, app_name, now - 7 * day, now + closes_in * day, now + 40 * day
+            )
+            self._questions(app, 4)
+
+        # 11. Enough closed applications that Closed collapses too. Start times
+        #     stay inside the current season - ClubApplication.season calls
+        #     anything starting before August "Spring".
+        for slug, club_name, app_name, closed_days in [
+            ("chorale", "Tracker Demo Chorale", "Auditions", 9),
+            ("gazette", "Tracker Demo Gazette", "Staff Application", 12),
+            ("chess", "Tracker Demo Chess Club", "Team Application", 15),
+        ]:
+            club = self._club(slug, club_name)
+            Favorite.objects.get_or_create(person=user, club=club)
+            app = self._application(
+                club,
+                app_name,
+                now - (closed_days + 10) * day,
+                now - closed_days * day,
+                now - (closed_days - 5) * day,
+            )
+            self._submit(user, app, self._questions(app, 3), 3)
+
+        # 12. Two more past-season applications for the disclosure.
+        for slug, app_name, ago in [
+            ("gazette", "Spring Staff Application", 210),
+            ("chorale", "Spring Auditions", 220),
+        ]:
+            club = Club.objects.get(code=f"{CODE_PREFIX}{slug}")
+            app = self._application(
+                club,
+                app_name,
+                now - ago * day,
+                now - (ago - 20) * day,
+                now - (ago - 30) * day,
+                current_season=False,
+            )
+            self._submit(
+                user,
+                app,
+                self._questions(app, 3),
+                3,
+                status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+                reason="Not this cycle.",
+                notified=True,
+            )
+
         saved = Favorite.objects.filter(person=user).count()
         subscribed = Subscribe.objects.filter(person=user).count()
         self.stdout.write(
             self.style.SUCCESS(
                 f"Application tracker populated for {username} "
                 f"(replaced {deleted} demo club(s)).\n"
-                f"  Action needed:  1 urgent, 1 extended\n"
-                f"  Submitted open: 1 application, 2 committees (3/5 and 5/5)\n"
-                f"  Closed:         1 accepted + 1 rejected on one application,\n"
-                f"                  1 decided-but-unsent, 1 at an unsaved club\n"
-                f"  Past season:    1\n"
+                f"  Action needed:  8 - one closing in hours, one open only via\n"
+                f"                  a personal extension, one on an external\n"
+                f"                  site, one with names long enough to wrap\n"
+                f"  Submitted open: 3 - committees at 3/5 and 5/5, one at 4/6,\n"
+                f"                  and one submitted with nothing answered\n"
+                f"  Closed:         6 - accepted and rejected on the same\n"
+                f"                  application, rejected after written, one\n"
+                f"                  decided but never sent, three with no\n"
+                f"                  decision posted\n"
+                f"  Past season:    3\n"
                 f"  Out of scope:   1 open application at an unfollowed club\n"
-                f"  saved_club_count should be {saved + subscribed}"
+                f"  saved_club_count should be {saved + subscribed}\n"
+                f"\n  Empty state: log in as any other populate user "
+                f"(jadams, ajackson) - they follow nothing."
             )
         )
