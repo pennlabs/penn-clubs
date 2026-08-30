@@ -285,6 +285,15 @@ def set_wc_external_url(application):
     application.save()
 
 
+IMAGE_REQUEST_HEADERS = {
+    # imgur rejects the default requests User-Agent with HTTP 429
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    )
+}
+
+
 class Command(BaseCommand):
     help = "Populates the development environment with dummy data."
 
@@ -506,12 +515,49 @@ class Command(BaseCommand):
         image_cache = {}
 
         def get_image(url):
-            if url not in image_cache:
-                contents = requests.get(url).content
-                image_cache[url] = contents
-            else:
-                contents = image_cache[url]
+            """
+            Fetch an image for seeding, or None if it could not be fetched.
+
+            imgur answers the default requests User-Agent with HTTP 429 and an
+            empty body, so without the browser User-Agent below every seeded
+            club ended up with a zero-byte image file that browsers render as
+            a broken image. The status check is belt and braces: a fetch that
+            fails for any other reason should skip the image loudly rather
+            than save an empty one.
+            """
+            if url in image_cache:
+                return image_cache[url]
+
+            contents = None
+            try:
+                resp = requests.get(url, headers=IMAGE_REQUEST_HEADERS, timeout=15)
+                if resp.ok and resp.content:
+                    contents = resp.content
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Could not fetch {url} (HTTP {resp.status_code}, "
+                            f"{len(resp.content)} bytes); skipping this image."
+                        )
+                    )
+            except requests.RequestException as e:
+                self.stdout.write(
+                    self.style.WARNING(f"Could not fetch {url} ({e}); skipping.")
+                )
+
+            image_cache[url] = contents
             return contents
+
+        def save_image(field, url, name="image.png"):
+            """
+            Save a fetched image onto a model field, skipping the write when
+            the fetch failed. Returns whether anything was saved.
+            """
+            contents = get_image(url)
+            if contents is None:
+                return False
+            field.save(name, ContentFile(contents))
+            return True
 
         classification_choices = list(
             Classification.objects.filter(symbol__in=["UG", "UGo", "G", "Go"])
@@ -539,9 +585,7 @@ class Command(BaseCommand):
 
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
 
-            if "image" in info:
-                contents = get_image(info["image"])
-                club.image.save("image.png", ContentFile(contents))
+            if "image" in info and save_image(club.image, info["image"]):
                 club.save()
 
             m2m_fields = [(Tag, "tags"), (Badge, "badges")]
@@ -696,7 +740,7 @@ class Command(BaseCommand):
         ben = user_objs[0]
         ben.is_superuser = True
         ben.is_staff = True
-        ben.profile.image.save("ben.png", ContentFile(get_image(profile_image_url)))
+        save_image(ben.profile.image, profile_image_url, "ben.png")
         ben.profile.school.add(*School.objects.order_by("name")[:2])
         ben.profile.major.add(*Major.objects.order_by("name")[:3])
         ben.save()
@@ -819,8 +863,7 @@ class Command(BaseCommand):
             )
 
         if created:
-            contents = get_image(event_image_url)
-            event.image.save("image.png", ContentFile(contents))
+            save_image(event.image, event_image_url)
 
         # create a club application
         club = Club.objects.get(code="empty-club")
@@ -1073,8 +1116,7 @@ class Command(BaseCommand):
                 )
 
                 if created:
-                    contents = get_image(event_image_url)
-                    event.image.save("image.png", ContentFile(contents))
+                    save_image(event.image, event_image_url)
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)
