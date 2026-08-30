@@ -3260,54 +3260,189 @@ class ApplicationSubmissionUserSerializer(ApplicationSubmissionSerializer):
 
 
 class UserApplicationSubmissionSerializer(serializers.ModelSerializer):
+    """
+    A single submission the requesting user made to an application.
+
+    The raw `status` field is deliberately not exposed. `status` defaults to
+    PENDING and clubs are not required to ever update it, so a raw status
+    cannot distinguish "the club has not used the review tooling" from "the
+    club reviewed this and left it pending". `notified` is the trustworthy
+    signal: it is only set once a decision has actually been communicated to
+    the applicant (see ClubApplicationViewSet.send_emails).
+    """
+
     committee = serializers.SerializerMethodField()
+    outcome = serializers.SerializerMethodField()
+    outcome_released = serializers.SerializerMethodField()
+    questions_answered = serializers.SerializerMethodField()
+    questions_total = serializers.SerializerMethodField()
+
+    OUTCOMES = {
+        ApplicationSubmission.REJECTED_AFTER_WRITTEN: "rejected_after_written",
+        ApplicationSubmission.REJECTED_AFTER_INTERVIEW: "rejected_after_interview",
+        ApplicationSubmission.ACCEPTED: "accepted",
+    }
 
     def get_committee(self, obj):
-        return obj.committee.name if obj.committee else "General Member"
+        return (
+            obj.committee.name if obj.committee else ClubApplication.DEFAULT_COMMITTEE
+        )
+
+    def get_outcome_released(self, obj):
+        return obj.notified
+
+    def get_outcome(self, obj):
+        if not obj.notified:
+            return "pending"
+        return self.OUTCOMES.get(obj.status, "pending")
+
+    def get_questions_answered(self, obj):
+        """
+        A response row only exists once an answer is non-empty, so counting
+        rows is the same as counting answered questions.
+        """
+        return getattr(obj, "answered_count", 0)
+
+    def get_questions_total(self, obj):
+        return getattr(obj, "questions_total", 0)
 
     class Meta:
         model = ApplicationSubmission
-        fields = ("pk", "created_at", "committee")
+        fields = (
+            "pk",
+            "committee",
+            "created_at",
+            "outcome",
+            "outcome_released",
+            "questions_answered",
+            "questions_total",
+        )
 
 
 class UserApplicationSerializer(serializers.ModelSerializer):
+    """
+    An application relevant to the requesting user, annotated with that user's
+    own submissions, extension and club relationships.
+
+    Expects `user_submissions` and `user_extensions` prefetches on the instance
+    and `bookmarked_club_ids` / `subscribed_club_ids` in the serializer context.
+    """
+
     club_name = serializers.CharField(source="club.name", read_only=True)
     club_code = serializers.CharField(source="club.code", read_only=True)
+    club_image_url = serializers.SerializerMethodField()
+    season = serializers.CharField(read_only=True)
     name = serializers.SerializerMethodField()
-    is_active = serializers.SerializerMethodField()
+    is_open = serializers.SerializerMethodField()
+    extension_end_time = serializers.SerializerMethodField()
+    effective_end_time = serializers.SerializerMethodField()
     application_link = serializers.SerializerMethodField()
+    external_url = serializers.SerializerMethodField()
+    bookmarked = serializers.SerializerMethodField()
+    subscribed = serializers.SerializerMethodField()
     submissions = serializers.SerializerMethodField()
+
+    def _live_extension_end_time(self, obj):
+        """
+        The end time of this user's extension, if it has not already passed.
+        """
+        now = timezone.now()
+        end_times = [
+            extension.end_time
+            for extension in getattr(obj, "user_extensions", [])
+            if extension.end_time >= now
+        ]
+        return max(end_times) if end_times else None
+
+    def get_club_image_url(self, obj):
+        image = obj.club.image_small or obj.club.image
+        if not image:
+            return None
+        if image.url.startswith("http"):
+            return image.url
+        elif "request" in self.context:
+            return self.context["request"].build_absolute_uri(image.url)
+        else:
+            return image.url
 
     def get_name(self, obj):
         return obj.name if obj.name else f"{obj.club.name} Application"
 
-    def get_is_active(self, obj):
+    def get_is_open(self, obj):
         now = timezone.now()
         if obj.application_start_time > now:
             return False
         if obj.application_end_time >= now:
             return True
+        return self._live_extension_end_time(obj) is not None
 
-        user_extensions = getattr(obj, "user_extensions", [])
-        return any(ext.end_time >= now for ext in user_extensions)
+    def get_extension_end_time(self, obj):
+        end_time = self._live_extension_end_time(obj)
+        if end_time is None:
+            return None
+        return serializers.DateTimeField().to_representation(end_time)
+
+    def get_effective_end_time(self, obj):
+        end_time = obj.application_end_time
+        extension_end_time = self._live_extension_end_time(obj)
+        if extension_end_time is not None and extension_end_time > end_time:
+            end_time = extension_end_time
+        return serializers.DateTimeField().to_representation(end_time)
 
     def get_application_link(self, obj):
         return f"/club/{obj.club.code}/application/{obj.pk}/"
 
+    def get_external_url(self, obj):
+        # deliberately not ClubApplicationSerializer.get_external_url, which
+        # fabricates a Penn Clubs link and would duplicate application_link
+        return obj.external_url or None
+
+    def get_bookmarked(self, obj):
+        return obj.club_id in self.context.get("bookmarked_club_ids", set())
+
+    def get_subscribed(self, obj):
+        return obj.club_id in self.context.get("subscribed_club_ids", set())
+
     def get_submissions(self, obj):
-        subs = getattr(obj, "user_submissions", [])
-        return UserApplicationSubmissionSerializer(subs, many=True).data
+        submissions = getattr(obj, "user_submissions", [])
+        questions = getattr(obj, "answerable_questions", [])
+        for submission in submissions:
+            # mirrors the skip in ClubApplicationViewSet.submit: a committee
+            # question only counts for the committee it belongs to
+            submission.questions_total = sum(
+                1
+                for question in questions
+                if not question.committee_question
+                or (
+                    submission.committee_id is not None
+                    and any(
+                        committee.id == submission.committee_id
+                        for committee in question.committees.all()
+                    )
+                )
+            )
+        return UserApplicationSubmissionSerializer(submissions, many=True).data
 
     class Meta:
         model = ClubApplication
         fields = (
             "id",
             "name",
-            "club_name",
             "club_code",
+            "club_name",
+            "club_image_url",
+            "season",
+            "application_start_time",
             "application_end_time",
-            "is_active",
+            "extension_end_time",
+            "effective_end_time",
+            "result_release_time",
+            "is_open",
             "application_link",
+            "external_url",
+            "is_wharton_council",
+            "bookmarked",
+            "subscribed",
             "submissions",
         )
 

@@ -8386,34 +8386,41 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
 
 class UserApplicationsView(generics.ListAPIView):
     """
-    get: Return a unified list of applications relevant to the current user.
+    get: Return the applications relevant to the current user, wrapped in an
+    envelope with the number of clubs the user follows.
 
-    Each application is annotated with the user's own submissions.
+    The list is the union of:
+    - applications at clubs the user has bookmarked or subscribed to that are
+      open by their base deadline
+    - applications at those clubs where the user has a personal extension that
+      has not yet expired
+    - every application the user has submitted to, regardless of whether the
+      club is saved or the application is still open
 
-    Query parameters:
-    - active_only: (optional, default false) When true, return only currently
-      active applications from clubs the user has bookmarked or subscribed to.
-      When false (default), also include any applications the user has
-      previously submitted to, regardless of active status.
+    Submissions whose application has been deleted are excluded, since nothing
+    about them can be rendered. Takes no query parameters.
     """
 
     permission_classes = [IsAuthenticated]
     serializer_class = UserApplicationSerializer
+    pagination_class = None
 
-    def get_queryset(self):
+    def _get_user_application_context(self):
+        """
+        Compute everything that depends on the requesting user in one place:
+        the ids of the applications to return, the clubs they have bookmarked
+        and subscribed to, and how many distinct clubs that is.
+        """
         user = self.request.user
         now = timezone.now()
-        active_only = (
-            self.request.query_params.get("active_only", "false").lower() == "true"
-        )
 
-        fav_club_ids = Favorite.objects.filter(person=user).values_list(
-            "club_id", flat=True
+        bookmarked_club_ids = set(
+            Favorite.objects.filter(person=user).values_list("club_id", flat=True)
         )
-        sub_club_ids = Subscribe.objects.filter(person=user).values_list(
-            "club_id", flat=True
+        subscribed_club_ids = set(
+            Subscribe.objects.filter(person=user).values_list("club_id", flat=True)
         )
-        saved_club_ids = set(fav_club_ids) | set(sub_club_ids)
+        saved_club_ids = bookmarked_club_ids | subscribed_club_ids
 
         # Applications open by base deadline for saved clubs
         base_active_ids = set(
@@ -8432,28 +8439,42 @@ class UserApplicationsView(generics.ListAPIView):
                 end_time__gte=now,
             ).values_list("application_id", flat=True)
         )
-        active_ids = base_active_ids | extension_active_ids
+        # Applications the user has submitted to, excluding orphaned
+        # submissions whose application has since been deleted
+        submitted_ids = set(
+            ApplicationSubmission.objects.filter(
+                user=user, application__isnull=False
+            ).values_list("application_id", flat=True)
+        )
 
-        if active_only:
-            all_ids = active_ids
-        else:
-            submitted_ids = set(
-                ApplicationSubmission.objects.filter(
-                    user=user, application__isnull=False
-                ).values_list("application_id", flat=True)
-            )
-            all_ids = active_ids | submitted_ids
+        return {
+            "application_ids": base_active_ids | extension_active_ids | submitted_ids,
+            "bookmarked_club_ids": bookmarked_club_ids,
+            "subscribed_club_ids": subscribed_club_ids,
+            "saved_club_count": len(saved_club_ids),
+        }
 
+    def _get_applications(self, application_ids):
+        user = self.request.user
         return (
-            ClubApplication.objects.filter(pk__in=all_ids)
+            ClubApplication.objects.filter(pk__in=application_ids)
             .select_related("club")
             .prefetch_related(
                 Prefetch(
                     "submissions",
-                    queryset=ApplicationSubmission.objects.filter(
-                        user=user
-                    ).select_related("committee"),
+                    queryset=ApplicationSubmission.objects.filter(user=user)
+                    .select_related("committee")
+                    .annotate(answered_count=Count("responses")),
                     to_attr="user_submissions",
+                ),
+                Prefetch(
+                    # answerable questions, for the progress denominator;
+                    # INFO_TEXT is not a question the applicant responds to
+                    "questions",
+                    queryset=ApplicationQuestion.objects.exclude(
+                        question_type=ApplicationQuestion.INFO_TEXT
+                    ).prefetch_related("committees"),
+                    to_attr="answerable_questions",
                 ),
                 Prefetch(
                     "extensions",
@@ -8461,6 +8482,28 @@ class UserApplicationsView(generics.ListAPIView):
                     to_attr="user_extensions",
                 ),
             )
+            .order_by("-application_end_time", "pk")
+        )
+
+    def get_queryset(self):
+        return self._get_applications(
+            self._get_user_application_context()["application_ids"]
+        )
+
+    def list(self, request, *args, **kwargs):
+        user_context = self._get_user_application_context()
+        queryset = self._get_applications(user_context["application_ids"])
+
+        context = self.get_serializer_context()
+        context["bookmarked_club_ids"] = user_context["bookmarked_club_ids"]
+        context["subscribed_club_ids"] = user_context["subscribed_club_ids"]
+        serializer = self.get_serializer_class()(queryset, many=True, context=context)
+
+        return Response(
+            {
+                "saved_club_count": user_context["saved_club_count"],
+                "results": serializer.data,
+            }
         )
 
 
