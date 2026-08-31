@@ -1922,9 +1922,10 @@ class ClubApplication(CloneModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # questions are deliberately absent here: they are cloned in
+    # clone_questions_from, which also carries their committee links over
     _clone_m2o_or_o2m_fields = [
         "committees",
-        "questions",
     ]
 
     def __str__(self):
@@ -2017,6 +2018,43 @@ class ClubApplication(CloneModel):
 
                     # Remove the duplicate committee
                     c.delete()
+
+    def clone_questions_from(self, source):
+        """
+        Clone source's questions onto this application, keeping each question's
+        committee links.
+
+        django-clone can copy the questions O2M itself, but it never copies
+        ApplicationQuestion.committees (an m2m it isn't configured to clone) and
+        hands back no source-to-clone mapping to restore the links with. So clone
+        each question here, where its source is still in hand, and match committees
+        by name: the clone's committees are fresh rows, so names are the only
+        identity that survives the copy.
+        """
+        committee_by_name = {c.name: c for c in self.committees.all()}
+
+        for source_question in source.questions.all():
+            clone_question = source_question.make_clone(attrs={"application": self})
+            committees = [
+                committee_by_name[committee.name]
+                for committee in source_question.committees.all()
+                if committee.name in committee_by_name
+            ]
+            if committees:
+                clone_question.committees.set(committees)
+
+    def make_clone(self, *args, **kwargs):
+        """
+        Clone the application, then repair what django-clone cannot do alone:
+        committees come back with "copy N" suffixes to satisfy the
+        (application, name) unique constraint, and questions have to be cloned
+        separately to preserve their committee links.
+        """
+        with transaction.atomic():
+            clone = super().make_clone(*args, **kwargs)
+            clone.normalize_committees()
+            clone.clone_questions_from(self)
+            return clone
 
 
 class ApplicationExtension(models.Model):
