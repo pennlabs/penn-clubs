@@ -84,22 +84,24 @@ class Command(BaseCommand):
             f"after {after_date.isoformat()}."
         )
 
-        # one email per person, no matter how many of these clubs they run
-        recipients = set()
+        # one email per person, no matter how many of these clubs they run,
+        # but keep the clubs they came from so a dry run can be eyeballed
+        clubs_by_email = {}
         unreachable = []
         for club in clubs:
             emails = club.get_officer_emails()
             if not emails:
                 unreachable.append(club.code)
                 continue
-            recipients.update(emails)
+            for email in emails:
+                clubs_by_email.setdefault(email, []).append(club.code)
 
         for code in unreachable:
             self.stdout.write(
                 self.style.WARNING(f"No officer emails on file for {code}")
             )
 
-        recipients = sorted(recipients)
+        recipients = sorted(clubs_by_email)
         self.stdout.write(
             f"{len(recipients)} unique recipient(s), "
             f"{len(unreachable)} club(s) with nobody to contact."
@@ -107,7 +109,8 @@ class Command(BaseCommand):
 
         if dry_run:
             for email in recipients:
-                self.stdout.write(f"[DRY RUN] Would email {email}")
+                codes = ", ".join(clubs_by_email[email])
+                self.stdout.write(f"[DRY RUN] Would email {email} ({codes})")
             self.stdout.write(f"[DRY RUN] Would email {len(recipients)} recipient(s).")
             return
 

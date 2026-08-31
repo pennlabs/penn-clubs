@@ -6685,6 +6685,39 @@ class CloneTestCase(TestCase):
             {"Design", "Engineering"},
         )
 
+    def test_source_committees_with_copy_suffixes_still_match(self):
+        """
+        Applications cloned before normalize_committees existed kept "copy N"
+        in their stored committee names. Cloning one of those strips the suffix
+        on the clone, so the two sides only line up on the base name.
+        """
+        legacy_app = ClubApplication.objects.create(
+            name="Legacy App",
+            club=self.club,
+            application_start_time=timezone.now() + timezone.timedelta(days=1),
+            application_end_time=timezone.now() + timezone.timedelta(days=2),
+            result_release_time=timezone.now() + timezone.timedelta(days=3),
+        )
+        legacy_committee = ApplicationCommittee.objects.create(
+            application=legacy_app, name="Design copy 1"
+        )
+        legacy_question = ApplicationQuestion.objects.create(
+            application=legacy_app, prompt="Legacy question", committee_question=True
+        )
+        legacy_question.committees.add(legacy_committee)
+
+        clone = legacy_app.make_clone()
+        clone.save()
+
+        self.assertEqual(
+            list(clone.committees.values_list("name", flat=True)), ["Design"]
+        )
+        cloned_question = clone.questions.get(prompt="Legacy question")
+        self.assertEqual(
+            list(cloned_question.committees.values_list("name", flat=True)), ["Design"]
+        )
+        self.assertEqual(cloned_question.committees.get().application_id, clone.pk)
+
     def test_submissions_extensions_and_responses_are_not_cloned(self):
         clone = self.clone_and_fix()
 

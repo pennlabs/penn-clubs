@@ -35,6 +35,25 @@ from urlextract import URLExtract
 from clubs.utils import clean, get_django_minified_image, get_domain, html_to_text
 
 
+committee_copy_suffix_regex = re.compile(r"^(?P<base>.+?)\s+copy\s+\d+$", re.IGNORECASE)
+
+
+def committee_base_name(name):
+    """
+    Strip a trailing "copy N" suffix from a committee name.
+
+    django-clone appends one to satisfy ApplicationCommittee's
+    (application, name) unique constraint, so it is usually the only thing
+    separating a committee from its clone. Applications cloned before
+    normalize_committees existed still carry these suffixes in their stored
+    names, so both sides of a comparison have to be reduced to a base name.
+    """
+    if not name:
+        return name
+    match = committee_copy_suffix_regex.match(name.strip())
+    return match.group("base").strip() if match else name.strip()
+
+
 subject_regex = re.compile(r"\s*<!--\s*SUBJECT:\s*(.*?)\s*-->", re.I)
 types_regex = re.compile(r"\s*<!--\s*TYPES:\s*(.*?)\s*-->", re.DOTALL)
 
@@ -1966,13 +1985,7 @@ class ClubApplication(CloneModel):
         ApplicationQuestionRef = ApplicationQuestion
         ApplicationSubmissionRef = ApplicationSubmission
 
-        copy_suffix_regex = re.compile(r"^(?P<base>.+?)\s+copy\s+\d+$", re.IGNORECASE)
-
-        def get_base_name(name):
-            if not name:
-                return name
-            match = copy_suffix_regex.match(name.strip())
-            return match.group("base").strip() if match else name.strip()
+        get_base_name = committee_base_name
 
         with transaction.atomic():
             committees = list(ApplicationCommitteeRef.objects.filter(application=self))
@@ -2030,15 +2043,27 @@ class ClubApplication(CloneModel):
         each question here, where its source is still in hand, and match committees
         by name: the clone's committees are fresh rows, so names are the only
         identity that survives the copy.
+
+        Names are compared as base names, because normalize_committees has
+        already stripped any "copy N" suffix off this clone's committees while
+        the source may still carry one (applications cloned before that method
+        existed kept the suffix in their stored names). Where a source has both
+        "Design" and "Design copy 1", normalize has already merged them on the
+        clone, so both link to the single surviving committee.
         """
-        committee_by_name = {c.name: c for c in self.committees.all()}
+        committee_by_name = {
+            committee_base_name(c.name): c for c in self.committees.all()
+        }
 
         for source_question in source.questions.all():
             clone_question = source_question.make_clone(attrs={"application": self})
             committees = [
-                committee_by_name[committee.name]
-                for committee in source_question.committees.all()
-                if committee.name in committee_by_name
+                committee_by_name[base_name]
+                for base_name in (
+                    committee_base_name(committee.name)
+                    for committee in source_question.committees.all()
+                )
+                if base_name in committee_by_name
             ]
             if committees:
                 clone_question.committees.set(committees)
