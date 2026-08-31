@@ -28,7 +28,10 @@ from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
     ApplicationCommittee,
+    ApplicationExtension,
+    ApplicationMultipleChoice,
     ApplicationQuestion,
+    ApplicationQuestionResponse,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -6506,3 +6509,219 @@ class NormalizeCommitteesTestCase(TestCase):
         # Submission should be re-pointed to the renamed committee
         self.sub.refresh_from_db()
         self.assertEqual(self.sub.committee.name, "PM")
+
+
+class CloneTestCase(TestCase):
+    """
+    Cloning is used both for a club officer manually duplicating an
+    application and for the Wharton Council cycle creation flow reusing the
+    previous cycle's application. django-clone does not copy
+    ApplicationQuestion.committees (a many-to-many field) on its own, and
+    renames cloned committees with "copy N" suffixes to satisfy the
+    (application, name) unique constraint, so ClubApplication.make_clone
+    repairs both before handing the clone back.
+    """
+
+    def setUp(self):
+        self.club = Club.objects.create(code="club-a", name="Club A")
+
+        now = timezone.now()
+        self.app = ClubApplication.objects.create(
+            name="Original App",
+            club=self.club,
+            application_start_time=now + timezone.timedelta(days=1),
+            application_end_time=now + timezone.timedelta(days=2),
+            result_release_time=now + timezone.timedelta(days=3),
+        )
+
+        self.design = ApplicationCommittee.objects.create(
+            application=self.app, name="Design"
+        )
+        self.engineering = ApplicationCommittee.objects.create(
+            application=self.app, name="Engineering"
+        )
+
+        self.shared_question = ApplicationQuestion.objects.create(
+            application=self.app, prompt="Shared question", committee_question=False
+        )
+
+        self.design_question = ApplicationQuestion.objects.create(
+            application=self.app,
+            prompt="Design-only question",
+            committee_question=True,
+        )
+        self.design_question.committees.add(self.design)
+
+        self.multi_committee_question = ApplicationQuestion.objects.create(
+            application=self.app,
+            prompt="Design and Engineering question",
+            committee_question=True,
+        )
+        self.multi_committee_question.committees.add(self.design, self.engineering)
+
+        self.mc_question = ApplicationQuestion.objects.create(
+            application=self.app,
+            prompt="Multiple choice question",
+            question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+        )
+        self.choice_a = ApplicationMultipleChoice.objects.create(
+            question=self.mc_question, value="Choice A"
+        )
+        self.choice_b = ApplicationMultipleChoice.objects.create(
+            question=self.mc_question, value="Choice B"
+        )
+
+        self.user = get_user_model().objects.create_user(
+            username="alice", email="alice@example.com", password="test"
+        )
+        self.submission = ApplicationSubmission.objects.create(
+            user=self.user, application=self.app, committee=self.design
+        )
+        ApplicationQuestionResponse.objects.create(
+            question=self.design_question,
+            submission=self.submission,
+            text="an answer",
+        )
+        ApplicationExtension.objects.create(
+            user=self.user,
+            application=self.app,
+            end_time=now + timezone.timedelta(days=5),
+        )
+
+    def clone_and_fix(self):
+        clone = self.app.make_clone()
+        clone.save()
+        return clone
+
+    def test_committee_questions_are_relinked_to_clones_own_committees(self):
+        clone = self.clone_and_fix()
+
+        clone_committees_by_name = {c.name: c for c in clone.committees.all()}
+        self.assertEqual(set(clone_committees_by_name), {"Design", "Engineering"})
+
+        clone_design_question = clone.questions.get(prompt="Design-only question")
+        self.assertEqual(
+            list(clone_design_question.committees.values_list("name", flat=True)),
+            ["Design"],
+        )
+        # the clone's question must point at the clone's own committee, not
+        # the source application's
+        self.assertEqual(
+            clone_design_question.committees.get().pk,
+            clone_committees_by_name["Design"].pk,
+        )
+
+        clone_multi_question = clone.questions.get(
+            prompt="Design and Engineering question"
+        )
+        self.assertEqual(
+            set(clone_multi_question.committees.values_list("name", flat=True)),
+            {"Design", "Engineering"},
+        )
+
+        clone_shared_question = clone.questions.get(prompt="Shared question")
+        self.assertEqual(clone_shared_question.committees.count(), 0)
+
+    def test_clone_committees_do_not_get_copy_suffix(self):
+        clone = self.clone_and_fix()
+        names = set(clone.committees.values_list("name", flat=True))
+        self.assertEqual(names, {"Design", "Engineering"})
+
+    def test_source_application_is_not_mutated_by_cloning(self):
+        self.clone_and_fix()
+
+        self.assertEqual(
+            set(self.app.committees.values_list("name", flat=True)),
+            {"Design", "Engineering"},
+        )
+        self.assertEqual(
+            list(self.design_question.committees.values_list("name", flat=True)),
+            ["Design"],
+        )
+
+    def test_multiple_choice_options_are_cloned(self):
+        clone = self.clone_and_fix()
+
+        clone_mc_question = clone.questions.get(prompt="Multiple choice question")
+        self.assertEqual(
+            set(clone_mc_question.multiple_choice.values_list("value", flat=True)),
+            {"Choice A", "Choice B"},
+        )
+        # cloned choices must be new rows, not shared with the source question
+        self.assertFalse(
+            clone_mc_question.multiple_choice.filter(
+                pk__in=self.mc_question.multiple_choice.values_list("pk", flat=True)
+            ).exists()
+        )
+
+    def test_cloning_a_clone_keeps_committee_links(self):
+        """
+        The Wharton cycle flow clones the most recent application every cycle,
+        which means it clones the previous clone. A broken lineage would stay
+        broken, so verify links survive a second generation.
+        """
+        clone = self.clone_and_fix()
+        second = clone.make_clone()
+        second.save()
+
+        self.assertEqual(
+            set(second.committees.values_list("name", flat=True)),
+            {"Design", "Engineering"},
+        )
+
+        second_design_question = second.questions.get(prompt="Design-only question")
+        self.assertEqual(
+            list(second_design_question.committees.values_list("name", flat=True)),
+            ["Design"],
+        )
+        for committee in second_design_question.committees.all():
+            self.assertEqual(committee.application_id, second.pk)
+
+        second_multi_question = second.questions.get(
+            prompt="Design and Engineering question"
+        )
+        self.assertEqual(
+            set(second_multi_question.committees.values_list("name", flat=True)),
+            {"Design", "Engineering"},
+        )
+
+    def test_source_committees_with_copy_suffixes_still_match(self):
+        """
+        Applications cloned before normalize_committees existed kept "copy N"
+        in their stored committee names. Cloning one of those strips the suffix
+        on the clone, so the two sides only line up on the base name.
+        """
+        legacy_app = ClubApplication.objects.create(
+            name="Legacy App",
+            club=self.club,
+            application_start_time=timezone.now() + timezone.timedelta(days=1),
+            application_end_time=timezone.now() + timezone.timedelta(days=2),
+            result_release_time=timezone.now() + timezone.timedelta(days=3),
+        )
+        legacy_committee = ApplicationCommittee.objects.create(
+            application=legacy_app, name="Design copy 1"
+        )
+        legacy_question = ApplicationQuestion.objects.create(
+            application=legacy_app, prompt="Legacy question", committee_question=True
+        )
+        legacy_question.committees.add(legacy_committee)
+
+        clone = legacy_app.make_clone()
+        clone.save()
+
+        self.assertEqual(
+            list(clone.committees.values_list("name", flat=True)), ["Design"]
+        )
+        cloned_question = clone.questions.get(prompt="Legacy question")
+        self.assertEqual(
+            list(cloned_question.committees.values_list("name", flat=True)), ["Design"]
+        )
+        self.assertEqual(cloned_question.committees.get().application_id, clone.pk)
+
+    def test_submissions_extensions_and_responses_are_not_cloned(self):
+        clone = self.clone_and_fix()
+
+        self.assertEqual(clone.submissions.count(), 0)
+        self.assertEqual(clone.extensions.count(), 0)
+        for question in clone.questions.all():
+            self.assertEqual(question.responses.count(), 0)
