@@ -1,0 +1,23 @@
+<!-- SUBJECT: [Action Needed] Committee Questions Bug in Duplicated Penn Clubs Applications -->
+<!-- TYPES: {} -->
+{% extends 'emails/base.html' %}
+
+{% block content %}
+    <h2>[Action Needed] Committee Questions Bug in Duplicated Penn Clubs Applications</h2>
+    <p style="font-size: 1.2em">Dear Club leaders,</p>
+    <p style="font-size: 1.2em">You are receiving this email because you are hosting applications on Penn Clubs. We have discovered a bug that <b>only affects applications that use committees</b>; if your application has no committees or no committee-specific questions, no action is needed on your part.</p>
+    <p style="font-size: 1.2em">If your Fall 2026 application uses committees, it is likely affected and we request that you please take a few minutes to check your applications as soon as possible.</p>
+    <p style="font-size: 1.2em">As you may know, we allow questions to be targeted towards specific committees. When applications are duplicated from previous applications, either as part of an automatic Wharton Council process or manually using the <b>Duplicate</b> button, these committee-specific questions are duplicated for Fall 2026, but are no longer associated with their assigned committees.</p>
+    <p style="font-size: 1.2em">As a result, <b>applicants may not be seeing the questions you intended for them</b>.</p>
+    <p style="font-size: 1.2em">To check whether your application is affected, <b>we recommend the following steps</b>.</p>
+    <ol style="font-size: 1.2em">
+        <li>Please use the <b>Preview</b> feature on your applications by previewing different committees to determine if this bug affects you.</li>
+        <li>If you intended for there to be committee-specific questions and you do not see them, use the <b>Edit Questions</b> utility to relink the questions to their committees and make sure to <b>Save</b> all changes.</li>
+        <li>Use <b>Preview</b> again to ensure that your application looks correct.</li>
+    </ol>
+    <p style="font-size: 1.2em">The visual guide below shows where to find each step.</p>
+    <img src="https://i.imgur.com/Ry7PCuH.jpeg" alt="Visual guide for previewing and relinking committee questions" style="max-width: 100%; margin: 20px 0;" />
+    <p style="font-size: 1.2em">Please do not hesitate to reach out immediately if you have any questions or notice any additional bugs. We apologize for any inconvenience caused.</p>
+    <p style="font-size: 1.2em">Best regards,</p>
+    <p style="font-size: 1.2em">Penn Clubs</p>
+{% endblock %}
