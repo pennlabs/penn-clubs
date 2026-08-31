@@ -72,16 +72,25 @@ class Command(BaseCommand):
             datetime.datetime.combine(after_date, datetime.time.min)
         )
 
-        club_ids = (
+        # what the bug leaves behind: a committee question with no committee.
+        # The application must have committees of its own, or there is nothing
+        # for the club to relink the question to and nothing to act on.
+        applications = (
             ClubApplication.objects.filter(application_start_time__gt=cutoff)
-            .values_list("club_id", flat=True)
+            .filter(
+                questions__committee_question=True,
+                questions__committees__isnull=True,
+            )
+            .filter(committees__isnull=False)
             .distinct()
         )
-        clubs = Club.objects.filter(pk__in=club_ids).order_by("code")
+        clubs = Club.objects.filter(
+            pk__in=applications.values_list("club_id", flat=True)
+        ).order_by("code")
 
         self.stdout.write(
-            f"Found {clubs.count()} club(s) with an application starting "
-            f"after {after_date.isoformat()}."
+            f"Found {applications.count()} affected application(s) across "
+            f"{clubs.count()} club(s), starting after {after_date.isoformat()}."
         )
 
         # one email per person, no matter how many of these clubs they run,
