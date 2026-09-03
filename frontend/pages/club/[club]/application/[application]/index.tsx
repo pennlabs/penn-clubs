@@ -214,6 +214,10 @@ const ApplicationPage = ({
   }
 
   const [errors, setErrors] = useState<string | null>(null)
+  // rendered next to the committee dropdown itself, not down by Submit --
+  // a switch-fetch error happens up here, and a form with several
+  // questions can put the shared errors span a full scroll away
+  const [committeeError, setCommitteeError] = useState<string | null>(null)
   const [saved, setSaved] = useState<boolean>(false)
   // A ?committee= in the URL preselects that committee, so a link from the
   // applications tab opens straight onto the submission it belongs to rather
@@ -267,18 +271,34 @@ const ApplicationPage = ({
 
     setCurrentCommittee(committee)
     setSaved(false)
+    setCommitteeError(null)
     setFormValues({})
     setWordCounts(countWords({}))
     setLoadingResponses(true)
 
     fetchResponses(questions, committee?.value ?? null)
-      .then((responses) => {
-        if (committeeRequest.current !== request) {
-          return
-        }
-        setFormValues(responses)
-        setWordCounts(countWords(responses))
-      })
+      .then(
+        (responses) => {
+          if (committeeRequest.current !== request) {
+            return
+          }
+          setFormValues(responses)
+          setWordCounts(countWords(responses))
+        },
+        () => {
+          // the two-argument form of .then only catches a rejection of
+          // fetchResponses itself, not an error thrown by the success
+          // handler above -- an uncaught rejection here would otherwise
+          // surface as an unhandled promise rejection with no feedback
+          // to the applicant that their answers failed to load
+          if (committeeRequest.current === request) {
+            setCommitteeError(
+              "Couldn't load your answers for this committee. Check your " +
+                'connection and try selecting it again.',
+            )
+          }
+        },
+      )
       .finally(() => {
         // without this a failed fetch leaves Submit disabled for good
         if (committeeRequest.current === request) {
@@ -400,20 +420,31 @@ const ApplicationPage = ({
                   method: 'POST',
                   body,
                 })
-                  .then((resp) => {
+                  .then(async (resp) => {
                     if (resp.status === 200) {
                       return resp.json()
                     } else if (resp.status === 400) {
-                      setSaved(false)
-                      setErrors('User profile is incomplete. Redirecting...')
-                      setRedirected(true)
-                      setTimeout(() => {
-                        router.push({
-                          pathname: '/settings',
-                          query: { from_application: club.code },
-                          hash: 'Profile',
-                        })
-                      }, 1000)
+                      // most 400s are a rejected answer (bad committee, a
+                      // stale question) and just need their message shown;
+                      // only an incomplete profile sends the user elsewhere
+                      const data = await resp.json().catch(() => null)
+                      if (data?.reason === 'incomplete_profile') {
+                        setSaved(false)
+                        setErrors('User profile is incomplete. Redirecting...')
+                        setRedirected(true)
+                        setTimeout(() => {
+                          router.push({
+                            pathname: '/settings',
+                            query: { from_application: club.code },
+                            hash: 'Profile',
+                          })
+                        }, 1000)
+                      } else {
+                        setSaved(false)
+                        setErrors(
+                          data?.detail ?? 'That submission was rejected.',
+                        )
+                      }
                     } else {
                       setSaved(false)
                       setErrors(
@@ -430,6 +461,12 @@ const ApplicationPage = ({
                         setSaved(true)
                       }
                     }
+                  })
+                  .catch(() => {
+                    setSaved(false)
+                    setErrors(
+                      'Could not reach the server. Check your connection and try again.',
+                    )
                   })
               }
             } else {
@@ -458,6 +495,9 @@ const ApplicationPage = ({
                       customHandleChange={(value) => selectCommittee(value)}
                       value={currentCommittee}
                     />
+                    {committeeError !== null && (
+                      <p className="has-text-danger mb-3">{committeeError}</p>
+                    )}
                   </>
                 )}
               {visibleQuestions.map((question: ApplicationQuestion) => {
