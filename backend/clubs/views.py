@@ -7539,10 +7539,54 @@ class UserViewSet(viewsets.ModelViewSet):
         response = Response([])
         if len(questions) == 0:
             return response
-        application = (
-            ApplicationQuestion.objects.filter(pk=questions[0]).first().application
+
+        # questionIds is built from Object.entries() on the frontend, so it is
+        # always strings there, but a hand-crafted request could send JSON
+        # integers instead. Normalize once so every lookup below -- including
+        # self.request.data.get(question_pk, ...), whose keys are JSON object
+        # keys and therefore always strings -- uses the same representation.
+        questions = [str(question_pk) for question_pk in questions]
+
+        first_question = ApplicationQuestion.objects.filter(pk=questions[0]).first()
+        if first_question is None:
+            return Response(
+                {"success": False, "detail": "That question does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        application = first_question.application
+
+        # every question id in the payload must belong to this application,
+        # or a stale/tampered id would attach a response to the wrong one;
+        # keyed by str(pk) to match questions and self.request.data's keys
+        question_lookup = {
+            str(question.pk): question
+            for question in ApplicationQuestion.objects.filter(
+                pk__in=questions, application=application
+            )
+        }
+        if len(question_lookup) != len(set(questions)):
+            return Response(
+                {
+                    "success": False,
+                    "detail": "One or more questions do not belong to this "
+                    "application.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        committee = (
+            application.committees.filter(name=committee_name).first()
+            if committee_name
+            else None
         )
-        committee = application.committees.filter(name=committee_name).first()
+        if committee_name and committee is None:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "That committee does not exist for this application.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         committees_applied = (
             ApplicationSubmission.objects.filter(
@@ -7593,6 +7637,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
+                    "reason": "incomplete_profile",
                     "detail": """You need to set your graduation year, major, and
                     school before you can apply to a club!""",
                 },
@@ -7609,9 +7654,13 @@ class UserViewSet(viewsets.ModelViewSet):
         cache.delete(key)
 
         for question_pk in questions:
-            question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+            # question_lookup was validated above to contain every id in
+            # questions, scoped to this application, so this is always a hit
+            question = question_lookup[question_pk]
             question_type = question.question_type
             question_data = self.request.data.get(question_pk, None)
+            if not isinstance(question_data, dict):
+                continue
 
             # skip the questions which do not belong to the current committee
             if (

@@ -7207,6 +7207,118 @@ class UserQuestionResponsesTestCase(TestCase):
         self.assertEqual(resp.json(), [])
 
 
+class QuestionResponseSubmissionTestCase(TestCase):
+    """
+    Tests for POST /api/users/question_response
+
+    This endpoint used to trust the payload heavily enough to crash on it: a
+    nonexistent question id, a question id from a different application, or a
+    per-question payload missing entirely would all 500 rather than 400.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username="testuser", password="test", email="test@example.com"
+        )
+        profile = self.user.profile
+        profile.graduation_year = timezone.now().year + 1
+        profile.school.add(School.objects.create(name="Test School", is_graduate=False))
+        profile.major.add(Major.objects.create(name="Test Major"))
+        profile.save()
+        self.client.login(username="testuser", password="test")
+
+        now = timezone.now()
+        self.club = Club.objects.create(code="test-club", name="Test Club", active=True)
+        self.application = ClubApplication.objects.create(
+            name="App",
+            club=self.club,
+            application_start_time=now - datetime.timedelta(days=1),
+            application_end_time=now + datetime.timedelta(days=7),
+            result_release_time=now + datetime.timedelta(days=14),
+        )
+        self.question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Why this club?",
+            word_limit=100,
+            application=self.application,
+        )
+        self.url = reverse("users-question-response")
+
+    def _post(self, body):
+        return self.client.post(self.url, body, content_type="application/json")
+
+    def test_valid_submission_still_succeeds(self):
+        resp = self._post(
+            {
+                "questionIds": [str(self.question.id)],
+                "committee": None,
+                str(self.question.id): {"text": "Because"},
+            }
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(
+            ApplicationQuestionResponse.objects.filter(question=self.question).exists()
+        )
+
+    def test_nonexistent_first_question_returns_400_not_500(self):
+        resp = self._post({"questionIds": ["999999"], "committee": None})
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertFalse(resp.data["success"])
+        self.assertNotEqual(resp.data.get("reason"), "incomplete_profile")
+
+    def test_question_from_another_application_returns_400(self):
+        other_club = Club.objects.create(code="other-club", name="Other Club")
+        other_application = ClubApplication.objects.create(
+            name="Other App",
+            club=other_club,
+            application_start_time=self.application.application_start_time,
+            application_end_time=self.application.application_end_time,
+            result_release_time=self.application.result_release_time,
+        )
+        other_question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Unrelated",
+            application=other_application,
+        )
+        resp = self._post(
+            {
+                "questionIds": [str(self.question.id), str(other_question.id)],
+                "committee": None,
+                str(self.question.id): {"text": "Because"},
+                str(other_question.id): {"text": "Sneaking in"},
+            }
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertNotEqual(resp.data.get("reason"), "incomplete_profile")
+        self.assertFalse(
+            ApplicationQuestionResponse.objects.filter(question=other_question).exists()
+        )
+
+    def test_missing_per_question_payload_is_skipped_not_500(self):
+        # questionIds names the question, but its own entry is absent from
+        # the body -- e.g. a client that dropped a field rather than sent ""
+        resp = self._post({"questionIds": [str(self.question.id)], "committee": None})
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertFalse(
+            ApplicationQuestionResponse.objects.filter(question=self.question).exists()
+        )
+
+    def test_unknown_committee_name_returns_400(self):
+        resp = self._post(
+            {
+                "questionIds": [str(self.question.id)],
+                "committee": "Does Not Exist",
+                str(self.question.id): {"text": "Because"},
+            }
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertNotEqual(resp.data.get("reason"), "incomplete_profile")
+        self.assertFalse(
+            ApplicationQuestionResponse.objects.filter(question=self.question).exists()
+        )
+
+
 class CloneTestCase(TestCase):
     """
     Cloning is used both for a club officer manually duplicating an
