@@ -33,8 +33,10 @@ function ApplyDashboard({
       content: () => <ApplicationsTable initialData={userApplications} />,
     },
     {
+      // the route stays /apply/applications; only the label disambiguates it
+      // from the tracker beside it
       name: 'applications',
-      label: 'Applications',
+      label: 'Wharton Applications',
       content: () => (
         <ApplicationsPage whartonApplications={whartonapplications} />
       ),
