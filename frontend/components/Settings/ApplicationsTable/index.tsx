@@ -1,6 +1,7 @@
 import moment from 'moment-timezone'
 import Link from 'next/link'
 import { Fragment, ReactElement, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { EmptyState, Icon, Modal, Text } from '~/components/common'
@@ -396,7 +397,7 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
   const [data, setData] = useState(initialData)
   const [query, setQuery] = useState<string>('')
   const [filter, setFilter] = useState<Filter>('all')
-  const [showPast, setShowPast] = useState<boolean>(true)
+  const [showPast, setShowPast] = useState<boolean>(false)
   const [viewing, setViewing] = useState<{
     application: UserApplication
     submission: UserApplicationSubmission
@@ -438,18 +439,31 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
     }
     doApiRequest(`/submissions/${submission.pk}/?format=json`, {
       method: 'DELETE',
-    }).then(() => {
+    }).then((resp) => {
+      if (!resp.ok) {
+        toast.error('That submission could not be deleted. Please try again.')
+        return
+      }
       setViewing(null)
       setData((previous) => {
         if ('detail' in previous) return previous
         return {
           ...previous,
-          results: previous.results.map((application) => ({
-            ...application,
-            submissions: application.submissions.filter(
-              (existing) => existing.pk !== submission.pk,
+          results: previous.results
+            .map((application) => ({
+              ...application,
+              submissions: application.submissions.filter(
+                (existing) => existing.pk !== submission.pk,
+              ),
+            }))
+            // an application with no submissions left is only listed while it
+            // is open at a club you follow; otherwise the server would drop it
+            .filter(
+              (application) =>
+                application.submissions.length > 0 ||
+                (application.is_open &&
+                  (application.bookmarked || application.subscribed)),
             ),
-          })),
         }
       })
     })
@@ -695,7 +709,7 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
         </Table>
       </Scroll>
 
-      {buckets.past.length > 0 && (
+      {filter === 'all' && buckets.past.length > 0 && (
         <>
           <Disclosure onClick={() => setShowPast(!showPast)}>
             <Icon
@@ -725,7 +739,9 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
         <Modal
           show={true}
           closeModal={() => setViewing(null)}
-          width="45rem"
+          // any explicit width opts out of the shared modal's responsive
+          // rules, so the phone case has to be handled here
+          width="min(45rem, 90vw)"
           marginBottom={false}
         >
           <ResponsesModal

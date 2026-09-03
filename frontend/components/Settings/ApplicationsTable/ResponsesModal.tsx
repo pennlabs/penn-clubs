@@ -18,6 +18,8 @@ import {
 } from '~/types'
 import { doApiRequest } from '~/utils'
 
+import { editHref } from './shared'
+
 const Header = styled.div`
   padding: 1.25rem 1.5rem 1rem;
   border-bottom: 1px solid ${BORDER};
@@ -211,7 +213,10 @@ const ResponsesModal = ({
           Close
         </button>
         {application.is_open && (
-          <a href={application.application_link} className="button is-primary">
+          <a
+            href={editHref(application, submission)}
+            className="button is-primary"
+          >
             <Icon name="edit" alt="edit" /> Edit &amp; resubmit
           </a>
         )}
