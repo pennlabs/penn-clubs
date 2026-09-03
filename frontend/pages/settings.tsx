@@ -10,13 +10,12 @@ import React, { ReactNode } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
-import { Application, UserApplicationsResponse, UserInfo } from 'types'
+import { Application, ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
 import ApplicationsPage from '~/components/Applications'
-import ApplicationsTab from '~/components/Settings/ApplicationsTab'
-import ApplicationsTable from '~/components/Settings/ApplicationsTable'
 import TicketsTab from '~/components/Settings/TicketsTab'
+import SubmissionsPage from '~/components/Submissions'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
 import { BORDER_RADIUS } from '~/constants/measurements'
 import { doBulkLookup } from '~/utils'
@@ -38,7 +37,7 @@ const Notification = styled.span`
 type SettingsProps = {
   userInfo?: UserInfo
   authenticated: boolean | null
-  userApplications: UserApplicationsResponse | { detail: string }
+  submissions: ApplicationSubmission[]
   whartonApplications: any
 }
 
@@ -46,7 +45,7 @@ const Settings = ({
   userInfo,
   authenticated,
   whartonApplications,
-  userApplications,
+  submissions,
 }: SettingsProps) => {
   /**
    * Display the message to the user in the form of a toast.
@@ -81,23 +80,13 @@ const Settings = ({
       content: <FavoritesTab key="subscription" keyword="subscription" />,
     },
     {
-      // the hash stays 'submissions' so existing /settings#submissions links
-      // keep working
       name: 'submissions',
-      label: 'My Applications',
-      content: <ApplicationsTab initialData={userApplications} />,
-    },
-    {
-      // TEMPORARY: the table alternative, side by side with the cards for
-      // comparison. Delete this tab and one of the two components once a
-      // direction is picked.
-      name: 'submissions-table',
-      label: 'My Applications (table)',
-      content: <ApplicationsTable initialData={userApplications} />,
+      label: 'Submissions',
+      content: <SubmissionsPage initialSubmissions={submissions} />,
     },
     {
       name: 'applications',
-      label: 'Wharton Applications',
+      label: 'Applications',
       content: <ApplicationsPage whartonApplications={whartonApplications} />,
     },
     {
@@ -137,21 +126,18 @@ const Settings = ({
 
 type BulkResp = {
   whartonapplications: Application[]
-  userApplications: UserApplicationsResponse | { detail: string }
+  submissions: Array<ApplicationSubmission>
 }
 
 Settings.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
-    [
-      'whartonapplications',
-      ['userApplications', '/user-applications/?format=json'],
-    ],
+    ['whartonapplications', 'submissions'],
     ctx,
   )) as BulkResp
 
   return {
     whartonApplications: data.whartonapplications,
-    userApplications: data.userApplications,
+    submissions: data.submissions,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }
 }
