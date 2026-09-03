@@ -7,7 +7,7 @@ import moment from 'moment'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { type JSX, ReactElement, useState } from 'react'
+import { type JSX, ReactElement, useRef, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
@@ -253,13 +253,38 @@ const ApplicationPage = ({
     countWords(initialValues),
   )
 
+  // Answers belong to one committee's submission. Switching committees swaps
+  // the whole form, so the answers on screen have to go the moment the
+  // committee does: leaving them up means the previous committee's text is
+  // visible, and submittable, under the new one. Only the newest request may
+  // fill the form, or switching quickly can land an older reply last.
+  const [loadingResponses, setLoadingResponses] = useState<boolean>(false)
+  const committeeRequest = useRef<number>(0)
+
   const selectCommittee = (committee: { label: string; value: string }) => {
+    const request = committeeRequest.current + 1
+    committeeRequest.current = request
+
     setCurrentCommittee(committee)
     setSaved(false)
-    fetchResponses(questions, committee?.value ?? null).then((responses) => {
-      setFormValues(responses)
-      setWordCounts(countWords(responses))
-    })
+    setFormValues({})
+    setWordCounts(countWords({}))
+    setLoadingResponses(true)
+
+    fetchResponses(questions, committee?.value ?? null)
+      .then((responses) => {
+        if (committeeRequest.current !== request) {
+          return
+        }
+        setFormValues(responses)
+        setWordCounts(countWords(responses))
+      })
+      .finally(() => {
+        // without this a failed fetch leaves Submit disabled for good
+        if (committeeRequest.current === request) {
+          setLoadingResponses(false)
+        }
+      })
   }
 
   const committees = application?.committees
@@ -450,7 +475,11 @@ const ApplicationPage = ({
                   </div>
                 )
               })}
-              <button type="submit" className="button is-primary">
+              <button
+                type="submit"
+                className="button is-primary"
+                disabled={loadingResponses}
+              >
                 <Icon name="edit" alt="save" /> Submit
               </button>
               {errors !== null && (
