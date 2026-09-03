@@ -9194,6 +9194,22 @@ class OptionListView(APIView):
             options["FAIR_OPEN"] = False
             options["PRE_FAIR"] = False
 
+        # APPLICATION_TRACKER_BANNER switches the clubs-page banner on, the
+        # same plain boolean option as CLUB_REGISTRATION. An optional
+        # APPLICATION_TRACKER_BANNER_UNTIL date switches it back off when it
+        # passes, so the banner can retire itself without a deploy.
+        banner_until = options.pop("APPLICATION_TRACKER_BANNER_UNTIL", None)
+        banner = str(options.get("APPLICATION_TRACKER_BANNER", "")).lower() == "true"
+        if banner and banner_until:
+            try:
+                until = datetime.datetime.fromisoformat(str(banner_until))
+                if timezone.is_naive(until):
+                    until = timezone.make_aware(until)
+                banner = now < until
+            except ValueError:
+                pass
+        options["APPLICATION_TRACKER_BANNER"] = banner
+
         return Response(options)
 
 

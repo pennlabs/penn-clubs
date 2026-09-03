@@ -1,5 +1,6 @@
 import { CLUB_RECRUITMENT_CYCLES } from 'components/ClubEditPage/ClubEditCard'
 import ListRenewalDialog from 'components/ClubPage/ListRenewalDialog'
+import ListTrackerDialog from 'components/ClubPage/ListTrackerDialog'
 import { LiveEventsDialog } from 'components/ClubPage/LiveEventsDialog'
 import {
   Icon,
@@ -310,6 +311,7 @@ const Splash = (props: SplashProps): ReactElement<any> => {
   const fairIsVirtual = useSetting('FAIR_VIRTUAL')
   const preFair = useSetting('PRE_FAIR')
   const renewalBanner = useSetting('CLUB_REGISTRATION')
+  const trackerBanner = useSetting('APPLICATION_TRACKER_BANNER')
   const currentSearch = useRef<SearchInput>({})
 
   const decodeQueryKey = (key: string): string => {
@@ -925,6 +927,10 @@ const Splash = (props: SplashProps): ReactElement<any> => {
             )}
 
             {renewalBanner && <ListRenewalDialog />}
+
+            {/* last in the stack: the least urgent of the three, and only for
+                signed-in users, since the dashboard needs a session */}
+            {trackerBanner && props.userInfo && <ListTrackerDialog />}
 
             {showLoadIndicator && <ListLoadIndicator />}
 
