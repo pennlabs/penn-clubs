@@ -35,6 +35,63 @@ const SubmitNotificationSpan = styled.span`
   left: 1em;
 `
 
+/**
+ * Prefills the form with the responses already stored for this user.
+ *
+ * Responses live on a submission and a user may hold one per committee, so the
+ * committee has to be part of the lookup — without it the server answers with
+ * whichever submission it finds first, which shows one committee's answers
+ * while you are editing another. `question_ids` asks for the whole form in a
+ * single request so switching committees is one round trip, not one per
+ * question.
+ */
+export async function fetchResponses(
+  questions: ApplicationQuestion[],
+  committee: string | null,
+  requestData?: { headers?: any },
+): Promise<{ [id: number]: any }> {
+  const ids = questions.map((question) => question.id)
+  if (ids.length === 0) {
+    return {}
+  }
+  const params = new URLSearchParams({
+    format: 'json',
+    question_ids: ids.join(','),
+  })
+  if (committee != null) {
+    params.set('committee', committee)
+  }
+  const payloads = await (
+    await doApiRequest(`/users/questions/?${params.toString()}`, requestData)
+  ).json()
+
+  const values: { [id: number]: any } = {}
+  if (!Array.isArray(payloads)) {
+    return values
+  }
+  payloads.forEach((payload) => {
+    const id = payload?.question?.id
+    if (id == null) {
+      return
+    }
+    switch (parseInt(payload.question_type)) {
+      case ApplicationQuestionType.FreeResponse:
+      case ApplicationQuestionType.ShortAnswer:
+        values[id] = payload.text
+        break
+      case ApplicationQuestionType.MultipleChoice:
+        values[id] =
+          payload.multiple_choice !== null
+            ? payload.multiple_choice.value
+            : null
+        break
+      default:
+        break
+    }
+  })
+  return values
+}
+
 export function computeWordCount(input: string): number {
   return input !== undefined
     ? input.split(' ').filter((word) => word !== '').length
@@ -175,20 +232,40 @@ const ApplicationPage = ({
     label: string
     value: string
   } | null>(preselected)
-  const initialWordCounts: { id?: number } = {}
-  questions.forEach((question) => {
-    if (question.question_type === ApplicationQuestionType.FreeResponse) {
-      initialWordCounts[question.id] = computeWordCount(
-        initialValues[question.id],
-      )
-    }
-  })
+
+  const countWords = (responses: { [id: number]: any }): { id?: number } => {
+    const counts: { id?: number } = {}
+    questions.forEach((question) => {
+      if (question.question_type === ApplicationQuestionType.FreeResponse) {
+        counts[question.id] = computeWordCount(responses[question.id])
+      }
+    })
+    return counts
+  }
+
+  // Answers belong to a committee's submission, so the form has to be refilled
+  // when the committee changes; keeping the values in state lets Formik
+  // reinitialize instead of showing the previous committee's answers.
+  const [formValues, setFormValues] = useState<{ [id: number]: any }>(
+    initialValues,
+  )
   const [wordCounts, setWordCounts] = useState<{ id?: number }>(
-    initialWordCounts,
+    countWords(initialValues),
   )
 
+  const selectCommittee = (committee: { label: string; value: string }) => {
+    setCurrentCommittee(committee)
+    setSaved(false)
+    fetchResponses(questions, committee?.value ?? null).then((responses) => {
+      setFormValues(responses)
+      setWordCounts(countWords(responses))
+    })
+  }
+
   const committees = application?.committees
-  questions = questions.filter((question) => {
+  // `questions` stays whole so a committee switch can refill every answer the
+  // user has; only what is rendered and submitted is narrowed
+  const visibleQuestions = questions.filter((question) => {
     if (!question.committee_question) {
       // render all non-committee questions
       return true
@@ -236,13 +313,14 @@ const ApplicationPage = ({
           )}
         <hr />
         <Formik
-          initialValues={initialValues}
+          initialValues={formValues}
+          enableReinitialize
           onSubmit={(values: { [id: number]: any }, actions) => {
             let submitErrors: string | null = null
 
             // word count error check
             for (const [questionId, text] of Object.entries(values)) {
-              const question = questions.find(
+              const question = visibleQuestions.find(
                 (question: ApplicationQuestion) =>
                   question.id === parseInt(questionId),
               )
@@ -265,7 +343,7 @@ const ApplicationPage = ({
                 if (currentCommittee != null) {
                   body.committee = currentCommittee.value
                 }
-                const question = questions.find(
+                const question = visibleQuestions.find(
                   (question: ApplicationQuestion) =>
                     question.id === parseInt(questionId),
                 )
@@ -352,12 +430,12 @@ const ApplicationPage = ({
                         return { label: value.name, value: value.name }
                       })}
                       isMulti={false}
-                      customHandleChange={(value) => setCurrentCommittee(value)}
+                      customHandleChange={(value) => selectCommittee(value)}
                       value={currentCommittee}
                     />
                   </>
                 )}
-              {questions.map((question: ApplicationQuestion) => {
+              {visibleQuestions.map((question: ApplicationQuestion) => {
                 const input = formatQuestionType(
                   props,
                   question,
@@ -418,34 +496,18 @@ ApplicationPage.getInitialProps = async (
     ].map(async (url) => (await doApiRequest(url, data)).json()),
   )
 
-  // TODO: refactor this, functional methods with async-await is horrible
-  const initialValues = await await questions
-    .map((question) => {
-      return [
-        question.id,
-        `/users/questions?format=json&question_id=${question.id}`,
-      ]
-    })
-    .reduce(async (accPromise, params: [number, string]) => {
-      const [id, url] = params
-      const acc = await accPromise
-      const payload = await (await doApiRequest(url, data)).json()
-      switch (parseInt(payload.question_type)) {
-        case ApplicationQuestionType.FreeResponse:
-        case ApplicationQuestionType.ShortAnswer:
-          acc[id] = payload.text
-          break
-        case ApplicationQuestionType.MultipleChoice:
-          acc[id] =
-            payload.multiple_choice !== null
-              ? payload.multiple_choice.value
-              : null
-          break
-        default:
-          return acc
-      }
-      return acc
-    }, {})
+  // a ?committee= in the link says which submission is being edited, so the
+  // very first render can already be prefilled from the right one
+  const requested = Array.isArray(query.committee)
+    ? query.committee[0]
+    : query.committee
+  const committee =
+    requested != null &&
+    application?.committees?.some((entry) => entry.name === requested)
+      ? requested
+      : null
+
+  const initialValues = await fetchResponses(questions, committee, data)
 
   return { club, application, questions, initialValues }
 }

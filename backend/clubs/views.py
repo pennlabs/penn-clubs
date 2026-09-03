@@ -7660,28 +7660,62 @@ class UserViewSet(viewsets.ModelViewSet):
                                                 type: integer
         ---
         """
-        question_id_param = self.request.GET.get("question_id")
-        if question_id_param is None or not question_id_param.isnumeric():
-            return Response([])
-        question_id = int(question_id_param)
-        question = ApplicationQuestion.objects.filter(pk=question_id).first()
-        if question is None:
+        # `question_ids` fetches several questions at once and answers with a
+        # list. `question_id` keeps the single-question shape callers expect.
+        ids_param = self.request.GET.get("question_ids")
+        if ids_param is not None:
+            question_ids = [
+                int(part) for part in ids_param.split(",") if part.strip().isnumeric()
+            ]
+            bulk = True
+        else:
+            question_id_param = self.request.GET.get("question_id")
+            if question_id_param is None or not question_id_param.isnumeric():
+                return Response([])
+            question_ids = [int(question_id_param)]
+            bulk = False
+
+        if not question_ids:
             return Response([])
 
-        response = (
+        # Responses are per-submission and a user may hold one submission per
+        # committee, so a question with no committee named is still ambiguous:
+        # answering it without filtering hands back whichever submission came
+        # first, which is another committee's answer more often than not.
+        committee = self.request.GET.get("committee")
+        submission_filter = (
+            {"submission__committee__name": committee}
+            if committee
+            else {"submission__committee__isnull": True}
+        )
+
+        responses = (
             ApplicationQuestionResponse.objects.filter(
-                question=question,
+                question_id__in=question_ids,
                 submission__user=self.request.user,
+                **submission_filter,
             )
             .select_related("submission", "multiple_choice", "question")
             .prefetch_related("question__committees", "question__multiple_choice")
-            .first()
+            .order_by("question_id", "-submission__created_at")
         )
 
+        if bulk:
+            # unique_together does not collide on a null committee, so a user
+            # can hold more than one committee-less submission; newest wins
+            seen = {}
+            for response in responses:
+                seen.setdefault(response.question_id, response)
+            return Response(
+                ApplicationQuestionResponseSerializer(
+                    list(seen.values()), many=True
+                ).data
+            )
+
+        response = responses.first()
         if response is None:
             return Response([])
-        else:
-            return Response(ApplicationQuestionResponseSerializer(response).data)
+        return Response(ApplicationQuestionResponseSerializer(response).data)
 
     def get_serializer_class(self):
         if self.action in {"list"}:

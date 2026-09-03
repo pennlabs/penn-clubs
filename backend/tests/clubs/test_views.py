@@ -6869,3 +6869,133 @@ class UserApplicationsViewTestCase(TestCase):
         resp = self._get()
         expected = f"/club/{self.club.code}/application/{self.active_app.id}/"
         self.assertEqual(self._app(resp, self.active_app)["application_link"], expected)
+
+
+class UserQuestionResponsesTestCase(TestCase):
+    """
+    Tests for GET /api/users/questions
+
+    A response belongs to a submission and a user may hold one submission per
+    committee, so the lookup has to name the committee. Without it the endpoint
+    answered with whichever submission came first, prefilling the application
+    form with a different committee's answers.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username="testuser", password="test", email="test@example.com"
+        )
+        self.url = "/api/users/questions/"
+
+        now = timezone.now()
+        self.club = Club.objects.create(code="test-club", name="Test Club", active=True)
+        self.application = ClubApplication.objects.create(
+            name="App",
+            club=self.club,
+            application_start_time=now - datetime.timedelta(days=1),
+            application_end_time=now + datetime.timedelta(days=7),
+            result_release_time=now + datetime.timedelta(days=14),
+        )
+        self.alpha = ApplicationCommittee.objects.create(
+            name="Alpha", application=self.application
+        )
+        self.beta = ApplicationCommittee.objects.create(
+            name="Beta", application=self.application
+        )
+
+        # a shared question: it names no committee, so every committee's
+        # submission carries its own answer to it
+        self.question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Why this club?",
+            word_limit=100,
+            application=self.application,
+        )
+
+        self.answers = {}
+        for committee in (self.alpha, self.beta):
+            submission = ApplicationSubmission.objects.create(
+                user=self.user, application=self.application, committee=committee
+            )
+            self.answers[committee.name] = ApplicationQuestionResponse.objects.create(
+                question=self.question, submission=submission, text=committee.name
+            )
+
+        self.client.login(username="testuser", password="test")
+
+    def test_committee_selects_that_committees_answer(self):
+        for name in ("Alpha", "Beta"):
+            resp = self.client.get(
+                self.url, {"question_id": self.question.id, "committee": name}
+            )
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.json()["text"], name)
+
+    def test_no_committee_does_not_leak_a_committees_answer(self):
+        """Both answers belong to a committee, so neither is the right prefill."""
+        resp = self.client.get(self.url, {"question_id": self.question.id})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), [])
+
+    def test_committeeless_submission_is_found_without_a_committee(self):
+        other = ClubApplication.objects.create(
+            name="No Committees",
+            club=self.club,
+            application_start_time=timezone.now() - datetime.timedelta(days=1),
+            application_end_time=timezone.now() + datetime.timedelta(days=7),
+            result_release_time=timezone.now() + datetime.timedelta(days=14),
+        )
+        question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Tell us about yourself",
+            word_limit=100,
+            application=other,
+        )
+        submission = ApplicationSubmission.objects.create(
+            user=self.user, application=other, committee=None
+        )
+        ApplicationQuestionResponse.objects.create(
+            question=question, submission=submission, text="hello"
+        )
+
+        resp = self.client.get(self.url, {"question_id": question.id})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["text"], "hello")
+
+    def test_bulk_returns_one_entry_per_question(self):
+        second = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="What else?",
+            word_limit=100,
+            application=self.application,
+        )
+        ApplicationQuestionResponse.objects.create(
+            question=second,
+            submission=self.answers["Alpha"].submission,
+            text="second answer",
+        )
+
+        resp = self.client.get(
+            self.url,
+            {
+                "question_ids": f"{self.question.id},{second.id}",
+                "committee": "Alpha",
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        by_question = {item["question"]["id"]: item["text"] for item in resp.json()}
+        self.assertEqual(
+            by_question, {self.question.id: "Alpha", second.id: "second answer"}
+        )
+
+    def test_another_users_answers_are_never_returned(self):
+        stranger = get_user_model().objects.create_user(
+            username="stranger", password="test", email="stranger@example.com"
+        )
+        self.client.force_login(stranger)
+        resp = self.client.get(
+            self.url, {"question_id": self.question.id, "committee": "Alpha"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), [])
