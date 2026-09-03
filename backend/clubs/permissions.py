@@ -152,10 +152,16 @@ class ClubPermission(permissions.BasePermission):
             return True
 
         # club approvers can update the club
-        if view.action in ["update", "partial_update"] and (
-            request.user.has_perm("clubs.approve_club")
-        ):
-            return True
+        if view.action in ["update", "partial_update"]:
+            if request.user.has_perm("clubs.approve_club"):
+                return True
+
+            # rejecters are only granted access to the approval fields
+            # themselves, not to general club editing
+            if request.user.has_perm("clubs.reject_club") and not (
+                set(request.data.keys()) - {"approved", "approved_comment"}
+            ):
+                return True
 
         # DRF calls DELETE "destroy", although ClubViewSet soft-archives the club.
         # Keep that action separate from global club management.
