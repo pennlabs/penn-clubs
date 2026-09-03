@@ -117,8 +117,8 @@ const Table = styled.table`
 /** Shared by the main table and the past-applications table. */
 const Cols = (): ReactElement<any> => (
   <colgroup>
-    <col style={{ width: '26%' }} />
-    <col style={{ width: '15%' }} />
+    <col style={{ width: '24%' }} />
+    <col style={{ width: '17%' }} />
     <col style={{ width: '15%' }} />
     <col style={{ width: '14%' }} />
     <col style={{ width: '16%' }} />
@@ -192,6 +192,14 @@ const InfoTag = styled(Tag)`
 const SuccessTag = styled(Tag)`
   background: #effaf5;
   color: #257953;
+`
+
+/** Status tag with the submitted date beneath it. */
+const StatusCell = styled.span`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
 `
 
 const Deadline = styled.span`
@@ -295,22 +303,31 @@ const Empty = styled.div`
 
 type Filter = 'all' | 'action' | 'open' | 'closed'
 
+const eastern = (value: string) => moment(value).tz('America/New_York')
+
+/**
+ * "Sep 8" this year, "Sep 8, 2025" otherwise. Past cycles are a year or more
+ * old, so a bare month and day there reads as though it just happened.
+ */
+const day = (m: moment.Moment): string =>
+  m.year() === moment().tz('America/New_York').year() ? 'MMM D' : 'MMM D, YYYY'
+
+/** "Submitted Sep 8" — the date this committee's submission was sent. */
+const submittedOn = (submission: UserApplicationSubmission): string => {
+  const sent = eastern(submission.created_at)
+  return `Submitted ${sent.format(day(sent))}`
+}
+
 const deadlineCell = (application: UserApplication): ReactElement<any> => {
-  const end = moment(application.effective_end_time)
+  const end = eastern(application.effective_end_time)
   if (!application.is_open) {
+    const release = eastern(application.result_release_time)
     return (
       <Deadline>
-        <Relative $tone={LIGHT_GRAY}>
-          Closed {end.tz('America/New_York').format('MMM D')}
-        </Relative>
+        <Relative $tone={LIGHT_GRAY}>Closed {end.format(day(end))}</Relative>
         {application.extension_end_time == null &&
-          moment(application.result_release_time).isAfter(moment()) && (
-            <Absolute>
-              Results expected{' '}
-              {moment(application.result_release_time)
-                .tz('America/New_York')
-                .format('MMM D')}
-            </Absolute>
+          release.isAfter(moment()) && (
+            <Absolute>Results expected {release.format(day(release))}</Absolute>
           )}
       </Deadline>
     )
@@ -322,8 +339,8 @@ const deadlineCell = (application: UserApplication): ReactElement<any> => {
       <Relative $tone={tone}>In {end.fromNow(true)}</Relative>
       <Absolute>
         {application.extension_end_time != null
-          ? `Extended for you · ${end.tz('America/New_York').format('MMM D')}`
-          : end.tz('America/New_York').format('MMM D, h:mm A')}
+          ? `Extended for you · ${end.format(day(end))}`
+          : end.format(`${day(end)}, h:mm A`)}
       </Absolute>
     </Deadline>
   )
@@ -333,31 +350,41 @@ const statusTag = (
   application: UserApplication,
   submission: UserApplicationSubmission,
 ): ReactElement<any> => {
+  // The submitted date has no column of its own, and it belongs to the
+  // committee rather than the application, so it cannot ride the row-spanning
+  // Deadline cell. The tooltip is the one per-row place left for it.
+  const sent = eastern(submission.created_at)
+  const submitted = `Submitted ${sent.format(`${day(sent)}, h:mm A`)}`
+
   if (application.is_open) {
     // Editability is carried by the Edit button and the live deadline beside
     // it, and stated once in the blurb above the table — the tag does not need
     // to repeat it a third time.
     return (
-      <InfoTag title="Saved and sent to the club. You can still change it until the deadline.">
+      <InfoTag
+        title={`${submitted}. You can still change it until the deadline.`}
+      >
         Submitted
       </InfoTag>
     )
   }
   switch (submission.outcome) {
     case 'accepted':
-      return <SuccessTag>Accepted</SuccessTag>
+      return <SuccessTag title={submitted}>Accepted</SuccessTag>
     case 'rejected_after_written':
       return (
-        <DangerTag title="Rejected after written application">
+        <DangerTag title={`Rejected after written application. ${submitted}`}>
           Not selected
         </DangerTag>
       )
     case 'rejected_after_interview':
       return (
-        <DangerTag title="Rejected after interviews">Not selected</DangerTag>
+        <DangerTag title={`Rejected after interviews. ${submitted}`}>
+          Not selected
+        </DangerTag>
       )
     default:
-      return <Tag>No decision posted</Tag>
+      return <Tag title={submitted}>No decision posted</Tag>
   }
 }
 
@@ -516,7 +543,10 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
                   <Tag>Not submitted</Tag>
                 )
               ) : (
-                statusTag(application, submission)
+                <StatusCell>
+                  {statusTag(application, submission)}
+                  <Absolute>{submittedOn(submission)}</Absolute>
+                </StatusCell>
               )}
             </td>
             <td>
@@ -610,10 +640,13 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
   return (
     <>
       <Blurb>
-        Everything you&apos;ve applied to, plus open applications from clubs
-        you&apos;ve bookmarked or subscribed to. A submitted application stays
-        editable until its deadline &mdash; clubs only read your most recent
-        version.
+        Bookmark (<Icon name="bookmark" alt="bookmark" size="0.9rem" />) or
+        subscribe (<Icon name="bell" alt="subscribe" size="0.9rem" />) to a club
+        to see its open applications here, alongside the ones you have already
+        submitted.
+        <br />
+        You can keep editing an application until its deadline. Clubs only read
+        your latest version.
       </Blurb>
 
       <Toolbar>

@@ -29,7 +29,7 @@ function ApplyDashboard({
   const tabs = [
     {
       name: 'tracker',
-      label: 'My Applications',
+      label: 'Application Tracker',
       content: () => <ApplicationsTable initialData={userApplications} />,
     },
     {
