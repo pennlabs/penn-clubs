@@ -6630,6 +6630,31 @@ class UserApplicationsViewTestCase(TestCase):
         resp = self._get()
         self.assertNotIn(self.unrelated_app.id, self._ids(resp))
 
+    def test_archived_club_bookmark_does_not_surface_its_application(self):
+        # A bookmark can outlive the club: if it is later archived, the
+        # club's page is gone, so an application discovered only through
+        # that bookmark would be a dead link.
+        self.club.archived = True
+        self.club.save()
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertNotIn(self.active_app.id, self._ids(resp))
+        self.assertEqual(resp.json()["saved_club_count"], 0)
+
+    def test_inactive_or_unapproved_club_bookmark_still_surfaces_application(self):
+        # Being unlisted from search (inactive this cycle, or pending /
+        # rejected approval) does not take down the club's own page, so its
+        # application should still show for a user who bookmarked it.
+        self.club.active = False
+        self.club.approved = False
+        self.club.save()
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertIn(self.active_app.id, self._ids(resp))
+        self.assertEqual(resp.json()["saved_club_count"], 1)
+
     def test_saved_club_count_counts_distinct_clubs(self):
         # bookmarked and subscribed to the same club counts once
         Favorite.objects.create(person=self.user, club=self.club)

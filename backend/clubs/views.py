@@ -8481,11 +8481,24 @@ class UserApplicationsView(generics.ListAPIView):
         user = self.request.user
         now = timezone.now()
 
+        # A bookmark or subscription can outlive the club itself. archived is
+        # the one flag that blocks a club's page at every action, not just
+        # list/search (ClubViewSet.get_queryset applies it unconditionally,
+        # while active and approved only filter the list action), so it is
+        # the only case where a stale relationship would produce a link the
+        # user cannot open. A club that is merely unlisted (inactive this
+        # cycle, pending review, or rejected) is still a real, visitable club
+        # and may still be running a legitimate application.
+        not_archived = Q(club__archived=False)
         bookmarked_club_ids = set(
-            Favorite.objects.filter(person=user).values_list("club_id", flat=True)
+            Favorite.objects.filter(not_archived, person=user).values_list(
+                "club_id", flat=True
+            )
         )
         subscribed_club_ids = set(
-            Subscribe.objects.filter(person=user).values_list("club_id", flat=True)
+            Subscribe.objects.filter(not_archived, person=user).values_list(
+                "club_id", flat=True
+            )
         )
         saved_club_ids = bookmarked_club_ids | subscribed_club_ids
 
