@@ -25,6 +25,16 @@ const Header = styled.div`
   border-bottom: 1px solid ${BORDER};
 `
 
+const FailedState = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  & p {
+    margin-bottom: 0;
+  }
+`
+
 const Title = styled.p`
   font-size: 1.25rem;
   font-weight: 600;
@@ -91,9 +101,12 @@ const ResponsesModal = ({
   const [detail, setDetail] = useState<ApplicationSubmission | null>(null)
   const [questions, setQuestions] = useState<ApplicationQuestion[] | null>(null)
   const [failed, setFailed] = useState<boolean>(false)
+  // bumped by Retry to re-run the effect below without duplicating the fetch
+  const [attempt, setAttempt] = useState<number>(0)
 
   useEffect(() => {
     let cancelled = false
+    setFailed(false)
     Promise.all([
       doApiRequest(`/submissions/${submission.pk}/?format=json`),
       doApiRequest(
@@ -115,7 +128,7 @@ const ResponsesModal = ({
     return () => {
       cancelled = true
     }
-  }, [submission.pk, application.club_code, application.id])
+  }, [submission.pk, application.club_code, application.id, attempt])
 
   const initialValues = {}
   const wordCounts = {}
@@ -170,10 +183,15 @@ const ResponsesModal = ({
       </Header>
       <Body>
         {failed ? (
-          <Text>
-            We couldn&apos;t load your responses. Try reopening this in a
-            moment.
-          </Text>
+          <FailedState>
+            <Text>We couldn&apos;t load your responses.</Text>
+            <button
+              className="button is-small"
+              onClick={() => setAttempt((value) => value + 1)}
+            >
+              Retry
+            </button>
+          </FailedState>
         ) : detail == null ? (
           <Loading />
         ) : applicable.length === 0 ? (
