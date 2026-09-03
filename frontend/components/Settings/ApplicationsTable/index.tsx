@@ -4,13 +4,6 @@ import { Fragment, ReactElement, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import { EmptyState, Icon, Modal, Text } from '~/components/common'
-import ResponsesModal from '~/components/Settings/ApplicationsTab/ResponsesModal'
-import {
-  applyHref,
-  bucketApplications,
-  editHref,
-  progressPercent,
-} from '~/components/Settings/ApplicationsTab/shared'
 import {
   ALLBIRDS_GRAY,
   BORDER,
@@ -29,18 +22,26 @@ import {
 } from '~/types'
 import { doApiRequest } from '~/utils'
 
+import ResponsesModal from './ResponsesModal'
+import {
+  applyHref,
+  bucketApplications,
+  editHref,
+  progressPercent,
+} from './shared'
+
+const Blurb = styled(Text)`
+  font-size: 0.9375rem;
+  margin-bottom: 1.25rem;
+`
+
+/** Filter chips on the left, search on the right, on one line. */
 const Toolbar = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
-`
-
-const Blurb = styled(Text)`
-  margin-bottom: 0;
-  max-width: 34rem;
-  font-size: 0.9375rem;
 `
 
 const Search = styled.div`
@@ -62,13 +63,6 @@ const Search = styled.div`
   }
 `
 
-const Filters = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-`
-
 const Chip = styled.button<{ $on?: boolean }>`
   height: 2.2em;
   padding: 0 0.85em;
@@ -85,8 +79,14 @@ const Scroll = styled.div`
   overflow-x: auto;
 `
 
+/**
+ * Fixed layout so a column never resizes when the filter changes the mix of
+ * action buttons in a cell. Widths are declared once, in Cols below.
+ */
 const Table = styled.table`
   width: 100%;
+  min-width: 56rem;
+  table-layout: fixed;
   border-collapse: collapse;
   background: white;
   color: #363636;
@@ -114,11 +114,22 @@ const Table = styled.table`
   }
 `
 
+/** Shared by the main table and the past-applications table. */
+const Cols = (): ReactElement<any> => (
+  <colgroup>
+    <col style={{ width: '26%' }} />
+    <col style={{ width: '15%' }} />
+    <col style={{ width: '15%' }} />
+    <col style={{ width: '14%' }} />
+    <col style={{ width: '16%' }} />
+    <col style={{ width: '14%' }} />
+  </colgroup>
+)
+
 const AppCell = styled.span`
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  min-width: 13rem;
 `
 
 const AppName = styled.span`
@@ -154,8 +165,11 @@ const Tag = styled.span`
   }
 `
 
-/** Filled: you applied to it. Dashed: open to you, not applied. */
-const MineTag = styled(Tag)`
+/**
+ * The committee a submission belongs to. A label, not a link — the Edit button
+ * in the same row already goes to that committee's form.
+ */
+const CommitteeTag = styled(Tag)`
   background: ${CLUBS_LIGHT_BLUE};
   color: ${CLUBS_BLUE};
 `
@@ -228,6 +242,7 @@ const Actions = styled.span`
   display: flex;
   gap: 0.25rem;
   justify-content: flex-end;
+  white-space: nowrap;
 `
 
 /**
@@ -241,47 +256,18 @@ const Row = styled.tr<{ $last?: boolean }>`
   }
 `
 
-const AlsoOpen = styled.span`
+const OtherCommittees = styled.span`
   font-size: 0.75rem;
   color: ${LIGHT_GRAY};
   margin-top: 0.15rem;
-`
-
-const GroupHeader = styled.td`
-  && {
-    background: #f4f6f9;
-    border-bottom: 1px solid #dbdbdb;
-    padding: 0.5em 0.75em;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: ${MEDIUM_GRAY};
-  }
-`
-
-const Legend = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  margin-top: 0.75rem;
-  font-size: 0.75rem;
-  color: ${MEDIUM_GRAY};
-  flex-wrap: wrap;
-
-  & span.key {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-  }
 `
 
 const Disclosure = styled.div`
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  margin-top: 1.25rem;
-  padding-top: 0.9rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
   border-top: 1px solid ${ALLBIRDS_GRAY};
   color: ${MEDIUM_GRAY};
   cursor: pointer;
@@ -293,6 +279,10 @@ const DiscTitle = styled.span`
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
+`
+
+const PastTable = styled.div`
+  margin-top: 1rem;
 `
 
 const Empty = styled.div`
@@ -344,21 +334,18 @@ const statusTag = (
   submission: UserApplicationSubmission,
 ): ReactElement<any> => {
   if (application.is_open) {
+    // Editability is carried by the Edit button and the live deadline beside
+    // it, and stated once in the blurb above the table — the tag does not need
+    // to repeat it a third time.
     return (
-      <InfoTag>
-        <Icon name="check" alt="" size="0.85rem" noMargin />
+      <InfoTag title="Saved and sent to the club. You can still change it until the deadline.">
         Submitted
       </InfoTag>
     )
   }
   switch (submission.outcome) {
     case 'accepted':
-      return (
-        <SuccessTag>
-          <Icon name="check" alt="" size="0.85rem" noMargin />
-          Accepted
-        </SuccessTag>
-      )
+      return <SuccessTag>Accepted</SuccessTag>
     case 'rejected_after_written':
       return (
         <DangerTag title="Rejected after written application">
@@ -382,7 +369,7 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
   const [data, setData] = useState(initialData)
   const [query, setQuery] = useState<string>('')
   const [filter, setFilter] = useState<Filter>('all')
-  const [showPast, setShowPast] = useState<boolean>(false)
+  const [showPast, setShowPast] = useState<boolean>(true)
   const [viewing, setViewing] = useState<{
     application: UserApplication
     submission: UserApplicationSubmission
@@ -441,6 +428,157 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
     })
   }
 
+  /**
+   * One <tr> per submission, with the application and deadline cells spanning
+   * them, so a multi-committee application still reads as one block and every
+   * column stays aligned across rows.
+   */
+  const renderApplication = (
+    application: UserApplication,
+  ): ReactElement<any> => {
+    const applied = application.submissions.map((s) => s.committee)
+    const notApplied = application.committees.filter(
+      (committee) => !applied.includes(committee),
+    )
+    // an untouched application still needs a single row, so stand in with null
+    const entries: (UserApplicationSubmission | null)[] =
+      application.submissions.length > 0 ? application.submissions : [null]
+
+    return (
+      <Fragment key={application.id}>
+        {entries.map((submission, position) => (
+          <Row
+            key={submission == null ? 'none' : submission.pk}
+            $last={position === entries.length - 1}
+          >
+            {position === 0 && (
+              <>
+                <td rowSpan={entries.length}>
+                  <AppCell>
+                    <AppName>{application.name}</AppName>
+                    <ClubName>
+                      <Link href={CLUB_ROUTE(application.club_code)}>
+                        {application.club_name}
+                      </Link>
+                    </ClubName>
+                    {application.is_open && notApplied.length > 0 && (
+                      <OtherCommittees>
+                        {applied.length > 0
+                          ? `You have not applied to: ${notApplied.join(', ')}`
+                          : `Committees: ${notApplied.join(', ')}`}
+                      </OtherCommittees>
+                    )}
+                  </AppCell>
+                </td>
+                <td rowSpan={entries.length}>{deadlineCell(application)}</td>
+              </>
+            )}
+            <td>
+              {submission == null || application.committees.length === 0 ? (
+                // "General Member" is a display fallback for a null committee,
+                // so naming it here would imply the application has a
+                // committee it does not have
+                <NoneCell>&mdash;</NoneCell>
+              ) : (
+                <CommitteeTag>{submission.committee}</CommitteeTag>
+              )}
+            </td>
+            <td>
+              {submission == null ? (
+                <NoneCell>&mdash;</NoneCell>
+              ) : (
+                (() => {
+                  const pct = progressPercent(submission)
+                  return (
+                    <Progress>
+                      <Track>
+                        <Fill $pct={pct} $done={pct === 100} />
+                      </Track>
+                      {submission.questions_answered} of{' '}
+                      {submission.questions_total}
+                    </Progress>
+                  )
+                })()
+              )}
+            </td>
+            <td>
+              {submission == null ? (
+                application.is_open ? (
+                  moment(application.effective_end_time).diff(
+                    moment(),
+                    'hours',
+                  ) < 48 ? (
+                    <DangerTag>Not started</DangerTag>
+                  ) : (
+                    <WarningTag>Not started</WarningTag>
+                  )
+                ) : (
+                  <Tag>Not submitted</Tag>
+                )
+              ) : (
+                statusTag(application, submission)
+              )}
+            </td>
+            <td>
+              <Actions>
+                {submission == null ? (
+                  <a
+                    href={applyHref(application)}
+                    target={application.external_url ? '_blank' : undefined}
+                    rel={
+                      application.external_url
+                        ? 'noopener noreferrer'
+                        : undefined
+                    }
+                    className="button is-small"
+                    style={{
+                      background: CLUBS_BLUE,
+                      borderColor: 'transparent',
+                      color: 'white',
+                    }}
+                  >
+                    Apply
+                  </a>
+                ) : (
+                  <>
+                    <button
+                      className="button is-small"
+                      onClick={() => setViewing({ application, submission })}
+                    >
+                      View
+                    </button>
+                    {application.is_open && (
+                      <a
+                        href={editHref(application, submission)}
+                        className="button is-small"
+                      >
+                        <Icon name="edit" alt="" size="0.8rem" />
+                        Edit
+                      </a>
+                    )}
+                  </>
+                )}
+              </Actions>
+            </td>
+          </Row>
+        ))}
+      </Fragment>
+    )
+  }
+
+  const header = (
+    <thead>
+      <tr>
+        <th>Application</th>
+        <th>Deadline</th>
+        <th>Committee</th>
+        <th>Questions</th>
+        <th>Status</th>
+        <th />
+      </tr>
+    </thead>
+  )
+
   if (isError) {
     return <Text>{(data as { detail: string }).detail}</Text>
   }
@@ -471,27 +609,14 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
 
   return (
     <>
-      <Toolbar>
-        <Blurb>
-          Everything you&apos;ve applied to, plus open applications from clubs
-          you&apos;ve bookmarked or subscribed to.
-        </Blurb>
-        <Search>
-          <span>
-            <Icon name="search" alt="search" size="0.9rem" />
-          </span>
-          <input
-            className="input"
-            type="text"
-            value={query}
-            placeholder="Search applications"
-            aria-label="Search applications"
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </Search>
-      </Toolbar>
+      <Blurb>
+        Everything you&apos;ve applied to, plus open applications from clubs
+        you&apos;ve bookmarked or subscribed to. A submitted application stays
+        editable until its deadline &mdash; clubs only read your most recent
+        version.
+      </Blurb>
 
-      <Filters>
+      <Toolbar>
         {(
           [
             [
@@ -514,195 +639,53 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
             {label} {count}
           </Chip>
         ))}
-      </Filters>
+        <Search>
+          <span>
+            <Icon name="search" alt="search" size="0.9rem" />
+          </span>
+          <input
+            className="input"
+            type="text"
+            value={query}
+            placeholder="Search applications"
+            aria-label="Search applications"
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </Search>
+      </Toolbar>
 
       <Scroll>
         <Table>
-          <thead>
-            <tr>
-              <th>Application</th>
-              <th>Deadline</th>
-              <th>Committee</th>
-              <th>Progress</th>
-              <th>Status</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              ...rows.map((application) => ({ application, past: false })),
-              ...(showPast
-                ? buckets.past.map((application) => ({
-                    application,
-                    past: true,
-                  }))
-                : []),
-            ].map(({ application, past }, index, all) => {
-              const startsPast = past && (index === 0 || !all[index - 1].past)
-              const applied = application.submissions.map((s) => s.committee)
-              const unapplied = application.committees.filter(
-                (committee) => !applied.includes(committee),
-              )
-              // one row per submission; an untouched application still needs
-              // a single row, so stand in with a null entry
-              const entries: (UserApplicationSubmission | null)[] =
-                application.submissions.length > 0
-                  ? application.submissions
-                  : [null]
-              return (
-                <Fragment key={application.id}>
-                  {startsPast && (
-                    <tr>
-                      <GroupHeader colSpan={6}>
-                        Past applications &mdash; earlier seasons
-                      </GroupHeader>
-                    </tr>
-                  )}
-                  {entries.map((submission, position) => (
-                    <Row
-                      key={submission == null ? 'none' : submission.pk}
-                      $last={position === entries.length - 1}
-                    >
-                      {position === 0 && (
-                        <>
-                          <td rowSpan={entries.length}>
-                            <AppCell>
-                              <AppName>{application.name}</AppName>
-                              <ClubName>
-                                <Link href={CLUB_ROUTE(application.club_code)}>
-                                  {application.club_name}
-                                </Link>
-                              </ClubName>
-                              {application.is_open && unapplied.length > 0 && (
-                                <AlsoOpen>
-                                  Also open to you: {unapplied.join(', ')}
-                                </AlsoOpen>
-                              )}
-                            </AppCell>
-                          </td>
-                          <td rowSpan={entries.length}>
-                            {deadlineCell(application)}
-                          </td>
-                        </>
-                      )}
-                      <td>
-                        {submission == null ? (
-                          <NoneCell>&mdash;</NoneCell>
-                        ) : application.committees.length === 0 ? (
-                          // "General Member" is a display fallback for a null
-                          // committee, so naming it here would imply the
-                          // application has a committee it does not have
-                          <NoneCell>&mdash;</NoneCell>
-                        ) : (
-                          <MineTag>{submission.committee}</MineTag>
-                        )}
-                      </td>
-                      <td>
-                        {submission == null ? (
-                          <NoneCell>&mdash;</NoneCell>
-                        ) : (
-                          (() => {
-                            const pct = progressPercent(submission)
-                            return (
-                              <Progress>
-                                <Track>
-                                  <Fill $pct={pct} $done={pct === 100} />
-                                </Track>
-                                {submission.questions_answered} of{' '}
-                                {submission.questions_total}
-                              </Progress>
-                            )
-                          })()
-                        )}
-                      </td>
-                      <td>
-                        {submission == null ? (
-                          application.is_open ? (
-                            moment(application.effective_end_time).diff(
-                              moment(),
-                              'hours',
-                            ) < 48 ? (
-                              <DangerTag>Not started</DangerTag>
-                            ) : (
-                              <WarningTag>Not started</WarningTag>
-                            )
-                          ) : (
-                            <Tag>Not submitted</Tag>
-                          )
-                        ) : (
-                          statusTag(application, submission)
-                        )}
-                      </td>
-                      <td>
-                        <Actions>
-                          {submission == null ? (
-                            <a
-                              href={applyHref(application)}
-                              target={
-                                application.external_url ? '_blank' : undefined
-                              }
-                              rel={
-                                application.external_url
-                                  ? 'noopener noreferrer'
-                                  : undefined
-                              }
-                              className="button is-small"
-                              style={{
-                                background: CLUBS_BLUE,
-                                borderColor: 'transparent',
-                                color: 'white',
-                              }}
-                            >
-                              Apply
-                            </a>
-                          ) : (
-                            <>
-                              <button
-                                className="button is-small"
-                                onClick={() =>
-                                  setViewing({ application, submission })
-                                }
-                              >
-                                View
-                              </button>
-                              {application.is_open && (
-                                <a
-                                  href={editHref(application, submission)}
-                                  className="button is-small"
-                                >
-                                  <Icon name="edit" alt="edit" size="0.8rem" />
-                                </a>
-                              )}
-                            </>
-                          )}
-                        </Actions>
-                      </td>
-                    </Row>
-                  ))}
-                </Fragment>
-              )
-            })}
-          </tbody>
+          <Cols />
+          {header}
+          <tbody>{rows.map(renderApplication)}</tbody>
         </Table>
       </Scroll>
 
-      <Legend>
-        <span className="key">
-          <MineTag>Writing</MineTag> the committee this submission is for
-        </span>
-      </Legend>
-
       {buckets.past.length > 0 && (
-        <Disclosure onClick={() => setShowPast(!showPast)}>
-          <Icon
-            name={showPast ? 'chevron-down' : 'chevron-right'}
-            alt=""
-            size="0.9rem"
-          />
-          <DiscTitle>Past applications</DiscTitle>
-          <Tag>{buckets.past.length}</Tag>
-          <Absolute>Earlier seasons</Absolute>
-        </Disclosure>
+        <>
+          <Disclosure onClick={() => setShowPast(!showPast)}>
+            <Icon
+              name={showPast ? 'chevron-down' : 'chevron-right'}
+              alt=""
+              size="0.9rem"
+            />
+            <DiscTitle>Past applications</DiscTitle>
+            <Tag>{buckets.past.length}</Tag>
+            <Absolute>Earlier seasons</Absolute>
+          </Disclosure>
+          {showPast && (
+            <PastTable>
+              <Scroll>
+                <Table>
+                  <Cols />
+                  {header}
+                  <tbody>{buckets.past.map(renderApplication)}</tbody>
+                </Table>
+              </Scroll>
+            </PastTable>
+          )}
+        </>
       )}
 
       {viewing != null && (
