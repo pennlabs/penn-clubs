@@ -10,10 +10,9 @@ import React, { ReactNode } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
-import { Application, ApplicationSubmission, UserInfo } from 'types'
+import { ApplicationSubmission, UserInfo } from 'types'
 import { OBJECT_NAME_TITLE, SHOW_MEMBERSHIP_REQUEST } from 'utils/branding'
 
-import ApplicationsPage from '~/components/Applications'
 import TicketsTab from '~/components/Settings/TicketsTab'
 import SubmissionsPage from '~/components/Submissions'
 import { BG_GRADIENT, CLUBS_BLUE, WHITE } from '~/constants/colors'
@@ -38,15 +37,9 @@ type SettingsProps = {
   userInfo?: UserInfo
   authenticated: boolean | null
   submissions: ApplicationSubmission[]
-  whartonApplications: any
 }
 
-const Settings = ({
-  userInfo,
-  authenticated,
-  whartonApplications,
-  submissions,
-}: SettingsProps) => {
+const Settings = ({ userInfo, authenticated, submissions }: SettingsProps) => {
   /**
    * Display the message to the user in the form of a toast.
    * @param The message to show to the user.
@@ -85,11 +78,6 @@ const Settings = ({
       content: <SubmissionsPage initialSubmissions={submissions} />,
     },
     {
-      name: 'applications',
-      label: 'Applications',
-      content: <ApplicationsPage whartonApplications={whartonApplications} />,
-    },
-    {
       name: 'Requests',
       icon: 'user-check',
       content: <MembershipRequestsTab />,
@@ -125,18 +113,13 @@ const Settings = ({
 }
 
 type BulkResp = {
-  whartonapplications: Application[]
   submissions: Array<ApplicationSubmission>
 }
 
 Settings.getInitialProps = async (ctx: NextPageContext) => {
-  const data: BulkResp = (await doBulkLookup(
-    ['whartonapplications', 'submissions'],
-    ctx,
-  )) as BulkResp
+  const data: BulkResp = (await doBulkLookup(['submissions'], ctx)) as BulkResp
 
   return {
-    whartonApplications: data.whartonapplications,
     submissions: data.submissions,
     fair: ctx.query.fair != null ? parseInt(ctx.query.fair as string) : null,
   }

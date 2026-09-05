@@ -226,6 +226,7 @@ from clubs.serializers import (
     TestimonialSerializer,
     TicketSerializer,
     TypeSerializer,
+    UserApplicationSerializer,
     UserClubVisitSerializer,
     UserClubVisitWriteSerializer,
     UserMembershipInviteSerializer,
@@ -7538,10 +7539,54 @@ class UserViewSet(viewsets.ModelViewSet):
         response = Response([])
         if len(questions) == 0:
             return response
-        application = (
-            ApplicationQuestion.objects.filter(pk=questions[0]).first().application
+
+        # questionIds is built from Object.entries() on the frontend, so it is
+        # always strings there, but a hand-crafted request could send JSON
+        # integers instead. Normalize once so every lookup below -- including
+        # self.request.data.get(question_pk, ...), whose keys are JSON object
+        # keys and therefore always strings -- uses the same representation.
+        questions = [str(question_pk) for question_pk in questions]
+
+        first_question = ApplicationQuestion.objects.filter(pk=questions[0]).first()
+        if first_question is None:
+            return Response(
+                {"success": False, "detail": "That question does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        application = first_question.application
+
+        # every question id in the payload must belong to this application,
+        # or a stale/tampered id would attach a response to the wrong one;
+        # keyed by str(pk) to match questions and self.request.data's keys
+        question_lookup = {
+            str(question.pk): question
+            for question in ApplicationQuestion.objects.filter(
+                pk__in=questions, application=application
+            )
+        }
+        if len(question_lookup) != len(set(questions)):
+            return Response(
+                {
+                    "success": False,
+                    "detail": "One or more questions do not belong to this "
+                    "application.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        committee = (
+            application.committees.filter(name=committee_name).first()
+            if committee_name
+            else None
         )
-        committee = application.committees.filter(name=committee_name).first()
+        if committee_name and committee is None:
+            return Response(
+                {
+                    "success": False,
+                    "detail": "That committee does not exist for this application.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         committees_applied = (
             ApplicationSubmission.objects.filter(
@@ -7592,6 +7637,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 {
                     "success": False,
+                    "reason": "incomplete_profile",
                     "detail": """You need to set your graduation year, major, and
                     school before you can apply to a club!""",
                 },
@@ -7608,9 +7654,13 @@ class UserViewSet(viewsets.ModelViewSet):
         cache.delete(key)
 
         for question_pk in questions:
-            question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+            # question_lookup was validated above to contain every id in
+            # questions, scoped to this application, so this is always a hit
+            question = question_lookup[question_pk]
             question_type = question.question_type
             question_data = self.request.data.get(question_pk, None)
+            if not isinstance(question_data, dict):
+                continue
 
             # skip the questions which do not belong to the current committee
             if (
@@ -7700,28 +7750,62 @@ class UserViewSet(viewsets.ModelViewSet):
                                                 type: integer
         ---
         """
-        question_id_param = self.request.GET.get("question_id")
-        if question_id_param is None or not question_id_param.isnumeric():
-            return Response([])
-        question_id = int(question_id_param)
-        question = ApplicationQuestion.objects.filter(pk=question_id).first()
-        if question is None:
+        # `question_ids` fetches several questions at once and answers with a
+        # list. `question_id` keeps the single-question shape callers expect.
+        ids_param = self.request.GET.get("question_ids")
+        if ids_param is not None:
+            question_ids = [
+                int(part) for part in ids_param.split(",") if part.strip().isnumeric()
+            ]
+            bulk = True
+        else:
+            question_id_param = self.request.GET.get("question_id")
+            if question_id_param is None or not question_id_param.isnumeric():
+                return Response([])
+            question_ids = [int(question_id_param)]
+            bulk = False
+
+        if not question_ids:
             return Response([])
 
-        response = (
+        # Responses are per-submission and a user may hold one submission per
+        # committee, so a question with no committee named is still ambiguous:
+        # answering it without filtering hands back whichever submission came
+        # first, which is another committee's answer more often than not.
+        committee = self.request.GET.get("committee")
+        submission_filter = (
+            {"submission__committee__name": committee}
+            if committee
+            else {"submission__committee__isnull": True}
+        )
+
+        responses = (
             ApplicationQuestionResponse.objects.filter(
-                question=question,
+                question_id__in=question_ids,
                 submission__user=self.request.user,
+                **submission_filter,
             )
             .select_related("submission", "multiple_choice", "question")
             .prefetch_related("question__committees", "question__multiple_choice")
-            .first()
+            .order_by("question_id", "-submission__created_at")
         )
 
+        if bulk:
+            # unique_together does not collide on a null committee, so a user
+            # can hold more than one committee-less submission; newest wins
+            seen = {}
+            for response in responses:
+                seen.setdefault(response.question_id, response)
+            return Response(
+                ApplicationQuestionResponseSerializer(
+                    list(seen.values()), many=True
+                ).data
+            )
+
+        response = responses.first()
         if response is None:
             return Response([])
-        else:
-            return Response(ApplicationQuestionResponseSerializer(response).data)
+        return Response(ApplicationQuestionResponseSerializer(response).data)
 
     def get_serializer_class(self):
         if self.action in {"list"}:
@@ -8416,6 +8500,143 @@ class WhartonApplicationAPIView(viewsets.ModelViewSet):
         return super().list(*args, **kwargs)
 
 
+class UserApplicationsView(generics.ListAPIView):
+    """
+    get: Return the applications relevant to the current user, wrapped in an
+    envelope with the number of clubs the user follows.
+
+    The list is the union of:
+    - applications at clubs the user has bookmarked or subscribed to that are
+      open by their base deadline
+    - applications at those clubs where the user has a personal extension that
+      has not yet expired
+    - every application the user has submitted to, regardless of whether the
+      club is saved or the application is still open
+
+    Submissions whose application has been deleted are excluded, since nothing
+    about them can be rendered. Takes no query parameters.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserApplicationSerializer
+    pagination_class = None
+
+    def _get_user_application_context(self):
+        """
+        Compute everything that depends on the requesting user in one place:
+        the ids of the applications to return, the clubs they have bookmarked
+        and subscribed to, and how many distinct clubs that is.
+        """
+        user = self.request.user
+        now = timezone.now()
+
+        # A bookmark or subscription can outlive the club itself. archived is
+        # the one flag that blocks a club's page at every action, not just
+        # list/search (ClubViewSet.get_queryset applies it unconditionally,
+        # while active and approved only filter the list action), so it is
+        # the only case where a stale relationship would produce a link the
+        # user cannot open. A club that is merely unlisted (inactive this
+        # cycle, pending review, or rejected) is still a real, visitable club
+        # and may still be running a legitimate application.
+        not_archived = Q(club__archived=False)
+        bookmarked_club_ids = set(
+            Favorite.objects.filter(not_archived, person=user).values_list(
+                "club_id", flat=True
+            )
+        )
+        subscribed_club_ids = set(
+            Subscribe.objects.filter(not_archived, person=user).values_list(
+                "club_id", flat=True
+            )
+        )
+        saved_club_ids = bookmarked_club_ids | subscribed_club_ids
+
+        # Applications open by base deadline for saved clubs
+        base_active_ids = set(
+            ClubApplication.objects.filter(
+                club_id__in=saved_club_ids,
+                application_start_time__lte=now,
+                application_end_time__gte=now,
+            ).values_list("pk", flat=True)
+        )
+        # Applications where the user has a personal extension still open
+        extension_active_ids = set(
+            ApplicationExtension.objects.filter(
+                user=user,
+                application__club_id__in=saved_club_ids,
+                application__application_start_time__lte=now,
+                end_time__gte=now,
+            ).values_list("application_id", flat=True)
+        )
+        # Applications the user has submitted to, excluding orphaned
+        # submissions whose application has since been deleted
+        submitted_ids = set(
+            ApplicationSubmission.objects.filter(
+                user=user, application__isnull=False
+            ).values_list("application_id", flat=True)
+        )
+
+        return {
+            "application_ids": base_active_ids | extension_active_ids | submitted_ids,
+            "bookmarked_club_ids": bookmarked_club_ids,
+            "subscribed_club_ids": subscribed_club_ids,
+            "saved_club_count": len(saved_club_ids),
+        }
+
+    def _get_applications(self, application_ids):
+        user = self.request.user
+        return (
+            ClubApplication.objects.filter(pk__in=application_ids)
+            .select_related("club")
+            .prefetch_related(
+                "committees",
+                Prefetch(
+                    "submissions",
+                    queryset=ApplicationSubmission.objects.filter(user=user)
+                    .select_related("committee")
+                    .annotate(answered_count=Count("responses")),
+                    to_attr="user_submissions",
+                ),
+                Prefetch(
+                    # answerable questions, for the progress denominator;
+                    # INFO_TEXT is not a question the applicant responds to
+                    "questions",
+                    queryset=ApplicationQuestion.objects.exclude(
+                        question_type=ApplicationQuestion.INFO_TEXT
+                    ).prefetch_related("committees"),
+                    to_attr="answerable_questions",
+                ),
+                Prefetch(
+                    "extensions",
+                    queryset=ApplicationExtension.objects.filter(user=user),
+                    to_attr="user_extensions",
+                ),
+            )
+            .order_by("-application_end_time", "pk")
+        )
+
+    def get_queryset(self):
+        return self._get_applications(
+            self._get_user_application_context()["application_ids"]
+        )
+
+    def list(self, request, *args, **kwargs):
+        user_context = self._get_user_application_context()
+        queryset = self._get_applications(user_context["application_ids"])
+
+        context = self.get_serializer_context()
+        context["bookmarked_club_ids"] = user_context["bookmarked_club_ids"]
+        context["subscribed_club_ids"] = user_context["subscribed_club_ids"]
+        serializer = self.get_serializer_class()(queryset, many=True, context=context)
+
+        return Response(
+            {
+                "saved_club_count": user_context["saved_club_count"],
+                "results": serializer.data,
+            }
+        )
+
+
 class WhartonApplicationStatusAPIView(generics.ListAPIView):
     """
     get: Return aggregate status for Wharton application submissions
@@ -9067,6 +9288,22 @@ class OptionListView(APIView):
         else:
             options["FAIR_OPEN"] = False
             options["PRE_FAIR"] = False
+
+        # APPLICATION_TRACKER_BANNER switches the clubs-page banner on, the
+        # same plain boolean option as CLUB_REGISTRATION. An optional
+        # APPLICATION_TRACKER_BANNER_UNTIL date switches it back off when it
+        # passes, so the banner can retire itself without a deploy.
+        banner_until = options.pop("APPLICATION_TRACKER_BANNER_UNTIL", None)
+        banner = str(options.get("APPLICATION_TRACKER_BANNER", "")).lower() == "true"
+        if banner and banner_until:
+            try:
+                until = datetime.datetime.fromisoformat(str(banner_until))
+                if timezone.is_naive(until):
+                    until = timezone.make_aware(until)
+                banner = now < until
+            except ValueError:
+                pass
+        options["APPLICATION_TRACKER_BANNER"] = banner
 
         return Response(options)
 

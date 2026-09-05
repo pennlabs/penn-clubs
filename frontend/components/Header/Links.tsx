@@ -18,11 +18,12 @@ import {
   MD,
   mediaMaxWidth,
 } from '../../constants/measurements'
-import { CART_ROUTE, SETTINGS_ROUTE } from '../../constants/routes'
+import { APPLY_ROUTE, CART_ROUTE, SETTINGS_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import { LOGIN_URL } from '../../utils'
 import { logEvent } from '../../utils/analytics'
 import { Icon } from '../common'
+import { BetaTag } from '../common/BetaTag'
 
 const StyledIcon = styled(Icon)`
   opacity: 0.5;
@@ -121,6 +122,18 @@ const Links = ({ userInfo, authenticated, show }: Props): ReactElement<any> => {
         <StyledLink href="/events" onClick={() => logEvent('events', 'click')}>
           Events
         </StyledLink>
+        {authenticated && (
+          <StyledLink
+            href={APPLY_ROUTE}
+            onClick={() => logEvent('apply', 'click')}
+          >
+            {/* TEMPORARY: drop the tag (keep the link) once the fall cycle is
+                over — a "New" marker that never leaves stops meaning "new". */}
+            <BetaTag label="New" raised={false}>
+              Applications
+            </BetaTag>
+          </StyledLink>
+        )}
         <StyledLink href="/faq" onClick={() => logEvent('faq', 'click')}>
           FAQ
         </StyledLink>

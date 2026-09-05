@@ -1,7 +1,6 @@
 import datetime
 import random
 
-import pytz
 import requests
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -29,6 +28,7 @@ from clubs.models import (
     Eligibility,
     Event,
     EventShowing,
+    Favorite,
     Major,
     Membership,
     Profile,
@@ -247,6 +247,51 @@ fair_registration_text = """
     sign up for the SAC fair.
 </p>
 """
+
+
+WC_PROMPT_ONE = "Tell us about a time you took initiative or demonstrated leadership"
+WC_PROMPT_TWO = "Tell us about a time you faced a challenge and how you solved it"
+WC_PROMPT_THREE = "Tell us about a time you collaborated well in a team"
+
+
+def add_wc_questions(application):
+    prompt_question = ApplicationQuestion.objects.create(
+        question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+        application=application,
+        prompt="Choose one of the following prompts for your personal statement",
+    )
+    ApplicationMultipleChoice.objects.create(
+        value=WC_PROMPT_ONE, question=prompt_question
+    )
+    ApplicationMultipleChoice.objects.create(
+        value=WC_PROMPT_TWO, question=prompt_question
+    )
+    ApplicationMultipleChoice.objects.create(
+        value=WC_PROMPT_THREE, question=prompt_question
+    )
+    ApplicationQuestion.objects.create(
+        question_type=ApplicationQuestion.FREE_RESPONSE,
+        prompt="Answer the prompt you selected",
+        word_limit=150,
+        application=application,
+    )
+
+
+def set_wc_external_url(application):
+    application.external_url = (
+        f"http://localhost:3000/club/{application.club.code}"
+        f"/application/{application.pk}"
+    )
+    application.save()
+
+
+IMAGE_REQUEST_HEADERS = {
+    # imgur rejects the default requests User-Agent with HTTP 429
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    )
+}
 
 
 class Command(BaseCommand):
@@ -470,12 +515,49 @@ class Command(BaseCommand):
         image_cache = {}
 
         def get_image(url):
-            if url not in image_cache:
-                contents = requests.get(url).content
-                image_cache[url] = contents
-            else:
-                contents = image_cache[url]
+            """
+            Fetch an image for seeding, or None if it could not be fetched.
+
+            imgur answers the default requests User-Agent with HTTP 429 and an
+            empty body, so without the browser User-Agent below every seeded
+            club ended up with a zero-byte image file that browsers render as
+            a broken image. The status check is belt and braces: a fetch that
+            fails for any other reason should skip the image loudly rather
+            than save an empty one.
+            """
+            if url in image_cache:
+                return image_cache[url]
+
+            contents = None
+            try:
+                resp = requests.get(url, headers=IMAGE_REQUEST_HEADERS, timeout=15)
+                if resp.ok and resp.content:
+                    contents = resp.content
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Could not fetch {url} (HTTP {resp.status_code}, "
+                            f"{len(resp.content)} bytes); skipping this image."
+                        )
+                    )
+            except requests.RequestException as e:
+                self.stdout.write(
+                    self.style.WARNING(f"Could not fetch {url} ({e}); skipping.")
+                )
+
+            image_cache[url] = contents
             return contents
+
+        def save_image(field, url, name="image.png"):
+            """
+            Save a fetched image onto a model field, skipping the write when
+            the fetch failed. Returns whether anything was saved.
+            """
+            contents = get_image(url)
+            if contents is None:
+                return False
+            field.save(name, ContentFile(contents))
+            return True
 
         classification_choices = list(
             Classification.objects.filter(symbol__in=["UG", "UGo", "G", "Go"])
@@ -503,9 +585,7 @@ class Command(BaseCommand):
 
             club, _ = Club.objects.get_or_create(code=info["code"], defaults=partial)
 
-            if "image" in info:
-                contents = get_image(info["image"])
-                club.image.save("image.png", ContentFile(contents))
+            if "image" in info and save_image(club.image, info["image"]):
                 club.save()
 
             m2m_fields = [(Tag, "tags"), (Badge, "badges")]
@@ -660,7 +740,7 @@ class Command(BaseCommand):
         ben = user_objs[0]
         ben.is_superuser = True
         ben.is_staff = True
-        ben.profile.image.save("ben.png", ContentFile(get_image(profile_image_url)))
+        save_image(ben.profile.image, profile_image_url, "ben.png")
         ben.profile.school.add(*School.objects.order_by("name")[:2])
         ben.profile.major.add(*Major.objects.order_by("name")[:3])
         ben.save()
@@ -783,8 +863,7 @@ class Command(BaseCommand):
             )
 
         if created:
-            contents = get_image(event_image_url)
-            event.image.save("image.png", ContentFile(contents))
+            save_image(event.image, event_image_url)
 
         # create a club application
         club = Club.objects.get(code="empty-club")
@@ -810,139 +889,69 @@ class Command(BaseCommand):
             },
         )
 
-        # create club applications that are wharton common app
-        eastern = pytz.timezone("America/New_York")
+        # Wharton Council applications with evergreen, now-relative dates.
+        # Two cycles: a completed past cycle and an active current cycle.
 
-        # Create application cycles
-        fall_cycle, _ = ApplicationCycle.objects.get_or_create(
-            name="Fall 2024",
+        if now.month >= 8:
+            current_sem = f"Fall {now.year}"
+            past_sem = f"Spring {now.year}"
+        else:
+            current_sem = f"Spring {now.year}"
+            past_sem = f"Fall {now.year - 1}"
+
+        past_cycle, _ = ApplicationCycle.objects.get_or_create(
+            name=past_sem,
             defaults={
-                "start_date": datetime.datetime(2024, 9, 1, 0, 0, tzinfo=eastern),
-                "end_date": datetime.datetime(2024, 11, 30, 23, 59, tzinfo=eastern),
-                "release_date": datetime.datetime(2024, 12, 15, 0, 0, tzinfo=eastern),
+                "start_date": now - datetime.timedelta(days=180),
+                "end_date": now - datetime.timedelta(days=60),
+                "release_date": now - datetime.timedelta(days=30),
             },
         )
-        spring_cycle, _ = ApplicationCycle.objects.get_or_create(
-            name="Spring 2025",
+        current_cycle, _ = ApplicationCycle.objects.get_or_create(
+            name=current_sem,
             defaults={
-                "start_date": datetime.datetime(2025, 1, 15, 0, 0, tzinfo=eastern),
-                "end_date": datetime.datetime(2025, 3, 31, 23, 59, tzinfo=eastern),
-                "release_date": datetime.datetime(2025, 4, 15, 0, 0, tzinfo=eastern),
+                "start_date": now - datetime.timedelta(weeks=2),
+                "end_date": now + datetime.timedelta(weeks=6),
+                "release_date": now + datetime.timedelta(weeks=8),
             },
         )
 
-        application_start_time = datetime.datetime(2021, 9, 4, 0, 0, tzinfo=eastern)
-        application_end_time = datetime.datetime(2021, 11, 20, 2, 0, tzinfo=eastern)
-        result_release_time = datetime.datetime(2021, 12, 4, 0, 0, tzinfo=eastern)
-        prompt_one = (
-            "Tell us about a time you took initiative or demonstrated leadership"
-        )
-        prompt_two = "Tell us about a time you faced a challenge and how you solved it"
-        prompt_three = "Tell us about a time you collaborated well in a team"
+        # --- Past cycle applications (closed, results released) ---
 
-        # Create applications for pppjo and harvard-rejects
-        for code in ["pppjo", "harvard-rejects"]:
-            club = Club.objects.get(code=code)
-            name = f"{club.name} Application"
-            application = ClubApplication.objects.create(
-                name=name,
-                club=club,
-                application_start_time=application_start_time,
-                application_end_time=application_end_time,
-                result_release_time=result_release_time,
-                is_wharton_council=True,
-                application_cycle=fall_cycle,
-            )
-            link = (
-                f"http://localhost:3000/club/{club.code}/application/{application.pk}"
-            )
-            application.external_url = link
-            application.save()
-            prompt = "Choose one of the following prompts for your personal statement"
-            prompt_question = ApplicationQuestion.objects.create(
-                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
-                application=application,
-                prompt=prompt,
-            )
-            ApplicationMultipleChoice.objects.create(
-                value=prompt_one, question=prompt_question
-            )
-            ApplicationMultipleChoice.objects.create(
-                value=prompt_two, question=prompt_question
-            )
-            ApplicationMultipleChoice.objects.create(
-                value=prompt_three, question=prompt_question
-            )
-            ApplicationQuestion.objects.create(
-                question_type=ApplicationQuestion.FREE_RESPONSE,
-                prompt="Answer the prompt you selected",
-                word_limit=150,
-                application=application,
+        pppjo_club = Club.objects.get(code="pppjo")
+        pppjo_past_app = ClubApplication.objects.create(
+            name=f"PPPJO Application ({past_sem})",
+            club=pppjo_club,
+            application_start_time=past_cycle.start_date,
+            application_end_time=past_cycle.end_date,
+            result_release_time=past_cycle.release_date,
+            is_wharton_council=True,
+            application_cycle=past_cycle,
+        )
+        set_wc_external_url(pppjo_past_app)
+        add_wc_questions(pppjo_past_app)
+
+        for user in get_user_model().objects.all():
+            ApplicationSubmission.objects.create(
+                status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+                user=user,
+                application=pppjo_past_app,
+                committee=None,
             )
 
-        # Create two applications for penn-memes with different cycles
-        club = Club.objects.get(code="penn-memes")
-        penn_memes_fall_app = None
-        penn_memes_spring_app = None
-        for cycle, cycle_name in [(fall_cycle, "Fall"), (spring_cycle, "Spring")]:
-            name = f"{club.name} Application ({cycle_name})"
-            application = ClubApplication.objects.create(
-                name=name,
-                club=club,
-                application_start_time=application_start_time,
-                application_end_time=application_end_time,
-                result_release_time=result_release_time,
-                is_wharton_council=True,
-                application_cycle=cycle,
-            )
-            link = (
-                f"http://localhost:3000/club/{club.code}/application/{application.pk}"
-            )
-            application.external_url = link
-            application.save()
-            prompt = "Choose one of the following prompts for your personal statement"
-            prompt_question = ApplicationQuestion.objects.create(
-                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
-                application=application,
-                prompt=prompt,
-            )
-            ApplicationMultipleChoice.objects.create(
-                value=prompt_one, question=prompt_question
-            )
-            ApplicationMultipleChoice.objects.create(
-                value=prompt_two, question=prompt_question
-            )
-            ApplicationMultipleChoice.objects.create(
-                value=prompt_three, question=prompt_question
-            )
-            ApplicationQuestion.objects.create(
-                question_type=ApplicationQuestion.FREE_RESPONSE,
-                prompt="Answer the prompt you selected",
-                word_limit=150,
-                application=application,
-            )
+        hr_club = Club.objects.get(code="harvard-rejects")
+        hr_past_app = ClubApplication.objects.create(
+            name=f"Harvard Rejects Application ({past_sem})",
+            club=hr_club,
+            application_start_time=past_cycle.start_date,
+            application_end_time=past_cycle.end_date,
+            result_release_time=past_cycle.release_date,
+            is_wharton_council=True,
+            application_cycle=past_cycle,
+        )
+        set_wc_external_url(hr_past_app)
+        add_wc_questions(hr_past_app)
 
-            # Store references to the applications
-            if cycle == fall_cycle:
-                penn_memes_fall_app = application
-            else:
-                penn_memes_spring_app = application
-
-        # Add committees to Spring application
-        ApplicationCommittee.objects.create(
-            name="Redditors", application=penn_memes_spring_app
-        )
-        ApplicationCommittee.objects.create(
-            name="Sidechat", application=penn_memes_spring_app
-        )
-        ApplicationCommittee.objects.create(
-            name="M&T", application=penn_memes_spring_app
-        )
-        ApplicationCommittee.objects.create(
-            name="Twitter", application=penn_memes_spring_app
-        )
-
-        # Create submissions for Spring application with various statuses
         status_counter = 0
         for user in get_user_model().objects.all():
             status = ApplicationSubmission.STATUS_TYPES[
@@ -951,82 +960,108 @@ class Command(BaseCommand):
             ApplicationSubmission.objects.create(
                 status=status,
                 user=user,
-                application=penn_memes_spring_app,
+                application=hr_past_app,
                 committee=None,
             )
             status_counter += 1
-            for committee in penn_memes_spring_app.committees.all():
+
+        # --- Current cycle applications (active, accepting submissions) ---
+
+        memes_club = Club.objects.get(code="penn-memes")
+        memes_current_app = ClubApplication.objects.create(
+            name=f"Penn Memes Application ({current_sem})",
+            club=memes_club,
+            application_start_time=current_cycle.start_date,
+            application_end_time=current_cycle.end_date,
+            result_release_time=current_cycle.release_date,
+            is_wharton_council=True,
+            application_cycle=current_cycle,
+        )
+        set_wc_external_url(memes_current_app)
+        add_wc_questions(memes_current_app)
+
+        for cname in ["Redditors", "Sidechat", "M&T", "Twitter"]:
+            ApplicationCommittee.objects.create(
+                name=cname, application=memes_current_app
+            )
+
+        status_counter = 0
+        for user in get_user_model().objects.all():
+            status = ApplicationSubmission.STATUS_TYPES[
+                status_counter % len(ApplicationSubmission.STATUS_TYPES)
+            ][0]
+            ApplicationSubmission.objects.create(
+                status=status,
+                user=user,
+                application=memes_current_app,
+                committee=None,
+            )
+            status_counter += 1
+            for committee in memes_current_app.committees.all():
                 ApplicationSubmission.objects.create(
                     status=status,
                     user=user,
-                    application=penn_memes_spring_app,
+                    application=memes_current_app,
                     committee=committee,
                 )
 
-        # Create application submissions for penn-memes Fall application (all rejected)
-        if penn_memes_fall_app:
-            ApplicationCommittee.objects.create(
-                name="Redditors", application=penn_memes_fall_app
-            )
-            ApplicationCommittee.objects.create(
-                name="Sidechat", application=penn_memes_fall_app
-            )
-            ApplicationCommittee.objects.create(
-                name="M&T", application=penn_memes_fall_app
-            )
-            ApplicationCommittee.objects.create(
-                name="Twitter", application=penn_memes_fall_app
-            )
-            # Create rejected submissions for all users
-            for user in get_user_model().objects.all():
-                # REJECTED_AFTER_WRITTEN = 2
-                ApplicationSubmission.objects.create(
-                    status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
-                    user=user,
-                    application=penn_memes_fall_app,
-                    committee=None,
+        # Question responses for penn-memes current app (for CSV export testing)
+        mc_q = ApplicationQuestion.objects.filter(
+            application=memes_current_app,
+            question_type=ApplicationQuestion.MULTIPLE_CHOICE,
+        ).first()
+        fr_q = ApplicationQuestion.objects.filter(
+            application=memes_current_app,
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+        ).first()
+        submissions_qs = ApplicationSubmission.objects.filter(
+            application=memes_current_app
+        )
+        choices = list(mc_q.multiple_choice.all()) if mc_q else []
+        for idx, sub in enumerate(submissions_qs):
+            if mc_q and choices:
+                ApplicationQuestionResponse.objects.get_or_create(
+                    question=mc_q,
+                    submission=sub,
+                    defaults={"multiple_choice": choices[idx % len(choices)]},
                 )
-                for committee in penn_memes_fall_app.committees.all():
-                    ApplicationSubmission.objects.create(
-                        status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
-                        user=user,
-                        application=penn_memes_fall_app,
-                        committee=committee,
-                    )
+            if fr_q:
+                ApplicationQuestionResponse.objects.get_or_create(
+                    question=fr_q,
+                    submission=sub,
+                    defaults={
+                        "text": (
+                            f"Sample response by {sub.user.first_name}"
+                            f" {sub.user.last_name}"
+                            f" for {memes_current_app.name}"
+                        )
+                    },
+                )
 
-        # Create example responses for penn-memes applications
-        for app in filter(None, [penn_memes_spring_app, penn_memes_fall_app]):
-            mc_q = ApplicationQuestion.objects.filter(
-                application=app,
-                question_type=ApplicationQuestion.MULTIPLE_CHOICE,
-                prompt="""Choose one of the following prompts
-                          for your personal statement""",
-            ).first()
-            fr_q = ApplicationQuestion.objects.filter(
-                application=app,
-                question_type=ApplicationQuestion.FREE_RESPONSE,
-                prompt="Answer the prompt you selected",
-            ).first()
+        pppjo_current_app = ClubApplication.objects.create(
+            name=f"PPPJO Application ({current_sem})",
+            club=pppjo_club,
+            application_start_time=current_cycle.start_date,
+            application_end_time=current_cycle.end_date,
+            result_release_time=current_cycle.release_date,
+            is_wharton_council=True,
+            application_cycle=current_cycle,
+        )
+        set_wc_external_url(pppjo_current_app)
+        add_wc_questions(pppjo_current_app)
 
-            submissions_qs = ApplicationSubmission.objects.filter(application=app)
-            choices = list(mc_q.multiple_choice.all()) if mc_q else []
+        for user in get_user_model().objects.all():
+            ApplicationSubmission.objects.create(
+                status=ApplicationSubmission.PENDING,
+                user=user,
+                application=pppjo_current_app,
+                committee=None,
+            )
 
-            for idx, sub in enumerate(submissions_qs):
-                if mc_q and choices:
-                    ApplicationQuestionResponse.objects.get_or_create(
-                        question=mc_q,
-                        submission=sub,
-                        defaults={"multiple_choice": choices[idx % len(choices)]},
-                    )
-                if fr_q:
-                    ApplicationQuestionResponse.objects.get_or_create(
-                        question=fr_q,
-                        submission=sub,
-                        defaults={
-                            "text": f"""Sample response by
-                            {sub.user.first_name} {sub.user.last_name} for {app.name}"""
-                        },
-                    )
+        # Bookmark clubs with active applications so the application tracker
+        # has data for ben out of the box.
+        for club in [pppjo_club, memes_club]:
+            Favorite.objects.get_or_create(person=ben, club=club)
 
         # 10am today
         even_base = now.replace(hour=14, minute=0, second=0, microsecond=0)
@@ -1081,8 +1116,7 @@ class Command(BaseCommand):
                 )
 
                 if created:
-                    contents = get_image(event_image_url)
-                    event.image.save("image.png", ContentFile(contents))
+                    save_image(event.image, event_image_url)
 
         # dismiss welcome prompt for all users
         Profile.objects.all().update(has_been_prompted=True)

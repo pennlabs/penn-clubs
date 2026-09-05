@@ -76,7 +76,7 @@ const SubmissionModal = (props: {
                     true,
                   )
                   return (
-                    <div>
+                    <div key={response.question.id}>
                       {input}
                       <br></br>
                     </div>

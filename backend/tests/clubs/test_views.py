@@ -56,6 +56,7 @@ from clubs.models import (
     RegistrationQueueSettings,
     School,
     Status,
+    Subscribe,
     Tag,
     Testimonial,
     Type,
@@ -6509,6 +6510,813 @@ class NormalizeCommitteesTestCase(TestCase):
         # Submission should be re-pointed to the renamed committee
         self.sub.refresh_from_db()
         self.assertEqual(self.sub.committee.name, "PM")
+
+
+class UserApplicationsViewTestCase(TestCase):
+    """
+    Tests for GET /api/user-applications/
+
+    Covers:
+    - Unauthenticated requests are rejected
+    - The response is an envelope with saved_club_count and results
+    - Applications from bookmarked / subscribed clubs appear when open
+    - Closed applications from saved clubs do NOT appear unless submitted
+    - Previously submitted applications appear regardless of open status
+    - Orphaned submissions (deleted application) are excluded
+    - Extensions make an expired application open for the extended user only
+    - is_open, extension_end_time and effective_end_time reflect extensions
+    - Outcomes are only exposed once the club has notified the applicant
+    - bookmarked / subscribed flags, external_url and ordering
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username="testuser", password="test", email="test@example.com"
+        )
+        self.other_user = get_user_model().objects.create_user(
+            username="otheruser", password="test", email="other@example.com"
+        )
+        self.url = reverse("user-applications")
+
+        now = timezone.now()
+        self.now = now
+
+        self.club = Club.objects.create(code="test-club", name="Test Club", active=True)
+        self.other_club = Club.objects.create(
+            code="other-club", name="Other Club", active=True
+        )
+
+        # A currently open application on self.club
+        self.active_app = ClubApplication.objects.create(
+            name="Active App",
+            club=self.club,
+            application_start_time=now - datetime.timedelta(days=1),
+            application_end_time=now + datetime.timedelta(days=7),
+            result_release_time=now + datetime.timedelta(days=14),
+        )
+
+        # An application that has already closed on self.club
+        self.closed_app = ClubApplication.objects.create(
+            name="Closed App",
+            club=self.club,
+            application_start_time=now - datetime.timedelta(days=10),
+            application_end_time=now - datetime.timedelta(days=1),
+            result_release_time=now + datetime.timedelta(days=5),
+        )
+
+        # An open application on a club the user has no relationship with
+        self.unrelated_app = ClubApplication.objects.create(
+            name="Unrelated App",
+            club=self.other_club,
+            application_start_time=now - datetime.timedelta(days=1),
+            application_end_time=now + datetime.timedelta(days=7),
+            result_release_time=now + datetime.timedelta(days=14),
+        )
+
+    def _get(self):
+        return self.client.get(self.url)
+
+    def _results(self, response):
+        return response.json()["results"]
+
+    def _ids(self, response):
+        return {item["id"] for item in self._results(response)}
+
+    def _app(self, response, application):
+        return next(d for d in self._results(response) if d["id"] == application.id)
+
+    def test_unauthenticated_rejected(self):
+        resp = self._get()
+        self.assertEqual(resp.status_code, 403)
+
+    def test_authenticated_empty_when_no_relationships(self):
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), {"saved_club_count": 0, "results": []})
+
+    def test_active_app_visible_when_bookmarked(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(self.active_app.id, self._ids(resp))
+
+    def test_active_app_visible_when_subscribed(self):
+        Subscribe.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(self.active_app.id, self._ids(resp))
+
+    def test_closed_app_not_visible_without_submission(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertNotIn(self.closed_app.id, self._ids(resp))
+
+    def test_closed_app_visible_when_previously_submitted(self):
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.closed_app, committee=None
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertIn(self.closed_app.id, self._ids(resp))
+
+    def test_unrelated_app_not_visible(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertNotIn(self.unrelated_app.id, self._ids(resp))
+
+    def test_archived_club_bookmark_does_not_surface_its_application(self):
+        # A bookmark can outlive the club: if it is later archived, the
+        # club's page is gone, so an application discovered only through
+        # that bookmark would be a dead link.
+        self.club.archived = True
+        self.club.save()
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertNotIn(self.active_app.id, self._ids(resp))
+        self.assertEqual(resp.json()["saved_club_count"], 0)
+
+    def test_inactive_or_unapproved_club_bookmark_still_surfaces_application(self):
+        # Being unlisted from search (inactive this cycle, or pending /
+        # rejected approval) does not take down the club's own page, so its
+        # application should still show for a user who bookmarked it.
+        self.club.active = False
+        self.club.approved = False
+        self.club.save()
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertIn(self.active_app.id, self._ids(resp))
+        self.assertEqual(resp.json()["saved_club_count"], 1)
+
+    def test_saved_club_count_counts_distinct_clubs(self):
+        # bookmarked and subscribed to the same club counts once
+        Favorite.objects.create(person=self.user, club=self.club)
+        Subscribe.objects.create(person=self.user, club=self.club)
+        Subscribe.objects.create(person=self.user, club=self.other_club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(resp.json()["saved_club_count"], 2)
+
+    def test_saved_club_count_nonzero_with_empty_results(self):
+        # saved a club, but it has no applications the user can see
+        empty_club = Club.objects.create(
+            code="empty-club", name="Empty Club", active=True
+        )
+        Favorite.objects.create(person=self.user, club=empty_club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(self._results(resp), [])
+        self.assertEqual(resp.json()["saved_club_count"], 1)
+
+    def test_submission_nested_in_application(self):
+        committee = ApplicationCommittee.objects.create(
+            name="Design", application=self.active_app
+        )
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.active_app, committee=committee
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.active_app)
+        self.assertEqual(len(app_data["submissions"]), 1)
+        self.assertEqual(app_data["submissions"][0]["committee"], "Design")
+
+    def test_no_submission_returns_empty_submissions_list(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(self._app(resp, self.active_app)["submissions"], [])
+
+    def test_null_committee_submission_shows_general_member(self):
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.closed_app, committee=None
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.closed_app)
+        self.assertEqual(
+            app_data["submissions"][0]["committee"],
+            ClubApplication.DEFAULT_COMMITTEE,
+        )
+
+    def test_other_users_submissions_not_visible(self):
+        ApplicationSubmission.objects.create(
+            user=self.other_user, application=self.closed_app, committee=None
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        # closed_app should not appear at all (not saved, not submitted by testuser)
+        self.assertNotIn(self.closed_app.id, self._ids(resp))
+
+    def test_is_open_true_for_open_application(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertTrue(self._app(resp, self.active_app)["is_open"])
+
+    def test_is_open_false_for_closed_application(self):
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.closed_app, committee=None
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertFalse(self._app(resp, self.closed_app)["is_open"])
+
+    def test_extension_makes_expired_app_open_for_extended_user(self):
+        # closed_app deadline has passed, but user has an extension still open
+        ApplicationExtension.objects.create(
+            user=self.user,
+            application=self.closed_app,
+            end_time=self.now + datetime.timedelta(days=3),
+        )
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(self.closed_app.id, self._ids(resp))
+        self.assertTrue(self._app(resp, self.closed_app)["is_open"])
+
+    def test_expired_extension_does_not_make_app_open(self):
+        ApplicationExtension.objects.create(
+            user=self.user,
+            application=self.closed_app,
+            end_time=self.now - datetime.timedelta(hours=1),
+        )
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        # Extension has expired, closed_app should not appear (no submission either)
+        self.assertNotIn(self.closed_app.id, self._ids(resp))
+
+    def test_extension_on_unrelated_club_does_not_include_app(self):
+        # Extension for unrelated_app, but user hasn't saved other_club
+        ApplicationExtension.objects.create(
+            user=self.user,
+            application=self.unrelated_app,
+            end_time=self.now + datetime.timedelta(days=3),
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertNotIn(self.unrelated_app.id, self._ids(resp))
+
+    def test_extension_end_time_null_without_extension(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertIsNone(self._app(resp, self.active_app)["extension_end_time"])
+
+    def test_effective_end_time_uses_extension_when_later(self):
+        extension_end = self.now + datetime.timedelta(days=3)
+        ApplicationExtension.objects.create(
+            user=self.user, application=self.closed_app, end_time=extension_end
+        )
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.closed_app)
+        self.assertEqual(isoparse(app_data["extension_end_time"]), extension_end)
+        self.assertEqual(isoparse(app_data["effective_end_time"]), extension_end)
+
+    def test_effective_end_time_uses_deadline_without_extension(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.active_app)
+        self.assertEqual(
+            isoparse(app_data["effective_end_time"]),
+            self.active_app.application_end_time,
+        )
+
+    def test_outcome_pending_when_not_notified(self):
+        # club set a status but never notified: nothing may leak
+        ApplicationSubmission.objects.create(
+            user=self.user,
+            application=self.closed_app,
+            committee=None,
+            status=ApplicationSubmission.ACCEPTED,
+            reason="Welcome aboard!",
+            notified=False,
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        submission = self._app(resp, self.closed_app)["submissions"][0]
+        self.assertEqual(submission["outcome"], "pending")
+        self.assertNotIn("reason", submission)
+        self.assertFalse(submission["outcome_released"])
+
+    def test_outcome_pending_when_notified_but_status_pending(self):
+        ApplicationSubmission.objects.create(
+            user=self.user,
+            application=self.closed_app,
+            committee=None,
+            status=ApplicationSubmission.PENDING,
+            notified=True,
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        submission = self._app(resp, self.closed_app)["submissions"][0]
+        self.assertEqual(submission["outcome"], "pending")
+
+    def test_outcome_accepted_when_notified(self):
+        ApplicationSubmission.objects.create(
+            user=self.user,
+            application=self.closed_app,
+            committee=None,
+            status=ApplicationSubmission.ACCEPTED,
+            reason="Welcome aboard!",
+            notified=True,
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        submission = self._app(resp, self.closed_app)["submissions"][0]
+        self.assertEqual(submission["outcome"], "accepted")
+        self.assertTrue(submission["outcome_released"])
+
+    def test_outcome_rejected_after_written_when_notified(self):
+        ApplicationSubmission.objects.create(
+            user=self.user,
+            application=self.closed_app,
+            committee=None,
+            status=ApplicationSubmission.REJECTED_AFTER_WRITTEN,
+            reason="Not this time",
+            notified=True,
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        submission = self._app(resp, self.closed_app)["submissions"][0]
+        self.assertEqual(submission["outcome"], "rejected_after_written")
+
+    def test_outcome_rejected_after_interview_when_notified(self):
+        ApplicationSubmission.objects.create(
+            user=self.user,
+            application=self.closed_app,
+            committee=None,
+            status=ApplicationSubmission.REJECTED_AFTER_INTERVIEW,
+            reason="Close call",
+            notified=True,
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        submission = self._app(resp, self.closed_app)["submissions"][0]
+        self.assertEqual(submission["outcome"], "rejected_after_interview")
+
+    def test_bookmarked_only_flags(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.active_app)
+        self.assertTrue(app_data["bookmarked"])
+        self.assertFalse(app_data["subscribed"])
+
+    def test_subscribed_only_flags(self):
+        Subscribe.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.active_app)
+        self.assertFalse(app_data["bookmarked"])
+        self.assertTrue(app_data["subscribed"])
+
+    def test_bookmarked_and_subscribed_flags(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        Subscribe.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.active_app)
+        self.assertTrue(app_data["bookmarked"])
+        self.assertTrue(app_data["subscribed"])
+
+    def test_flags_false_for_submitted_but_unsaved_club(self):
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.closed_app, committee=None
+        )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        app_data = self._app(resp, self.closed_app)
+        self.assertFalse(app_data["bookmarked"])
+        self.assertFalse(app_data["subscribed"])
+
+    def test_external_url_null_when_blank(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertIsNone(self._app(resp, self.active_app)["external_url"])
+
+    def test_external_url_returned_raw_when_set(self):
+        self.active_app.external_url = "https://example.com/apply"
+        self.active_app.save()
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(
+            self._app(resp, self.active_app)["external_url"],
+            "https://example.com/apply",
+        )
+
+    def test_season_reflects_start_time(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(
+            self._app(resp, self.active_app)["season"], self.active_app.season
+        )
+
+    def test_ordering_is_deterministic_by_end_time_then_pk(self):
+        # a second application sharing the closed app's deadline, to pin the
+        # secondary pk ordering
+        tied_app = ClubApplication.objects.create(
+            name="Tied App",
+            club=self.club,
+            application_start_time=self.now - datetime.timedelta(days=10),
+            application_end_time=self.closed_app.application_end_time,
+            result_release_time=self.now + datetime.timedelta(days=5),
+        )
+        for application in (self.active_app, self.closed_app, tied_app):
+            ApplicationSubmission.objects.create(
+                user=self.user, application=application, committee=None
+            )
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(
+            [item["id"] for item in self._results(resp)],
+            [self.active_app.id, self.closed_app.id, tied_app.id],
+        )
+
+    def test_blank_name_falls_back_to_club_name(self):
+        blank_name_app = ClubApplication.objects.create(
+            name="",
+            club=self.club,
+            application_start_time=self.now - datetime.timedelta(days=1),
+            application_end_time=self.now + datetime.timedelta(days=7),
+            result_release_time=self.now + datetime.timedelta(days=14),
+        )
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertEqual(
+            self._app(resp, blank_name_app)["name"], "Test Club Application"
+        )
+
+    def test_orphaned_submission_excluded(self):
+        # Create a submission, then delete the application to orphan it
+        orphan_app = ClubApplication.objects.create(
+            name="To Be Deleted",
+            club=self.club,
+            application_start_time=self.now - datetime.timedelta(days=5),
+            application_end_time=self.now - datetime.timedelta(days=1),
+            result_release_time=self.now + datetime.timedelta(days=5),
+        )
+        ApplicationSubmission.objects.create(
+            user=self.user, application=orphan_app, committee=None
+        )
+        orphan_app_id = orphan_app.id
+        orphan_app.delete()
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        self.assertNotIn(orphan_app_id, self._ids(resp))
+
+    # ---- progress -------------------------------------------------------
+
+    def _question(self, app, qtype=ApplicationQuestion.FREE_RESPONSE, committee=None):
+        question = ApplicationQuestion.objects.create(
+            application=app,
+            question_type=qtype,
+            prompt="Why?",
+            committee_question=committee is not None,
+        )
+        if committee is not None:
+            question.committees.add(committee)
+        return question
+
+    def test_progress_counts_answered_over_answerable(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        q1 = self._question(self.active_app)
+        self._question(self.active_app)
+        self._question(self.active_app)
+        submission = ApplicationSubmission.objects.create(
+            user=self.user, application=self.active_app
+        )
+        ApplicationQuestionResponse.objects.create(
+            question=q1, submission=submission, text="because"
+        )
+
+        self.client.login(username="testuser", password="test")
+        sub = self._app(self._get(), self.active_app)["submissions"][0]
+        self.assertEqual(sub["questions_answered"], 1)
+        self.assertEqual(sub["questions_total"], 3)
+
+    def test_progress_excludes_info_text_questions(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self._question(self.active_app)
+        self._question(self.active_app, qtype=ApplicationQuestion.INFO_TEXT)
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.active_app
+        )
+
+        self.client.login(username="testuser", password="test")
+        sub = self._app(self._get(), self.active_app)["submissions"][0]
+        self.assertEqual(sub["questions_total"], 1)
+
+    def test_progress_counts_only_own_committee_questions(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        writing = ApplicationCommittee.objects.create(
+            application=self.active_app, name="Writing"
+        )
+        editing = ApplicationCommittee.objects.create(
+            application=self.active_app, name="Editing"
+        )
+        self._question(self.active_app)  # applies to everyone
+        self._question(self.active_app, committee=writing)
+        self._question(self.active_app, committee=editing)
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.active_app, committee=writing
+        )
+
+        self.client.login(username="testuser", password="test")
+        sub = self._app(self._get(), self.active_app)["submissions"][0]
+        self.assertEqual(sub["committee"], "Writing")
+        self.assertEqual(sub["questions_total"], 2)
+
+    def test_progress_excludes_committee_questions_for_null_committee(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        writing = ApplicationCommittee.objects.create(
+            application=self.active_app, name="Writing"
+        )
+        self._question(self.active_app)
+        self._question(self.active_app, committee=writing)
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.active_app
+        )
+
+        self.client.login(username="testuser", password="test")
+        sub = self._app(self._get(), self.active_app)["submissions"][0]
+        self.assertEqual(sub["questions_total"], 1)
+
+    def test_progress_zero_when_application_has_no_questions(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        ApplicationSubmission.objects.create(
+            user=self.user, application=self.active_app
+        )
+
+        self.client.login(username="testuser", password="test")
+        sub = self._app(self._get(), self.active_app)["submissions"][0]
+        self.assertEqual(sub["questions_answered"], 0)
+        self.assertEqual(sub["questions_total"], 0)
+
+    def test_application_link_format(self):
+        Favorite.objects.create(person=self.user, club=self.club)
+        self.client.login(username="testuser", password="test")
+        resp = self._get()
+        expected = f"/club/{self.club.code}/application/{self.active_app.id}/"
+        self.assertEqual(self._app(resp, self.active_app)["application_link"], expected)
+
+
+class UserQuestionResponsesTestCase(TestCase):
+    """
+    Tests for GET /api/users/questions
+
+    A response belongs to a submission and a user may hold one submission per
+    committee, so the lookup has to name the committee. Without it the endpoint
+    answered with whichever submission came first, prefilling the application
+    form with a different committee's answers.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username="testuser", password="test", email="test@example.com"
+        )
+        self.url = "/api/users/questions/"
+
+        now = timezone.now()
+        self.club = Club.objects.create(code="test-club", name="Test Club", active=True)
+        self.application = ClubApplication.objects.create(
+            name="App",
+            club=self.club,
+            application_start_time=now - datetime.timedelta(days=1),
+            application_end_time=now + datetime.timedelta(days=7),
+            result_release_time=now + datetime.timedelta(days=14),
+        )
+        self.alpha = ApplicationCommittee.objects.create(
+            name="Alpha", application=self.application
+        )
+        self.beta = ApplicationCommittee.objects.create(
+            name="Beta", application=self.application
+        )
+
+        # a shared question: it names no committee, so every committee's
+        # submission carries its own answer to it
+        self.question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Why this club?",
+            word_limit=100,
+            application=self.application,
+        )
+
+        self.answers = {}
+        for committee in (self.alpha, self.beta):
+            submission = ApplicationSubmission.objects.create(
+                user=self.user, application=self.application, committee=committee
+            )
+            self.answers[committee.name] = ApplicationQuestionResponse.objects.create(
+                question=self.question, submission=submission, text=committee.name
+            )
+
+        self.client.login(username="testuser", password="test")
+
+    def test_committee_selects_that_committees_answer(self):
+        for name in ("Alpha", "Beta"):
+            resp = self.client.get(
+                self.url, {"question_id": self.question.id, "committee": name}
+            )
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.json()["text"], name)
+
+    def test_no_committee_does_not_leak_a_committees_answer(self):
+        """Both answers belong to a committee, so neither is the right prefill."""
+        resp = self.client.get(self.url, {"question_id": self.question.id})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), [])
+
+    def test_committeeless_submission_is_found_without_a_committee(self):
+        other = ClubApplication.objects.create(
+            name="No Committees",
+            club=self.club,
+            application_start_time=timezone.now() - datetime.timedelta(days=1),
+            application_end_time=timezone.now() + datetime.timedelta(days=7),
+            result_release_time=timezone.now() + datetime.timedelta(days=14),
+        )
+        question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Tell us about yourself",
+            word_limit=100,
+            application=other,
+        )
+        submission = ApplicationSubmission.objects.create(
+            user=self.user, application=other, committee=None
+        )
+        ApplicationQuestionResponse.objects.create(
+            question=question, submission=submission, text="hello"
+        )
+
+        resp = self.client.get(self.url, {"question_id": question.id})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["text"], "hello")
+
+    def test_bulk_returns_one_entry_per_question(self):
+        second = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="What else?",
+            word_limit=100,
+            application=self.application,
+        )
+        ApplicationQuestionResponse.objects.create(
+            question=second,
+            submission=self.answers["Alpha"].submission,
+            text="second answer",
+        )
+
+        resp = self.client.get(
+            self.url,
+            {
+                "question_ids": f"{self.question.id},{second.id}",
+                "committee": "Alpha",
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        by_question = {item["question"]["id"]: item["text"] for item in resp.json()}
+        self.assertEqual(
+            by_question, {self.question.id: "Alpha", second.id: "second answer"}
+        )
+
+    def test_another_users_answers_are_never_returned(self):
+        stranger = get_user_model().objects.create_user(
+            username="stranger", password="test", email="stranger@example.com"
+        )
+        self.client.force_login(stranger)
+        resp = self.client.get(
+            self.url, {"question_id": self.question.id, "committee": "Alpha"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), [])
+
+
+class QuestionResponseSubmissionTestCase(TestCase):
+    """
+    Tests for POST /api/users/question_response
+
+    This endpoint used to trust the payload heavily enough to crash on it: a
+    nonexistent question id, a question id from a different application, or a
+    per-question payload missing entirely would all 500 rather than 400.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = get_user_model().objects.create_user(
+            username="testuser", password="test", email="test@example.com"
+        )
+        profile = self.user.profile
+        profile.graduation_year = timezone.now().year + 1
+        profile.school.add(School.objects.create(name="Test School", is_graduate=False))
+        profile.major.add(Major.objects.create(name="Test Major"))
+        profile.save()
+        self.client.login(username="testuser", password="test")
+
+        now = timezone.now()
+        self.club = Club.objects.create(code="test-club", name="Test Club", active=True)
+        self.application = ClubApplication.objects.create(
+            name="App",
+            club=self.club,
+            application_start_time=now - datetime.timedelta(days=1),
+            application_end_time=now + datetime.timedelta(days=7),
+            result_release_time=now + datetime.timedelta(days=14),
+        )
+        self.question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Why this club?",
+            word_limit=100,
+            application=self.application,
+        )
+        self.url = reverse("users-question-response")
+
+    def _post(self, body):
+        return self.client.post(self.url, body, content_type="application/json")
+
+    def test_valid_submission_still_succeeds(self):
+        resp = self._post(
+            {
+                "questionIds": [str(self.question.id)],
+                "committee": None,
+                str(self.question.id): {"text": "Because"},
+            }
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(
+            ApplicationQuestionResponse.objects.filter(question=self.question).exists()
+        )
+
+    def test_nonexistent_first_question_returns_400_not_500(self):
+        resp = self._post({"questionIds": ["999999"], "committee": None})
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertFalse(resp.data["success"])
+        self.assertNotEqual(resp.data.get("reason"), "incomplete_profile")
+
+    def test_question_from_another_application_returns_400(self):
+        other_club = Club.objects.create(code="other-club", name="Other Club")
+        other_application = ClubApplication.objects.create(
+            name="Other App",
+            club=other_club,
+            application_start_time=self.application.application_start_time,
+            application_end_time=self.application.application_end_time,
+            result_release_time=self.application.result_release_time,
+        )
+        other_question = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Unrelated",
+            application=other_application,
+        )
+        resp = self._post(
+            {
+                "questionIds": [str(self.question.id), str(other_question.id)],
+                "committee": None,
+                str(self.question.id): {"text": "Because"},
+                str(other_question.id): {"text": "Sneaking in"},
+            }
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertNotEqual(resp.data.get("reason"), "incomplete_profile")
+        self.assertFalse(
+            ApplicationQuestionResponse.objects.filter(question=other_question).exists()
+        )
+
+    def test_missing_per_question_payload_is_skipped_not_500(self):
+        # questionIds names the question, but its own entry is absent from
+        # the body -- e.g. a client that dropped a field rather than sent ""
+        resp = self._post({"questionIds": [str(self.question.id)], "committee": None})
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertFalse(
+            ApplicationQuestionResponse.objects.filter(question=self.question).exists()
+        )
+
+    def test_unknown_committee_name_returns_400(self):
+        resp = self._post(
+            {
+                "questionIds": [str(self.question.id)],
+                "committee": "Does Not Exist",
+                str(self.question.id): {"text": "Because"},
+            }
+        )
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertNotEqual(resp.data.get("reason"), "incomplete_profile")
+        self.assertFalse(
+            ApplicationQuestionResponse.objects.filter(question=self.question).exists()
+        )
 
 
 class CloneTestCase(TestCase):

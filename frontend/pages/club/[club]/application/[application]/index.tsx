@@ -7,7 +7,7 @@ import moment from 'moment'
 import { NextPageContext } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { type JSX, ReactElement, useState } from 'react'
+import { type JSX, ReactElement, useRef, useState } from 'react'
 import TimeAgo from 'react-timeago'
 import renderPage from 'renderPage'
 import styled from 'styled-components'
@@ -34,6 +34,63 @@ const SubmitNotificationSpan = styled.span`
   top: 0.5em;
   left: 1em;
 `
+
+/**
+ * Prefills the form with the responses already stored for this user.
+ *
+ * Responses live on a submission and a user may hold one per committee, so the
+ * committee has to be part of the lookup — without it the server answers with
+ * whichever submission it finds first, which shows one committee's answers
+ * while you are editing another. `question_ids` asks for the whole form in a
+ * single request so switching committees is one round trip, not one per
+ * question.
+ */
+export async function fetchResponses(
+  questions: ApplicationQuestion[],
+  committee: string | null,
+  requestData?: { headers?: any },
+): Promise<{ [id: number]: any }> {
+  const ids = questions.map((question) => question.id)
+  if (ids.length === 0) {
+    return {}
+  }
+  const params = new URLSearchParams({
+    format: 'json',
+    question_ids: ids.join(','),
+  })
+  if (committee != null) {
+    params.set('committee', committee)
+  }
+  const payloads = await (
+    await doApiRequest(`/users/questions/?${params.toString()}`, requestData)
+  ).json()
+
+  const values: { [id: number]: any } = {}
+  if (!Array.isArray(payloads)) {
+    return values
+  }
+  payloads.forEach((payload) => {
+    const id = payload?.question?.id
+    if (id == null) {
+      return
+    }
+    switch (parseInt(payload.question_type)) {
+      case ApplicationQuestionType.FreeResponse:
+      case ApplicationQuestionType.ShortAnswer:
+        values[id] = payload.text
+        break
+      case ApplicationQuestionType.MultipleChoice:
+        values[id] =
+          payload.multiple_choice !== null
+            ? payload.multiple_choice.value
+            : null
+        break
+      default:
+        break
+    }
+  })
+  return values
+}
 
 export function computeWordCount(input: string): number {
   return input !== undefined
@@ -157,25 +214,103 @@ const ApplicationPage = ({
   }
 
   const [errors, setErrors] = useState<string | null>(null)
+  // rendered next to the committee dropdown itself, not down by Submit --
+  // a switch-fetch error happens up here, and a form with several
+  // questions can put the shared errors span a full scroll away
+  const [committeeError, setCommitteeError] = useState<string | null>(null)
   const [saved, setSaved] = useState<boolean>(false)
+  // A ?committee= in the URL preselects that committee, so a link from the
+  // applications tab opens straight onto the submission it belongs to rather
+  // than making the applicant find it in the dropdown again.
+  const requestedCommittee = Array.isArray(router.query.committee)
+    ? router.query.committee[0]
+    : router.query.committee
+  const preselected =
+    requestedCommittee != null &&
+    application?.committees?.some(
+      (committee) => committee.name === requestedCommittee,
+    )
+      ? { label: requestedCommittee, value: requestedCommittee }
+      : null
   const [currentCommittee, setCurrentCommittee] = useState<{
     label: string
     value: string
-  } | null>(null)
-  const initialWordCounts: { id?: number } = {}
-  questions.forEach((question) => {
-    if (question.question_type === ApplicationQuestionType.FreeResponse) {
-      initialWordCounts[question.id] = computeWordCount(
-        initialValues[question.id],
-      )
-    }
-  })
+  } | null>(preselected)
+
+  const countWords = (responses: { [id: number]: any }): { id?: number } => {
+    const counts: { id?: number } = {}
+    questions.forEach((question) => {
+      if (question.question_type === ApplicationQuestionType.FreeResponse) {
+        counts[question.id] = computeWordCount(responses[question.id])
+      }
+    })
+    return counts
+  }
+
+  // Answers belong to a committee's submission, so the form has to be refilled
+  // when the committee changes; keeping the values in state lets Formik
+  // reinitialize instead of showing the previous committee's answers.
+  const [formValues, setFormValues] = useState<{ [id: number]: any }>(
+    initialValues,
+  )
   const [wordCounts, setWordCounts] = useState<{ id?: number }>(
-    initialWordCounts,
+    countWords(initialValues),
   )
 
+  // Answers belong to one committee's submission. Switching committees swaps
+  // the whole form, so the answers on screen have to go the moment the
+  // committee does: leaving them up means the previous committee's text is
+  // visible, and submittable, under the new one. Only the newest request may
+  // fill the form, or switching quickly can land an older reply last.
+  const [loadingResponses, setLoadingResponses] = useState<boolean>(false)
+  const committeeRequest = useRef<number>(0)
+
+  const selectCommittee = (committee: { label: string; value: string }) => {
+    const request = committeeRequest.current + 1
+    committeeRequest.current = request
+
+    setCurrentCommittee(committee)
+    setSaved(false)
+    setCommitteeError(null)
+    setFormValues({})
+    setWordCounts(countWords({}))
+    setLoadingResponses(true)
+
+    fetchResponses(questions, committee?.value ?? null)
+      .then(
+        (responses) => {
+          if (committeeRequest.current !== request) {
+            return
+          }
+          setFormValues(responses)
+          setWordCounts(countWords(responses))
+        },
+        () => {
+          // the two-argument form of .then only catches a rejection of
+          // fetchResponses itself, not an error thrown by the success
+          // handler above -- an uncaught rejection here would otherwise
+          // surface as an unhandled promise rejection with no feedback
+          // to the applicant that their answers failed to load
+          if (committeeRequest.current === request) {
+            setCommitteeError(
+              "Couldn't load your answers for this committee. Check your " +
+                'connection and try selecting it again.',
+            )
+          }
+        },
+      )
+      .finally(() => {
+        // without this a failed fetch leaves Submit disabled for good
+        if (committeeRequest.current === request) {
+          setLoadingResponses(false)
+        }
+      })
+  }
+
   const committees = application?.committees
-  questions = questions.filter((question) => {
+  // `questions` stays whole so a committee switch can refill every answer the
+  // user has; only what is rendered and submitted is narrowed
+  const visibleQuestions = questions.filter((question) => {
     if (!question.committee_question) {
       // render all non-committee questions
       return true
@@ -223,13 +358,14 @@ const ApplicationPage = ({
           )}
         <hr />
         <Formik
-          initialValues={initialValues}
+          initialValues={formValues}
+          enableReinitialize
           onSubmit={(values: { [id: number]: any }, actions) => {
             let submitErrors: string | null = null
 
             // word count error check
             for (const [questionId, text] of Object.entries(values)) {
-              const question = questions.find(
+              const question = visibleQuestions.find(
                 (question: ApplicationQuestion) =>
                   question.id === parseInt(questionId),
               )
@@ -252,7 +388,7 @@ const ApplicationPage = ({
                 if (currentCommittee != null) {
                   body.committee = currentCommittee.value
                 }
-                const question = questions.find(
+                const question = visibleQuestions.find(
                   (question: ApplicationQuestion) =>
                     question.id === parseInt(questionId),
                 )
@@ -284,20 +420,31 @@ const ApplicationPage = ({
                   method: 'POST',
                   body,
                 })
-                  .then((resp) => {
+                  .then(async (resp) => {
                     if (resp.status === 200) {
                       return resp.json()
                     } else if (resp.status === 400) {
-                      setSaved(false)
-                      setErrors('User profile is incomplete. Redirecting...')
-                      setRedirected(true)
-                      setTimeout(() => {
-                        router.push({
-                          pathname: '/settings',
-                          query: { from_application: club.code },
-                          hash: 'Profile',
-                        })
-                      }, 1000)
+                      // most 400s are a rejected answer (bad committee, a
+                      // stale question) and just need their message shown;
+                      // only an incomplete profile sends the user elsewhere
+                      const data = await resp.json().catch(() => null)
+                      if (data?.reason === 'incomplete_profile') {
+                        setSaved(false)
+                        setErrors('User profile is incomplete. Redirecting...')
+                        setRedirected(true)
+                        setTimeout(() => {
+                          router.push({
+                            pathname: '/settings',
+                            query: { from_application: club.code },
+                            hash: 'Profile',
+                          })
+                        }, 1000)
+                      } else {
+                        setSaved(false)
+                        setErrors(
+                          data?.detail ?? 'That submission was rejected.',
+                        )
+                      }
                     } else {
                       setSaved(false)
                       setErrors(
@@ -314,6 +461,12 @@ const ApplicationPage = ({
                         setSaved(true)
                       }
                     }
+                  })
+                  .catch(() => {
+                    setSaved(false)
+                    setErrors(
+                      'Could not reach the server. Check your connection and try again.',
+                    )
                   })
               }
             } else {
@@ -339,12 +492,15 @@ const ApplicationPage = ({
                         return { label: value.name, value: value.name }
                       })}
                       isMulti={false}
-                      customHandleChange={(value) => setCurrentCommittee(value)}
+                      customHandleChange={(value) => selectCommittee(value)}
                       value={currentCommittee}
                     />
+                    {committeeError !== null && (
+                      <p className="has-text-danger mb-3">{committeeError}</p>
+                    )}
                   </>
                 )}
-              {questions.map((question: ApplicationQuestion) => {
+              {visibleQuestions.map((question: ApplicationQuestion) => {
                 const input = formatQuestionType(
                   props,
                   question,
@@ -353,13 +509,17 @@ const ApplicationPage = ({
                   false,
                 )
                 return (
-                  <div>
+                  <div key={question.id}>
                     {input}
                     <br></br>
                   </div>
                 )
               })}
-              <button type="submit" className="button is-primary">
+              <button
+                type="submit"
+                className="button is-primary"
+                disabled={loadingResponses}
+              >
                 <Icon name="edit" alt="save" /> Submit
               </button>
               {errors !== null && (
@@ -405,34 +565,18 @@ ApplicationPage.getInitialProps = async (
     ].map(async (url) => (await doApiRequest(url, data)).json()),
   )
 
-  // TODO: refactor this, functional methods with async-await is horrible
-  const initialValues = await await questions
-    .map((question) => {
-      return [
-        question.id,
-        `/users/questions?format=json&question_id=${question.id}`,
-      ]
-    })
-    .reduce(async (accPromise, params: [number, string]) => {
-      const [id, url] = params
-      const acc = await accPromise
-      const payload = await (await doApiRequest(url, data)).json()
-      switch (parseInt(payload.question_type)) {
-        case ApplicationQuestionType.FreeResponse:
-        case ApplicationQuestionType.ShortAnswer:
-          acc[id] = payload.text
-          break
-        case ApplicationQuestionType.MultipleChoice:
-          acc[id] =
-            payload.multiple_choice !== null
-              ? payload.multiple_choice.value
-              : null
-          break
-        default:
-          return acc
-      }
-      return acc
-    }, {})
+  // a ?committee= in the link says which submission is being edited, so the
+  // very first render can already be prefilled from the right one
+  const requested = Array.isArray(query.committee)
+    ? query.committee[0]
+    : query.committee
+  const committee =
+    requested != null &&
+    application?.committees?.some((entry) => entry.name === requested)
+      ? requested
+      : null
+
+  const initialValues = await fetchResponses(questions, committee, data)
 
   return { club, application, questions, initialValues }
 }
