@@ -5,23 +5,16 @@ import React, { ReactElement } from 'react'
 import renderPage from 'renderPage'
 import { doBulkLookup } from 'utils'
 
-import ApplicationsPage from '~/components/Applications'
 import ApplicationsTable from '~/components/Settings/ApplicationsTable'
 import SubmissionsPage from '~/components/Submissions'
 import { BrowserTabView } from '~/components/TabView'
 import { APPLY_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
-import {
-  Application,
-  ApplicationSubmission,
-  UserApplicationsResponse,
-} from '~/types'
+import { ApplicationSubmission, UserApplicationsResponse } from '~/types'
 
 function ApplyDashboard({
-  whartonapplications,
   submissions,
   userApplications,
 }: {
-  whartonapplications: any
   submissions: Array<ApplicationSubmission>
   userApplications: UserApplicationsResponse | { detail: string }
 }): ReactElement<any> {
@@ -31,15 +24,6 @@ function ApplyDashboard({
       name: 'tracker',
       label: 'Application Tracker',
       content: () => <ApplicationsTable initialData={userApplications} />,
-    },
-    {
-      // the route stays /apply/applications; only the label disambiguates it
-      // from the tracker beside it
-      name: 'applications',
-      label: 'Wharton Applications',
-      content: () => (
-        <ApplicationsPage whartonApplications={whartonapplications} />
-      ),
     },
     {
       name: 'submissions',
@@ -70,7 +54,6 @@ function ApplyDashboard({
 }
 
 type BulkResp = {
-  whartonapplications: Application[]
   submissions: Array<ApplicationSubmission>
   userApplications: UserApplicationsResponse | { detail: string }
 }
@@ -78,7 +61,6 @@ type BulkResp = {
 ApplyDashboard.getInitialProps = async (ctx: NextPageContext) => {
   const data: BulkResp = (await doBulkLookup(
     [
-      'whartonapplications',
       ['submissions', '/submissions/?format=json'],
       ['userApplications', '/user-applications/?format=json'],
     ],
