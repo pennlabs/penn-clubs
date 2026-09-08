@@ -55,6 +55,11 @@ from clubs.models import (
     Status,
     StudentType,
     Subscribe,
+    SubscriptionGroup,
+    SubscriptionMultipleChoice,
+    SubscriptionQuestion,
+    SubscriptionQuestionResponse,
+    SubscriptionSubmission,
     Tag,
     TargetMajor,
     TargetSchool,
@@ -693,3 +698,8 @@ admin.site.register(Type, TypeAdmin)
 admin.site.register(Status, StatusAdmin)
 admin.site.register(Classification, ClassificationAdmin)
 admin.site.register(GroupActivityOption, GroupActivityOptionAdmin)
+admin.site.register(SubscriptionGroup)
+admin.site.register(SubscriptionQuestion)
+admin.site.register(SubscriptionMultipleChoice)
+admin.site.register(SubscriptionSubmission)
+admin.site.register(SubscriptionQuestionResponse)

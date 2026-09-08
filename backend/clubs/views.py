@@ -38,9 +38,9 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command, get_commands, load_command_class
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.core.signing import BadSignature, SignatureExpired, Signer, TimestampSigner
 from django.core.validators import validate_email
-from django.db import transaction
+from django.db import connection, transaction
 from django.db.models import (
     Case,
     CharField,
@@ -85,10 +85,15 @@ from rest_framework.views import APIView
 from social_django.utils import load_strategy
 from tatsu.exceptions import FailedParse
 
-from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
+from clubs.filters import (
+    OptionalPageNumberPagination,
+    RandomOrderingFilter,
+    RandomPageNumberPagination,
+)
 from clubs.management.commands.sync import Command as SyncCommand
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
+    ATTRIBUTION_SOURCE_CHOICES,
     AdminNote,
     Advisor,
     ApplicationCycle,
@@ -130,6 +135,10 @@ from clubs.models import (
     Status,
     StudentType,
     Subscribe,
+    SubscriptionGroup,
+    SubscriptionMultipleChoice,
+    SubscriptionQuestion,
+    SubscriptionSubmission,
     Tag,
     Testimonial,
     Ticket,
@@ -160,6 +169,7 @@ from clubs.permissions import (
     ProfilePermission,
     QuestionAnswerPermission,
     ReadOnly,
+    SubscriptionGroupPermission,
     WhartonApplicationPermission,
     find_membership_helper,
 )
@@ -211,6 +221,7 @@ from clubs.serializers import (
     MinimalUserProfileSerializer,
     NoteSerializer,
     OwnershipRequestSerializer,
+    PublicSubscriptionGroupSerializer,
     QuestionAnswerSerializer,
     RankingWeightsSerializer,
     RegistrationQueueSettingsSerializer,
@@ -221,7 +232,15 @@ from clubs.serializers import (
     StatusSerializer,
     StudentTypeSerializer,
     SubscribeBookmarkSerializer,
+    SubscriberDetailSerializer,
+    SubscriberListSerializer,
     SubscribeSerializer,
+    SubscriptionGroupDetailSerializer,
+    SubscriptionGroupListSerializer,
+    SubscriptionGroupWriteSerializer,
+    SubscriptionMultipleChoiceSerializer,
+    SubscriptionQuestionSerializer,
+    SubscriptionSubmitSerializer,
     TagSerializer,
     TestimonialSerializer,
     TicketSerializer,
@@ -245,6 +264,7 @@ from clubs.serializers import (
     validate_constitution_file,
 )
 from clubs.utils import fuzzy_lookup_club, html_to_text
+from clubs.workflows import SubscriptionFormWorkflow
 from pennclubs.analytics import LabsAnalytics
 
 
@@ -1602,9 +1622,52 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             or bypass
             or self.action not in {"list"}
         ):
-            return queryset
+            final_qs = queryset
         else:
-            return queryset.filter(Q(approved=True) | Q(ghost=True))
+            final_qs = queryset.filter(Q(approved=True) | Q(ghost=True))
+
+        # #region agent log
+        if self.action == "list":
+            try:
+                _db_name = connection.settings_dict.get("NAME")
+                _total = Club.objects.count()
+                _vtp = Club.objects.filter(visible_to_public=True).count()
+                _pub = is_public_viewer(self.request)
+                _cnt = final_qs.count()
+                with open(
+                    "/Users/smaran/Desktop/penn-clubs/.cursor/debug.log", "a"
+                ) as _df:
+                    _df.write(
+                        json.dumps(
+                            {
+                                "id": "club_list_qs",
+                                "timestamp": int(timezone.now().timestamp() * 1000),
+                                "location": "clubs/views.py:ClubViewSet.get_queryset",
+                                "message": "club list queryset",
+                                "hypothesisId": "H1-H4",
+                                "data": {
+                                    "db_name": str(_db_name)[:200],
+                                    "is_public_viewer": _pub,
+                                    "club_objects_count": _total,
+                                    "visible_to_public_count": _vtp,
+                                    "filtered_count": _cnt,
+                                    "auth": bool(
+                                        getattr(
+                                            self.request.user,
+                                            "is_authenticated",
+                                            False,
+                                        )
+                                    ),
+                                },
+                            }
+                        )
+                        + "\n"
+                    )
+            except Exception:
+                pass
+        # #endregion
+
+        return final_qs
 
     def _has_elevated_view_perms(self, instance):
         """
@@ -4785,9 +4848,11 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        queryset = Subscribe.objects.filter(
-            person=self.request.user, club__archived=False
-        ).prefetch_related("club__tags")
+        queryset = (
+            Subscribe.objects.filter(person=self.request.user, club__archived=False)
+            .select_related("subscription_group")
+            .prefetch_related("club__tags")
+        )
 
         person = self.request.user
         queryset = queryset.prefetch_related(
@@ -4814,6 +4879,857 @@ class SubscribeViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return UserSubscribeWriteSerializer
         return UserSubscribeSerializer
+
+
+SUBSCRIPTION_LINK_SALT = "sub-group-link"
+
+# Export shapes offered for listserv-style platforms. XLSX is not listed here;
+# it is served through DRF's XLSXRenderer via the standard ?format=xlsx param.
+SUBSCRIPTION_EXPORT_FORMATS = ("csv", "tsv", "txt", "mailchimp", "google-groups")
+
+
+def subscription_link_base(request=None):
+    """
+    Base URL that subscription magic links and QR codes point at.
+
+    Production always uses the canonical domain so a printed QR code stays valid.
+    Under DEBUG we honour the calling frontend's own origin instead, so links are
+    actually followable on localhost whichever port the dev server uses. The
+    origin is only trusted if it is already whitelisted in CSRF_TRUSTED_ORIGINS,
+    so a caller cannot point links at an arbitrary host.
+    """
+    if settings.DEBUG and request is not None:
+        origin = request.META.get("HTTP_ORIGIN") or request.META.get("HTTP_REFERER")
+        if origin:
+            parsed = urlparse(origin)
+            if parsed.scheme and parsed.netloc:
+                candidate = f"{parsed.scheme}://{parsed.netloc}"
+                if candidate in settings.CSRF_TRUSTED_ORIGINS:
+                    return candidate
+    return f"https://{settings.DEFAULT_DOMAIN}"
+
+
+def build_subscription_magic_link(group, request=None):
+    """
+    Return the signed, user-facing magic link for a subscription form. Points at
+    the frontend route, matching the existing club QR action.
+    """
+    signer = Signer(salt=f"{SUBSCRIPTION_LINK_SALT}:{group.pk}")
+    token = signer.sign(str(group.pk))
+    return f"{subscription_link_base(request)}/subscribe/link/{token}"
+
+
+def subscription_export_response(rows, fmt, basename, columns=None):
+    """
+    Render subscriber `rows` (a list of dicts) in one of the text-based export
+    formats and return it as a file download. Mirrors the pandas/to_csv idiom
+    used by the club application submission export.
+    """
+    if fmt == "txt":
+        body = "".join(f"{row['email']}\n" for row in rows)
+        return HttpResponse(
+            body,
+            content_type="text/plain; charset=utf-8",
+            headers={"Content-Disposition": f"attachment;filename={basename}-list.txt"},
+        )
+
+    if fmt == "mailchimp":
+        rows = [
+            {
+                "Email Address": row["email"],
+                "First Name": row.get("first_name", ""),
+                "Last Name": row.get("last_name", ""),
+            }
+            for row in rows
+        ]
+        columns = ["Email Address", "First Name", "Last Name"]
+    elif fmt == "google-groups":
+        rows = [
+            {
+                "Group Email [Required]": row.get("group_email", ""),
+                "Member Email": row["email"],
+                "Member Type": "USER",
+                "Member Role": "MEMBER",
+            }
+            for row in rows
+        ]
+        columns = [
+            "Group Email [Required]",
+            "Member Email",
+            "Member Type",
+            "Member Role",
+        ]
+    elif columns is not None:
+        rows = [{k: row.get(k, "") for k in columns} for row in rows]
+
+    sep = "\t" if fmt == "tsv" else ","
+    extension = "tsv" if fmt == "tsv" else "csv"
+    # Mailchimp and Google Groups are both CSV; without a distinct filename all
+    # three land in the download bar as "emails.csv" and look identical.
+    suffix = f"-{fmt}" if fmt in ("mailchimp", "google-groups") else ""
+    content_type = (
+        "text/tab-separated-values; charset=utf-8"
+        if fmt == "tsv"
+        else "text/csv; charset=utf-8"
+    )
+
+    # Render to a buffer and hand HttpResponse the finished string. Writing
+    # directly into the response re-encodes on every pandas write, so a
+    # utf-8-sig charset would repeat the BOM mid-file. The single leading BOM
+    # is what makes Excel open the download as UTF-8.
+    buffer = io.StringIO()
+    pd.DataFrame(rows, columns=columns).to_csv(buffer, index=False, sep=sep)
+    return HttpResponse(
+        "\ufeff" + buffer.getvalue(),
+        content_type=content_type,
+        headers={
+            "Content-Disposition": (
+                f"attachment;filename={basename}{suffix}.{extension}"
+            )
+        },
+    )
+
+
+class SubscriptionGroupViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
+    """
+    list: Return subscription groups for a club.
+
+    create: Create a new subscription group for a club.
+
+    retrieve: Return a single subscription group.
+
+    update: Update a subscription group.
+
+    destroy: Delete a subscription group.
+    """
+
+    permission_classes = [SubscriptionGroupPermission | IsSuperuser]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return SubscriptionGroupListSerializer
+        if self.action == "retrieve":
+            return SubscriptionGroupDetailSerializer
+        if self.action in ("create", "update", "partial_update"):
+            return SubscriptionGroupWriteSerializer
+        return SubscriptionGroupListSerializer
+
+    def get_queryset(self):
+        return SubscriptionGroup.objects.filter(
+            club__code=self.kwargs.get("club_code")
+        ).annotate(
+            question_count=Count("questions", distinct=True),
+            submission_count=Count("submissions", distinct=True),
+            # Count the people who submitted this form, not Subscribe rows
+            # pointing back at it: the submit path only sets that FK when it is
+            # null, so anyone already subscribed to the club never counted.
+            subscriber_count=Count("submissions__subscribe__person", distinct=True),
+        )
+
+    def perform_create(self, serializer):
+        club = get_object_or_404(Club, code=self.kwargs.get("club_code"))
+        serializer.save(club=club)
+
+    @action(detail=True, methods=["post"], url_path="set-default")
+    def set_default(self, request, **kwargs):
+        """
+        Set this subscription form as the club's default form.
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        group = self.get_object()
+        if group.is_archived:
+            return Response(
+                {"detail": "Archived forms cannot be set as default."}, status=400
+            )
+        club = group.club
+        club.default_subscription_group = group
+        club.save(update_fields=["default_subscription_group"])
+        return Response({"detail": "Default subscription form updated."})
+
+    @action(detail=True, methods=["post"])
+    def archive(self, request, **kwargs):
+        """
+        Archive this subscription form so it no longer accepts submissions.
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        group = self.get_object()
+        club = group.club
+        if club.default_subscription_group_id == group.pk:
+            club.default_subscription_group = None
+            club.save(update_fields=["default_subscription_group"])
+        group.is_archived = True
+        group.is_active = False
+        group.save(update_fields=["is_archived", "is_active"])
+        return Response({"detail": "Form archived."})
+
+    @action(detail=True, methods=["post"])
+    def unarchive(self, request, **kwargs):
+        """
+        Restore an archived subscription form.
+        ---
+        requestBody:
+            content: {}
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        group = self.get_object()
+        group.is_archived = False
+        group.save(update_fields=["is_archived"])
+        return Response({"detail": "Form unarchived."})
+
+    @action(detail=True, methods=["get"], url_path="magic-link")
+    def magic_link(self, request, **kwargs):
+        """
+        Return a signed magic link URL and token for sharing the subscription form.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                url:
+                                    type: string
+                                token:
+                                    type: string
+                                auto_subscribe_eligible:
+                                    type: boolean
+        ---
+        """
+        group = self.get_object()
+        url = build_subscription_magic_link(group, request)
+        return Response(
+            {
+                "url": url,
+                "token": url.rsplit("/", 1)[-1],
+                "auto_subscribe_eligible": group.auto_subscribe_eligible,
+            }
+        )
+
+    @action(detail=True, methods=["get"], url_path="qr-code")
+    def qr_code(self, request, **kwargs):
+        """
+        Return a PNG QR code image linking to this subscription form.
+        ---
+        responses:
+            "200":
+                description: PNG image of a QR code.
+                content:
+                    image/png:
+                        schema:
+                            type: string
+                            format: binary
+        ---
+        """
+        group = self.get_object()
+        url = build_subscription_magic_link(group, request)
+        response = HttpResponse(content_type="image/png")
+        qr_image = qrcode.make(url, box_size=20, border=0)
+        qr_image.save(response, "PNG")
+        return response
+
+    def _subscriber_rows(self, group):
+        """
+        Base row set shared by every export shape, ordered oldest first.
+        Submissions whose Subscribe row was deleted are skipped.
+        """
+        qs = (
+            SubscriptionSubmission.objects.filter(subscription_group=group)
+            .select_related("subscribe__person__profile")
+            .order_by("created_at")
+        )
+        rows = []
+        for s in qs:
+            if not s.subscribe:
+                continue
+            person = s.subscribe.person
+            rows.append(
+                {
+                    "email": person.email,
+                    "name": person.get_full_name(),
+                    "first_name": person.first_name,
+                    "last_name": person.last_name,
+                    "source": s.attribution_source,
+                    "subscribed_at": s.created_at.isoformat(),
+                    "group_email": group.club.listserv,
+                }
+            )
+        return rows
+
+    def _requested_export_format(self, request):
+        """
+        Read and validate the export shape from ?fmt=. Note this is deliberately
+        not ?format=, which DRF reserves for renderer content negotiation
+        (?format=xlsx is handled by the XLSXRenderer instead).
+        """
+        fmt = request.query_params.get("fmt", "csv").lower()
+        if fmt not in SUBSCRIPTION_EXPORT_FORMATS:
+            raise DRFValidationError(
+                {
+                    "detail": "Unsupported export format '{}'. Choose one of: {}, "
+                    "or request ?format=xlsx for a spreadsheet.".format(
+                        fmt, ", ".join(SUBSCRIPTION_EXPORT_FORMATS)
+                    )
+                }
+            )
+        return fmt
+
+    @action(detail=True, methods=["get"], url_path="export/emails")
+    def export_emails(self, request, **kwargs):
+        """
+        Export subscriber emails in a listserv-compatible format.
+
+        Pass ?fmt=csv|tsv|txt|mailchimp|google-groups to choose the shape, or
+        ?format=xlsx for a spreadsheet.
+        ---
+        responses:
+            "200":
+                content:
+                    text/csv:
+                        schema:
+                            type: string
+        ---
+        """
+        group = self.get_object()
+        rows = self._subscriber_rows(group)
+        columns = ["email", "name", "source", "subscribed_at"]
+
+        if request.query_params.get("format") == "xlsx":
+            return Response([{k: row[k] for k in columns} for row in rows])
+
+        fmt = self._requested_export_format(request)
+        return subscription_export_response(rows, fmt, "emails", columns=columns)
+
+    @action(detail=True, methods=["get"], url_path="export/responses")
+    def export_responses(self, request, **kwargs):
+        """
+        Export subscriber responses, one column per question.
+
+        Pass ?fmt=csv|tsv|txt|mailchimp|google-groups to choose the shape, or
+        ?format=xlsx for a spreadsheet. The email-list shapes (txt, mailchimp,
+        google-groups) carry contact columns only, without question answers.
+        ---
+        responses:
+            "200":
+                content:
+                    text/csv:
+                        schema:
+                            type: string
+        ---
+        """
+        group = self.get_object()
+        questions = list(group.questions.order_by("precedence"))
+        qs = (
+            SubscriptionSubmission.objects.filter(subscription_group=group)
+            .select_related("subscribe__person__profile")
+            .prefetch_related("responses__question", "responses__multiple_choice")
+            .order_by("created_at")
+        )
+        rows = []
+        for s in qs:
+            if not s.subscribe:
+                continue
+            person = s.subscribe.person
+            row = {
+                "email": person.email,
+                "name": person.get_full_name(),
+                "first_name": person.first_name,
+                "last_name": person.last_name,
+                "source": s.attribution_source,
+                "subscribed_at": s.created_at.isoformat(),
+                "group_email": group.club.listserv,
+            }
+            response_map = {r.question_id: r for r in s.responses.all()}
+            for q in questions:
+                r = response_map.get(q.pk)
+                if r:
+                    row[q.prompt or f"Q{q.pk}"] = (
+                        r.multiple_choice.value if r.multiple_choice else r.text
+                    )
+                else:
+                    row[q.prompt or f"Q{q.pk}"] = ""
+            rows.append(row)
+        if request.query_params.get("format") == "xlsx":
+            hidden = {"first_name", "last_name", "group_email"}
+            return Response(
+                [{k: v for k, v in row.items() if k not in hidden} for row in rows]
+            )
+
+        fmt = self._requested_export_format(request)
+        if fmt in ("csv", "tsv"):
+            hidden = {"first_name", "last_name", "group_email"}
+            rows = [{k: v for k, v in row.items() if k not in hidden} for row in rows]
+        return subscription_export_response(rows, fmt, "responses")
+
+
+class SubscriptionQuestionViewSet(viewsets.ModelViewSet):
+    serializer_class = SubscriptionQuestionSerializer
+    permission_classes = [SubscriptionGroupPermission | IsSuperuser]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        return (
+            SubscriptionQuestion.objects.filter(
+                subscription_group__club__code=self.kwargs["club_code"],
+                subscription_group__pk=self.kwargs["subscription_group_pk"],
+            )
+            .order_by("precedence")
+            .prefetch_related("multiple_choice")
+        )
+
+    def perform_create(self, serializer):
+        group = get_object_or_404(
+            SubscriptionGroup,
+            pk=self.kwargs["subscription_group_pk"],
+            club__code=self.kwargs["club_code"],
+        )
+        serializer.save(subscription_group=group)
+
+    @action(detail=False, methods=["post"])
+    def reorder(self, request, **kwargs):
+        """
+        Reorder questions on this subscription form by precedence.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            question_ids:
+                                type: array
+                                items:
+                                    type: integer
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        ids = request.data.get("question_ids", [])
+        qs = self.get_queryset()
+        id_to_obj = {q.pk: q for q in qs}
+        for idx, qid in enumerate(ids):
+            if qid in id_to_obj:
+                id_to_obj[qid].precedence = idx
+                id_to_obj[qid].save(update_fields=["precedence"])
+        return Response({"detail": "Questions reordered."})
+
+
+class SubscriptionMultipleChoiceViewSet(viewsets.ModelViewSet):
+    serializer_class = SubscriptionMultipleChoiceSerializer
+    permission_classes = [SubscriptionGroupPermission | IsSuperuser]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
+
+    def get_queryset(self):
+        return SubscriptionMultipleChoice.objects.filter(
+            question__subscription_group__club__code=self.kwargs["club_code"],
+            question__subscription_group__pk=self.kwargs["subscription_group_pk"],
+            question__pk=self.kwargs["question_pk"],
+        )
+
+    def perform_create(self, serializer):
+        question = get_object_or_404(
+            SubscriptionQuestion,
+            pk=self.kwargs["question_pk"],
+            subscription_group__pk=self.kwargs["subscription_group_pk"],
+            subscription_group__club__code=self.kwargs["club_code"],
+        )
+        serializer.save(question=question)
+
+
+class SubscriptionSubmissionAdminViewSet(viewsets.ReadOnlyModelViewSet):
+    """Club-owner view of subscribers and their responses."""
+
+    permission_classes = [SubscriptionGroupPermission | IsSuperuser]
+    pagination_class = OptionalPageNumberPagination
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return SubscriberDetailSerializer
+        return SubscriberListSerializer
+
+    def get_queryset(self):
+        qs = (
+            SubscriptionSubmission.objects.filter(
+                subscription_group__club__code=self.kwargs["club_code"],
+                subscription_group__pk=self.kwargs["subscription_group_pk"],
+            )
+            .select_related("subscribe__person__profile")
+            .prefetch_related("responses__question", "responses__multiple_choice")
+        )
+
+        search = self.request.query_params.get("search")
+        if search:
+            qs = qs.filter(
+                Q(subscribe__person__email__icontains=search)
+                | Q(subscribe__person__first_name__icontains=search)
+                | Q(subscribe__person__last_name__icontains=search)
+            )
+        source = self.request.query_params.get("source")
+        if source:
+            qs = qs.filter(attribution_source=source)
+
+        ordering = self.request.query_params.get("ordering", "-created_at")
+        if ordering in (
+            "created_at",
+            "-created_at",
+            "subscribe__person__email",
+            "-subscribe__person__email",
+        ):
+            qs = qs.order_by(ordering)
+
+        return qs
+
+
+class SubscriptionEntryView(APIView):
+    """
+    Public endpoint: whether a club uses instant subscribe or a subscription form.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, club_code):
+        """
+        Return instant vs form mode and optional default form id.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                mode:
+                                    type: string
+                                    enum: [instant, form]
+                                subscription_group_id:
+                                    type: integer
+                                attribution_source:
+                                    type: string
+            "404":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        club = get_object_or_404(Club, code=club_code, archived=False)
+        group = club.default_subscription_group
+        if group is None or group.is_archived or not group.is_currently_open():
+            return Response({"mode": "instant"})
+
+        # Echo back a validated attribution source so the caller can pass it
+        # straight through to the form page and on into the submission.
+        source = request.query_params.get("source", "direct")
+        if source not in dict(ATTRIBUTION_SOURCE_CHOICES):
+            source = "unknown"
+
+        return Response(
+            {
+                "mode": "form",
+                "subscription_group_id": group.pk,
+                "attribution_source": source,
+            }
+        )
+
+
+class SubscriptionPublicGroupView(APIView):
+    """
+    Public subscription form definition for filling out the form.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        """
+        Return the public fields and questions for a subscription form.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                name:
+                                    type: string
+                                description:
+                                    type: string
+                                is_active:
+                                    type: boolean
+                                opens_at:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                                closes_at:
+                                    type: string
+                                    format: date-time
+                                    nullable: true
+                                questions:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: integer
+                                auto_subscribe_eligible:
+                                    type: boolean
+            "404":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        group = get_object_or_404(SubscriptionGroup, pk=pk, is_archived=False)
+        return Response(PublicSubscriptionGroupSerializer(group).data)
+
+
+class SubscriptionSubmitView(APIView):
+    """
+    Submit answers for a subscription form (authenticated user subscribes).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        """
+        Validate and save subscription form responses for the current user.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            answers:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        question:
+                                            type: integer
+                                        text:
+                                            type: string
+                                        multiple_choice:
+                                            type: integer
+                                            nullable: true
+                            attribution_source:
+                                type: string
+                            attribution_context:
+                                type: object
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                subscribed:
+                                    type: boolean
+                                club_code:
+                                    type: string
+                                subscription_group_id:
+                                    type: integer
+                                submission_id:
+                                    type: integer
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        group = get_object_or_404(SubscriptionGroup, pk=pk)
+        if group.is_archived or not group.is_currently_open():
+            return Response(
+                {"detail": "This form is not currently accepting submissions."},
+                status=400,
+            )
+
+        serializer = SubscriptionSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        required_ids = set(
+            group.questions.filter(required=True).values_list("pk", flat=True)
+        )
+        answered_ids = {a["question"].pk for a in data.get("answers", [])}
+        missing = required_ids - answered_ids
+        if missing:
+            return Response(
+                {
+                    "detail": "Required questions not answered.",
+                    "missing_questions": list(missing),
+                },
+                status=400,
+            )
+
+        source = data.get("attribution_source", "direct")
+        if source not in dict(ATTRIBUTION_SOURCE_CHOICES):
+            source = "unknown"
+
+        with transaction.atomic():
+            subscribe, _ = Subscribe.objects.get_or_create(
+                person=request.user, club=group.club
+            )
+            if subscribe.subscription_group is None:
+                subscribe.subscription_group = group
+                subscribe.save(update_fields=["subscription_group"])
+
+            workflow = SubscriptionFormWorkflow(
+                form_definition=group,
+                user=request.user,
+                subscribe=subscribe,
+                attribution_source=source,
+                attribution_context=data.get("attribution_context", {}),
+            )
+            submission = workflow.submit(
+                [
+                    {
+                        "question": answer["question"],
+                        "text": answer.get("text", ""),
+                        "multiple_choice": answer.get("multiple_choice"),
+                    }
+                    for answer in data.get("answers", [])
+                ]
+            )
+
+        return Response(
+            {
+                "subscribed": True,
+                "club_code": group.club.code,
+                "subscription_group_id": group.pk,
+                "submission_id": submission.pk,
+            }
+        )
+
+
+class SubscriptionMagicLinkResolveView(APIView):
+    """
+    Resolve a signed subscription magic link token to group metadata.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        """
+        Validate a subscription link token and return group summary for attribution.
+        ---
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                subscription_group_id:
+                                    type: integer
+                                club_code:
+                                    type: string
+                                group_name:
+                                    type: string
+                                is_active:
+                                    type: boolean
+                                is_archived:
+                                    type: boolean
+                                auto_subscribe_eligible:
+                                    type: boolean
+                                attribution_source:
+                                    type: string
+            "400":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        try:
+            raw = token.rsplit(":", 1)[0]
+            group_id = int(raw)
+        except (ValueError, IndexError):
+            return Response({"detail": "Invalid link."}, status=400)
+
+        signer = Signer(salt=f"sub-group-link:{group_id}")
+        try:
+            signer.unsign(token)
+        except BadSignature:
+            return Response({"detail": "Invalid or tampered link."}, status=400)
+
+        group = get_object_or_404(SubscriptionGroup, pk=group_id)
+        return Response(
+            {
+                "subscription_group_id": group.pk,
+                "club_code": group.club.code,
+                "group_name": group.get_display_name(),
+                "is_active": group.is_active,
+                "is_archived": group.is_archived,
+                "auto_subscribe_eligible": group.auto_subscribe_eligible,
+                "attribution_source": "email",
+            }
+        )
 
 
 class ClubVisitViewSet(viewsets.ModelViewSet):

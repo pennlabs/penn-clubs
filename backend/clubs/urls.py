@@ -58,6 +58,14 @@ from clubs.views import (
     StatusViewSet,
     StudentTypeViewSet,
     SubscribeViewSet,
+    SubscriptionEntryView,
+    SubscriptionGroupViewSet,
+    SubscriptionMagicLinkResolveView,
+    SubscriptionMultipleChoiceViewSet,
+    SubscriptionPublicGroupView,
+    SubscriptionQuestionViewSet,
+    SubscriptionSubmissionAdminViewSet,
+    SubscriptionSubmitView,
     TagViewSet,
     TestimonialViewSet,
     TicketViewSet,
@@ -156,10 +164,32 @@ clubs_router.register(
     r"applications", ClubApplicationViewSet, basename="club-applications"
 )
 clubs_router.register(r"adminnotes", AdminNoteViewSet, basename="adminnotes")
+clubs_router.register(
+    r"subscription-groups",
+    SubscriptionGroupViewSet,
+    basename="club-subscription-groups",
+)
 
 club_events_router = routers.NestedSimpleRouter(clubs_router, r"events", lookup="event")
 club_events_router.register(
     r"showings", ClubEventShowingViewSet, basename="club-events-showings"
+)
+
+subscription_groups_router = routers.NestedSimpleRouter(
+    clubs_router, r"subscription-groups", lookup="subscription_group"
+)
+subscription_groups_router.register(
+    r"questions", SubscriptionQuestionViewSet, basename="sub-group-questions"
+)
+subscription_groups_router.register(
+    r"subscribers", SubscriptionSubmissionAdminViewSet, basename="sub-group-subscribers"
+)
+
+sub_questions_router = routers.NestedSimpleRouter(
+    subscription_groups_router, r"questions", lookup="question"
+)
+sub_questions_router.register(
+    r"options", SubscriptionMultipleChoiceViewSet, basename="sub-question-options"
 )
 
 badges_router = routers.NestedSimpleRouter(router, r"badges", lookup="badge")
@@ -250,6 +280,26 @@ urlpatterns = [
         RankingWeightsView.as_view(),
         name="ranking-weights",
     ),
+    path(
+        "clubs/<slug:club_code>/subscription-entry/",
+        SubscriptionEntryView.as_view(),
+        name="subscription-entry",
+    ),
+    path(
+        "subscription-groups/<int:pk>/public/",
+        SubscriptionPublicGroupView.as_view(),
+        name="subscription-group-public",
+    ),
+    path(
+        "subscription-groups/<int:pk>/submit/",
+        SubscriptionSubmitView.as_view(),
+        name="subscription-group-submit",
+    ),
+    path(
+        "subscription-links/<str:token>/",
+        SubscriptionMagicLinkResolveView.as_view(),
+        name="subscription-link-resolve",
+    ),
 ]
 
 urlpatterns += router.urls
@@ -258,3 +308,5 @@ urlpatterns += badges_router.urls
 urlpatterns += applications_router.urls
 urlpatterns += events_router.urls
 urlpatterns += club_events_router.urls
+urlpatterns += subscription_groups_router.urls
+urlpatterns += sub_questions_router.urls
