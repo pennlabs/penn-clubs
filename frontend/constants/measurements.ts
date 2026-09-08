@@ -50,6 +50,13 @@ export const CARD_HEADING = MEASUREMENTS[SITE_ID].CARD_HEADING
 export const BANNER_HEIGHT = MEASUREMENTS[SITE_ID].BANNER_HEIGHT
 export const FULL_NAV_HEIGHT = MEASUREMENTS[SITE_ID].FULL_NAV_HEIGHT
 
+/**
+ * Height of the Penn Labs status banner injected by the script in
+ * `pages/_document.tsx`, published by `useStatusBannerHeight`. Falls back to
+ * `0px` when no banner is present, which is the default layout.
+ */
+export const STATUS_BANNER_HEIGHT = 'var(--status-banner-height, 0px)'
+
 export const BORDER_RADIUS = '4px'
 export const BORDER_RADIUS_LG = '8px'
 

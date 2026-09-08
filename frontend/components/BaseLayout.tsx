@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import AuthPrompt from '~/components/common/AuthPrompt'
 import Footer from '~/components/Footer'
 import Header from '~/components/Header'
-import { NAV_HEIGHT, SNOW } from '~/constants'
+import { NAV_HEIGHT, SNOW, STATUS_BANNER_HEIGHT } from '~/constants'
 import { RenderPageWrapper, ToastStyle } from '~/renderPage'
 import { PermissionsContext } from '~/utils'
 import { createBasePropFetcher } from '~/utils/getBaseProps'
@@ -17,7 +17,7 @@ type BaseLayoutProps = Awaited<
 }
 
 export const Wrapper = styled.div`
-  min-height: calc(100vh - ${NAV_HEIGHT});
+  min-height: calc(100vh - ${NAV_HEIGHT} - ${STATUS_BANNER_HEIGHT});
   background: ${SNOW};
 `
 
