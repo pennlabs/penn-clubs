@@ -1,4 +1,5 @@
 import { Container, Metadata, Title } from 'components/common'
+import AuthPrompt from 'components/common/AuthPrompt'
 import { NextPageContext } from 'next'
 import { useRouter } from 'next/router'
 import React, { ReactElement } from 'react'
@@ -9,15 +10,25 @@ import ApplicationsTable from '~/components/Settings/ApplicationsTable'
 import SubmissionsPage from '~/components/Submissions'
 import { BrowserTabView } from '~/components/TabView'
 import { APPLY_ROUTE, BG_GRADIENT, WHITE } from '~/constants'
-import { ApplicationSubmission, UserApplicationsResponse } from '~/types'
+import {
+  ApplicationSubmission,
+  UserApplicationsResponse,
+  UserInfo,
+} from '~/types'
 
 function ApplyDashboard({
+  userInfo,
   submissions,
   userApplications,
 }: {
+  userInfo?: UserInfo
   submissions: Array<ApplicationSubmission>
   userApplications: UserApplicationsResponse | { detail: string }
 }): ReactElement<any> {
+  if (!userInfo) {
+    return <AuthPrompt />
+  }
+
   const router = useRouter()
   const tabs = [
     {

@@ -151,6 +151,7 @@ const Tag = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
+  max-width: 100%;
   height: 2em;
   padding: 0 0.75em;
   border-radius: ${BORDER_RADIUS};
@@ -164,6 +165,21 @@ const Tag = styled.span`
   & svg {
     margin: 0;
   }
+`
+
+/**
+ * A committee's name has no length limit, and this table is table-layout:
+ * fixed, so an unclipped tag doesn't get pushed onto a new line the way it
+ * would in normal flow -- it just draws past the cell edge, over whatever is
+ * in the next column. min-width: 0 is what lets a flex child shrink below
+ * its content size at all; without it text-overflow never gets a chance to
+ * apply.
+ */
+const TagLabel = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 /**
@@ -263,12 +279,6 @@ const Row = styled.tr<{ $last?: boolean }>`
   & > td {
     border-bottom-color: ${({ $last }) => ($last ? '#dbdbdb' : '#f1f3f7')};
   }
-`
-
-const OtherCommittees = styled.span`
-  font-size: 0.75rem;
-  color: ${LIGHT_GRAY};
-  margin-top: 0.15rem;
 `
 
 const Disclosure = styled.div`
@@ -477,10 +487,6 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
   const renderApplication = (
     application: UserApplication,
   ): ReactElement<any> => {
-    const applied = application.submissions.map((s) => s.committee)
-    const notApplied = application.committees.filter(
-      (committee) => !applied.includes(committee),
-    )
     // an untouched application still needs a single row, so stand in with null
     const entries: (UserApplicationSubmission | null)[] =
       application.submissions.length > 0 ? application.submissions : [null]
@@ -502,13 +508,6 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
                         {application.club_name}
                       </Link>
                     </ClubName>
-                    {application.is_open && notApplied.length > 0 && (
-                      <OtherCommittees>
-                        {applied.length > 0
-                          ? `You have not applied to: ${notApplied.join(', ')}`
-                          : `Committees: ${notApplied.join(', ')}`}
-                      </OtherCommittees>
-                    )}
                   </AppCell>
                 </td>
                 <td rowSpan={entries.length}>{deadlineCell(application)}</td>
@@ -521,7 +520,9 @@ const ApplicationsTable = ({ initialData }: Props): ReactElement<any> => {
                 // committee it does not have
                 <NoneCell>&mdash;</NoneCell>
               ) : (
-                <CommitteeTag>{submission.committee}</CommitteeTag>
+                <CommitteeTag title={submission.committee}>
+                  <TagLabel>{submission.committee}</TagLabel>
+                </CommitteeTag>
               )}
             </td>
             <td>
