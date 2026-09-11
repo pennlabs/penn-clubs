@@ -388,6 +388,13 @@ class Club(models.Model):
         choices=RECRUITING_CYCLES, default=RECRUITING_UNKNOWN
     )
     enables_subscription = models.BooleanField(default=True)
+    default_subscription_group = models.ForeignKey(
+        "SubscriptionGroup",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="default_for_clubs",
+    )
     listserv = models.CharField(blank=True, max_length=255)
     ics_import_url = models.URLField(max_length=200, blank=True, null=True)
     image = models.ImageField(upload_to=get_club_file_name, null=True, blank=True)
@@ -1137,6 +1144,13 @@ class Subscribe(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    subscription_group = models.ForeignKey(
+        "SubscriptionGroup",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="subscriptions",
+    )
 
     def __str__(self):
         return "<Subscribe: {} for {}, with email {}>".format(
@@ -1900,6 +1914,20 @@ class Profile(models.Model):
         return self.user.username
 
 
+class FormDefinitionBehaviorMixin:
+    """
+    Pure Python mixin providing shared interface for form-definition models
+    (ClubApplication, SubscriptionGroup). No Django fields — only methods.
+    Subclasses must implement is_currently_open() and get_display_name().
+    """
+
+    def is_currently_open(self, at=None):
+        raise NotImplementedError
+
+    def get_display_name(self):
+        raise NotImplementedError
+
+
 class ApplicationCycle(models.Model):
     """
     Represents an application cycle attached to club applications
@@ -1914,7 +1942,7 @@ class ApplicationCycle(models.Model):
         return self.name
 
 
-class ClubApplication(CloneModel):
+class ClubApplication(FormDefinitionBehaviorMixin, CloneModel):
     """
     Represents custom club application.
     """
@@ -1960,6 +1988,13 @@ class ClubApplication(CloneModel):
         semester = "Fall" if 8 <= self.application_start_time.month <= 12 else "Spring"
         year = str(self.application_start_time.year)
         return f"{semester} {year}"
+
+    def is_currently_open(self, at=None):
+        now = at or timezone.now()
+        return self.application_start_time <= now <= self.application_end_time
+
+    def get_display_name(self):
+        return self.name or str(self)
 
     @classmethod
     def validate_template(cls, template):
@@ -2258,6 +2293,175 @@ class ApplicationQuestionResponse(models.Model):
 
     class Meta:
         unique_together = (("question", "submission"),)
+
+
+class SubscriptionGroup(FormDefinitionBehaviorMixin, models.Model):
+    """
+    Represents a subscription form/group for a club. Clubs may have multiple
+    subscription groups to segment subscribers (e.g. by semester or interest).
+    """
+
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name="subscription_groups"
+    )
+    name = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
+    opens_at = models.DateTimeField(null=True, blank=True)
+    closes_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_currently_open(self, at=None):
+        now = at or timezone.now()
+        if not self.is_active:
+            return False
+        if self.opens_at and now < self.opens_at:
+            return False
+        if self.closes_at and now > self.closes_at:
+            return False
+        return True
+
+    def get_display_name(self):
+        return self.name or f"Subscription Group {self.pk}"
+
+    @property
+    def auto_subscribe_eligible(self):
+        """
+        True when the form asks nothing beyond auto-collected profile info, so a
+        magic link can subscribe the user outright instead of showing a form.
+        Informational text is not a question, so it does not block this.
+        """
+        return not self.questions.filter(
+            question_type__in=[
+                SubscriptionQuestion.FREE_RESPONSE,
+                SubscriptionQuestion.MULTIPLE_CHOICE,
+                SubscriptionQuestion.SHORT_ANSWER,
+            ]
+        ).exists()
+
+    def __str__(self):
+        return f"{self.club.name} — {self.get_display_name()}"
+
+
+class SubscriptionQuestion(models.Model):
+    """
+    Represents a question attached to a SubscriptionGroup form.
+    """
+
+    FREE_RESPONSE = 1
+    MULTIPLE_CHOICE = 2
+    SHORT_ANSWER = 3
+    INFO_TEXT = 4
+    QUESTION_TYPES = (
+        (FREE_RESPONSE, "Free Response"),
+        (MULTIPLE_CHOICE, "Multiple Choice"),
+        (SHORT_ANSWER, "Short Answer"),
+        (INFO_TEXT, "Informational Text"),
+    )
+
+    question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)
+    prompt = models.TextField(blank=True)
+    required = models.BooleanField(default=False)
+    precedence = models.IntegerField(default=0)
+    word_limit = models.IntegerField(default=0)
+    subscription_group = models.ForeignKey(
+        SubscriptionGroup, on_delete=models.CASCADE, related_name="questions"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.subscription_group} — Q{self.precedence}: {self.prompt[:50]}"
+
+
+class SubscriptionMultipleChoice(models.Model):
+    """
+    Represents a multiple choice option for a SubscriptionQuestion.
+    """
+
+    value = models.TextField(blank=True)
+    question = models.ForeignKey(
+        SubscriptionQuestion, on_delete=models.CASCADE, related_name="multiple_choice"
+    )
+
+    def __str__(self):
+        return self.value
+
+
+ATTRIBUTION_SOURCE_CHOICES = (
+    ("direct", "Direct Club Page"),
+    ("fair", "Activities Fair Booth"),
+    ("search", "Search Results"),
+    ("email", "Email Link"),
+    ("external", "External Link"),
+    ("import", "Imported"),
+    ("unknown", "Unknown"),
+)
+
+
+class SubscriptionSubmission(models.Model):
+    """
+    Represents a user's form submission when subscribing via a SubscriptionGroup.
+    """
+
+    subscribe = models.ForeignKey(
+        "Subscribe",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="form_submission",
+    )
+    subscription_group = models.ForeignKey(
+        SubscriptionGroup,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="submissions",
+    )
+    attribution_source = models.CharField(
+        max_length=50, choices=ATTRIBUTION_SOURCE_CHOICES, default="unknown"
+    )
+    attribution_context = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (("subscribe", "subscription_group"),)
+
+    def __str__(self):
+        return (
+            f"SubscriptionSubmission(subscribe={self.subscribe_id}, "
+            f"group={self.subscription_group_id})"
+        )
+
+
+class SubscriptionQuestionResponse(models.Model):
+    """
+    Represents a response to a single SubscriptionQuestion within a
+    SubscriptionSubmission.
+    """
+
+    text = models.TextField(blank=True)
+    question = models.ForeignKey(
+        SubscriptionQuestion, on_delete=models.CASCADE, related_name="responses"
+    )
+    submission = models.ForeignKey(
+        SubscriptionSubmission, on_delete=models.CASCADE, related_name="responses"
+    )
+    multiple_choice = models.ForeignKey(
+        SubscriptionMultipleChoice,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="responses",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (("question", "submission"),)
+
+    def __str__(self):
+        return f"Response to Q{self.question_id} in submission {self.submission_id}"
 
 
 class Cart(models.Model):

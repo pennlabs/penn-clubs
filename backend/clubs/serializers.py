@@ -62,6 +62,11 @@ from clubs.models import (
     Status,
     StudentType,
     Subscribe,
+    SubscriptionGroup,
+    SubscriptionMultipleChoice,
+    SubscriptionQuestion,
+    SubscriptionQuestionResponse,
+    SubscriptionSubmission,
     Tag,
     TargetMajor,
     TargetSchool,
@@ -1546,6 +1551,9 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
     youtube = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     group_activity_assessment = GroupActivityOptionSerializer(many=True, required=False)
+    default_subscription_group = serializers.PrimaryKeyRelatedField(
+        queryset=SubscriptionGroup.objects.all(), required=False, allow_null=True
+    )
 
     def get_fairs(self, obj):
         return list(obj.clubfair_set.values_list("id", flat=True))
@@ -2193,6 +2201,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "eligibility",
             "classification",
             "group_activity_assessment",
+            "default_subscription_group",
         ]
         save_related_fields = [
             "tags",
@@ -2301,9 +2310,12 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
 
 class UserSubscribeWriteSerializer(UserSubscribeSerializer):
     club = serializers.SlugRelatedField(queryset=Club.objects.all(), slug_field="code")
+    subscription_group = serializers.PrimaryKeyRelatedField(
+        queryset=SubscriptionGroup.objects.all(), required=False, allow_null=True
+    )
 
     class Meta(UserSubscribeSerializer.Meta):
-        pass
+        fields = UserSubscribeSerializer.Meta.fields + ("subscription_group",)
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
@@ -3969,3 +3981,269 @@ class RankingWeightsSerializer(serializers.ModelSerializer):
 
     def get_updated_by(self, obj):
         return obj.updated_by.get_full_name() if obj.updated_by else "N/A"
+
+
+class SubscriptionMultipleChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionMultipleChoice
+        fields = ["id", "value", "question"]
+        # question is set from the nested route, never sent in the request body
+        read_only_fields = ["id", "question"]
+
+
+class SubscriptionQuestionSerializer(serializers.ModelSerializer):
+    multiple_choice = SubscriptionMultipleChoiceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SubscriptionQuestion
+        fields = [
+            "id",
+            "subscription_group",
+            "question_type",
+            "prompt",
+            "required",
+            "precedence",
+            "word_limit",
+            "multiple_choice",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "subscription_group", "created_at", "updated_at"]
+
+    def save(self, **kwargs):
+        question_obj = super().save(**kwargs)
+        # manually create multiple choice options as Django does not
+        # support nested serializers out of the box
+        request = self.context["request"].data
+        if "multiple_choice" in request:
+            SubscriptionMultipleChoice.objects.filter(question=question_obj).delete()
+            for choice in request["multiple_choice"]:
+                value = choice["value"] if isinstance(choice, dict) else choice
+                SubscriptionMultipleChoice.objects.create(
+                    value=value,
+                    question=question_obj,
+                )
+        return question_obj
+
+
+class SubscriptionGroupListSerializer(serializers.ModelSerializer):
+    question_count = serializers.IntegerField(read_only=True)
+    submission_count = serializers.IntegerField(read_only=True)
+    subscriber_count = serializers.IntegerField(read_only=True)
+    is_default = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SubscriptionGroup
+        fields = [
+            "id",
+            "name",
+            "description",
+            "is_active",
+            "is_archived",
+            "opens_at",
+            "closes_at",
+            "is_default",
+            "question_count",
+            "submission_count",
+            "subscriber_count",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_is_default(self, obj):
+        return obj.club.default_subscription_group_id == obj.pk
+
+
+class SubscriptionGroupDetailSerializer(SubscriptionGroupListSerializer):
+    questions = SubscriptionQuestionSerializer(many=True, read_only=True)
+
+    class Meta(SubscriptionGroupListSerializer.Meta):
+        fields = SubscriptionGroupListSerializer.Meta.fields + ["questions"]
+
+
+class SubscriptionGroupWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionGroup
+        fields = ["name", "description", "is_active", "opens_at", "closes_at"]
+
+    def validate(self, data):
+        """
+        A form cannot close before it opens, which would leave it permanently
+        shut. On a PATCH only one of the two may be supplied, so fall back to
+        the stored value for whichever is absent.
+        """
+        opens_at = data.get(
+            "opens_at", self.instance.opens_at if self.instance else None
+        )
+        closes_at = data.get(
+            "closes_at", self.instance.closes_at if self.instance else None
+        )
+
+        if opens_at and closes_at and closes_at <= opens_at:
+            raise serializers.ValidationError(
+                {
+                    "closes_at": [
+                        "The close date must be after the open date. "
+                        "Leave it blank to keep the form open indefinitely."
+                    ]
+                }
+            )
+        return data
+
+
+# Keep old name for backward compatibility (used in existing imports)
+SubscriptionGroupSerializer = SubscriptionGroupListSerializer
+
+
+class PublicSubscriptionQuestionSerializer(serializers.ModelSerializer):
+    multiple_choice = SubscriptionMultipleChoiceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SubscriptionQuestion
+        fields = [
+            "id",
+            "question_type",
+            "prompt",
+            "required",
+            "precedence",
+            "word_limit",
+            "multiple_choice",
+        ]
+
+
+class PublicSubscriptionGroupSerializer(serializers.ModelSerializer):
+    questions = PublicSubscriptionQuestionSerializer(many=True, read_only=True)
+    auto_subscribe_eligible = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SubscriptionGroup
+        fields = [
+            "id",
+            "name",
+            "description",
+            "is_active",
+            "opens_at",
+            "closes_at",
+            "questions",
+            "auto_subscribe_eligible",
+        ]
+
+    def get_auto_subscribe_eligible(self, obj):
+        return obj.auto_subscribe_eligible
+
+
+class SubscriberListSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source="subscribe.person.pk", read_only=True)
+    name = serializers.SerializerMethodField()
+    email = serializers.EmailField(source="subscribe.person.email", read_only=True)
+    graduation_year = serializers.SerializerMethodField()
+    subscribed_at = serializers.DateTimeField(source="created_at", read_only=True)
+    submission_id = serializers.IntegerField(source="pk", read_only=True)
+
+    class Meta:
+        model = SubscriptionSubmission
+        fields = [
+            "submission_id",
+            "user_id",
+            "name",
+            "email",
+            "graduation_year",
+            "attribution_source",
+            "attribution_context",
+            "subscribed_at",
+        ]
+
+    def get_name(self, obj):
+        if obj.subscribe and obj.subscribe.person:
+            return obj.subscribe.person.get_full_name()
+        return ""
+
+    def get_graduation_year(self, obj):
+        if obj.subscribe and obj.subscribe.person:
+            profile = getattr(obj.subscribe.person, "profile", None)
+            if profile:
+                return getattr(profile, "graduation_year", None)
+        return None
+
+
+class SubscriberDetailSerializer(SubscriberListSerializer):
+    responses = serializers.SerializerMethodField()
+
+    class Meta(SubscriberListSerializer.Meta):
+        fields = SubscriberListSerializer.Meta.fields + ["responses"]
+
+    def get_responses(self, obj):
+        result = []
+        for response in obj.responses.all():
+            result.append(
+                {
+                    "question_id": response.question_id,
+                    "prompt": response.question.prompt if response.question else "",
+                    "question_type": (
+                        response.question.question_type if response.question else None
+                    ),
+                    "text": response.text,
+                    "multiple_choice_value": (
+                        response.multiple_choice.value
+                        if response.multiple_choice
+                        else None
+                    ),
+                }
+            )
+        return result
+
+
+class SubscriptionAnswerSerializer(serializers.Serializer):
+    question = serializers.PrimaryKeyRelatedField(
+        queryset=SubscriptionQuestion.objects.all()
+    )
+    text = serializers.CharField(required=False, allow_blank=True, default="")
+    multiple_choice = serializers.PrimaryKeyRelatedField(
+        queryset=SubscriptionMultipleChoice.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
+
+class SubscriptionSubmitSerializer(serializers.Serializer):
+    # Accepted for backwards compatibility but ignored: the subscription group
+    # is identified by the URL, which is the authoritative source.
+    subscription_group = serializers.PrimaryKeyRelatedField(
+        queryset=SubscriptionGroup.objects.all(), required=False
+    )
+    answers = SubscriptionAnswerSerializer(many=True, required=False, default=list)
+    # Deliberately not a ChoiceField: a stale or unknown source recorded on a
+    # magic link should be stored as "unknown" rather than rejecting a
+    # legitimate subscription. The view validates against the choices.
+    attribution_source = serializers.CharField(required=False, default="direct")
+    attribution_context = serializers.JSONField(required=False, default=dict)
+
+
+class SubscriptionSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionSubmission
+        fields = [
+            "id",
+            "subscribe",
+            "subscription_group",
+            "attribution_source",
+            "attribution_context",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class SubscriptionQuestionResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionQuestionResponse
+        fields = [
+            "id",
+            "submission",
+            "question",
+            "text",
+            "multiple_choice",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]

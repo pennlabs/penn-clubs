@@ -604,3 +604,59 @@ export type RankingWeights = {
   updated_at: string
   updated_by: string
 }
+
+export enum SubscriptionQuestionType {
+  FreeResponse = 1,
+  MultipleChoice = 2,
+  ShortAnswer = 3,
+  InfoText = 4,
+}
+
+export interface SubscriptionMultipleChoice {
+  id: number
+  value: string
+}
+
+export interface SubscriptionQuestion {
+  id: number
+  subscription_group: number
+  question_type: SubscriptionQuestionType
+  prompt: string
+  required: boolean
+  precedence: number
+  word_limit: number | null
+  multiple_choice: SubscriptionMultipleChoice[]
+}
+
+export interface SubscriptionGroup {
+  id: number
+  name: string
+  description: string
+  is_active: boolean
+  is_archived: boolean
+  is_default: boolean
+  opens_at: string | null
+  closes_at: string | null
+  question_count: number
+  submission_count: number
+  subscriber_count: number
+  questions?: SubscriptionQuestion[]
+  created_at: string
+  updated_at: string
+}
+
+export interface SubscriberListItem {
+  submission_id: number
+  user_id: number
+  name: string
+  email: string
+  graduation_year: number | null
+  attribution_source: string
+  subscribed_at: string
+}
+
+export interface SubscriptionEntryResponse {
+  mode: 'instant' | 'form'
+  subscription_group_id?: number
+  attribution_source?: string
+}
