@@ -37,7 +37,7 @@
     "luxon": "^3.7.2",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.48",
-    "next": "~15.2.7",
+    "next": "~15.5.24",
     "react": "^19.2.2",
     "react-beautiful-dnd": "^13.1.1",
     "react-big-calendar": "^1.19.4",
@@ -57,7 +57,7 @@
     "recharts": "^3.5.1",
     "showdown": "^2.1.0",
     "styled-components": "npm:@sanity/css-in-js",
-    "swiper": "^11.2.10",
+    "swiper": "^12.1.2",
     "use-places-autocomplete": "^4.0.1"
   },
   "scripts": {
