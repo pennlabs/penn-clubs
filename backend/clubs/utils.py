@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import bleach
 import requests
+from bleach.css_sanitizer import CSSSanitizer
 from bs4 import BeautifulSoup, Comment, NavigableString
 from django.conf import settings
 from django.core.files.images import ImageFile
@@ -106,6 +107,16 @@ IFRAME_EMBED_ALLOWLIST = {
     "youtube.com",
 }
 
+CSS_SANITIZER = CSSSanitizer(
+    allowed_css_properties=[
+        "color",
+        "background-color",
+        "text-align",
+        "font-size",
+        "font-family",
+    ]
+)
+
 
 def allow_iframe(tag, name, value):
     if name in {"width", "height"}:
@@ -130,7 +141,7 @@ def clean(text):
     """
     return bleach.clean(
         text,
-        tags=bleach.sanitizer.ALLOWED_TAGS
+        tags=list(bleach.sanitizer.ALLOWED_TAGS)
         + [
             "br",
             "code",
@@ -159,7 +170,7 @@ def clean(text):
             **bleach.sanitizer.ALLOWED_ATTRIBUTES,
             **{"*": ["style"], "img": ["src", "alt"], "iframe": allow_iframe},
         },
-        styles=["color", "background-color", "text-align", "font-size", "font-family"],
+        css_sanitizer=CSS_SANITIZER,
     )
 
 
