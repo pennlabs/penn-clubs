@@ -765,16 +765,17 @@ class MembershipInviteSerializer(serializers.ModelSerializer):
 
         # if there is an owner and the invite is for a upenn email,
         # do strict username checking
+        invite_email = self.instance.email.lower()
         if (
-            self.instance.email.endswith((".upenn.edu", "@upenn.edu"))
+            invite_email.endswith((".upenn.edu", "@upenn.edu"))
             and self.instance.club.membership_set.count() > 0
         ):
             # penn medicine emails have multiple aliases
-            if not self.instance.email.endswith("@pennmedicine.upenn.edu"):
-                invite_username = self.instance.email.rsplit("@", 1)[0]
+            if not invite_email.endswith("@pennmedicine.upenn.edu"):
+                invite_username = invite_email.rsplit("@", 1)[0]
                 if not (
-                    invite_username.lower() == user.username.lower()
-                    or self.instance.email == user.email
+                    invite_username == user.username.lower()
+                    or invite_email == user.email.lower()
                 ):
                     raise serializers.ValidationError(
                         f"This invitation was meant for {invite_username}, "
