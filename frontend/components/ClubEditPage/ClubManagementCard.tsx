@@ -88,7 +88,11 @@ const ClubManagementCard = ({
   }, [activeAffiliation])
 
   return (
-    <>
+    <div
+      id="affiliations"
+      data-edit-section="Affiliations"
+      style={{ scrollMarginTop: '7.5rem' }}
+    >
       <Text>
         If {club.name} is an umbrella {OBJECT_NAME_SINGULAR}, you can use this
         page to assign affiliations to {OBJECT_NAME_PLURAL} that are associated
@@ -261,7 +265,7 @@ const ClubManagementCard = ({
       ) : (
         <Loading />
       )}
-    </>
+    </div>
   )
 }
 

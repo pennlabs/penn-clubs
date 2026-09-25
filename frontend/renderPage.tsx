@@ -348,7 +348,7 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
 
         // return all false permissions if not logged in
         if (!resp.ok) {
-          return permissions.reduce((acc, perm) => {
+          return Page.permissions.concat(otherPermissions).reduce((acc, perm) => {
             acc[perm] = false
             return acc
           }, {})

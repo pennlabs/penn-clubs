@@ -46,7 +46,7 @@ As you can tell, there is a lot of responsibility for club owners already. To he
 
 ## ⚙️ Settings
 
-We encourage clubs to keep their club pages as up-to-date as possible with descriptions, members, social media links, events, and more! Check out our [ranking algorithm](/rank) here to discover ways to boost your club and events to the top of Penn Clubs, simply by providing more information on your club for prospective members.
+We encourage clubs to keep their club pages as up-to-date as possible with descriptions, members, social media links, events, and more! Check out the ranking details on the [FAQ](/faq) to discover ways to boost your club and events to the top of Penn Clubs, simply by providing more information on your club for prospective members.
 
 If you have any questions, please don't hesitate to reach out to contact@pennclubs.com.
 

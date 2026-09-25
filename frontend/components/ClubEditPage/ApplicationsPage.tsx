@@ -614,7 +614,11 @@ export default function ApplicationsPage({
   )
 
   return (
-    <>
+    <div
+      id="applications"
+      data-edit-section="Applications"
+      style={{ scrollMarginTop: '7.5rem' }}
+    >
       <StyledHeader style={{ marginBottom: '2px' }}>Applications</StyledHeader>
       {applications === null ? (
         <Loading />
@@ -1022,6 +1026,6 @@ export default function ApplicationsPage({
           />
         </Modal>
       )}
-    </>
+    </div>
   )
 }

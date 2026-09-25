@@ -1,5 +1,4 @@
 import { Field, Form, Formik, useField, useFormikContext } from 'formik'
-import Link from 'next/link'
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 
 import { BLACK } from '~/constants'
@@ -65,6 +64,12 @@ import {
   TextField,
 } from '../FormComponents'
 import { doFormikInitialValueFixes } from '../ModelForm'
+import {
+  EDIT_SECTION_ATTR,
+  editSectionCardStyle,
+  editSectionHeaderStyle,
+  toSectionId,
+} from './editSection'
 
 // Group Activity Assessment Field Component
 const GroupActivityAssessmentField: React.FC<{
@@ -297,9 +302,16 @@ const Card = ({
 }: React.PropsWithChildren<{
   title?: string | ReactElement<any>
 }>): ReactElement<any> => {
+  const label = typeof title === 'string' ? title : undefined
+  const id = label ? toSectionId(label) : undefined
   return (
-    <div className="card mb-5">
-      <div className="card-header">
+    <div
+      className="card mb-5"
+      id={id}
+      {...(label ? { [EDIT_SECTION_ATTR]: label } : {})}
+      style={editSectionCardStyle}
+    >
+      <div className="card-header" style={editSectionHeaderStyle}>
         <div className="card-header-title">{title}</div>
       </div>
       <div className="card-content">{children}</div>
@@ -1021,8 +1033,8 @@ export default function ClubEditCard({
       description: SHOW_RANK_ALGORITHM ? (
         <Text>
           Some of these fields will be used to adjust {OBJECT_NAME_SINGULAR}{' '}
-          ordering on the home page. Click <Link href="/rank">here</Link> for
-          more details.
+          ordering on the home page. See the ranking details listed under the
+          page title for more information.
         </Text>
       ) : (
         <Text>

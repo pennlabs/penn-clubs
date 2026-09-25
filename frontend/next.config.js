@@ -31,14 +31,15 @@ module.exports = {
       },
     ]
     if (process.env.NODE_ENV !== 'production') {
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
       rewrites.push(
         {
           source: '/api/:path((?!api/.*$).*)',
-          destination: 'http://localhost:8000/api/:path/',
+          destination: `${backendUrl}/api/:path/`,
         },
         {
           source: '/api/:path((?!api/).*)/:query(.*)',
-          destination: 'http://localhost:8000/api/:path/:query',
+          destination: `${backendUrl}/api/:path/:query`,
         },
       )
     }
@@ -47,6 +48,7 @@ module.exports = {
   async redirects() {
     return [
       { source: '/reports', destination: '/admin/reports', permanent: true },
+      { source: '/rank', destination: '/faq', permanent: true },
     ]
   },
   publicRuntimeConfig: {

@@ -62,16 +62,16 @@ import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
 import {
   Contact,
-  Container,
   Icon,
   InactiveTag,
   InfoPageTitle,
   Loading,
   Metadata,
   Text,
+  WideContainer,
 } from './common'
 import AuthPrompt from './common/AuthPrompt'
-import { BrowserTabView } from './TabView'
+import ClubEditTabView from './ClubEditPage/ClubEditTabView'
 
 type ClubFormProps = {
   clubId: string | undefined
@@ -428,7 +428,7 @@ const ClubForm = ({
   const isViewButton = isEdit && club
 
   return (
-    <Container>
+    <WideContainer>
       {metadata}
       <InfoPageTitle>
         {nameOrDefault}
@@ -468,7 +468,7 @@ const ClubForm = ({
         </>
       )}
       {isEdit ? (
-        <BrowserTabView tabs={tabs} tab={tab} route={CLUB_EDIT_ROUTE(clubId)} />
+        <ClubEditTabView tabs={tabs} tab={tab} route={CLUB_EDIT_ROUTE(clubId)} />
       ) : (
         <div style={{ marginTop: '1em' }}>
           <ClubEditCard
@@ -489,7 +489,7 @@ const ClubForm = ({
           />
         </div>
       )}
-    </Container>
+    </WideContainer>
   )
 }
 
