@@ -1,10 +1,10 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
 import { Club } from '../../types'
 import { doApiRequest, getApiUrl } from '../../utils'
-import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Empty, Icon, Loading } from '../common'
+import Table from '../common/Table'
 import BaseCard from './BaseCard'
 
 type PotentialMemberCard = {
@@ -52,57 +52,81 @@ export default function PotentialMemberCard({
 
   useEffect(reloadList, [])
 
-  if (students == null) {
-    return <Loading />
-  }
-
   const title =
     source === 'subscription' ? 'Subscribers' : 'Membership Requests'
-  const pastVerb =
-    source === 'subscription' ? 'subscribed' : 'requested membership'
   const multiNoun =
     source === 'subscription' ? 'Subscriber' : 'Membership Request'
 
-  return (
-    <BaseCard title={title}>
-      {header}
-      <table className="table is-fullwidth">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Grad Year</th>
-            <th>School</th>
-            <th>Major</th>
-            <th>Subscribed</th>
-            {actions && <th>Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((item, i) => (
-            <tr key={i}>
-              <td>{item.name || item.username || <Empty>None</Empty>}</td>
-              <td>{item.email || <Empty>None</Empty>}</td>
-              <td>{item.graduation_year || <Empty>None</Empty>}</td>
-              <td>
-                {item.school && item.school.length ? (
-                  item.school.map((a) => a.name).join(', ')
-                ) : (
-                  <Empty>None</Empty>
-                )}
-              </td>
-              <td>
-                {item.major && item.major.length ? (
-                  item.major.map((a) => a.name).join(', ')
-                ) : (
-                  <Empty>None</Empty>
-                )}
-              </td>
-              <td>
-                <TimeAgo date={item.created_at} />
-              </td>
-              {actions && (
-                <td>
+  const studentColumns = useMemo(
+    () => [
+      {
+        name: 'name',
+        label: 'Name',
+        render: (id) => {
+          const item = students?.find((student) => student.username === id)
+          return item?.name || item?.username || <Empty>None</Empty>
+        },
+      },
+      {
+        name: 'email',
+        label: 'Email',
+        render: (id) => {
+          const item = students?.find((student) => student.username === id)
+          return item?.email || <Empty>None</Empty>
+        },
+      },
+      {
+        name: 'graduation_year',
+        label: 'Grad Year',
+        render: (id) => {
+          const item = students?.find((student) => student.username === id)
+          return item?.graduation_year || <Empty>None</Empty>
+        },
+      },
+      {
+        name: 'schoolDisplay',
+        label: 'School',
+        render: (id) => {
+          const item = students?.find((student) => student.username === id)
+          return item?.school && item.school.length ? (
+            item.school.map((a) => a.name).join(', ')
+          ) : (
+            <Empty>None</Empty>
+          )
+        },
+      },
+      {
+        name: 'majorDisplay',
+        label: 'Major',
+        render: (id) => {
+          const item = students?.find((student) => student.username === id)
+          return item?.major && item.major.length ? (
+            item.major.map((a) => a.name).join(', ')
+          ) : (
+            <Empty>None</Empty>
+          )
+        },
+      },
+      {
+        name: 'created_at',
+        label: 'Subscribed',
+        render: (id) => {
+          const item = students?.find((student) => student.username === id)
+          return item ? <TimeAgo date={item.created_at} /> : null
+        },
+      },
+      ...(actions
+        ? [
+            {
+              name: 'Actions',
+              render: (id) => {
+                const item = students?.find(
+                  (student) => student.username === id,
+                )
+                if (item == null) {
+                  return null
+                }
+                return (
                   <div className="buttons">
                     {actions.map(
                       ({ name, onClick, className = 'is-primary', icon }) => (
@@ -125,19 +149,44 @@ export default function PotentialMemberCard({
                       ),
                     )}
                   </div>
-                </td>
-              )}
-            </tr>
-          ))}
-          {(students !== null && !!students.length) || (
-            <tr>
-              <td colSpan={actions ? 6 : 5} className="has-text-grey">
-                No one has {pastVerb} to this {OBJECT_NAME_SINGULAR} yet.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                )
+              },
+            },
+          ]
+        : []),
+    ],
+    [actions, students],
+  )
+
+  const studentData = useMemo(
+    () =>
+      (students ?? []).map((item) => ({
+        ...item,
+        id: item.username,
+        schoolDisplay:
+          item.school && item.school.length
+            ? item.school.map((a) => a.name).join(', ')
+            : '',
+        majorDisplay:
+          item.major && item.major.length
+            ? item.major.map((a) => a.name).join(', ')
+            : '',
+      })),
+    [students],
+  )
+
+  if (students == null) {
+    return <Loading />
+  }
+
+  return (
+    <BaseCard title={title}>
+      {header}
+      <Table
+        data={studentData}
+        columns={studentColumns}
+        searchableColumns={['name', 'email', 'schoolDisplay', 'majorDisplay']}
+      />
       <div className="buttons">
         <a
           href={getApiUrl(`/clubs/${club.code}/${source}/?format=xlsx`)}

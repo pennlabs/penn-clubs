@@ -1,5 +1,5 @@
 import { Field, Form, Formik } from 'formik'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
 import { Club, File } from '../../types'
@@ -10,6 +10,7 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { Icon, Text } from '../common'
+import Table from '../common/Table'
 import { FileField } from '../FormComponents'
 import BaseCard from './BaseCard'
 
@@ -80,6 +81,75 @@ export default function FilesCard({
       })
   }
 
+  const fileColumns = useMemo(
+    () => [
+      {
+        name: 'name',
+        label: 'Name',
+        render: (id) => {
+          const file = files.find((item) => item.id === id)
+          if (file == null) {
+            return null
+          }
+          return (
+            <>
+              {file.name}{' '}
+              {file.is_constitution && (
+                <span className="tag is-info is-light ml-2">Constitution</span>
+              )}
+            </>
+          )
+        },
+      },
+      {
+        name: 'created_at',
+        label: 'Date Uploaded',
+        render: (id) => {
+          const file = files.find((item) => item.id === id)
+          return file ? <TimeAgo date={file.created_at} /> : null
+        },
+      },
+      {
+        name: 'Actions',
+        render: (id) => {
+          const file = files.find((item) => item.id === id)
+          if (file == null) {
+            return null
+          }
+          return (
+            <div className="buttons">
+              <button
+                className="button is-small is-danger"
+                onClick={() =>
+                  doApiRequest(
+                    `/clubs/${club.code}/assets/${file.id}/?format=json`,
+                    { method: 'DELETE' },
+                  ).then(() => {
+                    reloadFiles()
+                    if (file.is_constitution) {
+                      setConstitutionUrl(null)
+                      onUpdate?.()
+                    }
+                  })
+                }
+              >
+                <Icon name="x" alt="delete file" /> Delete
+              </button>
+              <a
+                href={`/api/clubs/${club.code}/assets/${file.id}/`}
+                target="_blank"
+                className="button is-small is-primary"
+              >
+                <Icon name="download" alt="download file" /> Download
+              </a>
+            </div>
+          )
+        },
+      },
+    ],
+    [club.code, files, onUpdate],
+  )
+
   return (
     <BaseCard title="Files">
       <Text>
@@ -100,68 +170,11 @@ export default function FilesCard({
           <span className="tag is-warning is-light">Not uploaded</span>
         )}
       </div>
-      <table className="table is-fullwidth">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Date Uploaded</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {files && files.length ? (
-            files.map((a) => (
-              <tr key={`${a.id}-${a.name}`}>
-                <td>
-                  {a.name}{' '}
-                  {a.is_constitution && (
-                    <span className="tag is-info is-light ml-2">
-                      Constitution
-                    </span>
-                  )}
-                </td>
-                <td>
-                  <TimeAgo date={a.created_at} />
-                </td>
-                <td>
-                  <div className="buttons">
-                    <button
-                      className="button is-small is-danger"
-                      onClick={() =>
-                        doApiRequest(
-                          `/clubs/${club.code}/assets/${a.id}/?format=json`,
-                          { method: 'DELETE' },
-                        ).then(() => {
-                          reloadFiles()
-                          if (a.is_constitution) {
-                            setConstitutionUrl(null)
-                            onUpdate?.()
-                          }
-                        })
-                      }
-                    >
-                      <Icon name="x" alt="delete file" /> Delete
-                    </button>
-                    <a
-                      href={`/api/clubs/${club.code}/assets/${a.id}/`}
-                      target="_blank"
-                      className="button is-small is-primary"
-                    >
-                      <Icon name="download" alt="download file" /> Download
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={3} className="has-text-grey">
-                There are no uploaded files for this {OBJECT_NAME_SINGULAR}.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <Table
+        data={files ?? []}
+        columns={fileColumns}
+        searchableColumns={['name']}
+      />
       <Formik
         initialValues={{ file: null, is_constitution: false }}
         onSubmit={submitForm}

@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useState } from 'react'
 import Select from 'react-select'
 import TimeAgo from 'react-timeago'
 import { toast, TypeOptions } from 'react-toastify'
@@ -15,6 +15,7 @@ import {
   SCHOOL_NAME,
 } from '../../utils/branding'
 import { Icon, Text } from '../common'
+import Table from '../common/Table'
 import BaseCard from './BaseCard'
 import { MEMBERSHIP_ROLES } from './MembersCard'
 
@@ -175,49 +176,65 @@ export default function InviteCard({
 
   useEffect(reloadInvites, [])
 
+  const inviteColumns = useMemo(
+    () => [
+      { name: 'email', label: 'Email' },
+      { name: 'titleDisplay', label: 'Title (Permissions)' },
+      {
+        name: 'updated_at',
+        label: 'Invite Time',
+        render: (id) => {
+          const item = invites.find((invite) => invite.id === id)
+          return item ? <TimeAgo date={item.updated_at} /> : null
+        },
+      },
+      {
+        name: 'Actions',
+        render: (id) => {
+          const item = invites.find((invite) => invite.id === id)
+          if (item == null) {
+            return null
+          }
+          return (
+            <div className="buttons">
+              <button
+                className="button is-small is-link"
+                onClick={() => resendInvite(item.id)}
+              >
+                <Icon name="mail" alt="resend invite" /> Resend
+              </button>
+              <button
+                className="button is-small is-danger"
+                onClick={() => deleteInvite(item.id)}
+              >
+                <Icon name="x" alt="remove invite" /> Remove
+              </button>
+            </div>
+          )
+        },
+      },
+    ],
+    [invites],
+  )
+
+  const inviteData = useMemo(
+    () =>
+      invites.map((item) => ({
+        ...item,
+        titleDisplay: `${item.title} (${getRoleDisplay(item.role)})`,
+      })),
+    [invites],
+  )
+
   return (
     <>
-      {invites && !!invites.length && (
-        <BaseCard title={`Pending Invites (${invites.length})`}>
-          <table className="table is-fullwidth">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Title (Permissions)</th>
-                <th>Invite Time</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invites.map((item) => (
-                <tr key={item.email}>
-                  <td>{item.email}</td>
-                  <td>
-                    {item.title} ({getRoleDisplay(item.role)})
-                  </td>
-                  <td>
-                    <TimeAgo date={item.updated_at} />
-                  </td>
-                  <td>
-                    <button
-                      className="button is-small is-link"
-                      onClick={() => resendInvite(item.id)}
-                    >
-                      <Icon name="mail" alt="resend invite" /> Resend
-                    </button>{' '}
-                    <button
-                      className="button is-small is-danger"
-                      onClick={() => deleteInvite(item.id)}
-                    >
-                      <Icon name="x" alt="remove invite" /> Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </BaseCard>
-      )}
+      <BaseCard title={`Pending Invites (${invites.length})`}>
+        <Table
+          data={inviteData}
+          columns={inviteColumns}
+          searchableColumns={['email', 'titleDisplay']}
+        />
+      </BaseCard>
       <BaseCard title={`Invite ${OBJECT_INVITE_LABEL}`}>
         <Text>
           Enter a {OBJECT_MEMBERSHIP_LABEL_LOWERCASE} email address or a list of

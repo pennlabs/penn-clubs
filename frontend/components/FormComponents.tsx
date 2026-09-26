@@ -43,6 +43,15 @@ interface BasicFormField {
   noLabel?: boolean
 }
 
+const selectMenuPortalTarget =
+  typeof document !== 'undefined' ? document.body : undefined
+
+const selectMenuStyles = {
+  container: (style) => ({ ...style, width: '100%' }),
+  menu: (style) => ({ ...style, zIndex: 30 }),
+  menuPortal: (style) => ({ ...style, zIndex: 30 }),
+}
+
 /**
  * This interface allows for completely arbitrary props
  * to be passed to any of the form inputs.
@@ -386,6 +395,9 @@ export const CreatableMultipleSelectField = useFieldWrapper(
         placeholder={placeholder}
         value={formattedValue}
         options={formatOptions(choices)}
+        menuPortalTarget={selectMenuPortalTarget}
+        menuPosition="fixed"
+        styles={selectMenuStyles}
       />
     )
   },
@@ -685,7 +697,23 @@ export const FileField = useFieldWrapper(
               <Icon name="file" alt="file" /> {imageUrl.substr(5)}
             </div>
           ) : (
-            <img style={{ maxWidth: 300 }} src={imageUrl} />
+            <div
+              style={{
+                border: '1px solid #dbdbdb',
+                borderRadius: 6,
+                display: 'inline-block',
+                lineHeight: 0,
+                marginBottom: '0.75rem',
+                maxWidth: 300,
+                overflow: 'hidden',
+              }}
+            >
+              <img
+                alt=""
+                src={imageUrl}
+                style={{ display: 'block', maxWidth: '100%' }}
+              />
+            </div>
           ))}
         <div className="file">
           <label
@@ -863,7 +891,9 @@ export const SelectField = useFieldWrapper(
           }
         }}
         onBlur={onBlur}
-        styles={{ container: (style) => ({ ...style, width: '100%' }) }}
+        menuPortalTarget={selectMenuPortalTarget}
+        menuPosition="fixed"
+        styles={selectMenuStyles}
       />
     )
   },

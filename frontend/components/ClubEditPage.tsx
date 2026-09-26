@@ -440,10 +440,28 @@ const ClubForm = ({
             as={isViewButton && club ? CLUB_ROUTE(club.code) : HOME_ROUTE}
           >
             <a
-              className="button is-pulled-right is-secondary is-medium"
-              style={{ fontWeight: 'normal' }}
+              className="button is-pulled-right is-link is-medium"
+              style={{
+                alignItems: 'center',
+                borderRadius: 6,
+                display: 'inline-flex',
+                fontWeight: 'normal',
+              }}
             >
-              {isViewButton ? `View ${OBJECT_NAME_TITLE_SINGULAR}` : 'Back'}
+              {isViewButton ? (
+                <>
+                  View {OBJECT_NAME_TITLE_SINGULAR} Page
+                  <Icon
+                    name="external-link"
+                    alt=""
+                    noMargin
+                    size="0.95rem"
+                    style={{ marginLeft: '0.4rem' }}
+                  />
+                </>
+              ) : (
+                'Back'
+              )}
             </a>
           </Link>
         }

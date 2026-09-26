@@ -131,6 +131,22 @@ const Workspace = styled.div`
 const Content = styled.div`
   flex: 1;
   min-width: 0;
+  font-size: 0.875rem;
+
+  .card-header-title {
+    font-size: 1.1rem;
+  }
+
+  .button,
+  .file-cta {
+    border-radius: 6px;
+  }
+
+  .field[data-field-name],
+  .card-content > .field,
+  .card-content form > .field {
+    margin-bottom: 1.5rem;
+  }
 `
 
 type EditTab = {
@@ -181,10 +197,7 @@ const ClubEditTabView = ({ tabs, tab, route }: Props): ReactElement<any> => {
     }
     const rect = button.getBoundingClientRect()
     const width = 224
-    const left = Math.min(
-      Math.max(8, rect.left),
-      window.innerWidth - width - 8,
-    )
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8)
     setMenuPos({
       top: rect.bottom + 4,
       left,
