@@ -1,9 +1,10 @@
+import { useRouter } from 'next/router'
 import { ReactElement, useContext, useState } from 'react'
 import styled from 'styled-components'
 
 import { BLACK, MEDIUM_GRAY } from '../../constants/colors'
-import { Club } from '../../types'
-import { apiSetSubscribeStatus } from '../../utils'
+import { Club, SubscriptionEntryResponse } from '../../types'
+import { apiSetSubscribeStatus, doApiRequest } from '../../utils'
 import { AuthCheckContext } from '../contexts'
 
 const SubscribeIconTag = styled.span<{
@@ -43,6 +44,12 @@ type SubscribeIconProps = {
   absolute?: boolean
   padding?: string
   onSubscribe?: (status: boolean) => void
+  /**
+   * Where this icon is being rendered, recorded against the subscription so
+   * clubs can see how students found them. Must be one of the backend's
+   * ATTRIBUTION_SOURCE_CHOICES; anything else is stored as "unknown".
+   */
+  source?: 'direct' | 'search' | 'fair' | 'external'
 }
 
 export const SubscribeIcon = ({
@@ -50,12 +57,29 @@ export const SubscribeIcon = ({
   absolute = false,
   padding,
   onSubscribe = () => null,
+  source = 'direct',
 }: SubscribeIconProps): ReactElement<any> => {
   const [subscribe, setSubscribe] = useState<boolean>(club.is_subscribe)
   const authCheck = useContext(AuthCheckContext)
+  const router = useRouter()
 
   const updateSubscribe = () => {
-    authCheck(() => {
+    authCheck(async () => {
+      if (!subscribe) {
+        const resp = await doApiRequest(
+          `/clubs/${club.code}/subscription-entry/?source=${source}&format=json`,
+        )
+        if (resp.ok) {
+          const data: SubscriptionEntryResponse = await resp.json()
+          if (data.mode === 'form' && data.subscription_group_id) {
+            router.push(
+              `/club/${club.code}/subscribe/${data.subscription_group_id}` +
+                `?source=${data.attribution_source ?? source}`,
+            )
+            return
+          }
+        }
+      }
       apiSetSubscribeStatus(club.code, !subscribe).then(() => {
         setSubscribe(!subscribe)
         onSubscribe(!subscribe)

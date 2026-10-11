@@ -6,7 +6,6 @@ import Select from 'react-select'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
-import { ALLBIRDS_GRAY, CLUBS_BLUE, MD, mediaMaxWidth, SNOW } from '~/constants'
 import {
   computeWordCount,
   formatQuestionType,
@@ -31,30 +30,11 @@ import {
   TextField,
 } from '../FormComponents'
 import ModelForm from '../ModelForm'
-
-const StyledHeader = styled.div.attrs({ className: 'is-clearfix' })`
-  margin-bottom: 20px;
-  color: ${CLUBS_BLUE};
-  font-size: 18px;
-  & > .info {
-    float: left;
-  }
-  .tools {
-    float: right;
-    margin: 0;
-    margin-left: auto;
-    & > div {
-      margin-left: 20px;
-      display: inline-block;
-    }
-  }
-
-  ${mediaMaxWidth(MD)} {
-    .tools {
-      margin-top: 20px;
-    }
-  }
-`
+import {
+  FormWrapper,
+  ScrollWrapper,
+  StyledHeader,
+} from './FormManagementStyles'
 
 const TableWrapper = styled.div`
 transform:rotateX(180deg);
@@ -62,27 +42,6 @@ transform:rotateX(180deg);
 -webkit-transform:rotateX(180deg);
 font-size: 14px;
 over
-`
-
-const ScrollWrapper = styled.div`
-  transform: rotateX(180deg);
-  -ms-transform: rotateX(180deg); /* IE 9 */
-  -webkit-transform: rotateX(180deg);
-  overflow-y: auto;
-  margin-top: 1rem;
-`
-
-const FormWrapper = styled.div`
-  border-bottom: 1px solid ${ALLBIRDS_GRAY};
-  padding: 12px;
-  cursor: pointer;
-
-  &:hover,
-  &:active,
-  &:focus {
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
-    background-color: ${SNOW};
-  }
 `
 
 export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [

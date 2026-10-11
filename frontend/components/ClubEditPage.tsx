@@ -12,6 +12,7 @@ import InviteCard from '../components/ClubEditPage/InviteCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembersCard from '../components/ClubEditPage/MembersCard'
 import QRCodeCard, { QRCodeType } from '../components/ClubEditPage/QRCodeCard'
+import SubscriptionsPage from '../components/ClubEditPage/SubscriptionsPage'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_RENEW_ROUTE,
@@ -371,6 +372,11 @@ const ClubForm = ({
         label: `Applications Page`,
         content: <ApplicationsPage club={club} />,
         disabled: !SHOW_APPLICATIONS,
+      },
+      {
+        name: 'subscriptions',
+        label: 'Subscriptions',
+        content: <SubscriptionsPage club={club} />,
       },
       {
         name: 'resources',

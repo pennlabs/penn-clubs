@@ -326,7 +326,7 @@ const Actions = ({
             {club.enables_subscription && (
               <>
                 <ActionDiv>|</ActionDiv>
-                <SubscribeIcon padding="0" club={club} />
+                <SubscribeIcon padding="0" club={club} source="direct" />
               </>
             )}
           </ActionWrapper>

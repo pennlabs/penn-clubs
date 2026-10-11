@@ -363,6 +363,28 @@ class ClubSensitiveItemPermission(permissions.BasePermission):
         return membership is not None and membership.role <= Membership.ROLE_OFFICER
 
 
+class SubscriptionGroupPermission(permissions.BasePermission):
+    """
+    Officers and above have full access to subscription form management,
+    subscriber data, and exports. No one else can access these.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        if request.user.has_perm("clubs.manage_club"):
+            return True
+        club_code = view.kwargs.get("club_code")
+        if not club_code:
+            return False
+        try:
+            club = Club.objects.get(code=club_code)
+        except Club.DoesNotExist:
+            return False
+        membership = find_membership_helper(request.user, club)
+        return membership is not None and membership.role <= Membership.ROLE_OFFICER
+
+
 class IsSuperuser(permissions.BasePermission):
     """
     Grants permission if the current user is a superuser.

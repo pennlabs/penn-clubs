@@ -18,26 +18,35 @@ const QRCode = styled.img`
 export enum QRCodeType {
   CLUB = 'clubs',
   TICKET = 'tickets',
+  SUBSCRIPTION = 'subscription',
 }
 
 const QRCodeCard: React.FC<
   PropsWithChildren<{
     id: string
     type: QRCodeType
+    /**
+     * API path serving the PNG, without the leading /api. Defaults to the
+     * conventional /{type}/{id}/qr route; pass this when the endpoint does not
+     * follow that shape (subscription forms are nested under their club).
+     */
+    apiPath?: string
+    title?: string
   }>
-> = ({ id, type, children }) => {
+> = ({ id, type, apiPath, title, children }) => {
+  const qrPath = apiPath ?? `/${type}/${id}/qr`
   return (
-    <BaseCard title="QR Code">
+    <BaseCard title={title ?? 'QR Code'}>
       {type === QRCodeType.CLUB && (
         <Text>
           When scanned, gives mobile-friendly access to your{' '}
           {OBJECT_NAME_SINGULAR} page and bookmark/subscribe actions.
         </Text>
       )}
-      <QRCode src={getApiUrl(`/${type}/${id}/qr`)} alt="qr code" />
+      <QRCode src={getApiUrl(qrPath)} alt="qr code" />
       <div className="buttons">
         <a
-          href={getApiUrl(`/${type}/${id}/qr`)}
+          href={getApiUrl(qrPath)}
           download={`${id}.png`}
           className="button is-success"
         >

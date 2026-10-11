@@ -1188,4 +1188,8 @@ class Command(BaseCommand):
                         Ticket.objects.create(showing=showing, type="Premium", price=i)
                     )
 
+        # Anonymous club list API filters to visible_to_public;
+        # match test_club_list_filter.
+        Club.objects.update(visible_to_public=True)
+
         self.stdout.write("Finished populating database!")

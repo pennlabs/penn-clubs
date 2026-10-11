@@ -130,6 +130,7 @@ const Details = ({ club }: DetailsProps): ReactElement<any> => {
               <SubscribeIcon
                 club={club}
                 padding="0"
+                source="search"
                 onSubscribe={(status) => {
                   updateClub?.(club.code, 'subscribe', status)
                 }}
