@@ -5339,7 +5339,7 @@ class ClubTestCase(TestCase):
         self.assertNotIn("onclick", html)
         self.assertNotIn("<script>", html)
         self.assertIn("&lt;script&gt;", html)
-        self.assertNotIn("white-space: pre-wrap", html)
+        self.assertIn("white-space: pre-wrap", html)
         self.assertIn("Hello leaders", mail.outbox[-1].body)
 
         outbox_size = len(mail.outbox)
@@ -5351,6 +5351,41 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(len(mail.outbox), outbox_size)
+
+    def test_email_blast_image_only_content(self):
+        self._create_email_blast_memberships()
+        self.client.login(username=self.user5.username, password="test")
+
+        for alt, expected_text in (
+            ("", "[Image: https://example.com/flyer.png]"),
+            (' alt="Club flyer"', "[Club flyer]"),
+        ):
+            with self.subTest(alt=alt):
+                content = f'<img src="https://example.com/flyer.png"{alt}>'
+                resp = self.client.post(
+                    reverse("clubs-email-blast"),
+                    {"target": "leaders", "content": content},
+                    content_type="application/json",
+                )
+
+                self.assertEqual(resp.status_code, 200)
+                self.assertIn(content, mail.outbox[-1].alternatives[0].content)
+                self.assertIn(expected_text, mail.outbox[-1].body)
+
+    def test_email_blast_preserves_plain_text_whitespace(self):
+        self._create_email_blast_memberships()
+        self.client.login(username=self.user5.username, password="test")
+        content = "First line\n\nSecond   line"
+
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": content},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        html = mail.outbox[-1].alternatives[0].content
+        self.assertIn(f'white-space: pre-wrap;">{content}</div>', html)
 
     def test_email_blast_view_is_async(self):
         view_func = resolve(reverse("clubs-email-blast")).func

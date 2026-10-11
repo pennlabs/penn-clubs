@@ -68,8 +68,10 @@ def html_to_text(html):
                     output += "\n"
                     continue
                 elif child.name == "img":
-                    if "alt" in child:
+                    if "alt" in child.attrs:
                         output += f"[{child['alt']}]"
+                    elif child.get("src"):
+                        output += f"[Image: {child['src']}]"
                     continue
 
             # add strings and traverse children recursively
