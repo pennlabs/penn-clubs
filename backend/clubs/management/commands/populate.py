@@ -1,5 +1,6 @@
 import datetime
 import random
+from decimal import Decimal
 
 import requests
 from django.contrib.auth import get_user_model
@@ -18,6 +19,7 @@ from clubs.models import (
     ApplicationSubmission,
     Badge,
     Cart,
+    CartItem,
     Category,
     Classification,
     Club,
@@ -39,6 +41,7 @@ from clubs.models import (
     Tag,
     Testimonial,
     Ticket,
+    TicketClass,
     Type,
     Year,
 )
@@ -1161,31 +1164,41 @@ class Command(BaseCommand):
             # Switch up person every so often
             person = ben if idx < 2 else user_objs[1]
 
-            # Create some unowned tickets
+            # Create ticket classes with some inventory
+            num_owned = (idx + 1) * 8
+            regular, _ = TicketClass.objects.get_or_create(
+                showing=showing,
+                name="Regular",
+                defaults={
+                    "price": Decimal("10.10"),
+                    "quantity": 10 + num_owned,
+                    "remaining": 10,
+                },
+            )
+            premium, _ = TicketClass.objects.get_or_create(
+                showing=showing,
+                name="Premium",
+                defaults={
+                    "price": Decimal("100.10"),
+                    "quantity": 5,
+                    "remaining": 5,
+                    "group_discount": Decimal("0.10"),
+                    "group_size": 2,
+                },
+            )
+
+            # Create some owned tickets
             Ticket.objects.bulk_create(
                 [
-                    Ticket(showing=showing, type="Regular", price=10.10)
-                    for _ in range(10)
+                    Ticket(ticket_class=regular, owner=person, owner_email=person.email)
+                    for _ in range(num_owned)
                 ]
             )
 
-            Ticket.objects.bulk_create(
-                [
-                    Ticket(showing=showing, type="Premium", price=100.10)
-                    for _ in range(5)
-                ]
+            # Put some tickets in the person's cart for this showing
+            cart, _ = Cart.objects.get_or_create(showing=showing, owner=person)
+            CartItem.objects.get_or_create(
+                cart=cart, ticket_class=premium, defaults={"quantity": 2}
             )
-
-            # Create some owned tickets and tickets in cart
-            for i in range((idx + 1) * 10):
-                if i % 5:
-                    Ticket.objects.create(
-                        showing=showing, owner=person, type="Regular", price=i
-                    )
-                else:
-                    c, _ = Cart.objects.get_or_create(owner=person)
-                    c.tickets.add(
-                        Ticket.objects.create(showing=showing, type="Premium", price=i)
-                    )
 
         self.stdout.write("Finished populating database!")
