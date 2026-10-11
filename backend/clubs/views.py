@@ -7829,6 +7829,8 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
     permission_classes = [ClubItemPermission | IsSuperuser]
     serializer_class = ClubApplicationSerializer
     http_method_names = ["get", "post", "put", "patch", "delete"]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ["application_start_time", "created_at", "id"]
 
     def destroy(self, *args, **kwargs):
         """
