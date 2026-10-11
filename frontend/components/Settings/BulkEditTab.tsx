@@ -1,5 +1,5 @@
 import { Field, Form, Formik } from 'formik'
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { Affiliation, ClubFair, Tag } from '../../types'
@@ -12,7 +12,12 @@ import {
   SITE_NAME,
 } from '../../utils/branding'
 import { Icon, Text } from '../common'
-import { DateTimeField, SelectField, TextField } from '../FormComponents'
+import {
+  DateTimeField,
+  RichTextField,
+  SelectField,
+  TextField,
+} from '../FormComponents'
 import { fixDeserialize } from '../reports/ReportForm'
 
 /**
@@ -72,6 +77,11 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
   const canManageClubs = apiCheckPermission('clubs.manage_club')
   const canManageFairs = apiCheckPermission('clubs.see_fair_status')
   const canSendEmailBlast = apiCheckPermission('clubs.send_club_email_blast')
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const bulkSubmit = async (data, { setSubmitting }) => {
     try {
@@ -164,12 +174,13 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
                     label="Subject"
                     helpText={`Leave blank to use "Update from ${SITE_NAME}" as the subject line.`}
                   />
-                  <Field
-                    name="content"
-                    as={TextField}
-                    type="textarea"
-                    label="Message Content"
-                  />
+                  {isClient && (
+                    <Field
+                      name="content"
+                      as={RichTextField}
+                      label="Message Content"
+                    />
+                  )}
                   <button
                     type="submit"
                     className="button is-primary"

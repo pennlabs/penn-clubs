@@ -244,7 +244,7 @@ from clubs.serializers import (
     YearSerializer,
     validate_constitution_file,
 )
-from clubs.utils import fuzzy_lookup_club, html_to_text
+from clubs.utils import clean, fuzzy_lookup_club, html_to_text
 from pennclubs.analytics import LabsAnalytics
 
 
@@ -288,8 +288,8 @@ class EmailBlastViewSet(AsyncViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        content = data.get("content", "").strip()
-        if not content:
+        content = clean(data.get("content", "")).strip()
+        if not html_to_text(content).strip():
             return Response(
                 {"detail": "Content must be specified"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -319,6 +319,7 @@ class EmailBlastViewSet(AsyncViewSet):
                     context={
                         "sender": settings.BRANDING_SITE_NAME,
                         "content": content,
+                        "is_html": True,
                         "reply_emails": reply_emails,
                     },
                     reply_to=reply_emails,
