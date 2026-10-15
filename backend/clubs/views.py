@@ -86,6 +86,13 @@ from social_django.utils import load_strategy
 from tatsu.exceptions import FailedParse
 
 from clubs.filters import RandomOrderingFilter, RandomPageNumberPagination
+from clubs.google import (
+    FORMS_API,
+    create_spreadsheet,
+    form_to_questions,
+    google_api_call,
+    parse_form_id,
+)
 from clubs.management.commands.sync import Command as SyncCommand
 from clubs.mixins import XLSXFormatterMixin
 from clubs.models import (
@@ -96,6 +103,7 @@ from clubs.models import (
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
+    ApplicationSection,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -171,6 +179,7 @@ from clubs.serializers import (
     ApplicationExtensionSerializer,
     ApplicationQuestionResponseSerializer,
     ApplicationQuestionSerializer,
+    ApplicationSectionSerializer,
     ApplicationSubmissionCSVSerializer,
     ApplicationSubmissionSerializer,
     ApplicationSubmissionUserSerializer,
@@ -7588,6 +7597,39 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # every required question this applicant was shown needs an answer:
+        # the ones for their committee, in the sections their answers led to
+        visited = application.route(
+            {
+                int(pk): answer.get("multipleChoice")
+                for pk, answer in self.request.data.items()
+                if pk.isnumeric() and isinstance(answer, dict)
+            }
+        )
+        required_questions = (
+            application.questions.filter(required=True)
+            .exclude(question_type=ApplicationQuestion.INFO_TEXT)
+            .prefetch_related("committees")
+        )
+        for question in required_questions:
+            if question.section_id not in visited or (
+                question.committee_question
+                and committee not in question.committees.all()
+            ):
+                continue
+            answer = self.request.data.get(str(question.pk))
+            if not isinstance(answer, dict) or not any(
+                answer.get(key) for key in ("text", "multipleChoice", "multipleChoices")
+            ):
+                return Response(
+                    {
+                        "success": False,
+                        "detail": f"Please answer the required question: "
+                        f"{question.prompt}",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         committees_applied = (
             ApplicationSubmission.objects.filter(
                 user=self.request.user,
@@ -7691,6 +7733,18 @@ class UserViewSet(viewsets.ModelViewSet):
                         question=question,
                         submission=submission,
                         defaults={"multiple_choice": multiple_choice_obj},
+                    )
+                    response = Response(ApplicationQuestionResponseSerializer(obj).data)
+            elif question_type == ApplicationQuestion.CHECKBOX:
+                values = question_data.get("multipleChoices", None)
+                if isinstance(values, list):
+                    obj, _ = ApplicationQuestionResponse.objects.get_or_create(
+                        question=question, submission=submission
+                    )
+                    obj.selected_choices.set(
+                        ApplicationMultipleChoice.objects.filter(
+                            question=question, value__in=values
+                        )
                     )
                     response = Response(ApplicationQuestionResponseSerializer(obj).data)
         return response
@@ -8066,6 +8120,80 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         )
         clone.save()
         return Response([])
+
+    @action(detail=True, methods=["post"])
+    def import_google_form(self, request, *args, **kwargs):
+        """
+        Add the questions of a Google Form to the end of this application, using
+        the Google account the officer linked.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            link:
+                                type: string
+        responses:
+            "200":
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                imported:
+                                    type: integer
+                                warnings:
+                                    type: array
+                                    items:
+                                        type: string
+        ---
+        """
+        application = self.get_object()
+        form_id = parse_form_id(str(request.data.get("link", "")))
+        form = google_api_call(request.user, "GET", FORMS_API.format(form_id))
+        questions, sections, warnings = form_to_questions(form)
+
+        last = application.questions.aggregate(Max("precedence"))["precedence__max"]
+        last_section = application.sections.aggregate(Max("precedence"))[
+            "precedence__max"
+        ]
+        with transaction.atomic():
+            # Google's page breaks become sections, after any already here
+            created = {
+                data["key"]: ApplicationSection.objects.create(
+                    application=application,
+                    title=data["title"],
+                    description=data["description"],
+                    precedence=precedence,
+                )
+                for precedence, data in enumerate(
+                    sections, start=(last_section or 0) + 1
+                )
+            }
+            for precedence, data in enumerate(questions, start=(last or 0) + 1):
+                choices = data.pop("choices")
+                routing = data.pop("routing")
+                question = ApplicationQuestion.objects.create(
+                    application=application,
+                    precedence=precedence,
+                    section=created.get(data.pop("section")),
+                    routes=bool(routing),
+                    **data,
+                )
+                ApplicationMultipleChoice.objects.bulk_create(
+                    ApplicationMultipleChoice(
+                        question=question,
+                        value=value,
+                        go_to_section=created.get(routing.get(value)),
+                        ends_application=routing.get(value) == "end",
+                    )
+                    for value in choices
+                )
+        cache.delete(f"applicationquestion:{application.id}")
+        cache.delete(f"clubapplication:{application.id}")
+        return Response({"imported": len(questions), "warnings": warnings})
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
@@ -8718,6 +8846,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
                 ),
                 "responses__question__committees",
                 "responses__question__multiple_choice",
+                "responses__selected_choices",
             )
         )
         return submissions
@@ -8783,6 +8912,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
                 ),
                 "responses__question__committees",
                 "responses__question__multiple_choice",
+                "responses__selected_choices",
             )
         )
         df = pd.DataFrame(ApplicationSubmissionCSVSerializer(data, many=True).data)
@@ -8980,9 +9110,35 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
                 ),
                 "responses__question__committees",
                 "responses__question__multiple_choice",
+                "responses__selected_choices",
             )
         )
         return submissions
+
+
+class ApplicationSectionViewSet(viewsets.ModelViewSet):
+    """
+    list: List the sections of a club application, after its first page.
+    create: Add a section to a club application.
+    """
+
+    permission_classes = [ClubItemPermission | IsSuperuser]
+    serializer_class = ApplicationSectionSerializer
+    http_method_names = ["get", "post", "patch", "delete"]
+
+    def get_queryset(self):
+        return ApplicationSection.objects.filter(
+            application__pk=self.kwargs["application_pk"]
+        )
+
+    def initial(self, request, *args, **kwargs):
+        # every change here, including questions deleted with their section,
+        # shows up in the cached application and question list
+        super().initial(request, *args, **kwargs)
+        if request.method != "GET":
+            app_id = self.kwargs["application_pk"]
+            cache.delete(f"applicationquestion:{app_id}")
+            cache.delete(f"clubapplication:{app_id}")
 
 
 class ApplicationQuestionViewSet(viewsets.ModelViewSet):
@@ -9242,6 +9398,22 @@ class EmailInvitesAPIView(generics.ListAPIView):
         return MembershipInvite.objects.filter(
             email=self.request.user.email, active=True, club__archived=False
         ).order_by("-created_at")
+
+
+class GoogleSheetsExportView(APIView):
+    """
+    post: Create a Google Sheet from the given rows in the user's linked Google
+    account and return its link.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        rows = request.data.get("rows")
+        if not isinstance(rows, list) or not all(isinstance(row, list) for row in rows):
+            raise DRFValidationError("Rows must be a list of lists.")
+        title = str(request.data.get("title") or "Penn Clubs export")
+        return Response({"url": create_spreadsheet(request.user, title, rows)})
 
 
 class OptionListView(APIView):

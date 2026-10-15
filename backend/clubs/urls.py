@@ -7,6 +7,7 @@ from clubs.views import (
     AdvisorViewSet,
     ApplicationExtensionViewSet,
     ApplicationQuestionViewSet,
+    ApplicationSectionViewSet,
     ApplicationSubmissionUserViewSet,
     ApplicationSubmissionViewSet,
     AssetViewSet,
@@ -33,6 +34,7 @@ from clubs.views import (
     FavoriteCalendarAPIView,
     FavoriteEventsAPIView,
     FavoriteViewSet,
+    GoogleSheetsExportView,
     GroupActivityOptionViewSet,
     HealthView,
     MajorViewSet,
@@ -172,6 +174,9 @@ applications_router.register(
     r"questions", ApplicationQuestionViewSet, basename="club-application-questions"
 )
 applications_router.register(
+    r"sections", ApplicationSectionViewSet, basename="club-application-sections"
+)
+applications_router.register(
     r"submissions",
     ApplicationSubmissionViewSet,
     basename="club-application-submissions",
@@ -186,6 +191,7 @@ router.register(r"booths", ClubBoothsViewSet, basename="club-booth")
 urlpatterns = [
     path(r"settings/", UserUpdateAPIView.as_view(), name="settings-detail"),
     path(r"settings/invites/", EmailInvitesAPIView.as_view(), name="email-invites"),
+    path(r"google/sheets/", GoogleSheetsExportView.as_view(), name="google-sheets"),
     path(r"settings/zoom/", UserZoomAPIView.as_view(), name="users-zoom"),
     path(
         r"settings/zoom/meetings/",

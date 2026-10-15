@@ -1,111 +1,71 @@
-import { Form, Formik } from 'formik'
 import moment from 'moment-timezone'
-import React, { ReactElement, useEffect, useState } from 'react'
+import Link from 'next/link'
+import React, { ReactElement, useState } from 'react'
+import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
-import { Icon, Modal, Text } from '~/components/common'
-import Table from '~/components/common/Table'
 import {
-  computeWordCount,
-  formatQuestionType,
-} from '~/pages/club/[club]/application/[application]'
+  answerText,
+  useConfirm,
+} from '~/components/ClubEditPage/ApplicationWorkspace/shared'
+import { EmptyState, Icon, Modal, Text } from '~/components/common'
 import {
-  APPLICATION_STATUS_TYPES,
-  ApplicationQuestionType,
-  ApplicationResponse,
-  ApplicationSubmission,
-} from '~/types'
+  Absolute,
+  Actions,
+  AppCell,
+  AppName,
+  Blurb,
+  ClubName,
+  CommitteeTag,
+  Deadline,
+  Empty,
+  NoneCell,
+  Relative,
+  Scroll,
+  Search,
+  Table,
+  TagLabel,
+  Toolbar,
+} from '~/components/Settings/ApplicationsTable/styles'
+import { ALLBIRDS_GRAY, MEDIUM_GRAY } from '~/constants'
+import { ApplicationSubmission } from '~/types'
 import { doApiRequest } from '~/utils'
 
-const StyledResponses = styled.div`
-  margin-bottom: 40px;
-`
-const ModalContainer = styled.div`
-  text-align: left;
-  padding: 20px;
-`
+// a submission as the applicant's submissions endpoint returns it
+type Submission = Omit<ApplicationSubmission, 'committee'> & {
+  committee: { name: string } | null
+  // the application's name, or null once the application is deleted
+  name: string | null
+}
 
-const SubmissionModal = (props: {
-  submission: ApplicationSubmission | null
-}): ReactElement<any> => {
-  const { submission } = props
-  const initialValues = {}
-  const wordCounts = {}
-  if (submission !== null) {
-    submission.responses.forEach((response) => {
-      switch (parseInt(response.question_type)) {
-        case ApplicationQuestionType.FreeResponse:
-          wordCounts[response.question.id] =
-            response.text != null ? computeWordCount(response.text) : 0
-          initialValues[response.question.id] = response.text
-          break
-        case ApplicationQuestionType.ShortAnswer:
-          initialValues[response.question.id] = response.text
-          break
-        case ApplicationQuestionType.MultipleChoice:
-          initialValues[response.question.id] =
-            response.multiple_choice !== null
-              ? response.multiple_choice.value
-              : null
-          break
-        default:
-          break
-      }
-    })
+const Answers = styled.div`
+  text-align: left;
+  padding: 24px;
+
+  h3 {
+    margin-bottom: 4px;
   }
 
-  return (
-    <ModalContainer>
-      <Formik
-        initialValues={initialValues}
-        onSubmit={() => {
-          // pass
-        }}
-      >
-        {(props) => (
-          <Form>
-            {submission !== null && submission.responses !== null
-              ? submission.responses.map((response: ApplicationResponse) => {
-                  const input = formatQuestionType(
-                    null,
-                    response.question,
-                    wordCounts,
-                    () => {
-                      // pass
-                    },
-                    true,
-                  )
-                  return (
-                    <div key={response.question.id}>
-                      {input}
-                      <br></br>
-                    </div>
-                  )
-                })
-              : null}
-          </Form>
-        )}
-      </Formik>
-    </ModalContainer>
-  )
-}
+  .answer {
+    padding: 12px 0;
+    border-top: 1px solid ${ALLBIRDS_GRAY};
+  }
 
-function formatSubmissions(responses) {
-  return responses.map((response) => {
-    return {
-      ...response,
-      name: response.name ?? '(removed)',
-      club: response.club ?? '(removed)',
-      committee: response.committee?.name ?? 'General Member',
-      status: APPLICATION_STATUS_TYPES.find(
-        (status) => status.value === response.status,
-      )?.label,
-      created_at: moment(response.created_at)
-        .tz('America/New_York')
-        .format('LLL'),
-    }
-  })
-}
+  .answer h5 {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .answer p {
+    white-space: pre-wrap;
+  }
+
+  .none {
+    color: ${MEDIUM_GRAY};
+  }
+`
+
+const eastern = (value: string) => moment(value).tz('America/New_York')
 
 function SubmissionsPage({
   initialSubmissions,
@@ -116,118 +76,184 @@ function SubmissionsPage({
     return <Text>{initialSubmissions.detail}</Text>
   }
 
-  const [submissions, setSubmissions] = useState<Array<ApplicationSubmission>>(
-    formatSubmissions(initialSubmissions),
+  const [submissions, setSubmissions] = useState<Submission[]>(
+    [...(initialSubmissions as unknown as Submission[])].sort((a, b) =>
+      b.created_at.localeCompare(a.created_at),
+    ),
   )
-  const [showModal, setShowModal] = useState<boolean>(false)
-  const [currentSubmission, setCurrentSubmission] =
-    useState<ApplicationSubmission | null>(null)
+  const [query, setQuery] = useState('')
+  const [viewing, setViewing] = useState<Submission | null>(null)
+  const [confirmDialog, confirm] = useConfirm()
 
-  const responseTableFields = [
-    { label: 'Application', name: 'name' },
-    { label: 'Committee', name: 'committee' },
-    { label: 'Submitted', name: 'created_at' },
-    { label: 'Club', name: 'club' },
-    {
-      name: 'application_link',
-      label: 'Link',
-      render: (id) => {
-        const submission = submissions.find(
-          (submission) => submission.pk === id,
-        )
-        return submission != null ? (
-          <>
-            <a href={submission.application_link}>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="button is-primary is-small ml-3"
-              >
-                <Icon name="edit" />
-                Edit
-              </button>
-            </a>
-          </>
-        ) : null
-      },
-    },
-    {
-      name: 'delete',
-      label: 'Delete',
-      render: (id) => {
-        const submission = submissions.find(
-          (submission) => submission.pk === id,
-        )
-        return submission != null ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              if (
-                confirm(
-                  'Are you sure you want to permanently delete this submission?',
-                )
-              ) {
-                doApiRequest(`/submissions/${submission.pk}/?format=json`, {
-                  method: 'DELETE',
-                })
-                setSubmissions(
-                  submissions.filter((submission) => submission.pk !== id),
-                )
-              }
-            }}
-            className="button is-danger is-small ml-3"
-          >
-            <Icon name="trash" alt="delete" />
-            Delete
-          </button>
-        ) : null
-      },
-    },
-  ]
-
-  useEffect(() => {
-    if (submissions !== null && submissions.length === 0) {
-      doApiRequest(`/submissions/?format=json`, {
-        method: 'GET',
-      })
-        .then((resp) => resp.json())
-        .then((responses) => setSubmissions(formatSubmissions(responses)))
+  const remove = async (submission: Submission) => {
+    const confirmed = await confirm({
+      title: 'Delete this submission?',
+      message: `Your answers to ${submission.name ?? 'this application'} will be deleted, and the club won't see them.`,
+      confirmLabel: 'Delete submission',
+    })
+    if (!confirmed) {
+      return
     }
-  }, [])
+    const resp = await doApiRequest(
+      `/submissions/${submission.pk}/?format=json`,
+      {
+        method: 'DELETE',
+      },
+    )
+    if (resp.ok) {
+      setSubmissions(submissions.filter(({ pk }) => pk !== submission.pk))
+    } else {
+      toast.error('Could not delete this submission. Please try again.')
+    }
+  }
+
+  if (submissions.length === 0) {
+    return (
+      <Empty>
+        <EmptyState name="hiring" size="14rem" />
+        <Text>You haven't submitted any applications yet.</Text>
+        <Link href="/clubs" className="button is-primary">
+          Browse clubs
+        </Link>
+      </Empty>
+    )
+  }
+
+  const shown = submissions.filter((submission) =>
+    `${submission.name} ${submission.club} ${submission.committee?.name ?? ''}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  )
 
   return (
     <>
-      <Text>
-        On this page you can view your submitted applications. Click on any
-        application to view your submission. If there is something you would
-        like to change, just click edit and resubmit to update your submission.
-      </Text>
-      <StyledResponses>
-        <Table
-          data={submissions.map((item, index) =>
-            item.pk ? { ...item, id: item.pk } : { ...item, id: index },
-          )}
-          columns={responseTableFields}
-          searchableColumns={['name']}
-          filterOptions={[]}
-          focusable={true}
-          onClick={(row) => {
-            setShowModal(true)
-            const submission =
-              submissions.find(
-                (submission) => submission.pk === row.original.pk,
-              ) ?? null
-            setCurrentSubmission(submission)
-          }}
-        />
-      </StyledResponses>
-      {showModal && (
+      <Blurb>
+        Everything you've submitted. Clubs only read your latest version, so you
+        can keep editing until the deadline.
+      </Blurb>
+      <Toolbar>
+        <Text className="mb-0">
+          {submissions.length} submission{submissions.length === 1 ? '' : 's'}
+        </Text>
+        <Search>
+          <span>
+            <Icon name="search" alt="search" size="0.9rem" />
+          </span>
+          <input
+            className="input"
+            type="text"
+            value={query}
+            placeholder="Search submissions"
+            aria-label="Search submissions"
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </Search>
+      </Toolbar>
+
+      <Scroll>
+        <Table>
+          <colgroup>
+            <col style={{ width: '36%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '26%' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Application</th>
+              <th>Committee</th>
+              <th>Submitted</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((submission) => {
+              const sent = eastern(submission.created_at)
+              return (
+                <tr key={submission.pk}>
+                  <td>
+                    <AppCell>
+                      <AppName>{submission.name ?? '(removed)'}</AppName>
+                      {submission.code ? (
+                        <Link href={`/club/${submission.code}`}>
+                          <ClubName>{submission.club}</ClubName>
+                        </Link>
+                      ) : (
+                        <ClubName>{submission.club ?? '(removed)'}</ClubName>
+                      )}
+                    </AppCell>
+                  </td>
+                  <td>
+                    {submission.committee ? (
+                      <CommitteeTag title={submission.committee.name}>
+                        <TagLabel>{submission.committee.name}</TagLabel>
+                      </CommitteeTag>
+                    ) : (
+                      <NoneCell>&mdash;</NoneCell>
+                    )}
+                  </td>
+                  <td>
+                    <Deadline>
+                      <Relative>{sent.format('MMM D')}</Relative>
+                      <Absolute>{sent.format('h:mm A')}</Absolute>
+                    </Deadline>
+                  </td>
+                  <td>
+                    <Actions>
+                      <button
+                        className="button is-small"
+                        onClick={() => setViewing(submission)}
+                      >
+                        View
+                      </button>
+                      <a
+                        className="button is-small"
+                        href={submission.application_link}
+                      >
+                        <Icon name="edit" alt="" size="0.8rem" />
+                        Edit
+                      </a>
+                      <button
+                        className="button is-small is-danger is-outlined"
+                        title="Delete submission"
+                        onClick={() => remove(submission)}
+                      >
+                        <Icon name="trash" alt="delete" size="0.8rem" />
+                      </button>
+                    </Actions>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </Table>
+      </Scroll>
+
+      {confirmDialog}
+      {viewing && (
         <Modal
-          show={showModal}
-          closeModal={() => setShowModal(false)}
-          width="80%"
+          show
+          closeModal={() => setViewing(null)}
+          width="640px"
           marginBottom={false}
         >
-          <SubmissionModal submission={currentSubmission} />
+          <Answers>
+            <h3 className="title is-4">{viewing.name}</h3>
+            <p className="mb-4 none">
+              {[viewing.club, viewing.committee?.name]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+            {viewing.responses.map((response) => {
+              const answer = answerText(response)
+              return (
+                <div className="answer" key={response.question.id}>
+                  <h5>{response.question.prompt}</h5>
+                  {answer ? <p>{answer}</p> : <p className="none">No answer</p>}
+                </div>
+              )
+            })}
+          </Answers>
         </Modal>
       )}
     </>

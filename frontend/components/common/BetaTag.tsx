@@ -27,7 +27,9 @@ export const BetaTag = ({
       </div>
       <BlueTag
         className="tag is-rounded has-text-white"
-        style={raised ? { marginTop: '-30px' } : undefined}
+        // a tag's usual bottom margin, for spacing it in a list, would lift
+        // it above the text it sits beside
+        style={raised ? { marginTop: '-30px' } : { margin: 0 }}
       >
         {label}
       </BlueTag>

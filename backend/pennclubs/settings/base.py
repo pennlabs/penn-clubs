@@ -118,6 +118,7 @@ ENABLE_EXTERNAL_MEMBER_API = False
 
 AUTHENTICATION_BACKENDS = (
     "clubs.backends.ZoomOAuth2",
+    "social_core.backends.google.GoogleOAuth2",
     "accounts.backends.LabsUserBackend",
     "django.contrib.auth.backends.ModelBackend",
 )
@@ -229,6 +230,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
     "social_core.pipeline.social_auth.social_uid",
     "social_core.pipeline.social_auth.auth_allowed",
+    "clubs.backends.require_logged_in_user",
     "social_core.pipeline.social_auth.social_user",
     "social_core.pipeline.social_auth.associate_user",
     "social_core.pipeline.social_auth.load_extra_data",
@@ -250,6 +252,20 @@ SOCIAL_AUTH_ZOOM_OAUTH2_SCOPE = [
     "meeting:write",
 ]
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"
+
+# Google sign-in, used to import Google Forms as applications and export to Sheets
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    "https://www.googleapis.com/auth/forms.body.readonly",
+    # only lets us touch files we create, i.e. exported spreadsheets
+    "https://www.googleapis.com/auth/drive.file",
+]
+# offline access returns a refresh token, so officers only sign in once
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
+    "access_type": "offline",
+    "prompt": "consent",
+}
 ZOOM_VERIFICATION_TOKEN = os.environ.get("ZOOM_VERIFICATION_TOKEN")
 
 

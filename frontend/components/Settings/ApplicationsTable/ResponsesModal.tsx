@@ -148,6 +148,11 @@ const ResponsesModal = ({
             ? response.multiple_choice.value
             : null
         break
+      case ApplicationQuestionType.Checkbox:
+        initialValues[response.question.id] = (response.selected_choices ?? [])
+          .map((choice) => choice.value)
+          .join(', ')
+        break
       default:
         break
     }

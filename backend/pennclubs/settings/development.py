@@ -32,6 +32,10 @@ NGROK_URL = os.getenv("NGROK_URL")
 # Frontend URL for redirects (keep localhost for OAuth/session cookies)
 FRONTEND_URL = "http://localhost:3000"
 
+# The frontend proxies /api to this server, so build links like OAuth callbacks
+# on the frontend's host, letting them land back on frontend pages
+USE_X_FORWARDED_HOST = True
+
 # CyberSource receipt callback base URL (ngrok if provided, otherwise localhost)
 CYBERSOURCE_CALLBACK_BASE = NGROK_URL or FRONTEND_URL
 

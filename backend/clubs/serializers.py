@@ -28,6 +28,7 @@ from clubs.models import (
     ApplicationMultipleChoice,
     ApplicationQuestion,
     ApplicationQuestionResponse,
+    ApplicationSection,
     ApplicationSubmission,
     Asset,
     Badge,
@@ -3008,7 +3009,32 @@ class ApplicationCommitteeSerializer(serializers.ModelSerializer):
 class ApplicationMultipleChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationMultipleChoice
-        fields = ("value",)
+        fields = ("value", "go_to_section", "ends_application")
+
+
+class ApplicationSectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationSection
+        fields = (
+            "id",
+            "title",
+            "description",
+            "precedence",
+            "next_section",
+            "ends_application",
+        )
+
+    def validate_next_section(self, value):
+        application_pk = self.context["view"].kwargs.get("application_pk")
+        if value is not None and str(value.application_id) != str(application_pk):
+            raise serializers.ValidationError("That section is in another application.")
+        return value
+
+    def create(self, validated_data):
+        validated_data["application"] = ClubApplication.objects.get(
+            pk=self.context["view"].kwargs["application_pk"]
+        )
+        return super().create(validated_data)
 
 
 class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer):
@@ -3025,6 +3051,11 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "id",
             "question_type",
             "prompt",
+            "description",
+            "required",
+            "section",
+            "routes",
+            "committee_routing",
             "word_limit",
             "multiple_choice",
             "committees",
@@ -3032,6 +3063,12 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
             "committee_question",
             "precedence",
         )
+
+    def validate_section(self, value):
+        application_pk = self.context["view"].kwargs.get("application_pk")
+        if value is not None and str(value.application_id) != str(application_pk):
+            raise serializers.ValidationError("That section is in another application.")
+        return value
 
     def validate_word_limit(self, value):
         """
@@ -3088,13 +3125,35 @@ class ApplicationQuestionSerializer(ClubRouteMixin, serializers.ModelSerializer)
         # support nested serializers out of the box
         request = self.context["request"].data
         if "multiple_choice" in request:
-            multiple_choice = request["multiple_choice"]
-            ApplicationMultipleChoice.objects.filter(question=question_obj).delete()
-            for choice in multiple_choice:
-                ApplicationMultipleChoice.objects.create(
-                    value=choice["value"],
-                    question=question_obj,
+            options = {choice["value"]: choice for choice in request["multiple_choice"]}
+            sections = {
+                section.pk: section
+                for section in question_obj.application.sections.all()
+            }
+            # keep options that are still there, since deleting an option also
+            # deletes every answer that picked it
+            choices = ApplicationMultipleChoice.objects.filter(question=question_obj)
+            choices.exclude(value__in=options).delete()
+            for value, option in options.items():
+                choice, _ = ApplicationMultipleChoice.objects.get_or_create(
+                    question=question_obj, value=value
                 )
+                # routing to a section of another application is ignored
+                choice.go_to_section = sections.get(option.get("go_to_section"))
+                choice.ends_application = bool(option.get("ends_application"))
+                choice.save()
+
+        if question_obj.committee_routing:
+            # only one question can decide the committee
+            question_obj.application.questions.exclude(pk=question_obj.pk).update(
+                committee_routing=False
+            )
+            try:
+                question_obj.application.set_committees(
+                    question_obj.multiple_choice.values_list("value", flat=True)
+                )
+            except ValueError as error:
+                raise serializers.ValidationError(str(error))
 
         # manually create committee choices as Django does not
         # support nested serializers out of the box
@@ -3114,6 +3173,7 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
     multiple_choice = ApplicationMultipleChoiceSerializer(
         required=False, read_only=True
     )
+    selected_choices = ApplicationMultipleChoiceSerializer(many=True, read_only=True)
     question_type = serializers.CharField(
         source="question.question_type", read_only=True
     )
@@ -3121,7 +3181,13 @@ class ApplicationQuestionResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApplicationQuestionResponse
-        fields = ("text", "multiple_choice", "question_type", "question")
+        fields = (
+            "text",
+            "multiple_choice",
+            "selected_choices",
+            "question_type",
+            "question",
+        )
 
 
 class ApplicationExtensionSerializer(serializers.ModelSerializer):
@@ -3541,6 +3607,10 @@ class ApplicationSubmissionCSVSerializer(serializers.ModelSerializer):
                         fields[question.prompt] = ""
                 elif question.question_type == ApplicationQuestion.SHORT_ANSWER:
                     fields[question.prompt] = response.text
+                elif question.question_type == ApplicationQuestion.CHECKBOX:
+                    fields[question.prompt] = ", ".join(
+                        choice.value for choice in response.selected_choices.all()
+                    )
                 elif question.question_type == ApplicationQuestion.INFO_TEXT:
                     pass
             else:
@@ -3589,6 +3659,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         many=True, required=False, read_only=True
     )
     questions = ApplicationQuestionSerializer(many=True, required=False, read_only=True)
+    sections = ApplicationSectionSerializer(many=True, read_only=True)
     club = serializers.SlugRelatedField(slug_field="code", read_only=True)
     updated_at = serializers.SerializerMethodField("get_updated_time", read_only=True)
     club_image_url = serializers.SerializerMethodField("get_image_url", read_only=True)
@@ -3678,6 +3749,9 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
         # manually create committee objects as Django does
         # not support nested serializers out of the box
         request = self.context["request"].data
+        # leave committees alone unless this save is changing them
+        if "committees" not in request:
+            return application_obj
         # only allow modifications to committees if the application is not yet open
         now = timezone.now()
         prev_committees = ApplicationCommittee.objects.filter(
@@ -3741,6 +3815,7 @@ class ClubApplicationSerializer(ClubRouteMixin, serializers.ModelSerializer):
             "external_url",
             "committees",
             "questions",
+            "sections",
             "club",
             "description",
             "updated_at",

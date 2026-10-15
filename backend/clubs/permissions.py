@@ -327,6 +327,7 @@ class ClubItemPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in [
             "duplicate",
+            "import_google_form",
             "create",
             "update",
             "partial_update",

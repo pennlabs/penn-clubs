@@ -15,6 +15,7 @@ import {
   Application,
   ApplicationQuestion,
   ApplicationQuestionType,
+  ApplicationSection,
   Club,
 } from 'types'
 import { doApiRequest } from 'utils'
@@ -85,12 +86,89 @@ export async function fetchResponses(
             ? payload.multiple_choice.value
             : null
         break
+      case ApplicationQuestionType.Checkbox:
+        values[id] = (payload.selected_choices ?? []).map(
+          (choice: { value: string }) => choice.value,
+        )
+        break
       default:
         break
     }
   })
   return values
 }
+
+// a word limit of 0 means the question has no limit
+const exceedsWordLimit = (question: ApplicationQuestion, text: string) =>
+  question.word_limit > 0 && computeWordCount(text) > question.word_limit
+
+const isUnanswered = (value: any) =>
+  value == null || value === '' || (Array.isArray(value) && value.length === 0)
+
+// the option picked for a choice question, as a plain value
+const pickedValue = (picked: any) => picked?.id ?? picked
+
+/**
+ * The sections an applicant passes through with their current answers, worked
+ * out the same way as on the server: start on the first page, shown as null,
+ * then go where each section's routing answers, or the section itself, lead.
+ */
+export function routeSections(
+  sections: ApplicationSection[],
+  questions: ApplicationQuestion[],
+  values: { [id: number]: any },
+): Array<number | null> {
+  const order = [null, ...sections.map(({ id }) => id)]
+  const visited: Array<number | null> = []
+  let index = 0
+  while (index >= 0 && index < order.length) {
+    const key = order[index]
+    if (visited.includes(key)) {
+      break
+    }
+    visited.push(key)
+    let target: number | 'end' | null = null
+    for (const question of questions) {
+      if (!question.routes || question.section !== key) {
+        continue
+      }
+      const choice = question.multiple_choice.find(
+        ({ value }) => value === pickedValue(values[question.id]),
+      )
+      if (choice?.ends_application) {
+        target = 'end'
+      } else if (choice?.go_to_section) {
+        target = choice.go_to_section
+      }
+    }
+    const section = sections.find(({ id }) => id === key)
+    if (target === null && section != null) {
+      target = section.ends_application ? 'end' : section.next_section
+    }
+    if (target === 'end') {
+      break
+    }
+    index =
+      target === null
+        ? index + 1
+        : order.includes(target)
+          ? order.indexOf(target)
+          : order.length
+  }
+  return visited
+}
+
+// turns web addresses in text into links, e.g. to a technical challenge
+const linkify = (text: string) =>
+  text.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
+    index % 2 === 1 ? (
+      <a key={index} href={part} target="_blank" rel="noreferrer">
+        {part}
+      </a>
+    ) : (
+      part
+    ),
+  )
 
 export function computeWordCount(input: string): number {
   return input !== undefined
@@ -119,19 +197,27 @@ export function formatQuestionType(
             }}
             as={TextField}
             type={'textarea'}
-            helpText={`Word count: ${wordCounts[question.id]}/${
-              question.word_limit
-            }`}
+            required={question.required}
+            helpText={[
+              question.description,
+              `Word count: ${wordCounts[question.id] ?? 0}${
+                question.word_limit > 0 ? `/${question.word_limit}` : ''
+              }`,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
             readOnly={readOnly}
           />
         </>
       )
     case ApplicationQuestionType.MultipleChoice:
+    case ApplicationQuestionType.Checkbox:
       return readOnly ? (
         <Field
           name={question.id}
           label={question.prompt}
           as={TextField}
+          helpText={question.description}
           readOnly={readOnly}
         />
       ) : (
@@ -139,20 +225,28 @@ export function formatQuestionType(
           name={question.id}
           label={question.prompt}
           as={SelectField}
-          choices={question.multiple_choice.map((choice) => {
-            return {
-              label: choice.value,
-              value: choice.value,
-            }
-          })}
+          required={question.required}
+          helpText={question.description}
+          isMulti={question.question_type === ApplicationQuestionType.Checkbox}
+          choices={question.multiple_choice.map((choice) =>
+            // checkboxes keep plain values, so their answer is a list of them
+            question.question_type === ApplicationQuestionType.Checkbox
+              ? choice.value
+              : { label: choice.value, value: choice.value },
+          )}
         />
       )
     case ApplicationQuestionType.InfoText:
+      // a section header, like a title and description in Google Forms
       return (
-        <>
-          <b>{question.prompt}</b>
-          <br></br>
-        </>
+        <div className="pt-4" style={{ borderTop: '1px solid #eaeaea' }}>
+          <h3 className="title is-5 mb-2">{question.prompt}</h3>
+          {question.description && (
+            <p style={{ whiteSpace: 'pre-line' }}>
+              {linkify(question.description)}
+            </p>
+          )}
+        </div>
       )
     default:
       return (
@@ -160,6 +254,8 @@ export function formatQuestionType(
           name={question.id}
           label={question.prompt}
           as={TextField}
+          required={question.required}
+          helpText={question.description}
           readOnly={readOnly}
         />
       )
@@ -308,6 +404,13 @@ const ApplicationPage = ({
   }
 
   const committees = application?.committees
+  const sections: ApplicationSection[] = application?.sections ?? []
+  // which of the sections on the applicant's route is on screen
+  const [page, setPage] = useState<number>(0)
+  // a routing question whose answer is the committee they apply to
+  const committeeQuestion = questions.find(
+    (question) => question.committee_routing,
+  )
   // `questions` stays whole so a committee switch can refill every answer the
   // user has; only what is rendered and submitted is narrowed
   const visibleQuestions = questions.filter((question) => {
@@ -362,6 +465,10 @@ const ApplicationPage = ({
           enableReinitialize
           onSubmit={(values: { [id: number]: any }, actions) => {
             let submitErrors: string | null = null
+            // answers in sections the applicant's choices skipped are left out
+            const route = routeSections(sections, questions, values)
+            const onRoute = (question: ApplicationQuestion) =>
+              route.includes(question.section ?? null)
 
             // word count error check
             for (const [questionId, text] of Object.entries(values)) {
@@ -373,10 +480,21 @@ const ApplicationPage = ({
                 question !== undefined &&
                 question.question_type ===
                   ApplicationQuestionType.FreeResponse &&
-                computeWordCount(text) > question.word_limit
+                exceedsWordLimit(question, text)
               ) {
                 submitErrors = 'One of your responses exceeds the word limit!'
               }
+            }
+
+            const unanswered = visibleQuestions.find(
+              (question: ApplicationQuestion) =>
+                onRoute(question) &&
+                question.required &&
+                question.question_type !== ApplicationQuestionType.InfoText &&
+                isUnanswered(values[question.id]),
+            )
+            if (unanswered !== undefined) {
+              submitErrors = `Please answer the required question: ${unanswered.prompt}`
             }
 
             if (submitErrors === null) {
@@ -384,14 +502,19 @@ const ApplicationPage = ({
               for (const [questionId, text] of Object.entries(values).filter(
                 (value) => value[0] !== 'undefined',
               )) {
-                body.questionIds.push(questionId)
-                if (currentCommittee != null) {
-                  body.committee = currentCommittee.value
-                }
                 const question = visibleQuestions.find(
                   (question: ApplicationQuestion) =>
                     question.id === parseInt(questionId),
                 )
+                if (question != null && !onRoute(question)) {
+                  continue
+                }
+                body.questionIds.push(questionId)
+                if (committeeQuestion != null) {
+                  body.committee = pickedValue(values[committeeQuestion.id])
+                } else if (currentCommittee != null) {
+                  body.committee = currentCommittee.value
+                }
                 if (
                   question != null &&
                   question.question_type === ApplicationQuestionType.InfoText
@@ -410,6 +533,9 @@ const ApplicationPage = ({
                     body[questionId] = {
                       multipleChoice: text.id ? text.id : text,
                     }
+                    break
+                  case ApplicationQuestionType.Checkbox:
+                    body[questionId] = { multipleChoices: text }
                     break
                   default:
                     break
@@ -479,13 +605,14 @@ const ApplicationPage = ({
               onSubmit={props.handleSubmit}
               onChange={() => setSaved(false)}
             >
-              {committees !== undefined &&
+              {committeeQuestion == null &&
+                committees !== undefined &&
                 committees !== null &&
                 committees.length !== 0 && (
                   <>
                     <Field
                       label={
-                        'This club has multiple committees open for applications. You can apply to multiple committees by saving one submission and then selecting a different committee in the drop-down menu.'
+                        'Which committee are you applying to? To apply to another one too, save this submission, then pick the other committee here.'
                       }
                       as={SelectField}
                       choices={committees.map((value) => {
@@ -500,28 +627,88 @@ const ApplicationPage = ({
                     )}
                   </>
                 )}
-              {visibleQuestions.map((question: ApplicationQuestion) => {
-                const input = formatQuestionType(
-                  props,
-                  question,
-                  wordCounts,
-                  setWordCounts,
-                  false,
+              {(() => {
+                const route = routeSections(sections, questions, props.values)
+                const step = Math.min(page, route.length - 1)
+                const current = route[step]
+                const section = sections.find(({ id }) => id === current)
+                const shown = visibleQuestions.filter(
+                  (question) => (question.section ?? null) === current,
                 )
+                const next = () => {
+                  const missing = shown.find(
+                    (question) =>
+                      question.required &&
+                      question.question_type !==
+                        ApplicationQuestionType.InfoText &&
+                      isUnanswered(props.values[question.id]),
+                  )
+                  if (missing) {
+                    setErrors(
+                      `Please answer the required question: ${missing.prompt}`,
+                    )
+                    return
+                  }
+                  setErrors(null)
+                  setPage(step + 1)
+                  window.scrollTo(0, 0)
+                }
                 return (
-                  <div key={question.id}>
-                    {input}
-                    <br></br>
-                  </div>
+                  <>
+                    {section != null && (
+                      <div className="mb-5">
+                        <h3 className="title is-4 mb-2">{section.title}</h3>
+                        {section.description && (
+                          <p style={{ whiteSpace: 'pre-line' }}>
+                            {linkify(section.description)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {shown.map((question: ApplicationQuestion) => (
+                      <div key={question.id}>
+                        {formatQuestionType(
+                          props,
+                          question,
+                          wordCounts,
+                          setWordCounts,
+                          false,
+                        )}
+                        <br></br>
+                      </div>
+                    ))}
+                    {step > 0 && (
+                      <button
+                        type="button"
+                        className="button mr-2"
+                        onClick={() => {
+                          setErrors(null)
+                          setPage(step - 1)
+                        }}
+                      >
+                        Back
+                      </button>
+                    )}
+                    {step < route.length - 1 ? (
+                      <button
+                        type="button"
+                        className="button is-primary"
+                        onClick={next}
+                      >
+                        Next
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        className="button is-primary"
+                        disabled={loadingResponses}
+                      >
+                        <Icon name="edit" alt="save" /> Submit
+                      </button>
+                    )}
+                  </>
                 )
-              })}
-              <button
-                type="submit"
-                className="button is-primary"
-                disabled={loadingResponses}
-              >
-                <Icon name="edit" alt="save" /> Submit
-              </button>
+              })()}
               {errors !== null && (
                 <SubmitNotificationSpan className="has-text-danger">
                   {errors}

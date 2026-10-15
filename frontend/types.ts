@@ -398,6 +398,7 @@ export type Application = {
   club: string
   club_image_url: string
   questions: ApplicationQuestion[]
+  sections: ApplicationSection[]
 }
 
 export type ApplicationStatus = {
@@ -416,20 +417,43 @@ export enum ApplicationQuestionType {
   MultipleChoice = 2,
   ShortAnswer = 3,
   InfoText = 4,
+  Checkbox = 5,
 }
 
 export type ApplicationQuestion = {
   id: number
   question_type: ApplicationQuestionType
   prompt: string
+  description: string
+  required: boolean
+  // the section it's in, or null for the first page
+  section: number | null
+  // whether its answer sends applicants to a section
+  routes: boolean
+  // whether its options are the committees applicants apply to
+  committee_routing: boolean
   word_limit: number
   committees: Array<{ name: string }>
-  multiple_choice: [
-    {
-      value: string
-    },
-  ]
+  multiple_choice: ApplicationChoice[]
   committee_question: boolean
+  precedence: number
+}
+
+export type ApplicationChoice = {
+  value: string
+  // where picking it leads, when its question routes applicants
+  go_to_section?: number | null
+  ends_application?: boolean
+}
+
+// a page of an application after the first, like a Google Forms section
+export type ApplicationSection = {
+  id: number
+  title: string
+  description: string
+  precedence: number
+  next_section: number | null
+  ends_application: boolean
 }
 
 export enum ApplicationStatusType {
@@ -533,6 +557,7 @@ export type ApplicationResponse = {
   multiple_choice: {
     value: string
   }
+  selected_choices: Array<{ value: string }>
   question_type: string
   question: ApplicationQuestion
 }

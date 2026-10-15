@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import React, { ReactElement, useEffect, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 
-import ApplicationsPage from '../components/ClubEditPage/ApplicationsPage'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
 import EventsCard from '../components/ClubEditPage/EventsCard'
@@ -51,7 +50,7 @@ import {
 import AdminNoteCard from './ClubEditPage/AdminNoteCard'
 import AdvisorCard from './ClubEditPage/AdvisorCard'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
-import ApplicationsCard from './ClubEditPage/ApplicationsCard'
+import ApplicationWorkspace from './ClubEditPage/ApplicationWorkspace'
 import ClubFairCard from './ClubEditPage/ClubFairCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
@@ -341,7 +340,6 @@ const ClubForm = ({
         label: OBJECT_TAB_RECRUITMENT_LABEL,
         content: (
           <>
-            {SHOW_APPLICATIONS && <ApplicationsCard club={club} />}
             <QRCodeCard id={club.code} type={QRCodeType.CLUB} />
             <EnableSubscriptionCard
               notify={notify}
@@ -368,8 +366,8 @@ const ClubForm = ({
       },
       {
         name: 'applications',
-        label: `Applications Page`,
-        content: <ApplicationsPage club={club} />,
+        label: 'Applications',
+        content: <ApplicationWorkspace club={club} />,
         disabled: !SHOW_APPLICATIONS,
       },
       {

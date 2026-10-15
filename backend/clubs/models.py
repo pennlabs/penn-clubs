@@ -2032,6 +2032,77 @@ class ClubApplication(CloneModel):
                     # Remove the duplicate committee
                     c.delete()
 
+    def route(self, choices):
+        """
+        The sections an applicant passes through, given the option they picked
+        for each question as {question pk: option value}. Starts on the first
+        page, shown as None, and after each section goes where its routing
+        questions, or the section itself, say to.
+        """
+        order = [None, *self.sections.all()]
+        routing = {}
+        for question in (
+            self.questions.filter(routes=True)
+            .prefetch_related("multiple_choice")
+            .order_by("precedence")
+        ):
+            routing.setdefault(question.section_id, []).append(question)
+
+        visited, index = [], 0
+        while 0 <= index < len(order):
+            section = order[index]
+            key = section.pk if section else None
+            if key in visited:
+                break
+            visited.append(key)
+            target = None
+            for question in routing.get(key, []):
+                choice = next(
+                    (
+                        option
+                        for option in question.multiple_choice.all()
+                        if option.value == choices.get(question.pk)
+                    ),
+                    None,
+                )
+                if choice is not None and choice.ends_application:
+                    target = "end"
+                elif choice is not None and choice.go_to_section_id:
+                    target = choice.go_to_section_id
+            if target is None and section is not None:
+                if section.ends_application:
+                    target = "end"
+                elif section.next_section_id:
+                    target = section.next_section_id
+            if target == "end":
+                break
+            index = (
+                index + 1
+                if target is None
+                else next(
+                    (i for i, s in enumerate(order) if s and s.pk == target),
+                    len(order),
+                )
+            )
+        return visited
+
+    def set_committees(self, names):
+        """
+        Replace this application's committees with the given names. Raises
+        ValueError for duplicate names, or for a change after the application
+        opens, since submissions already belong to its committees by then.
+        """
+        names = [name.strip() for name in names]
+        if len({name.lower() for name in names}) != len(names):
+            raise ValueError("Committee names must be unique")
+        if set(self.committees.values_list("name", flat=True)) == set(names):
+            return
+        if self.application_start_time < timezone.now():
+            raise ValueError("You cannot edit committees once the application is open")
+        self.committees.exclude(name__in=names).delete()
+        for name in names:
+            ApplicationCommittee.objects.get_or_create(application=self, name=name)
+
     def clone_questions_from(self, source):
         """
         Clone source's questions onto this application, keeping each question's
@@ -2055,8 +2126,34 @@ class ClubApplication(CloneModel):
             committee_base_name(c.name): c for c in self.committees.all()
         }
 
+        # sections are copied first, so copied questions and routing point at
+        # this application's sections rather than the source's
+        sections = {
+            section.pk: ApplicationSection.objects.create(
+                application=self,
+                title=section.title,
+                description=section.description,
+                precedence=section.precedence,
+                ends_application=section.ends_application,
+            )
+            for section in source.sections.all()
+        }
+        for section in source.sections.filter(next_section__isnull=False):
+            sections[section.pk].next_section = sections.get(section.next_section_id)
+            sections[section.pk].save()
+
         for source_question in source.questions.all():
-            clone_question = source_question.make_clone(attrs={"application": self})
+            clone_question = source_question.make_clone(
+                attrs={
+                    "application": self,
+                    "section": sections.get(source_question.section_id),
+                }
+            )
+            for choice in clone_question.multiple_choice.filter(
+                go_to_section__isnull=False
+            ):
+                choice.go_to_section = sections.get(choice.go_to_section_id)
+                choice.save()
             committees = [
                 committee_by_name[base_name]
                 for base_name in (
@@ -2142,6 +2239,29 @@ class ApplicationCommittee(models.Model):
         unique_together = (("application", "name"),)
 
 
+class ApplicationSection(models.Model):
+    """
+    A page of a custom application after the first, like a section in Google
+    Forms. Questions with no section are on the first page.
+    """
+
+    application = models.ForeignKey(
+        ClubApplication, related_name="sections", on_delete=models.CASCADE
+    )
+    title = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    precedence = models.IntegerField(default=0)
+    # where applicants go after this section, unless a question routes them:
+    # the next section in order, a chosen section, or the end of the form
+    next_section = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    ends_application = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["precedence", "pk"]
+
+
 class ApplicationQuestion(CloneModel):
     """
     Represents a question of a custom application
@@ -2151,15 +2271,31 @@ class ApplicationQuestion(CloneModel):
     MULTIPLE_CHOICE = 2
     SHORT_ANSWER = 3
     INFO_TEXT = 4
+    CHECKBOX = 5
     QUESTION_TYPES = (
         (FREE_RESPONSE, "Free Response"),
         (MULTIPLE_CHOICE, "Multiple Choice"),
         (SHORT_ANSWER, "Short Answer"),
         (INFO_TEXT, "Informational Text"),
+        (CHECKBOX, "Checkboxes"),
     )
 
     question_type = models.IntegerField(choices=QUESTION_TYPES, default=FREE_RESPONSE)
     prompt = models.TextField(blank=True)
+    # extra instructions shown under the prompt, like a Google Forms description
+    description = models.TextField(blank=True)
+    required = models.BooleanField(default=False)
+    section = models.ForeignKey(
+        ApplicationSection,
+        related_name="questions",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
+    # a choice question that sends applicants to a section based on their answer
+    routes = models.BooleanField(default=False)
+    # a routing question whose options are the committees applicants apply to
+    committee_routing = models.BooleanField(default=False)
     precedence = models.IntegerField(default=0)
     word_limit = models.IntegerField(default=0)
     application = models.ForeignKey(
@@ -2185,6 +2321,11 @@ class ApplicationMultipleChoice(models.Model):
         related_name="multiple_choice",
         on_delete=models.CASCADE,
     )
+    # where picking this option leads, when its question routes applicants
+    go_to_section = models.ForeignKey(
+        ApplicationSection, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    ends_application = models.BooleanField(default=False)
 
 
 class ApplicationSubmission(models.Model):
@@ -2251,6 +2392,10 @@ class ApplicationQuestionResponse(models.Model):
         related_name="responses",
         on_delete=models.CASCADE,
         null=True,
+    )
+    # every option picked for a checkbox question
+    selected_choices = models.ManyToManyField(
+        ApplicationMultipleChoice, related_name="checkbox_responses", blank=True
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

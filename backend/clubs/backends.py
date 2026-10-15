@@ -1,6 +1,16 @@
 import base64
 
 from social_core.backends.oauth import BaseOAuth2
+from social_core.exceptions import AuthForbidden
+
+
+def require_logged_in_user(backend, user=None, *args, **kwargs):
+    """
+    Social accounts (Zoom, Google) are only ever linked to an account that is
+    already logged in, so they can never be used to log in to Penn Clubs
+    """
+    if user is None:
+        raise AuthForbidden(backend)
 
 
 class ZoomOAuth2(BaseOAuth2):
