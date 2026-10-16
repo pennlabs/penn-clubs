@@ -179,6 +179,7 @@ const BulkEditTab = ({ tags, clubfairs, affiliations }: BulkEditTabProps) => {
                       name="content"
                       as={RichTextField}
                       label="Message Content"
+                      allowEmbed={false}
                     />
                   )}
                   <button
