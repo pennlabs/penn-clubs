@@ -3,6 +3,7 @@ import os
 import re
 import uuid
 import warnings
+from decimal import Decimal
 from email.mime.image import MIMEImage
 from io import BytesIO
 from smtplib import SMTPAuthenticationError, SMTPServerDisconnected
@@ -2262,16 +2263,101 @@ class ApplicationQuestionResponse(models.Model):
 
 class Cart(models.Model):
     """
-    Represents an instance of a ticket cart for a user
+    Represents a ticket cart for a single event showing.
+
+    A cart belongs either to an authenticated user (``owner``) or, for guest
+    checkout, to an anonymous session identified by ``session_key``.
     """
 
-    owner = models.OneToOneField(
-        get_user_model(), related_name="cart", on_delete=models.CASCADE
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    showing = models.ForeignKey(
+        EventShowing, related_name="carts", on_delete=models.CASCADE
+    )
+    session_key = models.CharField(max_length=40, blank=True)
+    owner = models.ForeignKey(
+        get_user_model(),
+        related_name="carts",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
     # Transaction UUID for looking up the cart when CyberSource POSTs back
     pending_transaction_uuid = models.UUIDField(
         null=True, blank=True, db_index=True, unique=True
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_accessible_by(self, request) -> bool:
+        """
+        Whether the given request may read or check out this cart. Authenticated
+        users must own the cart; guests must share the cart's session.
+        """
+        if request.user.is_authenticated:
+            return self.owner_id == request.user.id
+        return self.owner_id is None and bool(
+            request.session.session_key
+            and self.session_key == request.session.session_key
+        )
+
+
+class TicketClass(models.Model):
+    """
+    Represents a type of ticket that can be purchased for an event showing,
+    along with its remaining inventory.
+    """
+
+    showing = models.ForeignKey(
+        EventShowing, related_name="ticket_classes", on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField()
+    remaining = models.PositiveIntegerField()
+    transferable = models.BooleanField(default=True)
+    group_discount = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0,
+        blank=True,
+    )
+    group_size = models.PositiveIntegerField(null=True, blank=True)
+    buyable = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = (("showing", "name"),)
+
+    def __str__(self):
+        return f"{self.name} ({self.showing})"
+
+    def price_for_quantity(self, quantity: int) -> Decimal:
+        """
+        Total price for ``quantity`` tickets of this class, applying the group
+        discount when the quantity meets the group size.
+        """
+        total = self.price * quantity
+        if self.group_size and self.group_discount and quantity >= self.group_size:
+            total = total * (1 - self.group_discount)
+        return total.quantize(Decimal("0.01"))
+
+
+class CartItem(models.Model):
+    """
+    Represents a quantity of a ticket class in a cart
+    """
+
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    ticket_class = models.ForeignKey(
+        TicketClass, on_delete=models.CASCADE, related_name="cart_items"
+    )
+    quantity = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = (("cart", "ticket_class"),)
+
+    def total_price(self) -> Decimal:
+        return self.ticket_class.price_for_quantity(self.quantity)
 
 
 class TicketQuerySet(models.query.QuerySet):
@@ -2281,18 +2367,6 @@ class TicketQuerySet(models.query.QuerySet):
                 "Cannot delete tickets with an associated transaction record.", self
             )
         super().delete()
-
-
-class TicketManager(models.Manager):
-    # Update holds for all tickets
-    def update_holds(self):
-        with transaction.atomic():
-            self.get_queryset().select_for_update().filter(
-                holder__isnull=False, holding_expiration__lte=timezone.now()
-            ).update(holder=None)
-
-    def get_queryset(self):
-        return TicketQuerySet(self.model)
 
 
 class TicketTransactionRecord(models.Model):
@@ -2326,18 +2400,17 @@ class TicketTransactionRecord(models.Model):
 
 class Ticket(models.Model):
     """
-    Represents an instance of a ticket for an event
+    Represents an individual ticket that has been issued or purchased.
+
+    Unsold inventory is tracked on ``TicketClass.remaining``; a ``Ticket`` row only
+    exists once a ticket has been sold, issued, or otherwise assigned to someone.
+    Guest purchasers have no ``owner`` and are identified by ``owner_email``.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    showing = models.ForeignKey(
-        EventShowing,
-        related_name="tickets",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+    ticket_class = models.ForeignKey(
+        TicketClass, related_name="tickets", on_delete=models.PROTECT
     )
-    type = models.CharField(max_length=100)
     owner = models.ForeignKey(
         get_user_model(),
         related_name="owned_tickets",
@@ -2345,35 +2418,35 @@ class Ticket(models.Model):
         blank=True,
         null=True,
     )
-    holder = models.ForeignKey(
-        get_user_model(),
-        related_name="held_tickets",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-    )
-    holding_expiration = models.DateTimeField(null=True, blank=True, db_index=True)
-    carts = models.ManyToManyField(Cart, related_name="tickets", blank=True)
-    price = models.DecimalField(max_digits=5, decimal_places=2)
-    group_discount = models.DecimalField(
-        max_digits=3,
-        decimal_places=2,
-        default=0,
-        blank=True,
-    )
-    group_size = models.PositiveIntegerField(null=True, blank=True)
-    transferable = models.BooleanField(default=True)
+    owner_email = models.EmailField(blank=True)
     attended = models.BooleanField(default=False)
-    # TODO: change to enum between All, Club, None
-    buyable = models.BooleanField(default=True)
     transaction_record = models.ForeignKey(
         TicketTransactionRecord,
         related_name="tickets",
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         blank=True,
         null=True,
     )
-    objects = TicketManager()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = TicketQuerySet.as_manager()
+
+    @property
+    def showing(self):
+        return self.ticket_class.showing
+
+    @property
+    def type(self):
+        return self.ticket_class.name
+
+    @property
+    def price(self):
+        return self.ticket_class.price
+
+    @property
+    def transferable(self):
+        return self.ticket_class.transferable
 
     def delete(self, *args, **kwargs):
         if self.transaction_record:
@@ -2382,13 +2455,27 @@ class Ticket(models.Model):
             )
         super().delete(*args, **kwargs)
 
+    def get_owner_first_name(self) -> str:
+        if self.owner:
+            return self.owner.first_name
+        if self.transaction_record:
+            return self.transaction_record.buyer_first_name
+        return ""
+
+    def get_owner_full_name(self) -> str:
+        if self.owner:
+            return self.owner.get_full_name()
+        if self.transaction_record:
+            return (
+                f"{self.transaction_record.buyer_first_name} "
+                f"{self.transaction_record.buyer_last_name}"
+            ).strip()
+        return ""
+
     def get_qr(self):
         """
         Return a QR code image linking to the ticket page
         """
-        if not self.owner:
-            return None
-
         url = f"https://{settings.DOMAINS[0]}/api/tickets/{self.id}"
         qr_image = qrcode.make(url, box_size=20, border=0)
         return qr_image
@@ -2397,33 +2484,36 @@ class Ticket(models.Model):
         """
         Send a confirmation email to the ticket owner after purchase
         """
+        if not self.owner_email:
+            return
+
         output = BytesIO()
         qr_image = self.get_qr()
         qr_image.save(output, format="PNG")
 
+        showing = self.ticket_class.showing
         context = {
-            "first_name": self.owner.first_name,
-            "name": self.showing.event.name,
-            "type": self.type,
-            "start_time": self.showing.start_time,
-            "end_time": self.showing.end_time,
+            "first_name": self.get_owner_first_name(),
+            "name": showing.event.name,
+            "type": self.ticket_class.name,
+            "start_time": showing.start_time,
+            "end_time": showing.end_time,
             "cid": "qr_code",
             "ticket_url": f"https://{settings.DOMAINS[0]}/settings#Tickets",
         }
 
-        if self.owner.email:
-            send_mail_helper(
-                name="ticket_confirmation",
-                subject=f"Ticket confirmation for {self.owner.get_full_name()}"
-                f" to {self.showing.event.name}",
-                emails=[self.owner.email],
-                context=context,
-                attachment={
-                    "filename": "qr_code.png",
-                    "content": output.getvalue(),
-                    "mimetype": "image/png",
-                },
-            )
+        send_mail_helper(
+            name="ticket_confirmation",
+            subject=f"Ticket confirmation for {self.get_owner_full_name()}"
+            f" to {showing.event.name}",
+            emails=[self.owner_email],
+            context=context,
+            attachment={
+                "filename": "qr_code.png",
+                "content": output.getvalue(),
+                "mimetype": "image/png",
+            },
+        )
 
 
 class TicketTransferRecord(models.Model):
@@ -2454,19 +2544,18 @@ class TicketTransferRecord(models.Model):
         """
         Send confirmation email to the sender and recipient of the transfer.
         """
+        showing = self.ticket.ticket_class.showing
         context = {
             "sender_first_name": self.sender.first_name,
             "receiver_first_name": self.receiver.first_name,
             "receiver_username": self.receiver.username,
-            "event_name": self.ticket.showing.event.name,
-            "type": self.ticket.type,
+            "event_name": showing.event.name,
+            "type": self.ticket.ticket_class.name,
         }
 
         send_mail_helper(
             name="ticket_transfer",
-            subject=(
-                f"Ticket transfer confirmation for {self.ticket.showing.event.name}"
-            ),
+            subject=(f"Ticket transfer confirmation for {showing.event.name}"),
             emails=[self.sender.email, self.receiver.email],
             context=context,
         )
