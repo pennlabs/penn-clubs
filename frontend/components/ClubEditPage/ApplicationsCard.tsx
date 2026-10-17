@@ -20,6 +20,10 @@ import {
   TextField,
 } from '../FormComponents'
 import ModelForm from '../ModelForm'
+import {
+  DEFAULT_ACCEPTANCE_EMAIL,
+  DEFAULT_REJECTION_EMAIL,
+} from './ApplicationsPage'
 import BaseCard from './BaseCard'
 
 type Props = {
@@ -357,17 +361,13 @@ export default function ApplicationsCard({ club }: Props): ReactElement<any> {
             <Field
               name="acceptance_email"
               as={ApplicationUpdateTextField}
-              initialValues={
-                "<html> <body> <p> Congratulations {{ name }}! You've been accepted to {{ committee }} because {{reason}}! </p> </body> </html>"
-              }
+              initialValues={DEFAULT_ACCEPTANCE_EMAIL}
               helpText={`Acceptance email for your ${OBJECT_NAME_SINGULAR}.`}
             />
             <Field
               name="rejection_email"
               as={ApplicationUpdateTextField}
-              initialValues={
-                "<html> <body> <p> Sorry {{ name }}, You've been rejected because {{ reason }}! </p> </body> </html>"
-              }
+              initialValues={DEFAULT_REJECTION_EMAIL}
               helpText={`Rejection email for your ${OBJECT_NAME_SINGULAR}.`}
             />
           </>

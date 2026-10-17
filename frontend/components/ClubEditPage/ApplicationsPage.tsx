@@ -1,4 +1,4 @@
-import { Field, Form, Formik } from 'formik'
+import { Field, Form, Formik, useFormikContext } from 'formik'
 import { json2csv } from 'json-2-csv'
 import moment from 'moment-timezone'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
@@ -25,6 +25,7 @@ import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
 import Table from '../common/Table'
 import {
+  ApplicationUpdateTextField,
   CheckboxField,
   DateTimeField,
   SelectField,
@@ -85,6 +86,94 @@ const FormWrapper = styled.div`
   }
 `
 
+const NOTIFIED_SUFFIX = ' (notified)'
+
+export const DEFAULT_ACCEPTANCE_EMAIL =
+  "<html> <body> <p> Congratulations {{ name }}! You've been accepted to {{ committee }} because {{reason}}! </p> </body> </html>"
+
+export const DEFAULT_REJECTION_EMAIL =
+  "<html> <body> <p> Sorry {{ name }}, You've been rejected because {{ reason }}! </p> </body> </html>"
+
+const SAMPLE_PREVIEW = {
+  name: 'Alex',
+  committee: 'Academy',
+  reason: 'a strong application',
+}
+
+function baseStatus(status: string | null | undefined): string {
+  if (!status) {
+    return ''
+  }
+  return status.endsWith(NOTIFIED_SUFFIX)
+    ? status.slice(0, -NOTIFIED_SUFFIX.length)
+    : status
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function fillEmailTemplate(
+  template: string,
+  values: { name: string; committee: string; reason: string },
+): string {
+  return template.replace(
+    /\{\{\s*(name|committee|reason)\s*\}\}/gi,
+    (_, token: string) => {
+      const key = token.toLowerCase() as 'name' | 'committee' | 'reason'
+      return escapeHtml(values[key] ?? '')
+    },
+  )
+}
+
+function formatApiError(data: unknown): string {
+  if (typeof data === 'string' && data.trim()) {
+    return data
+  }
+  if (Array.isArray(data)) {
+    return data.map(String).join(' ')
+  }
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>
+    if (typeof record.detail === 'string') {
+      return record.detail
+    }
+    if (Array.isArray(record.non_field_errors)) {
+      return record.non_field_errors.map(String).join(' ')
+    }
+    const parts = Object.entries(record).map(([key, value]) => {
+      const text = Array.isArray(value)
+        ? value.map(String).join(' ')
+        : String(value)
+      return `${key}: ${text}`
+    })
+    if (parts.length > 0) {
+      return parts.join(' ')
+    }
+  }
+  return 'Could not save the email template.'
+}
+
+function wouldReceiveEmail(
+  submission: ApplicationSubmission,
+  emailType: string,
+): boolean {
+  if (!submission.reason) {
+    return false
+  }
+  if (emailType === 'acceptance') {
+    return baseStatus(submission.status) === 'Accepted'
+  }
+  if (emailType === 'rejection') {
+    return baseStatus(submission.status).startsWith('Rejected')
+  }
+  return false
+}
+
 export const APPLICATION_STATUS: Array<{ value: number; label: string }> = [
   {
     value: ApplicationStatusType.Pending,
@@ -123,7 +212,19 @@ type Application = {
   name: string
   cycle: string
   application_end_time: string
+  acceptance_email?: string
+  rejection_email?: string
+  committees?: Array<{ name: string }> | null
 }
+
+const PreviewPane = styled.div`
+  border: 1px solid ${ALLBIRDS_GRAY};
+  background: ${SNOW};
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin-top: 8px;
+  min-height: 4rem;
+`
 
 const ModalContainer = styled.div`
   text-align: left;
@@ -212,10 +313,34 @@ const NotificationModal = (props: {
   club: string
   application: Application | null
   updateSubmissions: (arr: Array<ApplicationSubmission>) => void
+  onTemplatesSaved: (patch: {
+    acceptance_email?: string
+    rejection_email?: string
+  }) => void
 }): ReactElement<any> => {
-  const { submissions, club, application, updateSubmissions } = props
-  // eslint-disable-next-line camelcase -- form field name for API
-  const initialValues = { dry_run: true }
+  const {
+    submissions,
+    club,
+    application,
+    updateSubmissions,
+    onTemplatesSaved,
+  } = props
+  /* eslint-disable camelcase -- form field names for the API */
+  const initialValues = {
+    dry_run: true,
+    email_type: null as null | { id: string; name: string },
+    acceptance_email: application?.acceptance_email ?? '',
+    rejection_email: application?.rejection_email ?? '',
+  }
+  const [savedTemplates, setSavedTemplates] = useState({
+    acceptance_email: application?.acceptance_email ?? '',
+    rejection_email: application?.rejection_email ?? '',
+  })
+  /* eslint-enable camelcase */
+  const [previewRecipientId, setPreviewRecipientId] = useState<number | null>(
+    null,
+  )
+  const [saving, setSaving] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<
     string | ReactElement<any> | null
   >(null)
@@ -223,24 +348,78 @@ const NotificationModal = (props: {
     { value: 'acceptance', label: 'Acceptance' },
     { value: 'rejection', label: 'Rejection' },
   ]
+
+  async function saveTemplate(
+    field: 'acceptance_email' | 'rejection_email',
+    html: string,
+    silent = false,
+  ): Promise<boolean> {
+    if (application == null) {
+      return false
+    }
+    const response = await doApiRequest(
+      `/clubs/${club}/applications/${application.id}/?format=json`,
+      {
+        method: 'PATCH',
+        body: {
+          [field]: html,
+          committees: application.committees ?? [],
+        },
+      },
+    )
+    let data: unknown = null
+    try {
+      data = await response.json()
+    } catch {
+      data = null
+    }
+    if (!response.ok) {
+      toast.error(formatApiError(data))
+      return false
+    }
+    setSavedTemplates((prev) => ({ ...prev, [field]: html }))
+    onTemplatesSaved({ [field]: html })
+    if (!silent) {
+      toast.success('Saved the email template.')
+    }
+    return true
+  }
+
   return (
-    <ModalContainer>
+    <ModalContainer style={{ maxHeight: '80vh', overflowY: 'auto' }}>
       <Formik
         initialValues={initialValues}
-        onSubmit={(data: any) => {
-          if (data.email_type.id === 'acceptance' && !data.dry_run) {
+        onSubmit={async (data: any) => {
+          const emailTypeId = data.email_type?.id
+          if (emailTypeId !== 'acceptance' && emailTypeId !== 'rejection') {
+            return
+          }
+          const field =
+            emailTypeId === 'acceptance'
+              ? 'acceptance_email'
+              : 'rejection_email'
+          const currentHtml = data[field] || ''
+          if (!data.dry_run && currentHtml !== savedTemplates[field]) {
+            setSaving(true)
+            const saved = await saveTemplate(field, currentHtml, true)
+            setSaving(false)
+            if (!saved) {
+              return
+            }
+          }
+          if (emailTypeId === 'acceptance' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
                 (data.allow_resend || !sub.notified) &&
-                sub.status === 'Accepted' &&
+                baseStatus(sub.status) === 'Accepted' &&
                 sub.reason,
             )
             updateSubmissions(relevant)
-          } else if (data.email_type.id === 'rejection' && !data.dry_run) {
+          } else if (emailTypeId === 'rejection' && !data.dry_run) {
             const relevant = submissions.filter(
               (sub) =>
                 (data.allow_resend || !sub.notified) &&
-                sub.status.startsWith('Rejected') &&
+                baseStatus(sub.status).startsWith('Rejected') &&
                 sub.reason,
             )
             updateSubmissions(relevant)
@@ -251,69 +430,238 @@ const NotificationModal = (props: {
             }/send_emails/?format=json`,
             {
               method: 'POST',
-              body: data,
+              /* eslint-disable camelcase -- request field names for the API */
+              body: {
+                dry_run: data.dry_run,
+                allow_resend: data.allow_resend,
+                email_type: data.email_type,
+              },
+              /* eslint-enable camelcase */
             },
           ).then((response) => {
-            response.json().then((data) => {
-              setSubmitMessage(data.detail)
+            response.json().then((payload) => {
+              setSubmitMessage(payload.detail)
             })
           })
         }}
       >
-        {(props) => (
-          <Form>
-            <StyledHeader style={{ marginBottom: '2px' }}>
-              Send application updates
-            </StyledHeader>
-            <Text>
-              Send acceptance or rejection emails. This may take a while...
-            </Text>
-            <Field
-              name="email_type"
-              required={true}
-              as={SelectField}
-              choices={options}
-              label="Template"
-              helpText="Choose from the following templates"
-            />
-
-            <Field
-              name="dry_run"
-              as={CheckboxField}
-              label="Dry Run"
-              helpText="If selected, will return the number of emails the script would have sent out"
-            />
-            <Field
-              name="allow_resend"
-              as={CheckboxField}
-              label="Resend Emails"
-              onClick={(e) => {
-                if (e.target.checked) {
-                  toast.warning(
-                    'Resending emails will send emails to applicants who have already received update emails. Please proceed with caution.',
-                  )
-                }
-              }}
-              helpText={
-                <strong className="has-text-danger">
-                  If selected, will resend notifications to all applicants,
-                  including those who have already been notified.
-                </strong>
+        {(formik) => {
+          const emailType = formik.values.email_type?.id as string | undefined
+          const templateField =
+            emailType === 'acceptance'
+              ? 'acceptance_email'
+              : emailType === 'rejection'
+                ? 'rejection_email'
+                : null
+          const templateHtml =
+            templateField != null ? formik.values[templateField] || '' : ''
+          const eligible =
+            emailType != null
+              ? submissions.filter((submission) =>
+                  wouldReceiveEmail(submission, emailType),
+                )
+              : []
+          const previewSubmission =
+            eligible.find(
+              (submission) => submission.pk === previewRecipientId,
+            ) ?? null
+          const previewValues = previewSubmission
+            ? {
+                name: previewSubmission.first_name || 'Applicant',
+                committee: previewSubmission.committee || 'General Member',
+                reason: previewSubmission.reason,
               }
-            />
-            <button type="submit" className="button">
-              Submit
-            </button>
+            : SAMPLE_PREVIEW
+          const previewHtml =
+            templateField != null
+              ? fillEmailTemplate(templateHtml, previewValues)
+              : ''
+          const previewLabel = previewSubmission
+            ? `${previewSubmission.first_name} ${previewSubmission.last_name} (${previewSubmission.committee || 'General Member'})`
+            : null
 
-            {submitMessage !== null && (
-              <div className="mt-2 mb-2 notification is-info is-light">
-                {submitMessage}
-              </div>
-            )}
-          </Form>
-        )}
+          return (
+            <Form>
+              <StyledHeader style={{ marginBottom: '2px' }}>
+                Send application updates
+              </StyledHeader>
+              <Text>
+                Send acceptance or rejection emails. This may take a while...
+                Sending still emails every applicant with this status and a
+                reason, not only the rows you checked.
+              </Text>
+              <Field
+                name="email_type"
+                required={true}
+                as={SelectField}
+                choices={options}
+                label="Template"
+                helpText="Choose which default email to preview, edit, and send"
+              />
+
+              {templateField != null && (
+                <>
+                  <Field
+                    name={templateField}
+                    as={ApplicationUpdateTextField}
+                    label={
+                      emailType === 'acceptance'
+                        ? 'Acceptance email'
+                        : 'Rejection email'
+                    }
+                    helpText="Default template for this application. {{ name }}, {{ committee }}, and {{ reason }} are filled in for each applicant."
+                  />
+                  <div className="buttons">
+                    <button
+                      type="button"
+                      className="button is-link is-light"
+                      disabled={saving}
+                      onClick={async () => {
+                        setSaving(true)
+                        await saveTemplate(templateField, templateHtml)
+                        setSaving(false)
+                      }}
+                    >
+                      Save template
+                    </button>
+                    <button
+                      type="button"
+                      className="button"
+                      onClick={() => {
+                        formik.setFieldValue(
+                          templateField,
+                          templateField === 'acceptance_email'
+                            ? DEFAULT_ACCEPTANCE_EMAIL
+                            : DEFAULT_REJECTION_EMAIL,
+                        )
+                      }}
+                    >
+                      Reset to sample
+                    </button>
+                  </div>
+                  <label className="label">Preview</label>
+                  <Select
+                    placeholder="Preview as"
+                    isClearable
+                    options={eligible.map((submission) => ({
+                      value: submission.pk,
+                      label: `${submission.first_name} ${submission.last_name} (${submission.committee || 'General Member'})`,
+                    }))}
+                    value={
+                      previewSubmission && previewLabel
+                        ? {
+                            value: previewSubmission.pk,
+                            label: previewLabel,
+                          }
+                        : null
+                    }
+                    onChange={(option) =>
+                      setPreviewRecipientId(option ? option.value : null)
+                    }
+                  />
+                  {previewSubmission == null && (
+                    <p className="help">
+                      No applicant with this status and a reason yet. Showing a
+                      sample recipient.
+                    </p>
+                  )}
+                  <PreviewPane>
+                    {previewHtml.trim() ? (
+                      <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                    ) : (
+                      <Text>
+                        This template is empty. Edit it above or reset to the
+                        sample.
+                      </Text>
+                    )}
+                  </PreviewPane>
+                  <p className="help">
+                    Local preview of the template above. The server uses the
+                    saved template when the email is sent.
+                  </p>
+                </>
+              )}
+
+              <Field
+                name="dry_run"
+                as={CheckboxField}
+                label="Dry Run"
+                helpText="If selected, will return the number of emails the script would have sent out"
+              />
+              <Field
+                name="allow_resend"
+                as={CheckboxField}
+                label="Resend Emails"
+                onClick={(e) => {
+                  if (e.target.checked) {
+                    toast.warning(
+                      'Resending emails will send emails to applicants who have already received update emails. Please proceed with caution.',
+                    )
+                  }
+                }}
+                helpText={
+                  <strong className="has-text-danger">
+                    If selected, will resend notifications to all applicants,
+                    including those who have already been notified.
+                  </strong>
+                }
+              />
+              <button type="submit" className="button" disabled={saving}>
+                Submit
+              </button>
+
+              {submitMessage !== null && (
+                <div className="mt-2 mb-2 notification is-info is-light">
+                  {submitMessage}
+                </div>
+              )}
+            </Form>
+          )
+        }}
       </Formik>
     </ModalContainer>
+  )
+}
+
+const ApplySharedReason = ({
+  submissions,
+}: {
+  submissions: Array<ApplicationSubmission>
+}): ReactElement<any> => {
+  const { setFieldValue } = useFormikContext()
+  const [sharedReason, setSharedReason] = useState('')
+  return (
+    <div className="mb-4">
+      <label className="label" htmlFor="shared-reason">
+        Shared reason
+      </label>
+      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <input
+          id="shared-reason"
+          className="input"
+          value={sharedReason}
+          onChange={(event) => setSharedReason(event.target.value)}
+          placeholder="Reason applied to every selected applicant"
+        />
+        <button
+          type="button"
+          className="button is-link"
+          onClick={() => {
+            submissions.forEach((submission) => {
+              if (submission != null) {
+                setFieldValue(String(submission.pk), sharedReason)
+              }
+            })
+          }}
+        >
+          Use this reason for everyone
+        </button>
+      </div>
+      <p className="help">
+        Copies this reason into each field below. You can still edit an
+        individual applicant before submitting.
+      </p>
+    </div>
   )
 }
 
@@ -360,13 +708,18 @@ const ReasonModal = (props: {
                 : null}{' '}
               applicants
             </StyledHeader>
+            {submissions != null && submissions.length > 0 && (
+              <ApplySharedReason
+                submissions={submissions.filter((data) => data != null)}
+              />
+            )}
             {submissions != null
               ? submissions.map((data) => {
                   return (
                     data != null && (
-                      <div>
+                      <div key={data.pk}>
                         <Field
-                          name={data.pk}
+                          name={String(data.pk)}
                           label={`Reason for ${data.first_name} ${data.last_name} (committee ${data.committee})`}
                           as={TextField}
                         />
@@ -415,6 +768,11 @@ export default function ApplicationsPage({
   )
   const [filteredSubmissionsForExport, setFilteredSubmissionsForExport] =
     useState<Array<ApplicationSubmission>>([])
+  const [selectedCommittee, setSelectedCommittee] = useState<string | null>(
+    null,
+  )
+  const [visibleSubmissions, setVisibleSubmissions] =
+    useState<Array<ApplicationSubmission> | null>(null)
 
   useEffect(() => {
     doApiRequest(`/clubs/${club.code}/applications/?format=json`, {
@@ -603,6 +961,76 @@ export default function ApplicationsPage({
     }
   }
 
+  function selectAllInCommittee() {
+    if (
+      currentApplication == null ||
+      submissions[currentApplication.id] == null
+    ) {
+      return
+    }
+    if (selectedCommittee == null) {
+      toast.info('Choose a committee to select.')
+      return
+    }
+    const statusLabel = APPLICATION_STATUS.find(
+      (option) => option.value === status,
+    )?.label
+    const matching = submissions[currentApplication.id].filter(
+      (submission) =>
+        (submission.committee || 'General Member') === selectedCommittee &&
+        (statusLabel == null || baseStatus(submission.status) === statusLabel),
+    )
+    if (matching.length === 0) {
+      toast.info(
+        `No ${statusLabel ?? 'matching'} submissions in ${selectedCommittee}.`,
+      )
+      return
+    }
+    setSelectedSubmissions((current) => {
+      const next = new Set(current)
+      matching.forEach((submission) => next.add(submission.pk))
+      return Array.from(next)
+    })
+  }
+
+  function selectAllVisible() {
+    if (
+      currentApplication == null ||
+      submissions[currentApplication.id] == null
+    ) {
+      return
+    }
+    const rows = visibleSubmissions ?? submissions[currentApplication.id]
+    if (rows.length === 0) {
+      toast.info('No visible submissions to select.')
+      return
+    }
+    setSelectedSubmissions((current) => {
+      const next = new Set(current)
+      rows.forEach((submission) => {
+        if (submission.pk != null) {
+          next.add(submission.pk)
+        }
+      })
+      return Array.from(next)
+    })
+  }
+
+  const selectedStatusLabel =
+    APPLICATION_STATUS.find((option) => option.value === status)?.label ??
+    'Pending'
+
+  const committeeOptions = Array.from(
+    new Set(
+      (currentApplication != null
+        ? (submissions[currentApplication.id] ?? [])
+        : []
+      ).map((submission) => submission.committee || 'General Member'),
+    ),
+  )
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({ value: name, label: name }))
+
   const formatAppName: (application: Application) => any = (application) => (
     <span>
       {application.name} {' - '}
@@ -660,10 +1088,16 @@ export default function ApplicationsPage({
                 cycle: string
                 application_end_time: string
               } | null,
-            ) =>
-              v != null &&
+            ) => {
+              if (v == null) {
+                return
+              }
               setCurrentApplication({ ...v, id: v.value, name: v.label })
-            }
+              setSelectedSubmissions([])
+              setSelectedCommittee(null)
+              setVisibleSubmissions(null)
+              setCategoriesSelectAll([])
+            }}
           />
         </>
       )}
@@ -676,10 +1110,22 @@ export default function ApplicationsPage({
                 Responses
               </StyledHeader>
               <div>
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
-                  <div className="mr-3" style={{ width: '70%' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{ minWidth: '16rem', flex: '1 1 16rem' }}>
                     <Select
                       options={APPLICATION_STATUS}
+                      value={
+                        APPLICATION_STATUS.find(
+                          (option) => option.value === status,
+                        ) ?? null
+                      }
                       onChange={(val) => val != null && setStatus(val.value)}
                     />
                   </div>
@@ -760,20 +1206,15 @@ export default function ApplicationsPage({
                       const newSelectedSubmissions: number[] = []
                       submissions[currentApplication.id].forEach(
                         (submission) => {
+                          const matchesStatus =
+                            baseStatus(submission.status) === statusLabel
                           if (selectedSubmissions.includes(submission.pk)) {
-                            if (
-                              deselecting &&
-                              submission.status !== statusLabel
-                            ) {
+                            if (deselecting && !matchesStatus) {
                               newSelectedSubmissions.push(submission.pk)
                             } else if (!deselecting) {
                               newSelectedSubmissions.push(submission.pk)
                             }
-                          } else if (
-                            !deselecting &&
-                            submission.status === statusLabel
-                          ) {
-                            // add pending values when we are selecting
+                          } else if (!deselecting && matchesStatus) {
                             newSelectedSubmissions.push(submission.pk)
                           }
                         },
@@ -791,6 +1232,46 @@ export default function ApplicationsPage({
                     {APPLICATION_STATUS.find((x) => x?.value === status)?.label}
                   </button>
                 </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem',
+                    alignItems: 'center',
+                    marginTop: '0.75rem',
+                  }}
+                >
+                  <div style={{ minWidth: '16rem', flex: '1 1 16rem' }}>
+                    <Select
+                      placeholder="Committee"
+                      isClearable
+                      options={committeeOptions}
+                      value={
+                        selectedCommittee == null
+                          ? null
+                          : {
+                              value: selectedCommittee,
+                              label: selectedCommittee,
+                            }
+                      }
+                      onChange={(option) =>
+                        setSelectedCommittee(option ? option.value : null)
+                      }
+                    />
+                  </div>
+                  <button
+                    className="button is-primary"
+                    onClick={selectAllInCommittee}
+                  >
+                    Select all {selectedStatusLabel} in committee
+                  </button>
+                  <button
+                    className="button is-primary"
+                    onClick={selectAllVisible}
+                  >
+                    Select all visible
+                  </button>
+                </div>
                 {submitMessage !== null && (
                   <div className="mt-2 mb-2 notification is-info is-light">
                     {submitMessage}
@@ -805,7 +1286,11 @@ export default function ApplicationsPage({
                   the "Select All Pending" button to batch update pending
                   applications (for example, you could manually mark all
                   accepted applications, then select all pending and mark them
-                  as rejected to quickly update statuses).
+                  as rejected to quickly update statuses). Choose a committee,
+                  such as an academy, to select every applicant in that track
+                  with the status above. Select all visible checks the rows that
+                  match the table filters. Sending updates still emails everyone
+                  with that status and a reason, not only the checked rows.
                 </small>
               </div>
               {submissions[currentApplication.id].length > 0 ? (
@@ -815,11 +1300,11 @@ export default function ApplicationsPage({
                       data={tableData}
                       columns={responseTableFields}
                       searchableColumns={['name']}
-                      onFilteredDataChange={(rows) =>
-                        setFilteredSubmissionsForExport(
-                          rows as Array<ApplicationSubmission>,
-                        )
-                      }
+                      onFilteredDataChange={(rows) => {
+                        const list = rows as Array<ApplicationSubmission>
+                        setFilteredSubmissionsForExport(list)
+                        setVisibleSubmissions(list)
+                      }}
                       filterOptions={[
                         {
                           label: 'notified',
@@ -862,7 +1347,17 @@ export default function ApplicationsPage({
                             },
                           ],
                           filterFunction: (selection, object) =>
-                            object.status === selection,
+                            baseStatus(object.status) === selection,
+                        },
+                        {
+                          label: 'committee',
+                          options: committeeOptions.map((option) => ({
+                            key: option.value,
+                            label: option.label,
+                          })),
+                          filterFunction: (selection, object) =>
+                            (object.committee || 'General Member') ===
+                            selection,
                         },
                       ]}
                       focusable={true}
@@ -977,6 +1472,22 @@ export default function ApplicationsPage({
             club={club.code}
             application={currentApplication}
             submissions={submissions[currentApplication!.id]}
+            onTemplatesSaved={(patch) => {
+              if (currentApplication == null) {
+                return
+              }
+              const applicationId = currentApplication.id
+              setCurrentApplication((prev) =>
+                prev == null ? prev : { ...prev, ...patch },
+              )
+              setApplications((prev) =>
+                prev == null
+                  ? prev
+                  : prev.map((item) =>
+                      item.id === applicationId ? { ...item, ...patch } : item,
+                    ),
+              )
+            }}
             updateSubmissions={(arr: Array<ApplicationSubmission>) => {
               if (currentApplication != null) {
                 for (const submission of arr) {
