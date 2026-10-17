@@ -3318,6 +3318,44 @@ class ClubTestCase(TestCase):
         self.assertEqual(resp.status_code, 400)
         self.assertIn("Committee names must be unique", str(resp.content))
 
+    def test_club_applications_can_be_ordered_by_cycle_then_creation_time(self):
+        now = timezone.now()
+        previous_cycle = ClubApplication.objects.create(
+            name="Previous Cycle",
+            club=self.club1,
+            application_start_time=now + timezone.timedelta(days=1),
+            application_end_time=now + timezone.timedelta(days=2),
+            result_release_time=now + timezone.timedelta(days=3),
+        )
+        earlier_created = ClubApplication.objects.create(
+            name="Earlier Created",
+            club=self.club1,
+            application_start_time=now + timezone.timedelta(days=10),
+            application_end_time=now + timezone.timedelta(days=11),
+            result_release_time=now + timezone.timedelta(days=12),
+        )
+        later_created = ClubApplication.objects.create(
+            name="Later Created",
+            club=self.club1,
+            application_start_time=earlier_created.application_start_time,
+            application_end_time=now + timezone.timedelta(days=11),
+            result_release_time=now + timezone.timedelta(days=12),
+        )
+        ClubApplication.objects.filter(pk=earlier_created.pk).update(
+            created_at=now - timezone.timedelta(days=1)
+        )
+
+        resp = self.client.get(
+            reverse("club-applications-list", args=(self.club1.code,)),
+            {"ordering": "-application_start_time,-created_at,-id"},
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(
+            [item["id"] for item in resp.json()],
+            [later_created.id, earlier_created.id, previous_cycle.id],
+        )
+
     def test_club_invite_insufficient_auth(self):
         self.client.login(username=self.user2.username, password="test")
         Membership.objects.create(person=self.user2, club=self.club1)
