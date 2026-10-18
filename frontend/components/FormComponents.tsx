@@ -154,9 +154,11 @@ if (process.browser) {
 
 /**
  * A rich text editor that accepts and outputs HTML.
+ * Pass allowEmbed={false} to hide the iframe embed button (e.g. for emails).
  */
 export const RichTextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement<any> => {
+    const { allowEmbed = true } = props
     const { setFieldValue } = useFormikContext()
     const textValue = useRef<string | null>(null)
 
@@ -216,7 +218,7 @@ export const RichTextField = useFieldWrapper(
               border: '1px solid #dbdbdb',
               padding: '0 1em',
             }}
-            toolbarCustomButtons={[<EmbedOption />]}
+            toolbarCustomButtons={allowEmbed ? [<EmbedOption />] : []}
             customBlockRenderFunc={blockRendererFunction}
           />
         )}
