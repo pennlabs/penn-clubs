@@ -23,6 +23,7 @@ from clubs.models import (
     Asset,
     Badge,
     Cart,
+    CartItem,
     Category,
     Classification,
     Club,
@@ -62,6 +63,7 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    TicketClass,
     TicketTransactionRecord,
     TicketTransferRecord,
     Type,
@@ -678,9 +680,11 @@ admin.site.register(Year, YearAdmin)
 admin.site.register(ZoomMeetingVisit, ZoomMeetingVisitAdmin)
 admin.site.register(AdminNote)
 admin.site.register(Ticket)
+admin.site.register(TicketClass)
 admin.site.register(TicketTransactionRecord)
 admin.site.register(TicketTransferRecord)
 admin.site.register(Cart)
+admin.site.register(CartItem)
 admin.site.register(ApplicationCycle)
 admin.site.register(ClubApprovalResponseTemplate, ClubApprovalResponseTemplateAdmin)
 admin.site.register(RegistrationQueueSettings)

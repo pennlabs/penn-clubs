@@ -1,6 +1,7 @@
 import json
 import re
 from collections import OrderedDict
+from decimal import Decimal
 from urllib.parse import parse_qs, urlparse
 
 import bleach
@@ -31,6 +32,8 @@ from clubs.models import (
     ApplicationSubmission,
     Asset,
     Badge,
+    Cart,
+    CartItem,
     Category,
     Classification,
     Club,
@@ -69,6 +72,7 @@ from clubs.models import (
     TargetYear,
     Testimonial,
     Ticket,
+    TicketClass,
     Type,
     Year,
 )
@@ -434,7 +438,7 @@ class EventShowingSerializer(serializers.ModelSerializer):
     ticketed = serializers.SerializerMethodField("get_ticketed")
 
     def get_ticketed(self, obj):
-        return obj.tickets.exists()
+        return obj.ticket_classes.exists()
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -566,7 +570,7 @@ class ClubEventSerializer(serializers.ModelSerializer):
     latest_end_time = serializers.DateTimeField(read_only=True)
 
     def get_ticketed(self, obj) -> bool:
-        return obj.eventshowing_set.filter(tickets__isnull=False).exists()
+        return obj.eventshowing_set.filter(ticket_classes__isnull=False).exists()
 
     def get_event_url(self, obj):
         # if no url, return that
@@ -2270,11 +2274,15 @@ class TicketSerializer(serializers.ModelSerializer):
     """
 
     owner = serializers.SerializerMethodField("get_owner_name")
-    showing = EventShowingSerializer()
-    event = EventSerializer(source="showing.event")
+    showing = EventShowingSerializer(source="ticket_class.showing", read_only=True)
+    event = EventSerializer(source="ticket_class.showing.event", read_only=True)
+    ticket_type = serializers.CharField(source="ticket_class.name", read_only=True)
+    price = serializers.DecimalField(
+        source="ticket_class.price", max_digits=10, decimal_places=2, read_only=True
+    )
 
     def get_owner_name(self, obj):
-        return obj.owner.get_full_name() if obj.owner else "None"
+        return obj.get_owner_full_name() or "None"
 
     class Meta:
         model = Ticket
@@ -2282,11 +2290,86 @@ class TicketSerializer(serializers.ModelSerializer):
             "id",
             "showing",
             "event",
-            "type",
+            "ticket_type",
             "owner",
+            "owner_email",
             "attended",
             "price",
+            "created_at",
+            "updated_at",
         )
+
+
+class TicketBuyerSerializer(serializers.ModelSerializer):
+    """
+    Used by club officers to list the buyers of a showing's tickets
+    """
+
+    fullname = serializers.SerializerMethodField()
+    owner_id = serializers.PrimaryKeyRelatedField(source="owner", read_only=True)
+    email = serializers.EmailField(source="owner_email", read_only=True)
+    ticket_type = serializers.CharField(source="ticket_class.name", read_only=True)
+
+    def get_fullname(self, obj):
+        return obj.get_owner_full_name()
+
+    class Meta:
+        model = Ticket
+        fields = ("fullname", "id", "owner_id", "email", "ticket_type", "attended")
+
+
+class TicketClassSerializer(serializers.ModelSerializer):
+    """
+    Used to return a ticket class (a purchasable ticket type and its inventory)
+    """
+
+    class Meta:
+        model = TicketClass
+        fields = (
+            "id",
+            "name",
+            "description",
+            "price",
+            "quantity",
+            "remaining",
+            "transferable",
+            "group_discount",
+            "group_size",
+            "buyable",
+        )
+
+
+class CartItemSerializer(serializers.ModelSerializer):
+    """
+    Used to return a single line item in a cart
+    """
+
+    ticket_class = TicketClassSerializer(read_only=True)
+    total_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+
+    class Meta:
+        model = CartItem
+        fields = ("id", "ticket_class", "quantity", "total_price")
+
+
+class CartSerializer(serializers.ModelSerializer):
+    """
+    Used to return a cart along with its items and total
+    """
+
+    showing = EventShowingSerializer(read_only=True)
+    event = EventSerializer(source="showing.event", read_only=True)
+    items = CartItemSerializer(many=True, read_only=True)
+    total = serializers.SerializerMethodField()
+
+    def get_total(self, obj) -> str:
+        return str(sum((item.total_price() for item in obj.items.all()), Decimal(0)))
+
+    class Meta:
+        model = Cart
+        fields = ("id", "showing", "event", "items", "total")
 
 
 class UserUUIDSerializer(serializers.ModelSerializer):

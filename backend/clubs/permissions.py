@@ -277,9 +277,22 @@ class EventShowingPermission(permissions.BasePermission):
                 return False
             membership = find_membership_helper(request.user, obj.event.club)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
-        elif view.action in ["add_to_cart", "remove_from_cart"]:
-            return request.user.is_authenticated
+        # add_to_cart, remove_from_cart and cart are open to guests; the cart is
+        # tied to the anonymous session instead of a user.
         return True
+
+
+class TicketPermission(permissions.BasePermission):
+    """
+    Guests may start and complete checkout (guest checkout); every other ticket
+    action requires authentication. Object-level access (owner / club officer)
+    is enforced by TicketViewSet.get_queryset.
+    """
+
+    def has_permission(self, request, view):
+        if view.action in ["cart", "initiate_checkout", "payment_complete"]:
+            return True
+        return request.user.is_authenticated
 
 
 class ClubBadgePermission(permissions.BasePermission):
