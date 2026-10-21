@@ -420,7 +420,7 @@ class MemberPermission(permissions.BasePermission):
     except ordinary members.
     Members can edit themselves, with additional restrictions on the serializer level.
     Officers and above can add new members.
-    Anyone can view membership.
+    Signed-in users can list memberships.
     """
 
     def has_object_permission(self, request, view, obj):
@@ -462,6 +462,8 @@ class MemberPermission(permissions.BasePermission):
             obj = Club.objects.get(code=view.kwargs["club_code"])
             membership = find_membership_helper(request.user, obj)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
+        elif view.action in ["list"]:
+            return request.user.is_authenticated
         else:
             return True
 

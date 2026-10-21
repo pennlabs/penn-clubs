@@ -465,6 +465,35 @@ class ClubTestCase(TestCase):
         data = json.loads(resp.content.decode("utf-8"))
         self.assertEqual(len(data.get("members", [])), 2)
 
+    def test_club_members_endpoint_visibility(self):
+        """
+        The members endpoint follows the same visibility rules as the club detail.
+        """
+        Membership.objects.create(
+            club=self.club1, person=self.user1, role=Membership.ROLE_OWNER
+        )
+        Membership.objects.create(club=self.club1, person=self.user2, public=False)
+        Membership.objects.create(club=self.club1, person=self.user3, active=False)
+        url = reverse("club-members-list", args=(self.club1.code,))
+
+        # anonymous users cannot list members
+        self.client.logout()
+        resp = self.client.get(url)
+        self.assertIn(resp.status_code, [401, 403], resp.content)
+
+        # non-members only see active, public members
+        self.client.login(username=self.user4.username, password="test")
+        resp = self.client.get(url)
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual([m["username"] for m in resp.data], [self.user1.username])
+
+        # members and admins see everyone
+        for user in [self.user1, self.user5]:
+            self.client.login(username=user.username, password="test")
+            resp = self.client.get(url)
+            self.assertIn(resp.status_code, [200, 201], resp.content)
+            self.assertEqual(len(resp.data), 3)
+
     def test_club_upload(self):
         """
         Test uploading a club logo.
@@ -1164,13 +1193,19 @@ class ClubTestCase(TestCase):
             prof.show_profile = False
             prof.save()
 
-        self.client.logout()
+        self.client.login(username=self.user4.username, password="test")
         resp = self.client.get(reverse("club-members-list", args=("penn-labs",)))
         self.assertIn(resp.status_code, [200], resp.content)
         data = json.loads(resp.content.decode("utf-8"))
+        self.assertTrue(data)
         # ensure emails are hidden
         for item in data:
             self.assertFalse(item.get("email", None))
+
+        # anonymous users cannot list members
+        self.client.logout()
+        resp = self.client.get(reverse("club-members-list", args=("penn-labs",)))
+        self.assertIn(resp.status_code, [401, 403], resp.content)
 
         # delete member should fail with insufficient permissions
         self.client.login(username=self.user2.username, password="test")

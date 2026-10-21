@@ -5249,11 +5249,21 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
     lookup_field = "person__username"
 
     def get_queryset(self):
-        return (
+        queryset = (
             Membership.objects.filter(club__code=self.kwargs["club_code"])
             .order_by("-active", "role", "person__last_name", "person__first_name")
             .select_related("person", "person__profile")
         )
+
+        # non-members only see active, public members, matching the club detail view
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.filter(active=True, public=True)
+        if not user.has_perm("clubs.manage_club"):
+            club = Club.objects.filter(code=self.kwargs["club_code"]).first()
+            if club is None or find_membership_helper(user, club) is None:
+                queryset = queryset.filter(active=True, public=True)
+        return queryset
 
     def get_serializer_class(self):
         if self.request is not None and self.request.user.is_authenticated:
