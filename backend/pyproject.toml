@@ -52,7 +52,6 @@ dependencies = [
     "pyasyncore>=1.0.4",
     "standard-smtpd>=3.13.0",
     "pip>=26.2.0",
-    "html-diff>=0.4.1",
     "aiosmtpd>=1.4.6",
     "blacknoise>=1.2.0",
     "adrf==0.1.12",

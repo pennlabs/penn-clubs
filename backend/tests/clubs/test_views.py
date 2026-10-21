@@ -3,6 +3,7 @@ import inspect
 import io
 import json
 import os
+import re
 import time
 from collections import Counter
 from smtplib import SMTPServerDisconnected
@@ -2816,13 +2817,16 @@ class ClubTestCase(TestCase):
         data = json.loads(resp.content.decode("utf-8"))
 
         self.assertEqual(
-            data["new-club"]["description"]["diff"],
-            """We are <ins style="text-decoration: none; background-color: #dafdd5; """
-            """opacity: 1;">not </ins>open<ins style="text-decoration: none; backg"""
-            """round-color: #dafdd5; opacity: 1;">,</ins> <del style="text-decorati"""
-            """on: none; background-color: #ffbdbd; opacity: 0.8;">source,</del><in"""
-            """s style="text-decoration: none; background-color: #dafdd5; opacity: """
-            """1;">do not</ins> expect us.""",
+            # the edit time changes every run, so leave it out
+            re.sub(
+                r' data-edited="[^"]*"', "", data["new-club"]["description"]["diff"]
+            ),
+            """We are <ins data-editor="Benedict Arnold" style="text-decoration: no"""
+            """ne; background-color: #dafdd5; opacity: 1;">not</ins> open<del data"""
+            """-editor="Benedict Arnold" style="text-decoration: none; background-"""
+            """color: #ffbdbd; opacity: 0.8;"> source</del>, <ins data-editor="Ben"""
+            """edict Arnold" style="text-decoration: none; background-color: #dafd"""
+            """d5; opacity: 1;">do not</ins> expect us.""",
         )
 
         # attempt to get diff of approved club
