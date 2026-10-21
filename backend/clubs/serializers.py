@@ -98,6 +98,15 @@ ALL_TAGS_SELECTED_ERROR_MESSAGE = (
 )
 
 
+def is_authenticated_request(serializer):
+    """
+    Return whether the request in the serializer context is from a signed-in user.
+    Contact information (emails, phone numbers) is never shown to anonymous users.
+    """
+    request = serializer.context.get("request")
+    return request is not None and request.user.is_authenticated
+
+
 class ClubRouteMixin(object):
     """
     Mixin for serializers that overrides the save method to
@@ -407,6 +416,13 @@ class AdvisorSerializer(
     class Meta:
         model = Advisor
         fields = ("id", "name", "title", "department", "email", "phone", "visibility")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not is_authenticated_request(self):
+            data["email"] = None
+            data["phone"] = None
+        return data
 
 
 class EventShowingSerializer(serializers.ModelSerializer):
@@ -865,7 +881,11 @@ class MembershipSerializer(ClubRouteMixin, serializers.ModelSerializer):
         return obj.person.get_full_name()
 
     def get_email(self, obj):
-        if not obj.public or not obj.person.profile.show_profile:
+        if (
+            not obj.public
+            or not obj.person.profile.show_profile
+            or not is_authenticated_request(self)
+        ):
             return None
         return obj.person.email
 
@@ -1113,7 +1133,7 @@ class ClubListSerializer(serializers.ModelSerializer):
     subtitle = serializers.SerializerMethodField("get_short_description")
 
     def get_email(self, obj):
-        if obj.email_public:
+        if obj.email_public and is_authenticated_request(self):
             return obj.email
         return "Hidden"
 

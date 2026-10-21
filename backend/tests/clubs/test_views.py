@@ -361,6 +361,54 @@ class ClubTestCase(TestCase):
             sorted_advisors, ["Anonymous Avi", "Jocular Julian", "Reclusive Rohan"]
         )
 
+    def test_contact_info_hidden_from_anonymous(self):
+        """
+        Club, member, and advisor contact info is never shown to anonymous users,
+        even if the club or advisor has made it public. Every field is populated, so
+        anonymous nulls mean hidden rather than missing.
+        """
+        self.club1.email = "contact@example.com"
+        self.club1.email_public = True
+        self.club1.save()
+        Advisor.objects.create(
+            name="John Smith",
+            email="john.smith@example.com",
+            phone="+12025550199",
+            club=self.club1,
+            visibility=Advisor.ADVISOR_VISIBILITY_ALL,
+        )
+        member = get_user_model().objects.create_user(
+            "jsmith", "jane.smith@example.com", "test", first_name="Jane"
+        )
+        Membership.objects.create(club=self.club1, person=member, public=True)
+
+        # Anonymous view
+        self.client.logout()
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(resp.data["email"], "Hidden")
+        advisor = next(a for a in resp.data["advisor_set"] if a["name"] == "John Smith")
+        self.assertIsNone(advisor["email"])
+        self.assertIsNone(advisor["phone"])
+        self.assertTrue(all(m["email"] is None for m in resp.data["members"]))
+
+        resp = self.client.get(reverse("clubs-list"))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        club = next(c for c in resp.data if c["code"] == self.club1.code)
+        self.assertEqual(club["email"], "Hidden")
+
+        # Signed-in view
+        self.client.login(username=self.user2.username, password="test")
+        resp = self.client.get(reverse("clubs-detail", args=(self.club1.code,)))
+        self.assertIn(resp.status_code, [200, 201], resp.content)
+        self.assertEqual(resp.data["email"], "contact@example.com")
+        advisor = next(a for a in resp.data["advisor_set"] if a["name"] == "John Smith")
+        self.assertEqual(advisor["email"], "john.smith@example.com")
+        self.assertEqual(advisor["phone"], "+12025550199")
+        self.assertIn(
+            "jane.smith@example.com", [m["email"] for m in resp.data["members"]]
+        )
+
     def test_advisor_viewset(self):
         # Make sure we can't view advisors via the viewset if not authed
         self.client.logout()
