@@ -7,6 +7,7 @@ import freezegun
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
@@ -1740,6 +1741,20 @@ class TicketModelTestCase(TestCase):
         self.assertFalse(
             guest_cart.is_accessible_by(FakeRequest(self.user1, "guest-session"))
         )
+
+    def test_unique_cart_per_showing_owner_and_session(self):
+        Cart.objects.create(showing=self.event_showing1, owner=self.user1)
+        with transaction.atomic(), self.assertRaises(IntegrityError):
+            Cart.objects.create(showing=self.event_showing1, owner=self.user1)
+
+        Cart.objects.create(showing=self.event_showing1, session_key="sess-1")
+        with transaction.atomic(), self.assertRaises(IntegrityError):
+            Cart.objects.create(showing=self.event_showing1, session_key="sess-1")
+
+        Cart.objects.create(showing=self.event_showing1, owner=self.user2)
+        Cart.objects.create(showing=self.event_showing1, session_key="sess-2")
+        Cart.objects.create(showing=self.unapproved_event_showing, owner=self.user1)
+        Cart.objects.create(showing=self.unapproved_event_showing, session_key="sess-1")
 
     def test_delete_tickets_without_transaction_record(self):
         sell_tickets(self.normal_class, owner=self.user1, quantity=3)

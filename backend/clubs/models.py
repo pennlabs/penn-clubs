@@ -2288,6 +2288,20 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["showing", "owner"],
+                condition=models.Q(owner__isnull=False),
+                name="unique_cart_per_showing_owner",
+            ),
+            models.UniqueConstraint(
+                fields=["showing", "session_key"],
+                condition=models.Q(owner__isnull=True),
+                name="unique_cart_per_showing_session",
+            ),
+        ]
+
     def is_accessible_by(self, request) -> bool:
         """
         Whether the given request may read or check out this cart. Authenticated
@@ -2540,6 +2554,8 @@ class TicketTransferRecord(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # TODO: we prob want to generate new qr codes of the unused tickets to the receiver
+    # so the sender doesn't reap of the recepient
     def send_confirmation_email(self):
         """
         Send confirmation email to the sender and recipient of the transfer.
