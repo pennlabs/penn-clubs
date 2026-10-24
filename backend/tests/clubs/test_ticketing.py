@@ -664,6 +664,21 @@ class TicketEventTestCase(TicketingTestMixin, TestCase):
         resp = self.client.get(self.showing_url("cart"))
         self.assertEqual(resp.status_code, 404, resp.content)
 
+    def test_get_cart_includes_location_when_authenticated(self):
+        self.event_showing1.location = "Houston Hall"
+        self.event_showing1.save()
+        self.client.login(username=self.user1.username, password="test")
+        self.add_to_cart([(self.normal_class, 1)])
+        resp = self.client.get(self.showing_url("cart"))
+        self.assertEqual(resp.json()["showing"]["location"], "Houston Hall")
+
+    def test_get_cart_hides_zoom_url_when_unauthenticated(self):
+        self.event1.url = "https://upenn.zoom.us/j/123456789"
+        self.event1.save()
+        self.add_to_cart([(self.normal_class, 1)])
+        resp = self.client.get(self.showing_url("cart"))
+        self.assertEqual(resp.json()["event"]["url"], "(Login to view url)")
+
     def test_add_to_cart_elapsed_event(self):
         self.client.login(username=self.user1.username, password="test")
 
