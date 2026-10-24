@@ -3953,6 +3953,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        updates = []
+        pending_by_class = {}
         for ticket_class_id, quantity in items:
             ticket_class = TicketClass.objects.filter(
                 id=ticket_class_id, showing=showing, buyable=True
@@ -3968,8 +3970,9 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
 
             cart_item = cart.items.filter(ticket_class=ticket_class).first()
             already_carted = cart_item.quantity if cart_item else 0
+            pending = pending_by_class.get(ticket_class.id, 0)
 
-            if ticket_class.remaining < already_carted + quantity:
+            if ticket_class.remaining < already_carted + pending + quantity:
                 return Response(
                     {
                         "detail": (
@@ -3980,6 +3983,11 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
+            pending_by_class[ticket_class.id] = pending + quantity
+            updates.append((ticket_class, quantity))
+
+        for ticket_class, quantity in updates:
+            cart_item = cart.items.filter(ticket_class=ticket_class).first()
             if cart_item:
                 cart_item.quantity += quantity
                 cart_item.save(update_fields=["quantity"])
