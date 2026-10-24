@@ -3767,7 +3767,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             return Response(
                 {"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
             )
-        return Response(CartSerializer(cart).data)
+        return Response(CartSerializer(cart, context={"request": request}).data)
 
     @staticmethod
     def _parse_cart_quantities(request):
@@ -6854,7 +6854,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         carts = carts.select_related("showing__event").prefetch_related(
             "items__ticket_class"
         )
-        return Response(CartSerializer(carts, many=True).data)
+        return Response(
+            CartSerializer(carts, many=True, context={"request": request}).data
+        )
 
     @staticmethod
     def _get_buyer_info(request):
