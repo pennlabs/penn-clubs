@@ -8,9 +8,11 @@ def forwards(apps, schema_editor):
 
     For every (showing, type) group of legacy tickets we create one
     ``TicketClass`` whose ``quantity`` is the number of legacy rows and whose
-    ``remaining`` is the number of those rows that were never sold. Sold tickets
-    (``owner`` set) are re-pointed at the new class and keep their transaction
-    records; unsold rows are deleted because inventory now lives on the class.
+    ``remaining`` is the number of those rows that were never sold. A ticket is
+    sold when ``owner`` or ``transaction_record`` is set (legacy ``owner`` used
+    ``SET_NULL``, so a paid ticket can have no owner). Sold tickets are
+    re-pointed at the new class and kept; unsold rows are deleted because
+    inventory now lives on the class.
 
     Legacy tickets whose showing has been deleted (``showing`` was SET_NULL) have
     nothing to attach to and are removed as well.
@@ -23,7 +25,10 @@ def forwards(apps, schema_editor):
         .values("showing_id", "type")
         .annotate(
             quantity=Count("id"),
-            remaining=Count("id", filter=Q(owner__isnull=True)),
+            remaining=Count(
+                "id",
+                filter=Q(owner__isnull=True, transaction_record__isnull=True),
+            ),
             max_price=Max("price"),
         )
         .order_by("showing_id", "type")
@@ -51,9 +56,21 @@ def forwards(apps, schema_editor):
         ticket.owner_email = ticket.owner.email or ""
         ticket.save(update_fields=["owner_email"])
 
-    # Historical models do not carry the custom delete() guard, so this also
-    # removes orphaned rows that still reference a transaction record.
-    Ticket.objects.filter(Q(owner__isnull=True) | Q(showing__isnull=True)).delete()
+    for ticket in (
+        Ticket.objects.filter(owner__isnull=True, transaction_record__isnull=False)
+        .select_related("transaction_record")
+    ):
+        ticket.owner_email = ticket.transaction_record.buyer_email or ""
+        ticket.save(update_fields=["owner_email"])
+
+    # Unsold inventory rows are dropped because remaining now lives on the
+    # class. Showing-less tickets cannot attach to a TicketClass. Historical
+    # models do not carry the custom delete() guard, so showing-null paid
+    # tickets are removed here as well.
+    Ticket.objects.filter(
+        Q(owner__isnull=True, transaction_record__isnull=True)
+        | Q(showing__isnull=True)
+    ).delete()
 
 
 class Migration(migrations.Migration):
