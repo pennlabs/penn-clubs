@@ -755,6 +755,8 @@ class TicketEventTestCase(TicketingTestMixin, TestCase):
                 ]
             },
             {"quantities": [{"quantity": 2}]},
+            {"quantities": [{"ticket_class_id": True, "quantity": 2}]},
+            {"quantities": [{"ticket_class_id": "1", "quantity": 2}]},
         ]
         for data in bad_data:
             resp = self.client.post(
