@@ -730,6 +730,15 @@ class TicketEventTestCase(TicketingTestMixin, TestCase):
         resp = self.add_to_cart([(self.normal_class, 1)])
         self.assertEqual(resp.status_code, 403, resp.data)
 
+    def test_add_to_cart_rejects_partial_updates(self):
+        self.client.login(username=self.user1.username, password="test")
+        self.premium_class.remaining = 0
+        self.premium_class.save()
+
+        resp = self.add_to_cart([(self.normal_class, 1), (self.premium_class, 1)])
+        self.assertEqual(resp.status_code, 403, resp.content)
+        self.assertFalse(CartItem.objects.exists())
+
     def test_add_to_cart_not_buyable(self):
         self.client.login(username=self.user1.username, password="test")
         self.normal_class.buyable = False
