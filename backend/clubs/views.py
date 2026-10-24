@@ -3795,7 +3795,8 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
             ticket_class_id = item.get("ticket_class_id")
             quantity = item.get("quantity")
             if (
-                ticket_class_id is None
+                not isinstance(ticket_class_id, int)
+                or isinstance(ticket_class_id, bool)
                 or not isinstance(quantity, int)
                 or isinstance(quantity, bool)
                 or quantity <= 0
