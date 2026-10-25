@@ -87,4 +87,6 @@ Edit.permissions = [
   'clubs.see_pending_clubs',
 ]
 
+Edit.hideSiteChrome = true
+
 export default renderPage(Edit)

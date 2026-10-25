@@ -8,6 +8,7 @@ import { Loading } from './components/common'
 import { AuthCheckContext } from './components/contexts'
 import Footer from './components/Footer'
 import Header from './components/Header'
+import Heading from './components/Header/Head'
 import LoginModal from './components/LoginModal'
 import {
   BULMA_DANGER,
@@ -158,6 +159,7 @@ type StaticPageProps<T> = {
   getInitialProps?: (ctx: NextPageContext) => Promise<T>
   getAdditionalPermissions?: (ctx: NextPageContext) => string[]
   permissions?: string[]
+  hideSiteChrome?: boolean | ((props: any) => boolean)
 }
 
 type PageComponent<T> = React.ComponentType<
@@ -205,18 +207,45 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
         const { props, state, closeModal } = this
         const { modal } = state
         const { authenticated, userInfo } = props
+        const hideSiteChrome = (Page as StaticPageProps<T>).hideSiteChrome
+        const hideChrome =
+          typeof hideSiteChrome === 'function'
+            ? hideSiteChrome(props)
+            : Boolean(hideSiteChrome)
         return (
           <>
             <OptionsContext.Provider value={this.props.options}>
               <AuthCheckContext.Provider value={this.checkAuth}>
                 <PermissionsContext.Provider value={this.props.permissions}>
-                  <RenderPageWrapper>
+                  <RenderPageWrapper
+                    style={
+                      hideChrome
+                        ? { background: 'transparent', minHeight: '100vh' }
+                        : undefined
+                    }
+                  >
                     <LoginModal show={modal} closeModal={closeModal} />
-                    <Header authenticated={authenticated} userInfo={userInfo} />
-                    <Wrapper>
+                    {hideChrome ? (
+                      <Heading />
+                    ) : (
+                      <Header
+                        authenticated={authenticated}
+                        userInfo={userInfo}
+                      />
+                    )}
+                    <Wrapper
+                      style={
+                        hideChrome
+                          ? {
+                              background: 'white',
+                              minHeight: '100vh',
+                            }
+                          : undefined
+                      }
+                    >
                       <Page {...(props as any)} {...state} />
                     </Wrapper>
-                    <Footer />
+                    {!hideChrome && <Footer />}
                   </RenderPageWrapper>
                 </PermissionsContext.Provider>
               </AuthCheckContext.Provider>
@@ -348,10 +377,12 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
 
         // return all false permissions if not logged in
         if (!resp.ok) {
-          return Page.permissions.concat(otherPermissions).reduce((acc, perm) => {
-            acc[perm] = false
-            return acc
-          }, {})
+          return Page.permissions
+            .concat(otherPermissions)
+            .reduce((acc, perm) => {
+              acc[perm] = false
+              return acc
+            }, {})
         }
 
         return (await resp.json()).permissions

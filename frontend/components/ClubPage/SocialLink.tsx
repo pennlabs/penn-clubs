@@ -26,6 +26,10 @@ const SocialLink = ({
     }
     url = `mailto:${email}`
     text = email
+  } else if (type === 'Phone') {
+    const phone = club[item.name]
+    url = `tel:${phone}`
+    text = phone
   } else if (type === 'Location') {
     return club[item.name]
   } else {

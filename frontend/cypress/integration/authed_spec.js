@@ -95,7 +95,7 @@ describe('Authenticated user tests', () => {
         pressEnter: false,
       },
       {
-        label: 'What is the membership process to join your club?',
+        label: 'Admission Category',
         value: 'Open Membership',
         pressEnter: true,
       },
@@ -134,12 +134,13 @@ describe('Authenticated user tests', () => {
     }
 
     cy.visit('/club/test-new-club/edit/member')
+    cy.get('select[aria-label="Message type"]').select('Invite')
     cy.contains('Invite Members').scrollIntoView()
     cy.get('textarea[placeholder="Enter email addresses here!"]').type(
       fakeEmails.join(','),
       { delay: 1 },
     )
-    cy.contains('.button', 'Send Invite').click()
+    cy.get('[data-testid="invite-emails-submit"]').click()
     cy.contains(/Sent invites? to 50 emails?/).should('be.visible')
 
     // delete created club

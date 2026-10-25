@@ -18,6 +18,11 @@ import {
 import { Club } from '../../types'
 import { doApiRequest } from '../../utils'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from '../common/selectStyles'
 import { Loading, Text } from '../common'
 import BaseCard from './BaseCard'
 
@@ -294,6 +299,10 @@ export default function AnalyticsCard({
                 options={chooseGroup()}
                 value={group}
                 onChange={(v) => v != null && setGroup(v)}
+                styles={selectMenuStyles}
+                components={selectComponents}
+                menuPortalTarget={selectMenuPortalTarget}
+                menuPosition="fixed"
               />
             </div>
           </div>
@@ -370,6 +379,10 @@ export default function AnalyticsCard({
               options={CATEGORIES}
               value={category}
               onChange={(v) => v != null && setCategory(v)}
+              styles={selectMenuStyles}
+              components={selectComponents}
+              menuPortalTarget={selectMenuPortalTarget}
+              menuPosition="fixed"
             />
           </div>
           <div className="column">
@@ -379,6 +392,10 @@ export default function AnalyticsCard({
               options={METRICS}
               value={metric}
               onChange={(v) => v != null && setMetric(v)}
+              styles={selectMenuStyles}
+              components={selectComponents}
+              menuPortalTarget={selectMenuPortalTarget}
+              menuPosition="fixed"
             />
           </div>
         </div>

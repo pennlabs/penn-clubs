@@ -12,6 +12,11 @@ import {
   Tag,
   Text,
 } from '~/components/common'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from '~/components/common/selectStyles'
 import { CLUB_ROUTE } from '~/constants'
 import { Affiliation, Club } from '~/types'
 import { doApiRequest } from '~/utils'
@@ -48,6 +53,10 @@ const ClubSearchField = ({ name }) => {
             <span className="has-text-grey">{opt.value}</span>
           </>
         )}
+        styles={selectMenuStyles}
+        components={selectComponents}
+        menuPortalTarget={selectMenuPortalTarget}
+        menuPosition="fixed"
       />
     </div>
   )

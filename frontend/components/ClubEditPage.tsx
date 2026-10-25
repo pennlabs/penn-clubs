@@ -3,14 +3,19 @@ import { useRouter } from 'next/router'
 import React, { ReactElement, useEffect, useState } from 'react'
 import { toast, TypeOptions } from 'react-toastify'
 
-import ApplicationsPage from '../components/ClubEditPage/ApplicationsPage'
+import ApplicationWorkspace from '../components/ClubEditPage/ApplicationWorkspace'
+import ClubAdminShell, {
+  PageHeading,
+  PageTitle,
+  ViewLink,
+} from '../components/ClubEditPage/ClubAdminShell'
 import ClubEditCard from '../components/ClubEditPage/ClubEditCard'
 import ClubManagementCard from '../components/ClubEditPage/ClubManagementCard'
-import EventsCard from '../components/ClubEditPage/EventsCard'
+import EventsWorkspace from '../components/ClubEditPage/EventsWorkspace'
 import FilesCard from '../components/ClubEditPage/FilesCard'
-import InviteCard from '../components/ClubEditPage/InviteCard'
+import HomeCard from '../components/ClubEditPage/HomeCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
-import MembersCard from '../components/ClubEditPage/MembersCard'
+import MembershipWorkspace from '../components/ClubEditPage/MembershipWorkspace'
 import QRCodeCard, { QRCodeType } from '../components/ClubEditPage/QRCodeCard'
 import {
   CLUB_EDIT_ROUTE,
@@ -44,34 +49,21 @@ import {
   OBJECT_TAB_MEMBERSHIP_LABEL,
   OBJECT_TAB_RECRUITMENT_LABEL,
   SHOW_APPLICATIONS,
-  SHOW_MEMBERSHIP_REQUEST,
   SHOW_ORG_MANAGEMENT,
   SITE_NAME,
 } from '../utils/branding'
 import AdminNoteCard from './ClubEditPage/AdminNoteCard'
-import AdvisorCard from './ClubEditPage/AdvisorCard'
 import AnalyticsCard from './ClubEditPage/AnalyticsCard'
-import ApplicationsCard from './ClubEditPage/ApplicationsCard'
+import ClubEditTabView from './ClubEditPage/ClubEditTabView'
 import ClubFairCard from './ClubEditPage/ClubFairCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
 import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
-import EventsImportCard from './ClubEditPage/EventsImportCard'
 import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
-import {
-  Contact,
-  Icon,
-  InactiveTag,
-  InfoPageTitle,
-  Loading,
-  Metadata,
-  Text,
-  WideContainer,
-} from './common'
+import { Contact, Icon, Loading, Metadata, Text } from './common'
 import AuthPrompt from './common/AuthPrompt'
-import ClubEditTabView from './ClubEditPage/ClubEditTabView'
 
 type ClubFormProps = {
   clubId: string | undefined
@@ -254,26 +246,34 @@ const ClubForm = ({
   if (club && club.code) {
     tabs = [
       {
+        name: 'home',
+        label: 'Home',
+        content: <HomeCard club={club} />,
+      },
+      {
         name: 'info',
         label: `Edit ${OBJECT_NAME_TITLE_SINGULAR} Page`,
         content: (
-          <ClubEditCard
-            isEdit={isEdit}
-            eligibilities={eligibilities}
-            categories={categories}
-            classifications={classifications}
-            schools={schools}
-            years={years}
-            majors={majors}
-            tags={tags}
-            studentTypes={studentTypes}
-            types={types}
-            statuses={statuses}
-            groupActivityOptions={groupActivityOptions}
-            userInfo={userInfo}
-            club={club}
-            onSubmit={submit}
-          />
+          <>
+            <ClubEditCard
+              variant="admin"
+              isEdit={isEdit}
+              eligibilities={eligibilities}
+              categories={categories}
+              classifications={classifications}
+              schools={schools}
+              years={years}
+              majors={majors}
+              tags={tags}
+              studentTypes={studentTypes}
+              types={types}
+              statuses={statuses}
+              groupActivityOptions={groupActivityOptions}
+              userInfo={userInfo}
+              club={club}
+              onSubmit={submit}
+            />
+          </>
         ),
       },
       {
@@ -288,60 +288,24 @@ const ClubForm = ({
       {
         name: 'member',
         label: OBJECT_TAB_MEMBERSHIP_LABEL,
-        content: (
-          <>
-            <InviteCard club={club} />
-            {SHOW_MEMBERSHIP_REQUEST && (
-              <PotentialMemberCard
-                club={club}
-                source="membershiprequests"
-                actions={[
-                  {
-                    name: 'Accept',
-                    icon: 'check',
-                    onClick: async (id: string): Promise<void> => {
-                      await doApiRequest(
-                        `/clubs/${club.code}/membershiprequests/${id}/accept/?format=json`,
-                        { method: 'POST' },
-                      )
-                    },
-                  },
-                  {
-                    name: 'Delete',
-                    className: 'is-danger',
-                    icon: 'trash',
-                    onClick: async (id: string): Promise<void> => {
-                      await doApiRequest(
-                        `/clubs/${club.code}/membershiprequests/${id}/?format=json`,
-                        { method: 'DELETE' },
-                      )
-                    },
-                  },
-                ]}
-              />
-            )}
-            <MembersCard club={club} />
-            <AdvisorCard club={club} />
-          </>
-        ),
+        content: <MembershipWorkspace club={club} />,
         disabled: !isEdit,
       },
       {
         name: 'events',
         label: 'Events',
-        content: (
-          <>
-            <EventsImportCard club={club} />
-            <EventsCard club={club} />
-          </>
-        ),
+        content: <EventsWorkspace club={club} />,
       },
       {
         name: 'recruitment',
         label: OBJECT_TAB_RECRUITMENT_LABEL,
         content: (
           <>
-            {SHOW_APPLICATIONS && <ApplicationsCard club={club} />}
+            {SHOW_APPLICATIONS && (
+              <div style={{ marginBottom: 32 }}>
+                <ApplicationWorkspace club={club} />
+              </div>
+            )}
             <QRCodeCard id={club.code} type={QRCodeType.CLUB} />
             <EnableSubscriptionCard
               notify={notify}
@@ -368,9 +332,9 @@ const ClubForm = ({
       },
       {
         name: 'applications',
-        label: `Applications Page`,
-        content: <ApplicationsPage club={club} />,
-        disabled: !SHOW_APPLICATIONS,
+        label: 'Applications',
+        content: <ApplicationWorkspace club={club} />,
+        disabled: true,
       },
       {
         name: 'resources',
@@ -425,89 +389,76 @@ const ClubForm = ({
     (club && club.name) || `New ${OBJECT_NAME_TITLE_SINGULAR}`
   const showInactiveTag = !(club && club.active) && isEdit
 
-  const isViewButton = isEdit && club
+  if (!isEdit) {
+    return (
+      <ClubAdminShell
+        clubName={nameOrDefault}
+        userInfo={userInfo}
+        items={[
+          {
+            name: 'info',
+            label: `Edit ${OBJECT_NAME_TITLE_SINGULAR} Page`,
+            icon: 'edit',
+          },
+        ]}
+        active="info"
+        onNavigate={() => undefined}
+      >
+        {metadata}
+        <PageHeading>
+          <PageTitle>Edit {OBJECT_NAME_TITLE_SINGULAR} Page</PageTitle>
+          <Link href={HOME_ROUTE} passHref legacyBehavior>
+            <ViewLink>Back</ViewLink>
+          </Link>
+        </PageHeading>
+        <p className="mb-3">
+          {OBJECT_NAME_TITLE} that you create from this form will enter an
+          approval process before being displayed to the public. After your{' '}
+          {OBJECT_NAME_SINGULAR} has been approved by the {APPROVAL_AUTHORITY},
+          it will appear on the {SITE_NAME} website.
+        </p>
+        <p>
+          <b>Before creating your {OBJECT_NAME_SINGULAR},</b> please check to
+          see if it already exists on the{' '}
+          <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
+            directory page
+          </Link>
+          . If your {OBJECT_NAME_SINGULAR} already exists, please email{' '}
+          <Contact /> to gain access instead of filling out this form.
+        </p>
+        <ClubEditCard
+          variant="admin"
+          isEdit={isEdit}
+          eligibilities={eligibilities}
+          categories={categories}
+          schools={schools}
+          years={years}
+          majors={majors}
+          tags={tags}
+          club={club === null ? {} : club}
+          studentTypes={studentTypes}
+          types={types}
+          statuses={statuses}
+          classifications={classifications}
+          groupActivityOptions={groupActivityOptions}
+          onSubmit={submit}
+        />
+      </ClubAdminShell>
+    )
+  }
 
   return (
-    <WideContainer>
+    <>
       {metadata}
-      <InfoPageTitle>
-        {nameOrDefault}
-        {showInactiveTag && <InactiveTag />}
-        {
-          <Link
-            legacyBehavior
-            href={isViewButton ? CLUB_ROUTE() : HOME_ROUTE}
-            as={isViewButton && club ? CLUB_ROUTE(club.code) : HOME_ROUTE}
-          >
-            <a
-              className="button is-pulled-right is-link is-medium"
-              style={{
-                alignItems: 'center',
-                borderRadius: 6,
-                display: 'inline-flex',
-                fontWeight: 'normal',
-              }}
-            >
-              {isViewButton ? (
-                <>
-                  View {OBJECT_NAME_TITLE_SINGULAR} Page
-                  <Icon
-                    name="external-link"
-                    alt=""
-                    noMargin
-                    size="0.95rem"
-                    style={{ marginLeft: '0.4rem' }}
-                  />
-                </>
-              ) : (
-                'Back'
-              )}
-            </a>
-          </Link>
-        }
-      </InfoPageTitle>
-      {!isEdit && (
-        <>
-          <p className="mb-3">
-            {OBJECT_NAME_TITLE} that you create from this form will enter an
-            approval process before being displayed to the public. After your{' '}
-            {OBJECT_NAME_SINGULAR} has been approved by the {APPROVAL_AUTHORITY}
-            , it will appear on the {SITE_NAME} website.
-          </p>
-          <p>
-            <b>Before creating your {OBJECT_NAME_SINGULAR},</b> please check to{' '}
-            see if it already exists on the{' '}
-            <Link href={DIRECTORY_ROUTE} as={DIRECTORY_ROUTE}>
-              directory page
-            </Link>
-            . If your {OBJECT_NAME_SINGULAR} already exists, please email{' '}
-            <Contact /> to gain access instead of filling out this form.
-          </p>
-        </>
-      )}
-      {isEdit ? (
-        <ClubEditTabView tabs={tabs} tab={tab} route={CLUB_EDIT_ROUTE(clubId)} />
-      ) : (
-        <div style={{ marginTop: '1em' }}>
-          <ClubEditCard
-            isEdit={isEdit}
-            eligibilities={eligibilities}
-            categories={categories}
-            schools={schools}
-            years={years}
-            majors={majors}
-            tags={tags}
-            club={club === null ? {} : club}
-            studentTypes={studentTypes}
-            types={types}
-            statuses={statuses}
-            classifications={classifications}
-            groupActivityOptions={groupActivityOptions}
-            onSubmit={submit}
-          />
-        </div>
-      )}
-    </WideContainer>
+      <ClubEditTabView
+        tabs={tabs}
+        tab={tab}
+        route={CLUB_EDIT_ROUTE(clubId)}
+        clubName={nameOrDefault}
+        inactive={Boolean(showInactiveTag)}
+        userInfo={userInfo}
+      />
+    </>
   )
 }
 

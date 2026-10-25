@@ -31,5 +31,6 @@ Create.getInitialProps = async (ctx: NextPageContext) => {
   )
 }
 Create.permissions = ['clubs.approve_club', 'clubs.see_pending_clubs']
+Create.hideSiteChrome = () => SITE_ID !== 'fyh'
 
 export default renderPage(Create)

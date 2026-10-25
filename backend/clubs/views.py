@@ -5253,6 +5253,7 @@ class MemberViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
             Membership.objects.filter(club__code=self.kwargs["club_code"])
             .order_by("-active", "role", "person__last_name", "person__first_name")
             .select_related("person", "person__profile")
+            .prefetch_related("person__profile__major")
         )
 
         # non-members only see active, public members, matching the club detail view

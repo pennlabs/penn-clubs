@@ -23,6 +23,11 @@ import { doApiRequest, getSemesterFromDate } from '~/utils'
 
 import { Checkbox, Loading, Modal, Text } from '../common'
 import { Icon } from '../common/Icon'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from '../common/selectStyles'
 import Table from '../common/Table'
 import {
   ApplicationUpdateTextField,
@@ -541,6 +546,10 @@ const NotificationModal = (props: {
                   </div>
                   <label className="label">Preview</label>
                   <Select
+                    styles={selectMenuStyles}
+                    components={selectComponents}
+                    menuPortalTarget={selectMenuPortalTarget}
+                    menuPosition="fixed"
                     placeholder="Preview as"
                     isClearable
                     options={eligible.map((submission) => ({
@@ -1065,6 +1074,10 @@ export default function ApplicationsPage({
             to CSV.
           </Text>
           <Select
+            styles={selectMenuStyles}
+            components={selectComponents}
+            menuPortalTarget={selectMenuPortalTarget}
+            menuPosition="fixed"
             options={applications.toReversed().map((application) => {
               return {
                 ...application,
@@ -1120,6 +1133,10 @@ export default function ApplicationsPage({
                 >
                   <div style={{ minWidth: '16rem', flex: '1 1 16rem' }}>
                     <Select
+                      styles={selectMenuStyles}
+                      components={selectComponents}
+                      menuPortalTarget={selectMenuPortalTarget}
+                      menuPosition="fixed"
                       options={APPLICATION_STATUS}
                       value={
                         APPLICATION_STATUS.find(
@@ -1243,6 +1260,10 @@ export default function ApplicationsPage({
                 >
                   <div style={{ minWidth: '16rem', flex: '1 1 16rem' }}>
                     <Select
+                      styles={selectMenuStyles}
+                      components={selectComponents}
+                      menuPortalTarget={selectMenuPortalTarget}
+                      menuPosition="fixed"
                       placeholder="Committee"
                       isClearable
                       options={committeeOptions}

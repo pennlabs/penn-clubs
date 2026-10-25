@@ -21,6 +21,11 @@ import { DynamicQuestion } from '../types'
 import { titleize } from '../utils'
 import AddressField from './ClubEditPage/AddressField'
 import { Icon } from './common'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from './common/selectStyles'
 import CustomOption from './CustomOption'
 import EmbedOption, {
   blockRendererFunction,
@@ -43,14 +48,58 @@ interface BasicFormField {
   noLabel?: boolean
 }
 
-const selectMenuPortalTarget =
-  typeof document !== 'undefined' ? document.body : undefined
+const HelpTip = styled.span`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #757575;
+  cursor: help;
 
-const selectMenuStyles = {
-  container: (style) => ({ ...style, width: '100%' }),
-  menu: (style) => ({ ...style, zIndex: 30 }),
-  menuPortal: (style) => ({ ...style, zIndex: 30 }),
-}
+  .hint {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: calc(100% + 4px);
+    z-index: 40;
+    width: max-content;
+    max-width: 280px;
+    padding: 8px 10px;
+    background: #1f2049;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .hint a {
+    color: #c5ccff;
+  }
+
+  &:hover .hint,
+  &:focus-within .hint {
+    display: block;
+  }
+`
+
+export const FieldHelpTip = ({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}): ReactElement<any> => (
+  <HelpTip tabIndex={0} aria-label={`About ${label}`}>
+    <Icon name="info" alt="" size="1rem" />
+    <span className="hint">{children}</span>
+  </HelpTip>
+)
 
 /**
  * This interface allows for completely arbitrary props
@@ -77,13 +126,24 @@ const FormFieldClassContext = React.createContext<string>('')
 export const FormStyle = ({
   children,
   isHorizontal,
-}: React.PropsWithChildren<{ isHorizontal?: boolean }>): ReactElement<any> => {
-  if (!isHorizontal) {
+  admin,
+}: React.PropsWithChildren<{
+  isHorizontal?: boolean
+  admin?: boolean
+}>): ReactElement<any> => {
+  const value = [
+    isHorizontal ? 'is-horizontal' : '',
+    admin ? 'admin-fields' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  if (!value) {
     return <>{children}</>
   }
 
   return (
-    <FormFieldClassContext.Provider value="is-horizontal">
+    <FormFieldClassContext.Provider value={value}>
       {children}
     </FormFieldClassContext.Provider>
   )
@@ -109,22 +169,31 @@ function useFieldWrapper<T extends FieldWrapperProps>(
       (submitCount > 0 ? errors?.[props.name] : undefined)
     const fieldContext = useContext(FormFieldClassContext)
     const isHorizontal = fieldContext.includes('is-horizontal')
+    const adminFields = fieldContext.includes('admin-fields')
 
     const fieldLabel = (
       <label className="label" htmlFor={other.id}>
-        {actualLabel}
-        {props.required && <span style={{ color: 'red' }}>*</span>}
+        <span>
+          {actualLabel}
+          {props.required && <span style={{ color: 'red' }}>*</span>}
+        </span>
+        {adminFields && helpText ? (
+          <FieldHelpTip label={actualLabel}>{helpText}</FieldHelpTip>
+        ) : null}
       </label>
     )
 
+    const showHelp = Boolean(errorMessage) || (!adminFields && helpText)
     const fieldBody = (
       <>
         <div className="control">
           <Element {...other} isError={!!errorMessage} />
         </div>
-        <p className={`help ${errorMessage ? 'is-danger' : ''}`}>
-          {errorMessage || helpText}
-        </p>
+        {showHelp && (errorMessage || helpText) ? (
+          <p className={`help ${errorMessage ? 'is-danger' : ''}`}>
+            {errorMessage || helpText}
+          </p>
+        ) : null}
       </>
     )
 
@@ -398,6 +467,7 @@ export const CreatableMultipleSelectField = useFieldWrapper(
         menuPortalTarget={selectMenuPortalTarget}
         menuPosition="fixed"
         styles={selectMenuStyles}
+        components={selectComponents}
       />
     )
   },
@@ -652,6 +722,57 @@ export const TextField = useFieldWrapper(
  * @param isImage Whether or not this file upload field is intended to accept images.
  * @param canDelete Whether or not images can be deleted instead of just replaced.
  */
+const DropZone = styled.label<{ $over?: boolean; $disabled?: boolean }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 183px;
+  min-height: 187px;
+  padding: 16px 12px;
+  background: ${({ $over }) => ($over ? '#eef0fe' : '#f3f3f3')};
+  border: 0;
+  border-radius: 10px;
+  box-shadow: ${({ $over }) =>
+    $over
+      ? 'inset 0 0 0 1px #4954f4'
+      : 'inset 3px 4px 7.9px 1px rgba(0, 0, 0, 0.05)'};
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
+  text-align: center;
+  color: #757575;
+  flex-shrink: 0;
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    max-height: 140px;
+    object-fit: contain;
+  }
+
+  .drop-copy {
+    font-size: 11px;
+    line-height: 1.35;
+    color: #757575;
+    width: 118px;
+    overflow-wrap: anywhere;
+  }
+
+  .drop-link {
+    color: #2c95ff;
+  }
+`
+
 export const FileField = useFieldWrapper(
   ({
     name,
@@ -662,11 +783,15 @@ export const FileField = useFieldWrapper(
     canDelete = false,
     disabled = false,
     accept,
+    dropzone = false,
+    dropText,
+    dropIcon,
   }: BasicFormField & AnyHack): ReactElement<any> => {
     const { setFieldValue } = useFormikContext()
 
     const [imageUrl, setImageUrl] = useState<string | null>(null)
     const [newlyUploaded, setNewlyUploaded] = useState<boolean>(false)
+    const [dragOver, setDragOver] = useState(false)
 
     useEffect(() => {
       if (value === null) {
@@ -688,6 +813,105 @@ export const FileField = useFieldWrapper(
         setNewlyUploaded(false)
       }
     }, [value])
+
+    const applyFile = (file?: File | null) => {
+      if (file) {
+        setFieldValue(name, file)
+      }
+    }
+
+    const fileInput = (
+      <input
+        className="file-input"
+        type="file"
+        name={name}
+        accept={accept}
+        disabled={disabled}
+        onDragOver={(e) => {
+          if (!disabled) {
+            e.preventDefault()
+            setDragOver(true)
+          }
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragOver(false)
+          if (!disabled) {
+            applyFile(e.dataTransfer.files?.[0])
+          }
+        }}
+        onChange={(e) => {
+          applyFile(e.target.files?.[0])
+        }}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        onClick={(e) => {
+          if (disabled) {
+            e.preventDefault()
+          }
+        }}
+      />
+    )
+
+    if (dropzone) {
+      const hasFile = Boolean(imageUrl)
+      const fileName = imageUrl?.startsWith('FILE:')
+        ? imageUrl.slice(5)
+        : value instanceof File
+          ? value.name
+          : !isImage && typeof imageUrl === 'string' && imageUrl
+            ? decodeURIComponent(imageUrl.split('/').pop() || 'Current file')
+            : null
+      const showImagePreview =
+        Boolean(isImage && hasFile && imageUrl && !imageUrl.startsWith('FILE:'))
+      return (
+        <div>
+          <DropZone $over={dragOver} $disabled={disabled}>
+            {fileInput}
+            {showImagePreview ? (
+              <img alt="" src={imageUrl as string} />
+            ) : fileName ? (
+              <span className="drop-copy">{fileName}</span>
+            ) : (
+              <>
+                <Icon
+                  name={dropIcon || (isImage ? 'image' : 'file')}
+                  alt=""
+                  size="5rem"
+                  fitSize
+                  style={{ marginBottom: 8, color: '#9e9e9e' }}
+                />
+                <span className="drop-copy">
+                  {dropText ? (
+                    dropText
+                  ) : (
+                    <>
+                      Drag and drop {isImage ? 'image' : 'file'} here, or{' '}
+                      <span className="drop-link">upload from computer</span>.
+                    </>
+                  )}
+                </span>
+              </>
+            )}
+          </DropZone>
+          {hasFile && (canDelete || isImage) && (
+            <button
+              type="button"
+              onClick={() => setFieldValue(name, null)}
+              className="button is-small is-light mt-2"
+            >
+              <Icon name="x" /> Remove {isImage ? 'image' : 'file'}
+            </button>
+          )}
+          {newlyUploaded && (
+            <p className="is-size-7 mt-1">
+              (Submit this form to confirm upload)
+            </p>
+          )}
+        </div>
+      )
+    }
 
     return (
       <>
@@ -728,6 +952,17 @@ export const FileField = useFieldWrapper(
               name={name}
               accept={accept}
               disabled={disabled}
+              onDragOver={(e) => {
+                if (!disabled) {
+                  e.preventDefault()
+                }
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                if (!disabled && e.dataTransfer.files?.[0]) {
+                  setFieldValue(name, e.dataTransfer.files[0])
+                }
+              }}
               onChange={(e) => {
                 if (e.target.files) {
                   setFieldValue(name, e.target.files[0])
@@ -894,6 +1129,7 @@ export const SelectField = useFieldWrapper(
         menuPortalTarget={selectMenuPortalTarget}
         menuPosition="fixed"
         styles={selectMenuStyles}
+        components={selectComponents}
       />
     )
   },
@@ -911,11 +1147,19 @@ export const CheckboxField = (
     status?.[props.name] ?? (submitCount > 0 ? errors?.[props.name] : undefined)
   const fieldContext = useContext(FormFieldClassContext)
   const isHorizontal = fieldContext.includes('is-horizontal')
+  const adminFields = fieldContext.includes('admin-fields')
 
   const innerBody = (
     <>
       <div className="control">
-        <label className="checkbox">
+        <label
+          className="checkbox"
+          style={
+            adminFields
+              ? { display: 'inline-flex', alignItems: 'center', gap: 6 }
+              : undefined
+          }
+        >
           <input
             type="checkbox"
             checked={value}
@@ -925,9 +1169,14 @@ export const CheckboxField = (
             }}
           />{' '}
           {label}
+          {adminFields && helpText ? (
+            <FieldHelpTip label={String(label ?? props.name)}>
+              {helpText}
+            </FieldHelpTip>
+          ) : null}
         </label>
       </div>
-      {helpText && <p className="help">{helpText}</p>}
+      {!adminFields && helpText && <p className="help">{helpText}</p>}
       {errorMessage && <p className="help is-danger">{errorMessage}</p>}
     </>
   )

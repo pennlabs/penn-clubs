@@ -15,6 +15,11 @@ import {
   SCHOOL_NAME,
 } from '../../utils/branding'
 import { Icon, Text } from '../common'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from '../common/selectStyles'
 import Table from '../common/Table'
 import BaseCard from './BaseCard'
 import { MEMBERSHIP_ROLES } from './MembersCard'
@@ -267,6 +272,10 @@ export default function InviteCard({
               )}
               value={inviteRole}
               onChange={updatePermissions}
+              styles={selectMenuStyles}
+              components={selectComponents}
+              menuPortalTarget={selectMenuPortalTarget}
+              menuPosition="fixed"
             />
           </div>
           <p className="help">

@@ -23,6 +23,12 @@ const socials = [
     icon: 'mail',
   },
   {
+    name: 'phone',
+    label: 'Phone',
+    prefix: 'tel:',
+    icon: 'phone',
+  },
+  {
     name: 'website',
     label: 'Website',
     icon: 'link',

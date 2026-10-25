@@ -5,14 +5,14 @@ export const EDIT_SECTION_ATTR = 'data-edit-section'
 export const editSectionCardStyle: CSSProperties = {
   marginBottom: 32,
   boxShadow: 'none',
-  border: '1px solid #dbdbdb',
+  border: 'none',
   borderRadius: 6,
   scrollMarginTop: '7.5rem',
 }
 
 export const editSectionHeaderStyle: CSSProperties = {
   boxShadow: 'none',
-  borderBottom: '1px solid #dbdbdb',
+  borderBottom: 'none',
 }
 
 export function toSectionId(title: string): string {
