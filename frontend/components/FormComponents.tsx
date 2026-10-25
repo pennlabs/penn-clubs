@@ -152,77 +152,110 @@ if (process.browser) {
   Editor = require('react-draft-wysiwyg').Editor
 }
 
+type RichTextEditorProps = {
+  value: string | null | undefined
+  onChange: (value: string) => void
+  placeholder?: string
+  allowEmbed?: boolean
+}
+
+/**
+ * A rich text editor that accepts and outputs HTML, for use outside of Formik.
+ * Pass allowEmbed={false} to hide the iframe embed button (e.g. for emails).
+ */
+export const RichTextEditor = ({
+  value,
+  onChange,
+  placeholder,
+  allowEmbed = true,
+}: RichTextEditorProps): ReactElement<any> => {
+  const textValue = useRef<string | null | undefined>(null)
+  // the editor only loads in the browser, so render it after hydration
+  const [isMounted, setIsMounted] = useState<boolean>(false)
+
+  const [editorState, setEditorState] = useState<EditorState>(() =>
+    EditorState.createEmpty(),
+  )
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (value !== textValue.current) {
+      if (value && value.length) {
+        setEditorState(
+          EditorState.createWithContent(
+            ContentState.createFromBlockArray(
+              htmlToDraft(value, htmlToEntity).contentBlocks,
+            ),
+          ),
+        )
+      } else {
+        setEditorState(EditorState.createEmpty())
+      }
+      textValue.current = value
+    }
+  }, [value])
+
+  return (
+    <div>
+      {isMounted && Editor != null && (
+        <Editor
+          editorState={editorState}
+          placeholder={placeholder}
+          onEditorStateChange={(state): void => {
+            setEditorState(state)
+            const newValue = draftToHtml(
+              convertToRaw(state.getCurrentContent()),
+              undefined,
+              undefined,
+              entityToHtml,
+            )
+            textValue.current = newValue
+            onChange(newValue)
+          }}
+          toolbar={{
+            options: [
+              'inline',
+              'fontSize',
+              'fontFamily',
+              'list',
+              'textAlign',
+              'colorPicker',
+              'link',
+              'image',
+              'remove',
+              'history',
+            ],
+          }}
+          editorStyle={{
+            border: '1px solid #dbdbdb',
+            padding: '0 1em',
+          }}
+          toolbarCustomButtons={allowEmbed ? [<EmbedOption />] : []}
+          customBlockRenderFunc={blockRendererFunction}
+        />
+      )}
+    </div>
+  )
+}
+
 /**
  * A rich text editor that accepts and outputs HTML.
  * Pass allowEmbed={false} to hide the iframe embed button (e.g. for emails).
  */
 export const RichTextField = useFieldWrapper(
   (props: BasicFormField & AnyHack): ReactElement<any> => {
-    const { allowEmbed = true } = props
     const { setFieldValue } = useFormikContext()
-    const textValue = useRef<string | null>(null)
-
-    const [editorState, setEditorState] = useState<EditorState>(() =>
-      EditorState.createEmpty(),
-    )
-
-    useEffect(() => {
-      if (props.value !== textValue.current) {
-        if (props.value && props.value.length) {
-          setEditorState(
-            EditorState.createWithContent(
-              ContentState.createFromBlockArray(
-                htmlToDraft(props.value, htmlToEntity).contentBlocks,
-              ),
-            ),
-          )
-        } else {
-          setEditorState(EditorState.createEmpty())
-        }
-        textValue.current = props.value
-      }
-    }, [props.value])
 
     return (
-      <div>
-        {Editor != null && (
-          <Editor
-            editorState={editorState}
-            placeholder={props.placeholder}
-            onEditorStateChange={(state): void => {
-              setEditorState(state)
-              const newValue = draftToHtml(
-                convertToRaw(state.getCurrentContent()),
-                undefined,
-                undefined,
-                entityToHtml,
-              )
-              textValue.current = newValue
-              setFieldValue(props.name, newValue)
-            }}
-            toolbar={{
-              options: [
-                'inline',
-                'fontSize',
-                'fontFamily',
-                'list',
-                'textAlign',
-                'colorPicker',
-                'link',
-                'image',
-                'remove',
-                'history',
-              ],
-            }}
-            editorStyle={{
-              border: '1px solid #dbdbdb',
-              padding: '0 1em',
-            }}
-            toolbarCustomButtons={allowEmbed ? [<EmbedOption />] : []}
-            customBlockRenderFunc={blockRendererFunction}
-          />
-        )}
-      </div>
+      <RichTextEditor
+        value={props.value}
+        onChange={(value) => setFieldValue(props.name, value)}
+        placeholder={props.placeholder}
+        allowEmbed={props.allowEmbed}
+      />
     )
   },
 )
