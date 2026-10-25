@@ -1791,6 +1791,16 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
         """
         return clean(bleach.linkify(value))
 
+    def validate_approved_comment(self, value):
+        """
+        Allow the approval comment to have allowlisted HTML tags. Comments with no
+        visible text (such as an empty rich text editor) are stored as empty.
+        """
+        out = clean(bleach.linkify(value)).strip()
+        if not html_to_text(out).strip():
+            return ""
+        return out
+
     def validate_email(self, value):
         """
         You must enter a contact email.
@@ -3925,6 +3935,15 @@ class ClubApprovalResponseTemplateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop("author", "")
         return super().update(instance, validated_data)
+
+    def validate_content(self, value):
+        """
+        Allow template content to have allowlisted HTML tags.
+        """
+        out = clean(bleach.linkify(value)).strip()
+        if not html_to_text(out).strip():
+            raise serializers.ValidationError("Template content must be specified.")
+        return out
 
     class Meta:
         model = ClubApprovalResponseTemplate
