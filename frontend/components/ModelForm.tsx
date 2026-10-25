@@ -164,7 +164,9 @@ export const ModelTable = ({
       return {
         ...column,
         render: (id, row) => {
-          const obj = objects?.[id] ?? objects?.[row]
+          const obj =
+            (id != null && objects?.find((object) => object.id === id)) ||
+            objects?.[row]
           const value = obj?.[column.name]
           return obj && value != null ? renderFunction(value, obj) : 'N/A'
         },
