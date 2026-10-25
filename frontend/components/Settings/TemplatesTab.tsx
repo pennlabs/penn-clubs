@@ -3,9 +3,10 @@ import moment from 'moment-timezone'
 import React, { ReactElement } from 'react'
 
 import { Template } from '../../types'
+import { stripTags } from '../../utils'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Text } from '../common'
-import { TextField } from '../FormComponents'
+import { RichTextField, TextField } from '../FormComponents'
 import ModelForm from '../ModelForm'
 
 type TemplatesTabProps = {
@@ -39,12 +40,21 @@ export default function TemplatesTab({
               required
               helpText={`The unique title of the ${OBJECT_NAME_SINGULAR} approval response template. This will be shown in the template dropdown menu.`}
             />
-            <Field name="content" as={TextField} type="textarea" required />
+            <Field
+              name="content"
+              as={RichTextField}
+              allowEmbed={false}
+              required
+            />
           </>
         }
         tableFields={[
           { name: 'title', label: 'Title' },
-          { name: 'content', label: 'Content' },
+          {
+            name: 'content',
+            label: 'Content',
+            converter: (field) => stripTags(field),
+          },
           { name: 'author', label: 'Author' },
           {
             name: 'created_at',

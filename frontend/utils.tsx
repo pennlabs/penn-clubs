@@ -47,13 +47,25 @@ export function stripTags(val: string): string {
   }
   return val
     .replace(/(<[^>]+>)/gi, '')
-    .replace('&amp;', '&')
-    .replace('&lt;', '<')
-    .replace('&gt;', '>')
-    .replace('&ndash;', '-')
-    .replace('&mdash;', '-')
-    .replace('&nbsp;', ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&ndash;/g, '-')
+    .replace(/&mdash;/g, '-')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
     .trim()
+}
+
+/**
+ * Combine approval response templates into a single HTML comment.
+ */
+export function joinTemplateContents(templates: { content: string }[]): string {
+  // stored content is sanitized HTML, so content without markup is safe to wrap
+  return templates
+    .map(({ content }) =>
+      content.trim().startsWith('<') ? content : `<p>${content}</p>`,
+    )
+    .join('')
 }
 
 export const OptionsContext = createContext({})
