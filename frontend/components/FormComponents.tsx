@@ -232,6 +232,7 @@ export const RichTextEditor = ({
           editorStyle={{
             border: '1px solid #dbdbdb',
             padding: '0 1em',
+            backgroundColor: 'white',
           }}
           toolbarCustomButtons={allowEmbed ? [<EmbedOption />] : []}
           customBlockRenderFunc={blockRendererFunction}
