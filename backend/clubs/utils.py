@@ -73,6 +73,10 @@ def html_to_text(html):
                     elif child.get("src"):
                         output += f"[Image: {child['src']}]"
                     continue
+                elif child.name == "br":
+                    # html.parser can nest the content following a br inside it
+                    output += "\n" + traverse(child.children)
+                    continue
 
             # add strings and traverse children recursively
             if isinstance(child, NavigableString):
@@ -82,15 +86,13 @@ def html_to_text(html):
                 child_contents = traverse(child.children)
                 output += child_contents
 
-            # add newlines for p and br elements
-            if child.name == "p":
+            # add newlines for block elements
+            if child.name in {"p", "div"}:
                 output += "\n\n"
-            if child.name == "br":
-                output += "\n"
         return "\n".join(line.strip() for line in output.strip().split("\n"))
 
     soup = BeautifulSoup(html, "html.parser")
-    return traverse(soup.children).strip()
+    return re.sub(r"\n{3,}", "\n\n", traverse(soup.children)).strip()
 
 
 # a list of allowed domains for embedding iframes

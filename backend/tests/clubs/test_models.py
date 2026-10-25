@@ -27,6 +27,7 @@ from clubs.models import (
     send_mail_helper,
 )
 from clubs.serializers import UserSerializer
+from clubs.utils import html_to_text
 
 
 class YearTestCase(TestCase):
@@ -356,6 +357,19 @@ class UtilsTestCase(TestCase):
             args, kwargs = mocked_message.call_args
             self.assertEqual(args[3], ["to@example.com"])
             self.assertEqual(kwargs["bcc"], ["bcc@example.com"])
+
+    def test_html_to_text_block_and_br_elements(self):
+        # content inside a div keeps the break before the following paragraph
+        self.assertEqual(
+            html_to_text("<div><p>One</p><p>Two</p></div><p>Three</p>"),
+            "One\n\nTwo\n\nThree",
+        )
+
+        # a bare br followed by a self-closing br still breaks lines correctly
+        self.assertEqual(
+            html_to_text("<p>a<br>b</p><div><a href='x'>Link</a><br />After</div>"),
+            "a\nb\n\nLink (x)\nAfter",
+        )
 
 
 class OwnershipRequestTestCase(TestCase):
