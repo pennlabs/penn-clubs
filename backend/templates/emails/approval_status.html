@@ -28,7 +28,7 @@ reply_emails:
         Your {% if change %}updated{% else %}new{% endif %} club is now visible to the public on Penn Clubs.
     </p>
     {% if approved_comment %}
-        <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc; white-space: pre-wrap;">{{ approved_comment }}</p>
+        <div style="font-size: 1.2em; padding: 0 8px; border-left: 5px solid #ccc;">{{ approved_comment|safe }}</div>
     {% endif %}
     <p style="font-size: 1.2em">
         No further action is required at this time.
@@ -45,7 +45,7 @@ reply_emails:
         Your club {% if change %}updates have{% else %}has{% endif %} <b>not been approved</b> by the <b>Office of Student Affairs</b>. Changes to your club's information are required before approval can be granted.
     </p>
     <p style="font-size: 1.2em">The feedback regarding your club's status is as follows:</p>
-    <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc;">{{ approved_comment }}</p>
+    <div style="font-size: 1.2em; padding: 0 8px; border-left: 5px solid #ccc;">{{ approved_comment|safe }}</div>
     <p style="font-size: 1.2em">Please <a href="{{ edit_url }}">make the necessary edits</a> to your club information and use the button <a href="{{ view_url }}">here</a> to resubmit for approval.</p>
     <p style="font-size: 1.2em">
         If you have any questions about the approval process, please feel free to respond to this email or <a href="mailto:{% for email in reply_emails %}{% if not forloop.first %},{% endif %}{{ email }}{% endfor %}">contact the Office of Student Affairs</a>.

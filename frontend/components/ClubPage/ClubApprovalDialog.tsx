@@ -10,6 +10,9 @@ import {
   apiCheckPermission,
   doApiRequest,
   getCurrentSchoolYear,
+  hasEmbeddedMedia,
+  joinTemplateContents,
+  stripTags,
 } from '../../utils'
 import {
   APPROVAL_AUTHORITY,
@@ -20,6 +23,7 @@ import {
 } from '../../utils/branding'
 import { Contact, Icon, Modal, Text, TextQuote } from '../common'
 import { Chevron } from '../DropdownFilter'
+import { RichTextEditor } from '../FormComponents'
 import { ModalContent } from './Actions'
 
 type Props = {
@@ -44,27 +48,43 @@ type HistoricItem = {
   pending_label?: string
 }
 
+const CommentQuote = ({ html }: { html: string }): ReactElement => (
+  <TextQuote
+    as="div"
+    className="content"
+    dangerouslySetInnerHTML={{ __html: html }}
+  />
+)
+
 const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
   const [active, setActive] = useState<boolean>(false)
   const [reason, setReason] = useState<string | null>(null)
 
   const getReason = (item: HistoricItem): ReactNode => {
-    return item.approved_comment ? (
-      item.approved_comment.length > 100 ? (
-        <span
-          style={{
-            cursor: 'pointer',
-            textDecoration: 'underline',
-          }}
-          onClick={() => setReason(item.approved_comment)}
-        >
-          View Reason
-        </span>
-      ) : (
-        item.approved_comment
-      )
-    ) : (
-      'No reason provided'
+    if (!item.approved_comment) {
+      return 'No reason provided'
+    }
+    const text = stripTags(item.approved_comment)
+    const blockCount = (item.approved_comment.match(/<(p|li|br)\b/gi) ?? [])
+      .length
+    if (
+      text &&
+      text.length <= 100 &&
+      blockCount <= 1 &&
+      !hasEmbeddedMedia(item.approved_comment)
+    ) {
+      return text
+    }
+    return (
+      <span
+        style={{
+          cursor: 'pointer',
+          textDecoration: 'underline',
+        }}
+        onClick={() => setReason(item.approved_comment)}
+      >
+        View Reason
+      </span>
     )
   }
   const renderMeta = (item: HistoricItem): ReactNode => {
@@ -106,7 +126,14 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
         marginBottom={false}
         width="80%"
       >
-        <ModalContent>{reason}</ModalContent>
+        <ModalContent>
+          {reason !== null && (
+            <div
+              className="content"
+              dangerouslySetInnerHTML={{ __html: reason }}
+            />
+          )}
+        </ModalContent>
       </Modal>
       {active && (
         <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
@@ -233,9 +260,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
         })
     }
 
-    setComment(
-      selectedTemplates.map((template) => template.content).join('\n\n'),
-    )
+    setComment(joinTemplateContents(selectedTemplates))
   }, [selectedTemplates])
 
   return (
@@ -269,7 +294,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
           </div>
           {club.approved_comment && (
             <div className="mb-5">
-              <TextQuote>{club.approved_comment}</TextQuote>
+              <CommentQuote html={club.approved_comment} />
             </div>
           )}
           <button
@@ -304,7 +329,7 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
       )}
       {(club.active || canDeleteClub) && club.approved !== true ? (
         <div className="notification is-warning">
-          <Text>
+          <Text as="div">
             {club.approved === false ? (
               <>
                 <p>
@@ -316,15 +341,15 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
                   listed below. If you believe that this is a mistake, contact{' '}
                   <Contact point="osa" />.
                 </p>
-                <TextQuote>
-                  {club.approved_comment || (
-                    <>
-                      No reason has been given for why your{' '}
-                      {OBJECT_NAME_SINGULAR} was not approved. Contact{' '}
-                      <Contact point="osa" /> for more details.
-                    </>
-                  )}
-                </TextQuote>
+                {club.approved_comment ? (
+                  <CommentQuote html={club.approved_comment} />
+                ) : (
+                  <TextQuote>
+                    No reason has been given for why your {OBJECT_NAME_SINGULAR}{' '}
+                    was not approved. Contact <Contact point="osa" /> for more
+                    details.
+                  </TextQuote>
+                )}
               </>
             ) : (
               <>
@@ -398,12 +423,14 @@ const ClubApprovalDialog = ({ club }: Props): ReactElement<any> | null => {
                       This {OBJECT_NAME_SINGULAR} has not uploaded any files.
                     </div>
                   )}
-                  <textarea
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="textarea mb-4"
-                    placeholder="Enter approval or rejection notes here! Your notes will be emailed to the requester when you approve or reject this request."
-                  ></textarea>
+                  <div className="mb-4">
+                    <RichTextEditor
+                      value={comment}
+                      onChange={setComment}
+                      allowEmbed={false}
+                      placeholder="Enter approval or rejection notes here! Your notes will be emailed to the requester when you approve or reject this request."
+                    />
+                  </div>
                   <div className="field is-grouped mb-3">
                     <div className="control is-expanded">
                       <Select

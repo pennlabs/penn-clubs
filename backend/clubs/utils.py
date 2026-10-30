@@ -51,13 +51,19 @@ def html_to_text(html):
 
             # format links, lists, and images
             if child.name:
-                if child.name.startswith("h"):
+                if re.fullmatch(r"h[1-6]", child.name):
+                    output += f"{traverse(child.children)}\n\n"
+                    continue
+                elif child.name.startswith("h"):
                     continue
                 elif child.name == "a":
-                    if child.text.lower() == "here":
-                        output += f"at {child['href']}"
+                    href = child.get("href")
+                    if not href:
+                        output += child.text
+                    elif child.text.lower() == "here":
+                        output += f"at {href}"
                     else:
-                        output += f"{child.text} ({child['href']})"
+                        output += f"{child.text} ({href})"
                     continue
                 elif child.name in ["ol", "ul"]:
                     for item in child.children:
@@ -73,6 +79,10 @@ def html_to_text(html):
                     elif child.get("src"):
                         output += f"[Image: {child['src']}]"
                     continue
+                elif child.name == "br":
+                    # html.parser can nest the content following a br inside it
+                    output += "\n" + traverse(child.children)
+                    continue
 
             # add strings and traverse children recursively
             if isinstance(child, NavigableString):
@@ -82,15 +92,13 @@ def html_to_text(html):
                 child_contents = traverse(child.children)
                 output += child_contents
 
-            # add newlines for p and br elements
-            if child.name == "p":
+            # add newlines for block elements
+            if child.name in {"p", "div"}:
                 output += "\n\n"
-            if child.name == "br":
-                output += "\n"
         return "\n".join(line.strip() for line in output.strip().split("\n"))
 
     soup = BeautifulSoup(html, "html.parser")
-    return traverse(soup.children).strip()
+    return re.sub(r"\n{3,}", "\n\n", traverse(soup.children)).strip()
 
 
 # a list of allowed domains for embedding iframes

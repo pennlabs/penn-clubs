@@ -3,6 +3,7 @@ Test cases related to models and their fields in the clubs models.py.
 """
 
 import datetime
+import importlib
 from smtplib import SMTPAuthenticationError, SMTPServerDisconnected
 from unittest import mock
 
@@ -27,6 +28,7 @@ from clubs.models import (
     send_mail_helper,
 )
 from clubs.serializers import UserSerializer
+from clubs.utils import html_to_text
 
 
 class YearTestCase(TestCase):
@@ -67,6 +69,26 @@ class ClubTestCase(TestCase):
     def test_parent_children(self):
         self.assertEqual(self.club2.parent_orgs.first(), self.club1)
         self.assertEqual(self.club1.children_orgs.first(), self.club2)
+
+    def test_approved_comment_sanitized_on_save(self):
+        self.club1.approved_comment = (
+            '<p onclick="steal()">Fix <strong>this</strong> &amp; that</p>'
+            '<img src="x" onerror="steal()"><script>steal()</script>'
+        )
+        self.club1.save()
+
+        self.club1.refresh_from_db()
+        comment = self.club1.approved_comment
+        self.assertIn("<p>Fix <strong>this</strong> &amp; that</p>", comment)
+        self.assertNotIn("onclick", comment)
+        self.assertNotIn("onerror", comment)
+        self.assertNotIn("<script>", comment)
+        self.assertEqual(self.club1.history.first().approved_comment, comment)
+
+        # sanitizing an already sanitized comment leaves it unchanged
+        self.club1.save()
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.approved_comment, comment)
 
     def test_get_officer_emails(self):
         # Create test users with various email formats
@@ -356,6 +378,37 @@ class UtilsTestCase(TestCase):
             args, kwargs = mocked_message.call_args
             self.assertEqual(args[3], ["to@example.com"])
             self.assertEqual(kwargs["bcc"], ["bcc@example.com"])
+
+    def test_html_to_text_block_and_br_elements(self):
+        # content inside a div keeps the break before the following paragraph
+        self.assertEqual(
+            html_to_text("<div><p>One</p><p>Two</p></div><p>Three</p>"),
+            "One\n\nTwo\n\nThree",
+        )
+
+        # a bare br followed by a self-closing br still breaks lines correctly
+        self.assertEqual(
+            html_to_text("<p>a<br>b</p><div><a href='x'>Link</a><br />After</div>"),
+            "a\nb\n\nLink (x)\nAfter",
+        )
+
+    def test_html_to_text_link_without_href(self):
+        self.assertEqual(html_to_text("<p>Call <a>us</a> today</p>"), "Call us today")
+
+    def test_html_to_text_keeps_headings(self):
+        self.assertEqual(html_to_text("<h1>Title</h1>"), "Title")
+        self.assertEqual(html_to_text("<h2>Title</h2><p>Body</p>"), "Title\n\nBody")
+        self.assertEqual(html_to_text("<p>a</p><hr><p>b</p>"), "a\n\nb")
+
+    def test_approval_comment_migration_text_to_html(self):
+        migration = importlib.import_module(
+            "clubs.migrations.0144_approval_comment_html"
+        )
+        self.assertEqual(
+            migration.text_to_html("One\r\nTwo\n\n<3 & more"),
+            "<p>One<br>Two</p>\n\n<p>&lt;3 &amp; more</p>",
+        )
+        self.assertEqual(migration.text_to_html("   \n   "), "")
 
 
 class OwnershipRequestTestCase(TestCase):
