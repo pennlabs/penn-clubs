@@ -1774,6 +1774,27 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club1.approved_comment, "<p>Call <a>OSA</a>.</p>")
         self.assertIn("Call OSA.", mail.outbox[-1].body)
 
+    def test_club_approval_comment_heading_only(self):
+        """
+        A comment containing only a heading has visible text, so it is kept.
+        """
+        self.client.login(username=self.user5.username, password="test")
+        self.club1.approved = None
+        self.club1.save(update_fields=["approved"])
+
+        comment = "<h1>Add a meeting time</h1>"
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {"approved": False, "approved_comment": comment},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.approved_comment, comment)
+        self.assertIn(comment, mail.outbox[-1].alternatives[0].content)
+        self.assertIn("Add a meeting time", mail.outbox[-1].body)
+
     def test_club_reject_permission_split_from_approve(self):
         """
         A user with only clubs.reject_club can reject a pending club, but
@@ -4740,6 +4761,13 @@ class ClubTestCase(TestCase):
         )
         self.assertEqual(resp.status_code, 400, resp.content)
 
+        resp = self.client.post(
+            reverse("templates-list"),
+            {"title": "Heading template", "content": "<h2>Missing details</h2>"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 201, resp.content)
+
     def test_ownership_requests_create_and_view(self):
         """
         Test the ownership requests creation and viewing permissions
@@ -5533,6 +5561,15 @@ class ClubTestCase(TestCase):
 
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(len(mail.outbox), outbox_size)
+
+        resp = self.client.post(
+            reverse("clubs-email-blast"),
+            {"target": "leaders", "content": "<h1>Heading only</h1>"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Heading only", mail.outbox[-1].body)
 
     def test_email_blast_image_only_content(self):
         self._create_email_blast_memberships()

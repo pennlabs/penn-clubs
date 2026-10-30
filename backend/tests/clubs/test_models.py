@@ -70,6 +70,26 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club2.parent_orgs.first(), self.club1)
         self.assertEqual(self.club1.children_orgs.first(), self.club2)
 
+    def test_approved_comment_sanitized_on_save(self):
+        self.club1.approved_comment = (
+            '<p onclick="steal()">Fix <strong>this</strong> &amp; that</p>'
+            '<img src="x" onerror="steal()"><script>steal()</script>'
+        )
+        self.club1.save()
+
+        self.club1.refresh_from_db()
+        comment = self.club1.approved_comment
+        self.assertIn("<p>Fix <strong>this</strong> &amp; that</p>", comment)
+        self.assertNotIn("onclick", comment)
+        self.assertNotIn("onerror", comment)
+        self.assertNotIn("<script>", comment)
+        self.assertEqual(self.club1.history.first().approved_comment, comment)
+
+        # sanitizing an already sanitized comment leaves it unchanged
+        self.club1.save()
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.approved_comment, comment)
+
     def test_get_officer_emails(self):
         # Create test users with various email formats
         user1 = get_user_model().objects.create_user(
@@ -374,6 +394,11 @@ class UtilsTestCase(TestCase):
 
     def test_html_to_text_link_without_href(self):
         self.assertEqual(html_to_text("<p>Call <a>us</a> today</p>"), "Call us today")
+
+    def test_html_to_text_keeps_headings(self):
+        self.assertEqual(html_to_text("<h1>Title</h1>"), "Title")
+        self.assertEqual(html_to_text("<h2>Title</h2><p>Body</p>"), "Title\n\nBody")
+        self.assertEqual(html_to_text("<p>a</p><hr><p>b</p>"), "a\n\nb")
 
     def test_approval_comment_migration_text_to_html(self):
         migration = importlib.import_module(

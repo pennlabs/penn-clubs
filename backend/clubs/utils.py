@@ -51,7 +51,10 @@ def html_to_text(html):
 
             # format links, lists, and images
             if child.name:
-                if child.name.startswith("h"):
+                if re.fullmatch(r"h[1-6]", child.name):
+                    output += f"{traverse(child.children)}\n\n"
+                    continue
+                elif child.name.startswith("h"):
                     continue
                 elif child.name == "a":
                     href = child.get("href")
