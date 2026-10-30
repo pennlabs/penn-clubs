@@ -3,6 +3,7 @@ Test cases related to models and their fields in the clubs models.py.
 """
 
 import datetime
+import importlib
 from smtplib import SMTPAuthenticationError, SMTPServerDisconnected
 from unittest import mock
 
@@ -370,6 +371,19 @@ class UtilsTestCase(TestCase):
             html_to_text("<p>a<br>b</p><div><a href='x'>Link</a><br />After</div>"),
             "a\nb\n\nLink (x)\nAfter",
         )
+
+    def test_html_to_text_link_without_href(self):
+        self.assertEqual(html_to_text("<p>Call <a>us</a> today</p>"), "Call us today")
+
+    def test_approval_comment_migration_text_to_html(self):
+        migration = importlib.import_module(
+            "clubs.migrations.0144_approval_comment_html"
+        )
+        self.assertEqual(
+            migration.text_to_html("One\r\nTwo\n\n<3 & more"),
+            "<p>One<br>Two</p>\n\n<p>&lt;3 &amp; more</p>",
+        )
+        self.assertEqual(migration.text_to_html("   \n   "), "")
 
 
 class OwnershipRequestTestCase(TestCase):

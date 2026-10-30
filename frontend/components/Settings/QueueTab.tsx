@@ -11,6 +11,7 @@ import { Club, RegistrationQueueSettings, Template } from '../../types'
 import {
   apiCheckPermission,
   doApiRequest,
+  hasEmbeddedMedia,
   joinTemplateContents,
   stripTags,
 } from '../../utils'
@@ -178,9 +179,10 @@ const QueueTable = ({
             method: 'PATCH',
             body: {
               approved: approve,
-              approved_comment: stripTags(comment)
-                ? comment
-                : '(Administrator did not include a comment.)',
+              approved_comment:
+                stripTags(comment) || hasEmbeddedMedia(comment)
+                  ? comment
+                  : '(Administrator did not include a comment.)',
             },
           }),
         ),

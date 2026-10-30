@@ -54,10 +54,13 @@ def html_to_text(html):
                 if child.name.startswith("h"):
                     continue
                 elif child.name == "a":
-                    if child.text.lower() == "here":
-                        output += f"at {child['href']}"
+                    href = child.get("href")
+                    if not href:
+                        output += child.text
+                    elif child.text.lower() == "here":
+                        output += f"at {href}"
                     else:
-                        output += f"{child.text} ({child['href']})"
+                        output += f"{child.text} ({href})"
                     continue
                 elif child.name in ["ol", "ul"]:
                     for item in child.children:

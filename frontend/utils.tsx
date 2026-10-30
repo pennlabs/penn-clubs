@@ -57,6 +57,13 @@ export function stripTags(val: string): string {
 }
 
 /**
+ * Whether the HTML contains images or embeds, which have no text content.
+ */
+export function hasEmbeddedMedia(html: string): boolean {
+  return /<(img|iframe)\b/i.test(html)
+}
+
+/**
  * Combine approval response templates into a single HTML comment.
  */
 export function joinTemplateContents(templates: { content: string }[]): string {

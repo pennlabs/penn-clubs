@@ -1752,6 +1752,28 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club1.approved_comment, "")
         self.assertNotIn("border-left", mail.outbox[-1].alternatives[0].content)
 
+    def test_club_approval_comment_unsupported_link(self):
+        """
+        Links whose href is removed by sanitization still save and email as text.
+        """
+        self.client.login(username=self.user5.username, password="test")
+        self.club1.approved = None
+        self.club1.save(update_fields=["approved"])
+
+        resp = self.client.patch(
+            reverse("clubs-detail", args=(self.club1.code,)),
+            {
+                "approved": False,
+                "approved_comment": '<p>Call <a href="tel:+12155551234">OSA</a>.</p>',
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        self.club1.refresh_from_db()
+        self.assertEqual(self.club1.approved_comment, "<p>Call <a>OSA</a>.</p>")
+        self.assertIn("Call OSA.", mail.outbox[-1].body)
+
     def test_club_reject_permission_split_from_approve(self):
         """
         A user with only clubs.reject_club can reject a pending club, but

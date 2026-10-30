@@ -22,7 +22,8 @@ FIELDS = [
 
 
 def text_to_html(text):
-    return linebreaks(escape(text.strip()))
+    text = text.strip()
+    return linebreaks(escape(text)) if text else ""
 
 
 def html_to_text(html):

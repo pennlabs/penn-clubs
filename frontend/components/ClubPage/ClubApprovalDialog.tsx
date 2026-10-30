@@ -10,6 +10,7 @@ import {
   apiCheckPermission,
   doApiRequest,
   getCurrentSchoolYear,
+  hasEmbeddedMedia,
   joinTemplateContents,
   stripTags,
 } from '../../utils'
@@ -66,7 +67,12 @@ const ClubHistoryDropdown = ({ history }: { history: HistoricItem[] }) => {
     const text = stripTags(item.approved_comment)
     const blockCount = (item.approved_comment.match(/<(p|li|br)\b/gi) ?? [])
       .length
-    if (text.length <= 100 && blockCount <= 1) {
+    if (
+      text &&
+      text.length <= 100 &&
+      blockCount <= 1 &&
+      !hasEmbeddedMedia(item.approved_comment)
+    ) {
       return text
     }
     return (
