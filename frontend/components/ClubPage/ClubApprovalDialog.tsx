@@ -48,6 +48,9 @@ type HistoricItem = {
   pending_label?: string
 }
 
+/**
+ * Render a sanitized approval comment as a quote.
+ */
 const CommentQuote = ({ html }: { html: string }): ReactElement => (
   <TextQuote
     as="div"

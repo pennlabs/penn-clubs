@@ -475,8 +475,10 @@ class Club(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        # approved_comment is displayed as raw HTML, so writes that skip the
-        # serializer (such as the Django admin) must be sanitized too
+        """
+        Sanitize the approval comment, which is displayed as raw HTML, including
+        writes that skip the serializer such as the Django admin.
+        """
         if (
             "approved_comment" not in self.get_deferred_fields()
             and self.approved_comment

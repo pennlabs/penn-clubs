@@ -71,6 +71,9 @@ class ClubTestCase(TestCase):
         self.assertEqual(self.club1.children_orgs.first(), self.club2)
 
     def test_approved_comment_sanitized_on_save(self):
+        """
+        Approval comments are sanitized even when saved outside the serializer.
+        """
         self.club1.approved_comment = (
             '<p onclick="steal()">Fix <strong>this</strong> &amp; that</p>'
             '<img src="x" onerror="steal()"><script>steal()</script>'
@@ -380,6 +383,9 @@ class UtilsTestCase(TestCase):
             self.assertEqual(kwargs["bcc"], ["bcc@example.com"])
 
     def test_html_to_text_block_and_br_elements(self):
+        """
+        Divs and line breaks become the expected breaks in plain text.
+        """
         # content inside a div keeps the break before the following paragraph
         self.assertEqual(
             html_to_text("<div><p>One</p><p>Two</p></div><p>Three</p>"),
@@ -393,14 +399,23 @@ class UtilsTestCase(TestCase):
         )
 
     def test_html_to_text_link_without_href(self):
+        """
+        Links without an href become their text.
+        """
         self.assertEqual(html_to_text("<p>Call <a>us</a> today</p>"), "Call us today")
 
     def test_html_to_text_keeps_headings(self):
+        """
+        Headings become their own paragraphs and horizontal rules are dropped.
+        """
         self.assertEqual(html_to_text("<h1>Title</h1>"), "Title")
         self.assertEqual(html_to_text("<h2>Title</h2><p>Body</p>"), "Title\n\nBody")
         self.assertEqual(html_to_text("<p>a</p><hr><p>b</p>"), "a\n\nb")
 
     def test_approval_comment_migration_text_to_html(self):
+        """
+        The approval comment migration converts plain text to equivalent HTML.
+        """
         migration = importlib.import_module(
             "clubs.migrations.0144_approval_comment_html"
         )

@@ -22,17 +22,26 @@ FIELDS = [
 
 
 def text_to_html(text):
+    """
+    Convert plain text to escaped HTML paragraphs, keeping line breaks.
+    """
     text = text.strip()
     return linebreaks(escape(text)) if text else ""
 
 
 def html_to_text(html):
+    """
+    Convert HTML back to plain text, keeping paragraph and line breaks.
+    """
     text = re.sub(r"<br\s*/?>", "\n", html)
     text = re.sub(r"</p>\s*", "\n\n", text)
     return unescape(strip_tags(text)).strip()
 
 
 def convert(apps, schema_editor, pattern, func):
+    """
+    Apply func to every field value matching pattern, in batches.
+    """
     database = schema_editor.connection.alias
     for model_name, field in FIELDS:
         model = apps.get_model("clubs", model_name)
@@ -53,10 +62,16 @@ def convert(apps, schema_editor, pattern, func):
 
 
 def forwards(apps, schema_editor):
+    """
+    Convert plain text values that would render differently as HTML.
+    """
     convert(apps, schema_editor, r"[\n<>&]", text_to_html)
 
 
 def backwards(apps, schema_editor):
+    """
+    Convert HTML values back to plain text.
+    """
     convert(apps, schema_editor, r"[<&]", html_to_text)
 
 
