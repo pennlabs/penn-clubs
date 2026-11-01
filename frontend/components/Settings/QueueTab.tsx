@@ -8,7 +8,13 @@ import styled from 'styled-components'
 
 import { CLUB_ROUTE } from '../../constants'
 import { Club, RegistrationQueueSettings, Template } from '../../types'
-import { apiCheckPermission, doApiRequest } from '../../utils'
+import {
+  apiCheckPermission,
+  doApiRequest,
+  hasEmbeddedMedia,
+  joinTemplateContents,
+  stripTags,
+} from '../../utils'
 import {
   OBJECT_NAME_PLURAL,
   OBJECT_NAME_SINGULAR,
@@ -19,6 +25,7 @@ import {
 } from '../../utils/branding'
 import { ModalContent } from '../ClubPage/Actions'
 import { Checkbox, Icon, Modal } from '../common'
+import { RichTextEditor } from '../FormComponents'
 
 type ClubDiff = {
   description: {
@@ -64,9 +71,7 @@ const QueueTableModal = ({
   const [selectedTemplates, setSelectedTemplates] = useState<Template[]>([])
 
   useEffect(() => {
-    setComment(
-      selectedTemplates.map((template) => template.content).join('\n\n'),
-    )
+    setComment(joinTemplateContents(selectedTemplates))
   }, [selectedTemplates])
 
   return (
@@ -115,12 +120,15 @@ const QueueTableModal = ({
             }
           }}
         />
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="textarea my-2"
-          placeholder={`${isApproving ? 'approval' : 'rejection'} notes`}
-        ></textarea>
+        <div className="my-2">
+          <RichTextEditor
+            key={isApproving ? 'approve' : 'reject'}
+            value={comment}
+            onChange={setComment}
+            allowEmbed={false}
+            placeholder={`${isApproving ? 'approval' : 'rejection'} notes`}
+          />
+        </div>
         <button
           className={`mb-2 button ${isApproving ? 'is-success' : 'is-danger'}`}
           onClick={() => {
@@ -172,7 +180,9 @@ const QueueTable = ({
             body: {
               approved: approve,
               approved_comment:
-                comment || '(Administrator did not include a comment.)',
+                stripTags(comment) || hasEmbeddedMedia(comment)
+                  ? comment
+                  : '(Administrator did not include a comment.)',
             },
           }),
         ),

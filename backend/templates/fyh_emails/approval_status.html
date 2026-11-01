@@ -22,7 +22,7 @@ view_url:
         Your {% if change %}updated{% else %}new{% endif %} resource information is now open to the public on Hub@Penn.
     </p>
     {% if approved_comment %}
-        <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc; white-space: pre-wrap;">{{ approved_comment }}</p>
+        <div style="font-size: 1.2em; padding: 0 8px; border-left: 5px solid #ccc;">{{ approved_comment|safe }}</div>
     {% endif %}
     <p style="font-size: 1.2em">
         You do not need to perform any further actions at this time.
@@ -39,7 +39,7 @@ view_url:
         <b>Oh no!</b> Your resource {% if change %}updates have{% else %}has{% endif %} <b>not been approved</b> by the Hub@Penn administrators. You will need to make changes to your resource information before gaining approval.
     </p>
     <p style="font-size: 1.2em">The reason your resource was not approved is shown below:</p>
-    <p style="font-size: 1.2em; padding: 8px; border-left: 5px solid #ccc;">{{ approved_comment }}</p>
+    <div style="font-size: 1.2em; padding: 0 8px; border-left: 5px solid #ccc;">{{ approved_comment|safe }}</div>
     <p style="font-size: 1.2em">You will need to <a href="{{ edit_url }}">make edits</a> to your resource and press the button found <a href="{{ view_url }}">here</a> to apply again for approval.</p>
     <p style="font-size: 1.2em">If you run into any issues with the approval process, you can respond to this email.</p>
     <p style="font-size: 1.2em">
