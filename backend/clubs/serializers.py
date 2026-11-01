@@ -1,6 +1,7 @@
 import json
 import re
 from collections import OrderedDict
+from difflib import SequenceMatcher
 from urllib.parse import parse_qs, urlparse
 
 import bleach
@@ -14,7 +15,6 @@ from django.db import IntegrityError, models, transaction
 from django.db.models import Prefetch
 from django.template.defaultfilters import slugify
 from django.utils import timezone
-from html_diff import diff
 from rest_framework import serializers, validators
 from simple_history.utils import update_change_reason
 
@@ -1098,8 +1098,30 @@ class ClubDiffSerializer(serializers.ModelSerializer):
         latest_description = diff["description"]["new"] or ""
         latest_approved_title = diff["name"]["old"] or ""
         latest_title = diff["name"]["new"] or ""
+
+        # every save since the last approval, to tell who made each change
+        history = instance.history.order_by("history_date").select_related(
+            "history_user"
+        )
+        approved = history.filter(approved=True).last()
+        if approved is not None:
+            history = history.filter(history_date__gt=approved.history_date)
+        edits = [
+            (
+                record.description or "",
+                (
+                    # saves made outside the website, like scripts, have no user
+                    record.history_user.get_full_name()
+                    if record.history_user
+                    else "Unknown",
+                    record.history_date.isoformat(),
+                ),
+            )
+            for record in history
+        ]
+
         diff["description"]["diff"] = diff_calculator(
-            latest_approved_description, latest_description
+            latest_approved_description, latest_description, edits
         )
         diff["name"]["diff"] = diff_calculator(latest_approved_title, latest_title)
 
@@ -1345,80 +1367,191 @@ class StudentTypeSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
-def diff_calculator(latest_approved_description, latest_description):
+def diff_tokens(soup):
+    """
+    Split the text of an HTML tree into word, punctuation and whitespace tokens,
+    each paired with the text node it came from and the link it sits under
+    """
+    tokens = []
+    for node in soup.find_all(string=True):
+        link = node.find_parent("a")
+        href = link.get("href") if link is not None else None
+        for text in re.findall(r"\s+|\w+|[^\w\s]", str(node)):
+            tokens.append((text, node, href))
+    return tokens
+
+
+def blame_words(versions):
+    """
+    Walk through each saved version of some HTML, given as (html, editor) pairs
+    from the approved version to the latest, and find who last wrote each word of
+    the latest version and who removed each word of the approved version
+    """
+    words, editors, origins, removed_by = [], [], [], {}
+    for k, (html, editor) in enumerate(versions):
+        tokens = diff_tokens(BeautifulSoup(html, "html.parser"))
+        new_words = [(text, href) for text, _, href in tokens if not text.isspace()]
+        new_editors = [editor] * len(new_words)
+        # origins point each word back to its position in the approved version
+        new_origins = list(range(len(new_words))) if k == 0 else [None] * len(new_words)
+        matcher = SequenceMatcher(None, words, new_words, autojunk=False)
+        for op, i1, i2, j1, j2 in matcher.get_opcodes():
+            if op == "equal":
+                new_editors[j1:j2] = editors[i1:i2]
+                new_origins[j1:j2] = origins[i1:i2]
+            else:
+                for origin in origins[i1:i2]:
+                    if origin is not None:
+                        removed_by[origin] = editor
+        words, editors, origins = new_words, new_editors, new_origins
+    return editors, removed_by
+
+
+def diff_calculator(latest_approved_description, latest_description, edits=()):
     """
     Calculates difference between two HTML strings and
       returns a diff string visualizing them
+
+    edits are the (html, (name, date)) pairs saved since approval, oldest first,
+    used to tag each change with who made it and when
+
+    Only the words are compared, so line breaks, new paragraphs and stylistic
+    changes (highlighting, font size, etc.) do not show up in the diff.
+    The diff is drawn on top of the new HTML, keeping its formatting.
     """
 
     if latest_approved_description == latest_description:
         return latest_description
 
-    """
-    Retrieve the difference between the two HTML strings
-    """
-    html_text = diff(latest_approved_description, latest_description)
-    soup = BeautifulSoup(html_text, "html.parser")
+    old_soup = BeautifulSoup(latest_approved_description, "html.parser")
+    soup = BeautifulSoup(latest_description, "html.parser")
 
     """
-    Strip original background from all elements and apply diff highlighting
+    Strip original background from all elements so it is not confused with the
+    diff highlighting
     """
     for tag in soup.find_all(style=True):
         tag["style"] = diff_regex_helper(tag["style"])
-    for tag in soup.find_all(["del", "ins"]):
-        bg_color = "#ffbdbd" if tag.name == "del" else "#dafdd5"
-        for child in tag.find_all(True):
-            child["style"] = (
-                child.get("style", "") + f"; background-color: {bg_color};"
-            ).strip("; ")
+
+    old_tokens = diff_tokens(old_soup)
+    new_tokens = diff_tokens(soup)
+    old_words = [i for i, token in enumerate(old_tokens) if not token[0].isspace()]
+    new_words = [i for i, token in enumerate(new_tokens) if not token[0].isspace()]
+    editors, removed_by = blame_words([(latest_approved_description, None), *edits])
+    editor = dict(zip(new_words, editors)) if len(editors) == len(new_words) else {}
 
     """
-    Unwrap nested <del> tags inside <ins> and vice versa
+    Label each new word as unchanged, inserted or relinked, and collect the
+    removed text that should be shown before each new word
     """
-    for del_tag in soup.find_all("del"):
-        for nested_ins in del_tag.find_all("ins"):
-            nested_ins.unwrap()
-    for ins_tag in soup.find_all("ins"):
-        for nested_del in ins_tag.find_all("del"):
-            nested_del.unwrap()
+    labels = [None] * len(new_tokens)
+    removed = {}
+    matcher = SequenceMatcher(
+        None,
+        [old_tokens[i][0] for i in old_words],
+        [new_tokens[i][0] for i in new_words],
+        autojunk=False,
+    )
+    for op, i1, i2, j1, j2 in matcher.get_opcodes():
+        if op == "equal":
+            for i, j in zip(old_words[i1:i2], new_words[j1:j2]):
+                old_href, new_href = old_tokens[i][2], new_tokens[j][2]
+                if old_href != new_href:
+                    labels[j] = ("link", old_href, new_href, editor.get(j))
+            continue
+        for j in new_words[j1:j2]:
+            labels[j] = ("ins", editor.get(j))
+        if i2 > i1:
+            position = new_words[j1] if j1 < len(new_words) else len(new_tokens)
+            start, end = old_words[i1], old_words[i2 - 1] + 1
+            # keep a space around the removed text if the new text lacks one
+            if (
+                start > 0
+                and old_tokens[start - 1][0].isspace()
+                and position > 0
+                and not new_tokens[position - 1][0].isspace()
+            ):
+                start -= 1
+            elif (
+                end < len(old_tokens)
+                and old_tokens[end][0].isspace()
+                and position < len(new_tokens)
+                and not new_tokens[position][0].isspace()
+            ):
+                end += 1
+            removers = (removed_by.get(k) for k in range(i1, i2))
+            removed[position] = (
+                "".join(token[0] for token in old_tokens[start:end]),
+                next(filter(None, removers), None),
+            )
 
     """
-    Highlight and style the del and ins tags
+    Whitespace joins the change around it only when both sides share a label
     """
-    for tag in soup.find_all(["del", "ins"]):
-        if tag.name == "del":
-            tag["style"] = (
-                "text-decoration: none; background-color: #ffbdbd; opacity: 0.8;"
-            )
-        elif tag.name == "ins":
-            tag["style"] = (
-                "text-decoration: none; background-color: #dafdd5; opacity: 1;"
-            )
+    for i, token in enumerate(new_tokens):
+        if token[0].isspace() and 0 < i < len(new_tokens) - 1:
+            if labels[i - 1] == labels[i + 1] and i + 1 not in removed:
+                labels[i] = labels[i - 1]
 
     """
     Color new content with a green highlight
     Color removed content with a red highlight
-    Color resized content with a yellow highlight
+    Color content whose link changed with a yellow highlight, and tag it with
+      the old and new link for the frontend to show on hover
+    Tag each change with who made it, for the frontend to show on request
     """
-    for del_tag in soup.find_all("del"):
-        next_tag = del_tag.find_next_sibling("ins")
-        if next_tag and next_tag.get_text() == del_tag.get_text():
-            del_tag.decompose()
-            next_tag["style"] = diff_regex_helper(next_tag.get("style", ""))
-            next_tag["style"] = (
-                next_tag.get("style", "") + " background-color: #fff2bd;"
+
+    def removed_tag(text, editor):
+        tag = soup.new_tag("del")
+        tag.string = text
+        tag["style"] = "text-decoration: none; background-color: #ffbdbd; opacity: 0.8;"
+        if editor:
+            tag["data-editor"], tag["data-edited"] = editor
+        return tag
+
+    def changed_tag(text, label):
+        if label[0] == "ins":
+            tag = soup.new_tag("ins")
+            tag["style"] = (
+                "text-decoration: none; background-color: #dafdd5; opacity: 1;"
             )
-            for child in next_tag.find_all(True):
-                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
-    for ins_tag in soup.find_all("ins"):
-        next_tag = ins_tag.find_next_sibling("del")
-        if next_tag and next_tag.get_text() == ins_tag.get_text():
-            # Remove the redundant <del> tag, then style the <ins> tag and its children
-            next_tag.decompose()
-            ins_tag["style"] = diff_regex_helper(ins_tag.get("style", ""))
-            ins_tag["style"] = ins_tag.get("style", "") + " background-color: #fff2bd;"
-            for child in ins_tag.find_all(True):
-                child["style"] = child.get("style", "") + " background-color: #fff2bd;"
+        else:
+            tag = soup.new_tag("span")
+            tag["style"] = "background-color: #fff2bd;"
+            tag["data-tooltip-id"] = "link-diff"
+            tag["data-old-link"] = label[1] or ""
+            tag["data-new-link"] = label[2] or ""
+        if label[-1]:
+            tag["data-editor"], tag["data-edited"] = label[-1]
+        tag.string = text
+        return tag
+
+    i = 0
+    for node in soup.find_all(string=True):
+        pieces = []
+        while i < len(new_tokens) and new_tokens[i][1] is node:
+            if i in removed:
+                pieces.append(removed_tag(*removed[i]))
+            label = labels[i]
+            text = new_tokens[i][0]
+            i += 1
+            while (
+                i < len(new_tokens)
+                and new_tokens[i][1] is node
+                and labels[i] == label
+                and i not in removed
+            ):
+                text += new_tokens[i][0]
+                i += 1
+            pieces.append(text if label is None else changed_tag(text, label))
+        if i == len(new_tokens) and i in removed:
+            pieces.append(removed_tag(*removed.pop(i)))
+        if pieces:
+            node.replace_with(*pieces)
+
+    if len(new_tokens) in removed:
+        soup.append(removed_tag(*removed[len(new_tokens)]))
+
     return str(soup)
 
 
