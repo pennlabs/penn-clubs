@@ -25,6 +25,11 @@ import {
   selectMenuPortalTarget,
   selectMenuStyles,
 } from '../common/selectStyles'
+import {
+  AdminActions,
+  AdminGhost,
+  AdminPrimary,
+} from './adminControls'
 import { ADMIN_ACCENT, ADMIN_CANVAS, ADMIN_NAVY } from './adminTheme'
 import { PageTitle } from './ClubAdminShell'
 import { MEMBERSHIP_ROLES } from './MembersCard'
@@ -108,14 +113,29 @@ const COLUMN_LABELS: Record<ColumnKey, string> = {
   role: 'Role',
 }
 
+const Fill = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+`
+
 const Layout = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
+    overflow: hidden;
   }
 `
 
@@ -125,8 +145,10 @@ const Column = styled.section`
   border-radius: 10px;
   padding: 18px 16px 16px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 `
 
 const ColumnHead = styled.div`
@@ -134,7 +156,36 @@ const ColumnHead = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-shrink: 0;
   margin: 0 0 12px;
+`
+
+const HeadLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+`
+
+const BackButton = styled.button`
+  appearance: none;
+  align-items: center;
+  background: white;
+  border: 0;
+  border-radius: 999px;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+
+  svg {
+    display: block;
+    stroke-width: 2.75;
+  }
 `
 
 const Widget = styled.div`
@@ -142,6 +193,11 @@ const Widget = styled.div`
   border-radius: 10px;
   padding: 12px 14px 14px;
   min-width: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 `
 
 const ListToolbar = styled.div`
@@ -150,6 +206,7 @@ const ListToolbar = styled.div`
   justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
+  flex-shrink: 0;
   margin: 0 0 12px;
 `
 
@@ -238,10 +295,46 @@ const Tiny = styled.button`
 `
 
 const Composer = styled(Widget)`
-  flex: 1;
+  overflow: auto;
 
   > label:first-of-type {
     margin-top: 0;
+  }
+`
+
+const DraftList = styled.ul`
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li + li {
+    border-top: 1px solid #ececec;
+  }
+
+  button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: ${ADMIN_NAVY};
+    cursor: pointer;
+    display: block;
+    padding: 12px 4px;
+    text-align: left;
+    width: 100%;
+  }
+
+  button:hover {
+    background: #f7f8fb;
+  }
+
+  .title {
+    display: block;
+    font-weight: 600;
+  }
+
+  .meta {
+    color: #6b7280;
+    font-size: 12px;
   }
 `
 
@@ -272,6 +365,10 @@ const Area = styled.textarea`
   padding: 8px 10px;
   color: ${ADMIN_NAVY};
   resize: vertical;
+
+  &::placeholder {
+    color: #9aa0a6;
+  }
 `
 
 const Chips = styled.div`
@@ -282,8 +379,13 @@ const Chips = styled.div`
   background: #f3f3f3;
   border: 1px solid #d8d8d8;
   border-radius: 10px;
-  padding: 6px;
+  padding: 6px 10px;
   min-height: 40px;
+`
+
+const ChipPlaceholder = styled.span`
+  color: #9aa0a6;
+  font-size: 13px;
 `
 
 const Chip = styled.span`
@@ -298,22 +400,67 @@ const Chip = styled.span`
   font-size: 13px;
 `
 
-const RecipientButton = styled.button<{ $on?: boolean }>`
-  margin-left: auto;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  border: 1px solid ${({ $on }) => ($on ? ADMIN_ACCENT : '#d8d8d8')};
-  background: ${({ $on }) => ($on ? '#eef0ff' : 'white')};
-  color: ${ADMIN_ACCENT};
-  cursor: pointer;
-`
-
 const SendRow = styled.div`
   display: flex;
   gap: 8px;
   align-items: center;
   margin-top: 12px;
+`
+
+const SendSplit = styled.div`
+  display: inline-flex;
+  align-items: stretch;
+  background: ${ADMIN_ACCENT};
+  border-radius: 8px;
+  overflow: hidden;
+`
+
+const SendMain = styled.button`
+  appearance: none;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+  line-height: 1;
+  padding: 9px 14px;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  svg {
+    color: #fff;
+    display: block;
+  }
+`
+
+const SendCaret = styled.button`
+  appearance: none;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  padding: 0 10px;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  svg {
+    color: #fff;
+    display: block;
+  }
 `
 
 const SendButton = styled.button`
@@ -437,7 +584,6 @@ export default function MembershipWorkspace({
   const [members, setMembers] = useState<Member[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
   const [requests, setRequests] = useState<RequestRow[]>([])
-  const [picking, setPicking] = useState(false)
   const [recipients, setRecipients] = useState<Recipient[]>([])
   const [messageType, setMessageType] = useState<'invite' | 'application'>(
     'invite',
@@ -933,7 +1079,7 @@ export default function MembershipWorkspace({
   }
 
   return (
-    <>
+    <Fill>
       <Layout>
         <Column>
           <ColumnHead>
@@ -976,6 +1122,9 @@ export default function MembershipWorkspace({
             <Table
               key={segment}
               variant="sheet"
+              fillParent
+              resizable
+              initialPageSize={50}
               data={tableData}
               columns={tableColumns}
               searchableColumns={[
@@ -996,112 +1145,123 @@ export default function MembershipWorkspace({
         </Column>
         <Column>
           <ColumnHead>
-            <PageTitle>Send Message</PageTitle>
-            <Menu>
-              <GhostButton
-                type="button"
-                onClick={() => setDraftsOpen((open) => !open)}
-              >
-                <Icon name="file" alt="" /> Drafts
-              </GhostButton>
-              {draftsOpen && (
-                <Popover>
-                  {drafts.length === 0 && <div>No drafts yet.</div>}
-                  {drafts.map((draft) => (
-                    <button
-                      key={draft.id}
-                      type="button"
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        textAlign: 'left',
-                      }}
-                      onClick={() => {
-                        setMessageType(draft.type)
-                        setSubject(draft.subject)
-                        setBody(draft.body)
-                        setTags(draft.tags)
-                        setDraftsOpen(false)
-                      }}
-                    >
-                      {draft.subject || draft.type}
-                    </button>
-                  ))}
-                </Popover>
+            <HeadLeft>
+              {!draftsOpen && (
+                <BackButton
+                  type="button"
+                  aria-label="View drafts"
+                  onClick={() => setDraftsOpen(true)}
+                >
+                  <Icon name="chevron-left" alt="" size="1.1rem" fitSize />
+                </BackButton>
               )}
-            </Menu>
+              <PageTitle>{draftsOpen ? 'Drafts' : 'Send Message'}</PageTitle>
+            </HeadLeft>
+            {draftsOpen && (
+              <GhostButton type="button" onClick={() => setDraftsOpen(false)}>
+                New message
+              </GhostButton>
+            )}
           </ColumnHead>
+          {draftsOpen ? (
+            <Widget>
+              {drafts.length === 0 ? (
+                <ChipPlaceholder>No drafts yet.</ChipPlaceholder>
+              ) : (
+                <DraftList>
+                  {drafts.map((draft) => (
+                    <li key={draft.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMessageType(draft.type)
+                          setSubject(draft.subject)
+                          setBody(draft.body)
+                          setTags(draft.tags)
+                          setDraftsOpen(false)
+                        }}
+                      >
+                        <span className="title">
+                          {draft.subject ||
+                            (draft.type === 'application'
+                              ? 'Application email'
+                              : 'Invite')}
+                        </span>
+                        <span className="meta">
+                          {draft.type === 'application'
+                            ? 'Application'
+                            : 'Invite'}
+                          {draft.tags ? ` · ${draft.tags}` : ''}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </DraftList>
+              )}
+            </Widget>
+          ) : (
           <Composer>
           <InputLabel htmlFor="message-type">Type</InputLabel>
-          <select
-            id="message-type"
+          <Select
+            inputId="message-type"
             aria-label="Message type"
-            value={messageType}
-            onChange={(event) =>
-              setMessageType(event.target.value as 'invite' | 'application')
-            }
-            style={{ width: '100%' }}
-          >
-            {SHOW_APPLICATIONS && (
-              <option value="application">Application</option>
-            )}
-            <option value="invite">Invite</option>
-          </select>
-          <InputLabel>Recipients</InputLabel>
-          <Chips>
-            {recipients.map((recipient) => (
-              <Chip key={recipient.id}>
-                {recipient.label}
-                <button
-                  type="button"
-                  aria-label={`Remove ${recipient.label}`}
-                  onClick={() =>
-                    setRecipients((current) =>
-                      current.filter((item) => item.id !== recipient.id),
-                    )
-                  }
-                  style={{
-                    border: 0,
-                    background: 'transparent',
-                    cursor: 'pointer',
-                  }}
-                >
-                  ×
-                </button>
-              </Chip>
-            ))}
-            <RecipientButton
-              type="button"
-              $on={picking}
-              aria-label="Add recipients from the table"
-              title="Add recipients from the table"
-              onClick={() => setPicking((on) => !on)}
-            >
-              <Icon name="plus" alt="" size="0.8rem" />
-            </RecipientButton>
-          </Chips>
-          <InputLabel htmlFor="message-subject">Subject</InputLabel>
-          <TextInput
-            id="message-subject"
-            value={subject}
-            onChange={(event) => setSubject(event.target.value)}
-          />
-          <InputLabel htmlFor="message-tags">Tags</InputLabel>
-          <TextInput
-            id="message-tags"
-            value={tags}
-            placeholder="Kept with the draft only"
-            onChange={(event) => setTags(event.target.value)}
+            styles={selectMenuStyles}
+            components={selectComponents}
+            menuPortalTarget={selectMenuPortalTarget}
+            menuPosition="fixed"
+            isSearchable={false}
+            options={[
+              ...(SHOW_APPLICATIONS
+                ? [{ value: 'application' as const, label: 'Application' }]
+                : []),
+              { value: 'invite' as const, label: 'Invite' },
+            ]}
+            value={{
+              value: messageType,
+              label: messageType === 'application' ? 'Application' : 'Invite',
+            }}
+            onChange={(option) => {
+              if (option) {
+                setMessageType(option.value)
+              }
+            }}
           />
           {messageType === 'invite' ? (
             <>
-              <h3 style={{ marginTop: 16 }}>Invite Members</h3>
-              <p>
-                Enter email addresses separated by commas or newlines. Invites
-                are not sent to people who are already members.
-              </p>
+              <InputLabel>Recipients</InputLabel>
+              <Chips>
+                {recipients.length === 0 ? (
+                  <ChipPlaceholder>
+                    Selected members will appear here.
+                  </ChipPlaceholder>
+                ) : (
+                  recipients.map((recipient) => (
+                    <Chip key={recipient.id}>
+                      {recipient.label}
+                      <button
+                        type="button"
+                        aria-label={`Remove ${recipient.label}`}
+                        onClick={() =>
+                          setRecipients((current) =>
+                            current.filter((item) => item.id !== recipient.id),
+                          )
+                        }
+                        style={{
+                          border: 0,
+                          background: 'transparent',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </Chip>
+                  ))
+                )}
+              </Chips>
+              <InputLabel htmlFor="invite-emails">Emails</InputLabel>
               <Area
-                placeholder="Enter email addresses here!"
+                id="invite-emails"
+                placeholder="Enter email addresses separated by commas or newlines. Invites are not sent to people who are already members."
                 data-testid="invite-emails-input"
                 value={inviteEmails}
                 onChange={(event) => setInviteEmails(event.target.value)}
@@ -1113,6 +1273,7 @@ export default function MembershipWorkspace({
                 components={selectComponents}
                 menuPortalTarget={selectMenuPortalTarget}
                 menuPosition="fixed"
+                isSearchable={false}
                 options={MEMBERSHIP_ROLES.filter(
                   ({ value }) => value in MEMBERSHIP_ROLE_NAMES,
                 )}
@@ -1141,32 +1302,53 @@ export default function MembershipWorkspace({
           ) : (
             <>
               <InputLabel htmlFor="application-id">Application</InputLabel>
-              <select
-                id="application-id"
-                value={applicationId}
-                onChange={(event) =>
-                  setApplicationId(Number(event.target.value))
+              <Select
+                inputId="application-id"
+                aria-label="Application"
+                styles={selectMenuStyles}
+                components={selectComponents}
+                menuPortalTarget={selectMenuPortalTarget}
+                menuPosition="fixed"
+                isSearchable={false}
+                options={applications.map((app) => ({
+                  value: app.id,
+                  label: app.name,
+                }))}
+                value={
+                  applications
+                    .map((app) => ({ value: app.id, label: app.name }))
+                    .find((option) => option.value === applicationId) || null
                 }
-                style={{ width: '100%' }}
-              >
-                {applications.map((app) => (
-                  <option key={app.id} value={app.id}>
-                    {app.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(option) => {
+                  if (option) {
+                    setApplicationId(option.value)
+                  }
+                }}
+              />
               <InputLabel htmlFor="email-kind">Email</InputLabel>
-              <select
-                id="email-kind"
-                value={emailKind}
-                onChange={(event) =>
-                  setEmailKind(event.target.value as 'acceptance' | 'rejection')
-                }
-                style={{ width: '100%' }}
-              >
-                <option value="acceptance">Acceptance</option>
-                <option value="rejection">Rejection</option>
-              </select>
+              <Select
+                inputId="email-kind"
+                aria-label="Email kind"
+                styles={selectMenuStyles}
+                components={selectComponents}
+                menuPortalTarget={selectMenuPortalTarget}
+                menuPosition="fixed"
+                isSearchable={false}
+                options={[
+                  { value: 'acceptance' as const, label: 'Acceptance' },
+                  { value: 'rejection' as const, label: 'Rejection' },
+                ]}
+                value={{
+                  value: emailKind,
+                  label:
+                    emailKind === 'acceptance' ? 'Acceptance' : 'Rejection',
+                }}
+                onChange={(option) => {
+                  if (option) {
+                    setEmailKind(option.value)
+                  }
+                }}
+              />
               <InputLabel>Applicants</InputLabel>
               <div style={{ maxHeight: 140, overflow: 'auto' }}>
                 {submissions.map((submission) => {
@@ -1194,61 +1376,79 @@ export default function MembershipWorkspace({
                   )
                 })}
               </div>
+              <InputLabel htmlFor="message-body">Email body</InputLabel>
+              <Area
+                id="message-body"
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+              />
             </>
           )}
-          <InputLabel htmlFor="message-body">Body</InputLabel>
-          <Area
-            id="message-body"
-            value={body}
-            onChange={(event) => setBody(event.target.value)}
-          />
           <SendRow>
-            <SendButton
-              type="button"
-              className="button"
-              disabled={sendDisabled}
-              data-testid="invite-emails-submit"
-              onClick={() =>
-                messageType === 'invite'
-                  ? sendInvites()
-                  : sendApplication(false, false)
-              }
-            >
-              <Icon name="send" alt="" />{' '}
-              {messageType === 'invite' ? 'Send Invite' : 'Send'}
-            </SendButton>
-            {messageType === 'application' && (
-              <Menu>
-                <GhostButton
+            <Menu>
+              {messageType === 'invite' ? (
+                <SendMain
                   type="button"
-                  onClick={() => setSendMenu((open) => !open)}
+                  disabled={sendDisabled}
+                  data-testid="invite-emails-submit"
+                  onClick={() => sendInvites()}
+                  style={{
+                    background: ADMIN_ACCENT,
+                    borderRadius: 8,
+                  }}
                 >
-                  ▾
-                </GhostButton>
-                {sendMenu && (
-                  <Popover>
-                    <button
-                      type="button"
-                      onClick={() => sendApplication(true, false)}
-                    >
-                      Dry run
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => sendApplication(false, true)}
-                    >
-                      Resend emails
-                    </button>
-                  </Popover>
-                )}
-              </Menu>
-            )}
+                  <Icon name="send" alt="" size="1rem" fitSize noMargin />
+                  Send
+                </SendMain>
+              ) : (
+                <SendSplit>
+                  <SendMain
+                    type="button"
+                    disabled={sendDisabled}
+                    onClick={() => sendApplication(false, false)}
+                  >
+                    <Icon name="send" alt="" size="1rem" fitSize noMargin />
+                    Send
+                  </SendMain>
+                  <SendCaret
+                    type="button"
+                    aria-label="More send options"
+                    onClick={() => setSendMenu((open) => !open)}
+                  >
+                    <Icon
+                      name="chevron-down"
+                      alt=""
+                      size="0.85rem"
+                      fitSize
+                      noMargin
+                    />
+                  </SendCaret>
+                </SendSplit>
+              )}
+              {sendMenu && messageType === 'application' && (
+                <Popover>
+                  <button
+                    type="button"
+                    onClick={() => sendApplication(true, false)}
+                  >
+                    Dry run
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => sendApplication(false, true)}
+                  >
+                    Resend emails
+                  </button>
+                </Popover>
+              )}
+            </Menu>
             <GhostButton type="button" onClick={saveDraft}>
               Save Draft
             </GhostButton>
           </SendRow>
           <Hint>{sendHint}</Hint>
           </Composer>
+          )}
         </Column>
       </Layout>
       {editing && (
@@ -1286,22 +1486,29 @@ export default function MembershipWorkspace({
                 setEditing({ ...editing, title: event.target.value })
               }
             />
-            <InputLabel htmlFor="member-role">Role</InputLabel>
-            <select
-              id="member-role"
-              value={editing.role}
-              onChange={(event) =>
-                setEditing({ ...editing, role: Number(event.target.value) })
+            <InputLabel htmlFor="member-role">Type</InputLabel>
+            <Select
+              inputId="member-role"
+              styles={selectMenuStyles}
+              components={selectComponents}
+              menuPortalTarget={selectMenuPortalTarget}
+              menuPosition="fixed"
+              isSearchable={false}
+              getOptionLabel={(role) => role.label}
+              getOptionValue={(role) => String(role.value)}
+              value={
+                MEMBERSHIP_ROLES.find((role) => role.value === editing.role) ??
+                null
               }
-            >
-              {MEMBERSHIP_ROLES.filter(
+              options={MEMBERSHIP_ROLES.filter(
                 ({ value }) => value in MEMBERSHIP_ROLE_NAMES,
-              ).map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
-                </option>
-              ))}
-            </select>
+              )}
+              onChange={(option) => {
+                if (option) {
+                  setEditing({ ...editing, role: option.value })
+                }
+              }}
+            />
             <label style={{ display: 'block', margin: '12px 0' }}>
               <input
                 type="checkbox"
@@ -1312,10 +1519,15 @@ export default function MembershipWorkspace({
               />{' '}
               Active member
             </label>
-            <SendButton type="submit">Save member</SendButton>
+            <AdminActions>
+              <AdminGhost type="button" onClick={() => setEditing(null)}>
+                Cancel
+              </AdminGhost>
+              <AdminPrimary type="submit">Save member</AdminPrimary>
+            </AdminActions>
           </form>
         </Modal>
       )}
-    </>
+    </Fill>
   )
 }

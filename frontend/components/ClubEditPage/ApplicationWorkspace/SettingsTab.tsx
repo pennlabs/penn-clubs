@@ -12,6 +12,7 @@ import {
   TextField,
 } from '../../FormComponents'
 import ModelForm from '../../ModelForm'
+import { AdminPrimary } from '../adminControls'
 import { Panel, WorkspaceApplication } from './shared'
 
 // DRF answers a rejected save with {field: [messages]} or a list of messages
@@ -94,12 +95,9 @@ export default function SettingsTab({
                 as={ApplicationUpdateTextField}
                 label="Rejection email"
               />
-              <button
-                type="submit"
-                className={`button is-primary ${isSubmitting ? 'is-loading' : ''}`}
-              >
-                Save settings
-              </button>
+              <AdminPrimary type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving…' : 'Save settings'}
+              </AdminPrimary>
             </Form>
           )}
         </Formik>

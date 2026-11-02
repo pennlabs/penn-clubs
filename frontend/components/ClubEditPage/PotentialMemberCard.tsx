@@ -5,11 +5,13 @@ import { Club } from '../../types'
 import { doApiRequest, getApiUrl } from '../../utils'
 import { Empty, Icon, Loading } from '../common'
 import Table from '../common/Table'
+import { FieldHelpTip } from '../FormComponents'
 import BaseCard from './BaseCard'
 
 type PotentialMemberCard = {
   club: Club
   header?: ReactElement<any>
+  framed?: boolean
   source?: 'subscription' | 'membershiprequests'
   actions?: {
     name: string
@@ -39,6 +41,7 @@ type Student = {
 export default function PotentialMemberCard({
   header,
   club,
+  framed = true,
   source = 'subscription',
   actions,
 }: PotentialMemberCard): ReactElement<any> {
@@ -179,15 +182,38 @@ export default function PotentialMemberCard({
     return <Loading />
   }
 
-  return (
-    <BaseCard title={title}>
+  const help =
+    source === 'subscription'
+      ? 'People who subscribed or shared a bookmark with officers.'
+      : null
+
+  const heading = (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: header || help ? 12 : 0,
+        fontWeight: 600,
+      }}
+    >
+      {title}
+      {help && <FieldHelpTip label={title}>{help}</FieldHelpTip>}
+    </div>
+  )
+
+  const body = (
+    <div>
+      {framed ? null : heading}
       {header}
       <Table
         data={studentData}
         columns={studentColumns}
         searchableColumns={['name', 'email', 'schoolDisplay', 'majorDisplay']}
+        fillParent={!framed}
+        initialPageSize={framed ? 10 : 50}
       />
-      <div className="buttons">
+      <div style={{ flexShrink: 0, marginTop: 16, paddingBottom: 20 }}>
         <a
           href={getApiUrl(`/clubs/${club.code}/${source}/?format=xlsx`)}
           className="button is-link is-small"
@@ -195,6 +221,12 @@ export default function PotentialMemberCard({
           <Icon alt="download" name="download" /> Download {multiNoun} List
         </a>
       </div>
-    </BaseCard>
+    </div>
   )
+
+  if (!framed) {
+    return body
+  }
+
+  return <BaseCard title={title}>{body}</BaseCard>
 }

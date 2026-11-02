@@ -22,7 +22,7 @@ const PRIMARY_TAB_NAMES = [
 
 const EXTRA_TAB_NAMES = ['applications', 'notes', 'organization']
 
-const SELF_TITLED = new Set(['home', 'info', 'member', 'events'])
+const SELF_TITLED = new Set(['home', 'info', 'member', 'events', 'recruitment'])
 
 const TAB_ICONS: Record<string, string> = {
   home: 'home',
@@ -133,7 +133,23 @@ const ClubEditTabView = ({
           <PageTitle>{activeTab?.label || activeName}</PageTitle>
         </PageHeading>
       )}
-      <div key={activeName}>
+      <div
+        key={activeName}
+        style={
+          activeName === 'member' ||
+          activeName === 'events' ||
+          activeName === 'recruitment'
+            ? {
+                display: 'flex',
+                flex: 1,
+                flexDirection: 'column',
+                height: '100%',
+                minHeight: 0,
+                overflow: 'hidden',
+              }
+            : undefined
+        }
+      >
         {typeof tabContent === 'function' ? tabContent() : tabContent}
       </div>
     </ClubAdminShell>

@@ -3,7 +3,9 @@ import { ReactElement, ReactNode, useState } from 'react'
 import styled from 'styled-components'
 
 import { Modal } from '~/components/common'
-import { ALLBIRDS_GRAY, CLUBS_BLUE, CLUBS_GREY, MEDIUM_GRAY } from '~/constants'
+
+import { AdminDanger, AdminGhost, AdminActions } from '../adminControls'
+import { CLUBS_BLUE, CLUBS_GREY, MEDIUM_GRAY } from '~/constants'
 import {
   Application,
   ApplicationQuestion,
@@ -53,11 +55,11 @@ export const Pill = styled.span<{ $status?: number }>`
 `
 
 export const Panel = styled.div`
-  background: #fff;
-  border: 1px solid #dbdbdb;
-  border-radius: 6px;
-  padding: 20px 24px;
-  margin-bottom: 32px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 16px;
 `
 
 export const Muted = styled.span`
@@ -67,21 +69,23 @@ export const Muted = styled.span`
 
 export const SegmentedControl = styled.div`
   display: inline-flex;
-  border: 1px solid #dbdbdb;
-  border-radius: 6px;
+  flex-shrink: 0;
   overflow: hidden;
+  border: 1px solid ${CLUBS_BLUE};
+  border-radius: 999px;
+  background: #fff;
 
   button {
     border: none;
     background: #fff;
     padding: 6px 14px;
     cursor: pointer;
-    font-size: 0.9rem;
-    color: ${CLUBS_GREY};
+    font-size: 0.875rem;
+    color: ${CLUBS_BLUE};
   }
 
   button + button {
-    border-left: 1px solid ${ALLBIRDS_GRAY};
+    border-left: 1px solid ${CLUBS_BLUE};
   }
 
   button.is-active {
@@ -178,17 +182,17 @@ export function useConfirm(): [
       width="440px"
       marginBottom={false}
     >
-      <div style={{ padding: 24, textAlign: 'left' }}>
+      <div>
         <h3 className="title is-5 mb-3">{request.title}</h3>
         <p className="mb-4">{request.message}</p>
-        <div className="buttons is-right">
-          <button className="button" onClick={() => close(false)}>
+        <AdminActions>
+          <AdminGhost type="button" onClick={() => close(false)}>
             Cancel
-          </button>
-          <button className="button is-danger" onClick={() => close(true)}>
+          </AdminGhost>
+          <AdminDanger type="button" onClick={() => close(true)}>
             {request.confirmLabel}
-          </button>
-        </div>
+          </AdminDanger>
+        </AdminActions>
       </div>
     </Modal>
   )

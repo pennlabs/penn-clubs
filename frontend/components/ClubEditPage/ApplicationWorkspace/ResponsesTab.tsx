@@ -1,12 +1,12 @@
 import moment from 'moment-timezone'
 import { ReactElement, ReactNode, useEffect, useState } from 'react'
+import Select from 'react-select'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { Icon, Loading, Modal } from '~/components/common'
 import {
   ALLBIRDS_GRAY,
-  CLUBS_BLUE,
   CLUBS_GREY,
   MD,
   mediaMaxWidth,
@@ -14,6 +14,13 @@ import {
 import { ApplicationQuestion, ApplicationStatusType } from '~/types'
 import { doApiRequest } from '~/utils'
 
+import {
+  selectCompactStyles,
+  selectComponents,
+  selectMenuPortalTarget,
+} from '../../common/selectStyles'
+import { AdminGhost, AdminPrimary } from '../adminControls'
+import { ADMIN_NAVY } from '../adminTheme'
 import { exportToGoogleSheets } from '../Google'
 import {
   answerableQuestions,
@@ -21,9 +28,9 @@ import {
   Muted,
   Panel,
   Pill,
-  SegmentedControl,
   STATUS_LABELS,
   Submission,
+  SegmentedControl,
   WorkspaceApplication,
 } from './shared'
 import SummaryView from './SummaryView'
@@ -36,34 +43,112 @@ const Toolbar = styled.div`
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  min-width: 0;
 
-  .spacer {
-    flex: 1;
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
   }
 `
 
-const Split = styled.div`
+const Fill = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+`
+
+const SummaryScroll = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+`
+
+const Split = styled.div<{ $listOpen?: boolean }>`
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: ${({ $listOpen }) =>
+    $listOpen ? '260px minmax(0, 1fr)' : 'minmax(0, 1fr)'};
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 
   ${mediaMaxWidth(MD)} {
     grid-template-columns: 1fr;
+    overflow: auto;
   }
 `
 
+const Column = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+`
+
+const ListHead = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+`
+
+const MinimizeButton = styled.button`
+  appearance: none;
+  align-items: center;
+  background: #f3f3f3;
+  border: 0;
+  border-radius: 8px;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 32px;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0;
+  width: 32px;
+
+  &:hover {
+    background: #e8e8e8;
+  }
+`
+
+const DetailScroll = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+`
+
+const SelectApplicants = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 13px;
+  margin: 0;
+`
+
 const ApplicantList = styled.ul`
-  max-height: 600px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  margin: 8px -24px -20px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
 
   li {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 24px;
+    padding: 10px 4px;
     border-top: 1px solid ${ALLBIRDS_GRAY};
     cursor: pointer;
   }
@@ -74,7 +159,6 @@ const ApplicantList = styled.ul`
 
   li.is-selected {
     background: #eef0fe;
-    box-shadow: inset 3px 0 0 ${CLUBS_BLUE};
   }
 
   .who {
@@ -93,13 +177,15 @@ const ApplicantList = styled.ul`
 const Filters = styled.div`
   display: grid;
   gap: 8px;
-  margin-bottom: 12px;
+  flex-shrink: 0;
+  margin-bottom: 8px;
 `
 
 const DetailHeader = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-shrink: 0;
   gap: 16px;
 
   h3 {
@@ -119,13 +205,11 @@ const Pager = styled.div`
   flex: none;
   display: inline-flex;
   align-items: center;
-  border: 1px solid ${ALLBIRDS_GRAY};
-  border-radius: 6px;
-  overflow: hidden;
+  gap: 2px;
 
   button {
     border: none;
-    background: #fff;
+    background: transparent;
     padding: 4px 8px;
     cursor: pointer;
     color: ${CLUBS_GREY};
@@ -137,11 +221,9 @@ const Pager = styled.div`
   }
 
   span {
-    padding: 0 10px;
+    padding: 0 8px;
     font-size: 0.85rem;
     color: ${CLUBS_GREY};
-    border-left: 1px solid ${ALLBIRDS_GRAY};
-    border-right: 1px solid ${ALLBIRDS_GRAY};
     line-height: 30px;
   }
 `
@@ -189,19 +271,28 @@ const StatusSelect = ({
   onChange: (status: ApplicationStatusType) => void
   placeholder?: string
 }): ReactElement => (
-  <div className="select is-small">
-    <select
-      value={value ?? ''}
-      onChange={(e) => e.target.value && onChange(Number(e.target.value))}
-    >
-      {placeholder && <option value="">{placeholder}</option>}
-      {Object.entries(STATUS_LABELS).map(([status, label]) => (
-        <option key={status} value={status}>
-          {label}
-        </option>
-      ))}
-    </select>
-  </div>
+  <Select
+    styles={selectCompactStyles}
+    components={selectComponents}
+    menuPortalTarget={selectMenuPortalTarget}
+    menuPosition="fixed"
+    isClearable={Boolean(placeholder)}
+    placeholder={placeholder ?? 'Status'}
+    value={
+      value != null
+        ? { value, label: STATUS_LABELS[value] }
+        : null
+    }
+    options={Object.entries(STATUS_LABELS).map(([status, label]) => ({
+      value: Number(status),
+      label,
+    }))}
+    onChange={(option) => {
+      if (option) {
+        onChange(option.value)
+      }
+    }}
+  />
 )
 
 const Individual = ({
@@ -218,6 +309,7 @@ const Individual = ({
   onStatus: (pks: number[], status: ApplicationStatusType) => Promise<void>
   onReason: (pk: number, reason: string) => Promise<void>
 }): ReactElement => {
+  const [listOpen, setListOpen] = useState(true)
   const [selectedPk, setSelectedPk] = useState<number | null>(null)
   const [checked, setChecked] = useState<number[]>([])
   const index = Math.max(
@@ -231,11 +323,11 @@ const Individual = ({
 
   if (submissions.length === 0) {
     return (
-      <Split>
-        <Panel>
+      <Split $listOpen>
+        <Column>
           {filters}
           <Muted>No applicants match.</Muted>
-        </Panel>
+        </Column>
       </Split>
     )
   }
@@ -248,27 +340,36 @@ const Individual = ({
     )
 
   return (
-    <Split>
-      <Panel>
-        {filters}
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={checked.length === submissions.length}
-            onChange={(e) =>
-              setChecked(
-                e.target.checked ? submissions.map(({ pk }) => pk) : [],
-              )
-            }
-          />{' '}
-          <Muted>
+    <Split $listOpen={listOpen}>
+      {listOpen && (
+      <Column>
+        <ListHead>
+          <SelectApplicants>
+            <input
+              type="checkbox"
+              checked={checked.length === submissions.length}
+              onChange={(e) =>
+                setChecked(
+                  e.target.checked ? submissions.map(({ pk }) => pk) : [],
+                )
+              }
+            />
             {checked.length > 0
               ? `${checked.length} selected`
               : 'Select applicants'}
-          </Muted>
-        </label>
+          </SelectApplicants>
+          <MinimizeButton
+            type="button"
+            aria-label="Hide applicant list"
+            title="Hide applicant list"
+            onClick={() => setListOpen(false)}
+          >
+            <Icon name="x" alt="" size="1rem" fitSize />
+          </MinimizeButton>
+        </ListHead>
+        {filters}
         {checked.length > 0 && (
-          <div className="mt-2">
+          <div style={{ flexShrink: 0, marginBottom: 8 }}>
             <StatusSelect
               placeholder="Set status…"
               onChange={(status) =>
@@ -302,11 +403,18 @@ const Individual = ({
             </li>
           ))}
         </ApplicantList>
-      </Panel>
+      </Column>
+      )}
 
-      <Panel>
+      <Column>
         <DetailHeader>
           <h3>{fullName(selected)}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {!listOpen && (
+            <AdminGhost type="button" onClick={() => setListOpen(true)}>
+              Applicants
+            </AdminGhost>
+          )}
           <Pager>
             <button
               title="Previous applicant"
@@ -326,8 +434,9 @@ const Individual = ({
               <Icon name="chevron-right" alt="next" />
             </button>
           </Pager>
+          </div>
         </DetailHeader>
-        <Muted as="p" className="mt-1">
+        <Muted as="p" className="mt-1" style={{ flexShrink: 0 }}>
           {[
             selected.email,
             selected.graduation_year && `Class of ${selected.graduation_year}`,
@@ -344,6 +453,7 @@ const Individual = ({
           {selected.notified ? 'Decision email sent' : 'No decision email yet'}
         </Muted>
 
+        <DetailScroll>
         <DecisionBox>
           <div className="row">
             <b>Decision</b>
@@ -377,7 +487,8 @@ const Individual = ({
             </Answer>
           )
         })}
-      </Panel>
+        </DetailScroll>
+      </Column>
     </Split>
   )
 }
@@ -442,25 +553,22 @@ const DecisionEmails = ({
             can't be undone.
           </p>
           <div className="buttons">
-            <button className="button" onClick={() => setConfirming(false)}>
+            <AdminGhost type="button" onClick={() => setConfirming(false)}>
               Cancel
-            </button>
-            <button className="button is-primary" onClick={() => send(false)}>
+            </AdminGhost>
+            <AdminPrimary type="button" onClick={() => send(false)}>
               Yes, send them
-            </button>
+            </AdminPrimary>
           </div>
         </div>
       ) : (
         <div className="buttons mt-3">
-          <button className="button" onClick={() => send(true)}>
+          <AdminGhost type="button" onClick={() => send(true)}>
             Check who would get it
-          </button>
-          <button
-            className="button is-primary"
-            onClick={() => setConfirming(true)}
-          >
+          </AdminGhost>
+          <AdminPrimary type="button" onClick={() => setConfirming(true)}>
             <Icon name="send" alt="" /> Send emails
-          </button>
+          </AdminPrimary>
         </div>
       )}
       {message && (
@@ -473,9 +581,11 @@ const DecisionEmails = ({
 export default function ResponsesTab({
   clubCode,
   application,
+  chrome,
 }: {
   clubCode: string
   application: WorkspaceApplication
+  chrome?: (toolbar: ReactNode) => ReactNode
 }): ReactElement {
   const url = `/clubs/${clubCode}/applications/${application.id}/`
   const [submissions, setSubmissions] = useState<Submission[] | null>(null)
@@ -501,7 +611,14 @@ export default function ResponsesTab({
   }, [url])
 
   if (submissions === null) {
-    return <Loading />
+    return (
+      <>
+        {chrome?.(null)}
+        <Fill>
+          <Loading />
+        </Fill>
+      </>
+    )
   }
 
   const visible = submissions.filter(
@@ -604,38 +721,31 @@ export default function ResponsesTab({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <div className="select is-small is-fullwidth">
-        <select
-          value={statusFilter ?? ''}
-          onChange={(e) =>
-            setStatusFilter(e.target.value ? Number(e.target.value) : undefined)
-          }
-        >
-          <option value="">All statuses</option>
-          {Object.entries(STATUS_LABELS).map(([status, label]) => (
-            <option key={status} value={status}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        styles={selectCompactStyles}
+        components={selectComponents}
+        menuPortalTarget={selectMenuPortalTarget}
+        menuPosition="fixed"
+        isClearable
+        placeholder="All statuses"
+        value={
+          statusFilter != null
+            ? { value: statusFilter, label: STATUS_LABELS[statusFilter] }
+            : null
+        }
+        options={Object.entries(STATUS_LABELS).map(([status, label]) => ({
+          value: Number(status),
+          label,
+        }))}
+        onChange={(option) =>
+          setStatusFilter(option ? option.value : undefined)
+        }
+      />
     </Filters>
   )
 
-  if (submissions.length === 0) {
-    return (
-      <Panel className="has-text-centered py-6">
-        <h3 className="title is-5">No responses yet</h3>
-        <Muted>
-          Share the application link from the top of this page. Responses will
-          show up here as students apply.
-        </Muted>
-      </Panel>
-    )
-  }
-
-  return (
-    <>
+  const toolbar =
+    submissions.length === 0 ? null : (
       <Toolbar>
         <SegmentedControl>
           {(['summary', 'individual'] as const).map((option) => (
@@ -650,41 +760,67 @@ export default function ResponsesTab({
             </button>
           ))}
         </SegmentedControl>
-        <span className="spacer" />
-        <button className="button is-small" onClick={downloadCsv}>
-          <Icon name="download" alt="" /> CSV
-        </button>
-        <button
-          className="button is-small"
-          onClick={() =>
-            exportToGoogleSheets(`${application.name} responses`, exportRows())
-          }
-        >
-          <Icon name="external-link" alt="" /> Google Sheets
-        </button>
-        <button
-          className="button is-small is-primary"
-          onClick={() => setShowEmails(true)}
-        >
-          <Icon name="mail" alt="" /> Send decisions
-        </button>
+        <div className="actions">
+          <AdminGhost type="button" onClick={downloadCsv}>
+            <Icon name="download" alt="" /> CSV
+          </AdminGhost>
+          <AdminGhost
+            type="button"
+            onClick={() =>
+              exportToGoogleSheets(
+                `${application.name} responses`,
+                exportRows(),
+              )
+            }
+          >
+            <Icon name="external-link" alt="" /> Google Sheets
+          </AdminGhost>
+          <AdminPrimary type="button" onClick={() => setShowEmails(true)}>
+            <Icon name="mail" alt="" /> Send decisions
+          </AdminPrimary>
+        </div>
       </Toolbar>
+    )
 
-      {view === 'summary' ? (
-        <SummaryView
-          submissions={submissions}
-          questions={questions}
-          committees={committees}
-        />
-      ) : (
-        <Individual
-          submissions={visible}
-          questions={questions}
-          filters={filters}
-          onStatus={onStatus}
-          onReason={onReason}
-        />
-      )}
+  if (submissions.length === 0) {
+    return (
+      <>
+        {chrome?.(null)}
+        <Fill>
+          <Panel className="has-text-centered py-6">
+            <h3 className="title is-5">No responses yet</h3>
+            <Muted>
+              Share the application link from the top of this page. Responses
+              will show up here as students apply.
+            </Muted>
+          </Panel>
+        </Fill>
+      </>
+    )
+  }
+
+  return (
+    <>
+      {chrome?.(toolbar)}
+      <Fill>
+        {view === 'summary' ? (
+          <SummaryScroll>
+            <SummaryView
+              submissions={submissions}
+              questions={questions}
+              committees={committees}
+            />
+          </SummaryScroll>
+        ) : (
+          <Individual
+            submissions={visible}
+            questions={questions}
+            filters={filters}
+            onStatus={onStatus}
+            onReason={onReason}
+          />
+        )}
+      </Fill>
 
       {showEmails && (
         <Modal

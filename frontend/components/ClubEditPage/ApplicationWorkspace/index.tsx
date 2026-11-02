@@ -4,24 +4,25 @@ import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { Icon, Loading } from '~/components/common'
-import {
-  ALLBIRDS_GRAY,
-  CLUBS_BLUE,
-  CLUBS_GREY,
-  MD,
-  mediaMaxWidth,
-} from '~/constants'
+import { MD, mediaMaxWidth } from '~/constants'
 import { Club } from '~/types'
 import { doApiRequest } from '~/utils'
 
+import { ADMIN_NAVY } from '../adminTheme'
+import {
+  AdminDanger,
+  AdminGhost,
+  AdminGhostLink,
+  AdminPrimary,
+} from '../adminControls'
 import QuestionsTab from './QuestionsTab'
 import ResponsesTab from './ResponsesTab'
 import SettingsTab from './SettingsTab'
 import {
   applicationState,
   Muted,
-  Panel,
   Pill,
+  SegmentedControl,
   useConfirm,
   WorkspaceApplication,
 } from './shared'
@@ -34,20 +35,77 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]['name']
 
-const Layout = styled.div`
+const Layout = styled.div<{ $listOpen?: boolean }>`
   display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 24px;
-  align-items: start;
+  grid-template-columns: ${({ $listOpen }) =>
+    $listOpen ? 'minmax(160px, 1fr) minmax(0, 4fr)' : 'minmax(0, 1fr)'};
+  gap: 16px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 
   ${mediaMaxWidth(MD)} {
     grid-template-columns: 1fr;
+    height: auto;
+  }
+`
+
+const Pane = styled.div`
+  background: #fff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 16px;
+`
+
+const CloseButton = styled.button`
+  appearance: none;
+  align-items: center;
+  background: #f3f3f3;
+  border: 0;
+  border-radius: 8px;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+
+  &:hover {
+    background: #e8e8e8;
+  }
+`
+
+const SideHead = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  ${AdminPrimary} {
+    flex: 1;
+    min-width: 0;
+  }
+
+  ${CloseButton} {
+    margin-left: auto;
   }
 `
 
 const Sidebar = styled.nav`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+
   ul {
-    margin-top: 12px;
+    margin: 12px 0 0;
+    overflow: auto;
   }
 
   li button {
@@ -55,18 +113,18 @@ const Sidebar = styled.nav`
     text-align: left;
     border: none;
     background: none;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 10px 12px;
     cursor: pointer;
-    color: ${CLUBS_GREY};
+    color: ${ADMIN_NAVY};
   }
 
   li button:hover {
-    background: #f7f7f8;
+    background: #f7f8fb;
   }
 
   li button.is-selected {
-    background: #eef0fe;
+    background: #eef0ff;
   }
 
   .name {
@@ -83,31 +141,33 @@ const Header = styled.div`
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  flex-shrink: 0;
+  gap: 8px;
 `
 
-const Tabs = styled.div`
+const ActionRow = styled.div`
   display: flex;
-  gap: 24px;
-  border-bottom: 1px solid ${ALLBIRDS_GRAY};
-  margin: 16px 0 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+`
 
-  button {
-    border: none;
-    background: none;
-    padding: 8px 0;
-    cursor: pointer;
-    font-size: 1rem;
-    color: ${CLUBS_GREY};
-    border-bottom: 3px solid transparent;
-    margin-bottom: -1px;
-  }
+const TabBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  gap: 8px;
+  margin: 12px 0 16px;
+`
 
-  button.is-active {
-    color: ${CLUBS_BLUE};
-    border-bottom-color: ${CLUBS_BLUE};
-    font-weight: 600;
-  }
+const ScrollBody = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
 `
 
 const applicationLink = (club: Club, application: WorkspaceApplication) =>
@@ -119,8 +179,12 @@ const applicationLink = (club: Club, application: WorkspaceApplication) =>
  */
 export default function ApplicationWorkspace({
   club,
+  listOpen = true,
+  onCloseList,
 }: {
   club: Club
+  listOpen?: boolean
+  onCloseList?: () => void
 }): ReactElement {
   const [applications, setApplications] = useState<
     WorkspaceApplication[] | null
@@ -221,38 +285,31 @@ export default function ApplicationWorkspace({
 
   const selected = applications.find(({ id }) => id === selectedId)
 
-  if (selected == null) {
-    return (
-      <Panel className="has-text-centered py-6">
-        <h3 className="title is-4">Create your first application</h3>
-        <p className="mb-4">
-          Write your questions here, then share the link with students and
-          review responses in one place.
-        </p>
-        {!club.is_wharton && (
-          <button className="button is-link" onClick={create}>
-            <Icon name="plus" alt="" /> New application
-          </button>
-        )}
-      </Panel>
-    )
-  }
-
-  const state = applicationState(selected)
-
-  return (
-    <Layout>
+  const sidebar = listOpen ? (
+    <Pane>
       <Sidebar>
-        {!club.is_wharton && (
-          <button className="button is-link is-fullwidth" onClick={create}>
-            <Icon name="plus" alt="" /> New application
-          </button>
-        )}
+        <SideHead>
+          {!club.is_wharton && (
+            <AdminPrimary type="button" onClick={create}>
+              <Icon name="plus" alt="" /> New application
+            </AdminPrimary>
+          )}
+          {onCloseList && (
+            <CloseButton
+              type="button"
+              aria-label="Close applications list"
+              title="Close applications list"
+              onClick={onCloseList}
+            >
+              <Icon name="x" alt="" size="1rem" fitSize />
+            </CloseButton>
+          )}
+        </SideHead>
         <ul>
           {applications.map((application) => (
             <li key={application.id}>
               <button
-                className={application.id === selected.id ? 'is-selected' : ''}
+                className={application.id === selectedId ? 'is-selected' : ''}
                 onClick={() => setSelectedId(application.id)}
               >
                 <span className="name">{application.name}</span>
@@ -266,17 +323,66 @@ export default function ApplicationWorkspace({
           ))}
         </ul>
       </Sidebar>
+    </Pane>
+  ) : null
 
-      <div style={{ minWidth: 0 }}>
+  if (selected == null) {
+    return (
+      <Layout $listOpen={listOpen}>
+        {sidebar}
+        <Pane style={{ justifyContent: 'center', textAlign: 'center' }}>
+          <h3 className="title is-5" style={{ color: ADMIN_NAVY }}>
+            Create your first application
+          </h3>
+          <p className="mb-4">
+            Write your questions here, then share the link with students and
+            review responses in one place.
+          </p>
+          {!club.is_wharton && (
+            <AdminPrimary type="button" onClick={create}>
+              <Icon name="plus" alt="" /> New application
+            </AdminPrimary>
+          )}
+        </Pane>
+      </Layout>
+    )
+  }
+
+  const state = applicationState(selected)
+
+  const mainTabs = (
+    <SegmentedControl>
+      {TABS.map(({ name, label }) => (
+        <button
+          key={name}
+          className={tab === name ? 'is-active' : ''}
+          onClick={() => setTab(name)}
+        >
+          {label}
+        </button>
+      ))}
+    </SegmentedControl>
+  )
+
+  return (
+    <Layout $listOpen={listOpen}>
+      {sidebar}
+
+      <Pane>
         <Header>
           <div>
-            <h2 className="title is-4 mb-1">{selected.name}</h2>
+            <h2
+              className="title is-4 mb-1"
+              style={{ color: ADMIN_NAVY, fontSize: '1.25rem' }}
+            >
+              {selected.name}
+            </h2>
             <Pill $status={state.tone}>{state.label}</Pill>{' '}
             <Muted>{state.detail}</Muted>
           </div>
-          <div className="buttons">
-            <button
-              className="button is-small"
+          <ActionRow>
+            <AdminGhost
+              type="button"
               onClick={() =>
                 navigator.clipboard
                   .writeText(applicationLink(club, selected))
@@ -284,71 +390,68 @@ export default function ApplicationWorkspace({
               }
             >
               <Icon name="link" alt="" /> Copy link
-            </button>
-            <a
-              className="button is-small"
+            </AdminGhost>
+            <AdminGhostLink
               href={applicationLink(club, selected)}
               target="_blank"
               rel="noreferrer"
             >
               <Icon name="eye" alt="" /> Preview
-            </a>
+            </AdminGhostLink>
             {!club.is_wharton && (
               <>
-                <button
-                  className="button is-small"
-                  onClick={() => duplicate(selected)}
-                >
+                <AdminGhost type="button" onClick={() => duplicate(selected)}>
                   <Icon name="clipboard" alt="" /> Duplicate
-                </button>
-                <button
-                  className="button is-small is-danger is-outlined"
-                  onClick={() => remove(selected)}
-                >
+                </AdminGhost>
+                <AdminDanger type="button" onClick={() => remove(selected)}>
                   <Icon name="trash" alt="" /> Delete
-                </button>
+                </AdminDanger>
               </>
             )}
-          </div>
+          </ActionRow>
         </Header>
 
-        <Tabs>
-          {TABS.map(({ name, label }) => (
-            <button
-              key={name}
-              className={tab === name ? 'is-active' : ''}
-              onClick={() => setTab(name)}
-            >
-              {label}
-            </button>
-          ))}
-        </Tabs>
-
         {tab === 'questions' && (
-          <QuestionsTab
-            key={selected.id}
-            clubCode={club.code}
-            application={selected}
-            onApplicationChanged={() => load()}
-          />
+          <>
+            <TabBar>{mainTabs}</TabBar>
+            <ScrollBody>
+              <QuestionsTab
+                key={selected.id}
+                clubCode={club.code}
+                application={selected}
+                onApplicationChanged={() => load()}
+              />
+            </ScrollBody>
+          </>
         )}
         {tab === 'responses' && (
           <ResponsesTab
             key={selected.id}
             clubCode={club.code}
             application={selected}
+            chrome={(toolbar) => (
+              <TabBar>
+                {mainTabs}
+                {toolbar}
+              </TabBar>
+            )}
           />
         )}
         {tab === 'settings' && (
-          <SettingsTab
-            key={selected.id}
-            club={club}
-            application={selected}
-            onSaved={() => load()}
-          />
+          <>
+            <TabBar>{mainTabs}</TabBar>
+            <ScrollBody>
+              <SettingsTab
+                key={selected.id}
+                club={club}
+                application={selected}
+                onSaved={() => load()}
+              />
+            </ScrollBody>
+          </>
         )}
         {confirmDialog}
-      </div>
+      </Pane>
     </Layout>
   )
 }

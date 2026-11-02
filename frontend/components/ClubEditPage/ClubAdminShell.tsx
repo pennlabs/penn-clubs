@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ReactElement, ReactNode } from 'react'
+import Select from 'react-select'
 import styled from 'styled-components'
 
 import { GREEN } from '../../constants/colors'
@@ -8,12 +9,16 @@ import { HOME_ROUTE, SETTINGS_ROUTE } from '../../constants/routes'
 import { UserInfo } from '../../types'
 import { SHOW_FEEDBACK, SITE_LOGO, SITE_NAME } from '../../utils/branding'
 import { Icon } from '../common'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from '../common/selectStyles'
 import Feedback from '../Header/Feedback'
 import {
   ADMIN_ACCENT,
   ADMIN_CANVAS,
   ADMIN_FONT,
-  ADMIN_LINE,
   ADMIN_NAVY,
   ADMIN_PAD_FIELD,
   ADMIN_RADIUS,
@@ -26,27 +31,38 @@ export type AdminNavItem = {
 }
 
 const Page = styled.div`
-  min-height: 100vh;
   background: white;
   box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 `
 
 const Frame = styled.div`
   background: white;
-  min-height: 100vh;
   display: flex;
+  flex: 1;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 `
 
 const TopBar = styled.header`
-  height: 60px;
+  background: white;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 18px 0 20px;
   flex-shrink: 0;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
 `
 
 const Brand = styled.a`
@@ -94,15 +110,26 @@ const Body = styled.div`
   align-items: stretch;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+  padding: 0 16px 16px 0;
+
+  ${mediaMaxWidth(MD)} {
+    padding: 0 16px 16px;
+  }
 `
 
 const Sidebar = styled.nav`
   width: 208px;
   flex-shrink: 0;
-  padding: 8px 12px 24px;
+  padding: 0 12px 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  height: 100%;
+  overflow: auto;
+  position: sticky;
+  top: 0;
+  align-self: stretch;
 
   ${mediaMaxWidth(MD)} {
     display: none;
@@ -160,16 +187,18 @@ const ExtraLabel = styled.div`
 const Canvas = styled.main<{ $plain?: boolean }>`
   flex: 1;
   min-width: 0;
+  min-height: 0;
   background: ${({ $plain }) => ($plain ? 'white' : ADMIN_CANVAS)};
   border-radius: ${({ $plain }) => ($plain ? '0' : '10px')};
-  margin: 0 16px 16px 0;
+  margin: 0;
   padding: ${({ $plain }) => ($plain ? '0' : '22px 22px 32px')};
-  overflow: auto;
+  overflow: ${({ $plain }) => ($plain ? 'hidden' : 'auto')};
+  display: ${({ $plain }) => ($plain ? 'flex' : 'block')};
+  flex-direction: column;
   font-size: ${ADMIN_FONT};
 
   ${mediaMaxWidth(MD)} {
-    margin: 0 8px 8px;
-    padding: ${({ $plain }) => ($plain ? '0 8px 8px' : '16px')};
+    padding: ${({ $plain }) => ($plain ? '0' : '16px')};
   }
 
   .card {
@@ -324,22 +353,20 @@ const Canvas = styled.main<{ $plain?: boolean }>`
   }
 `
 
-const MobileNav = styled.label`
-  display: none;
-  margin-bottom: 14px;
-  color: ${ADMIN_NAVY};
-  font-size: 13px;
+const Main = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+`
 
-  select {
-    display: block;
-    width: 100%;
-    margin-top: 6px;
-    background: white;
-    border: 1px solid ${ADMIN_LINE};
-    border-radius: ${ADMIN_RADIUS};
-    padding: 8px 10px;
-    color: ${ADMIN_NAVY};
-  }
+const MobileNav = styled.div`
+  display: none;
+  flex-shrink: 0;
+  padding: 0 0 16px;
+  position: relative;
+  z-index: 6;
 
   ${mediaMaxWidth(MD)} {
     display: block;
@@ -455,27 +482,46 @@ export default function ClubAdminShell({
               </>
             )}
           </Sidebar>
-          <Canvas
-            className="admin-canvas"
-            id="club-edit-content"
-            $plain={active === 'member'}
-          >
+          <Main>
             <MobileNav>
-              Section
-              <select
+              <Select
                 aria-label="Club admin section"
-                value={active}
-                onChange={(event) => onNavigate(event.target.value)}
-              >
-                {allItems.map((item) => (
-                  <option key={item.name} value={item.name}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
+                styles={selectMenuStyles}
+                components={selectComponents}
+                menuPortalTarget={selectMenuPortalTarget}
+                menuPosition="fixed"
+                isSearchable={false}
+                options={allItems.map((item) => ({
+                  value: item.name,
+                  label: item.label,
+                }))}
+                value={
+                  allItems
+                    .map((item) => ({
+                      value: item.name,
+                      label: item.label,
+                    }))
+                    .find((item) => item.value === active) ?? null
+                }
+                onChange={(option) => {
+                  if (option) {
+                    onNavigate(option.value)
+                  }
+                }}
+              />
             </MobileNav>
-            {children}
-          </Canvas>
+            <Canvas
+              className="admin-canvas"
+              id="club-edit-content"
+              $plain={
+                active === 'member' ||
+                active === 'events' ||
+                active === 'recruitment'
+              }
+            >
+              {children}
+            </Canvas>
+          </Main>
         </Body>
         {SHOW_FEEDBACK && <Feedback />}
       </Frame>

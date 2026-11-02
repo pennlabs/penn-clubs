@@ -24,6 +24,7 @@ import { BODY_FONT } from '../../constants/styles'
 import { titleize } from '../../utils'
 import { Icon } from '.'
 import {
+  selectCompactStyles,
   selectComponents,
   selectMenuPortalTarget,
   selectMenuStyles,
@@ -75,12 +76,24 @@ type tableProps = {
   onFilteredDataChange?: (rows: Row[]) => void
   variant?: 'boxed' | 'sheet'
   isRowSelected?: (row: Row) => boolean
+  fillParent?: boolean
+  resizable?: boolean
 }
 
-const Styles = styled.div`
+const Styles = styled.div<{ $fill?: boolean }>`
   width: 100%;
   font-size: 0.875rem;
   margin-bottom: 0;
+
+  ${({ $fill }) =>
+    $fill &&
+    `
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  `}
 `
 
 const SearchWrapper = styled.div<{ $sheet?: boolean }>`
@@ -109,6 +122,7 @@ const Toolbar = styled.div<{ $sheet?: boolean }>`
   align-items: center;
   justify-content: ${({ $sheet }) => ($sheet ? 'flex-start' : 'space-between')};
   gap: 0.75rem;
+  flex-shrink: 0;
   flex-wrap: wrap;
   background: ${({ $sheet }) => ($sheet ? 'transparent' : WHITE)};
   border-bottom: ${({ $sheet }) =>
@@ -203,17 +217,48 @@ const ColumnsItem = styled.label<{ $locked?: boolean }>`
   }
 `
 
-const TableFrame = styled.div<{ $sheet?: boolean }>`
+const TableFrame = styled.div<{ $sheet?: boolean; $fill?: boolean }>`
   background: ${({ $sheet }) => ($sheet ? 'transparent' : WHITE)};
   border: ${({ $sheet }) => ($sheet ? '0' : `1px solid ${TABLE_LINE}`)};
   border-radius: ${({ $sheet }) => ($sheet ? '0' : '8px')};
   box-shadow: none;
   overflow: ${({ $sheet }) => ($sheet ? 'visible' : 'hidden')};
+
+  ${({ $fill }) =>
+    $fill &&
+    `
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  `}
 `
 
-const TableScroll = styled.div<{ $sheet?: boolean }>`
+const ResizeHandle = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  z-index: 3;
+
+  &:hover,
+  &:active {
+    background: rgba(73, 84, 244, 0.18);
+  }
+`
+
+const TableScroll = styled.div<{
+  $sheet?: boolean
+  $fill?: boolean
+  $resizable?: boolean
+}>`
   overflow: auto;
-  max-height: 36rem;
+  max-height: ${({ $fill }) => ($fill ? 'none' : '36rem')};
+  ${({ $fill }) => $fill && 'flex: 1; min-height: 0;'}
   width: 100%;
   scrollbar-width: thin;
   scrollbar-color: #c4c4c4 #f3f3f3;
@@ -246,8 +291,9 @@ const TableScroll = styled.div<{ $sheet?: boolean }>`
     border: 0;
     border-collapse: collapse;
     margin-bottom: 0;
-    min-width: ${({ $sheet }) => ($sheet ? '0' : '100%')};
-    width: max-content;
+    min-width: 100%;
+    table-layout: ${({ $resizable }) => ($resizable ? 'fixed' : 'auto')};
+    width: ${({ $resizable }) => ($resizable ? 'max-content' : '100%')};
   }
 
   table.table th,
@@ -260,6 +306,8 @@ const TableScroll = styled.div<{ $sheet?: boolean }>`
     padding: ${({ $sheet }) => ($sheet ? '11px 16px' : '10px 14px')};
     vertical-align: middle;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   table.table thead th {
@@ -336,6 +384,7 @@ const Footer = styled.div<{ $sheet?: boolean }>`
   border-top: ${({ $sheet }) =>
     $sheet ? '0' : `1px solid ${TABLE_LINE}`};
   display: flex;
+  flex-shrink: 0;
   flex-wrap: wrap;
   font-size: 0.8125rem;
   gap: 12px 16px;
@@ -531,6 +580,8 @@ const Table = ({
   onFilteredDataChange,
   variant = 'boxed',
   isRowSelected,
+  fillParent = false,
+  resizable = false,
 }: tableProps): ReactElement<any> => {
   const sheet = variant === 'sheet'
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -539,10 +590,43 @@ const Table = ({
   const [hiddenColumns, setHiddenColumns] = useState<Record<string, boolean>>(
     {},
   )
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({})
+  const resizeDrag = useRef<{
+    name: string
+    startX: number
+    startWidth: number
+    moved: boolean
+  } | null>(null)
   const [columnsOpen, setColumnsOpen] = useState(false)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
   const columnsRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!resizable) {
+      return
+    }
+    const onMove = (event: MouseEvent) => {
+      const drag = resizeDrag.current
+      if (!drag) {
+        return
+      }
+      const next = Math.max(64, drag.startWidth + (event.clientX - drag.startX))
+      if (Math.abs(event.clientX - drag.startX) > 3) {
+        drag.moved = true
+      }
+      setColumnWidths((current) => ({ ...current, [drag.name]: next }))
+    }
+    const onUp = () => {
+      resizeDrag.current = null
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [resizable])
 
   useEffect(() => {
     const searchedData = data.filter((item) => {
@@ -877,29 +961,82 @@ const Table = ({
   )
 
   const tableBody = (
-        <TableScroll $sheet={sheet}>
+        <TableScroll $sheet={sheet} $fill={fillParent} $resizable={resizable}>
           <table
             className={sheet ? 'table' : 'table is-fullwidth'}
             {...getTableProps()}
+            style={
+              resizable
+                ? {
+                    width: Math.max(
+                      720,
+                      visibleColumnDefs.reduce(
+                        (sum, column) =>
+                          sum +
+                          (columnWidths[column.name] ||
+                            (column.name === 'select' ? 52 : 140)),
+                        0,
+                      ),
+                    ),
+                  }
+                : undefined
+            }
           >
             <thead>
               {headerGroups.map((headerGroup) => (
                 <tr {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map((column) => {
+                  {headerGroup.headers.map((column, index) => {
                     const header = column.render('Header')
                     const sortable = Boolean(column.canSort)
+                    const def = visibleColumnDefs[index]
+                    const name = def?.name || column.id
+                    const headerProps = sortable
+                      ? column.getHeaderProps(column.getSortByToggleProps())
+                      : column.getHeaderProps()
                     return (
                       <th
-                        {...(sortable
-                          ? column.getHeaderProps(column.getSortByToggleProps())
-                          : column.getHeaderProps())}
+                        {...headerProps}
                         data-sortable={sortable ? 'true' : 'false'}
+                        style={{
+                          ...(headerProps as { style?: object }).style,
+                          position: 'sticky',
+                          width:
+                            columnWidths[name] ||
+                            (name === 'select' ? 52 : undefined),
+                          minWidth: name === 'select' ? 52 : 80,
+                        }}
+                        onClick={(event) => {
+                          if (resizeDrag.current?.moved) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                          }
+                        }}
                       >
                         {renderHeader(header)}
                         {sortable && (
                           <SortIndicator
                             isSorted={column.isSorted}
                             isSortedDesc={column.isSortedDesc}
+                          />
+                        )}
+                        {resizable && (
+                          <ResizeHandle
+                            onMouseDown={(event) => {
+                              event.preventDefault()
+                              event.stopPropagation()
+                              const th = event.currentTarget.parentElement
+                              resizeDrag.current = {
+                                name,
+                                startX: event.clientX,
+                                startWidth:
+                                  th?.getBoundingClientRect().width || 140,
+                                moved: false,
+                              }
+                            }}
+                            onClick={(event) => {
+                              event.preventDefault()
+                              event.stopPropagation()
+                            }}
                           />
                         )}
                       </th>
@@ -1007,17 +1144,26 @@ const Table = ({
               }}
             >
               Rows per page
-              <FooterSelect
-                value={pageSize}
-                onChange={(e) => handlePageSize(Number(e.target.value))}
-                aria-label="Rows per page"
-              >
-                {pageSizeOptions.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </FooterSelect>
+              <div style={{ width: 88 }}>
+                <Select
+                  aria-label="Rows per page"
+                  styles={selectCompactStyles}
+                  components={selectComponents}
+                  menuPortalTarget={selectMenuPortalTarget}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  options={pageSizeOptions.map((size) => ({
+                    value: size,
+                    label: String(size),
+                  }))}
+                  value={{ value: pageSize, label: String(pageSize) }}
+                  onChange={(option) => {
+                    if (option) {
+                      handlePageSize(option.value)
+                    }
+                  }}
+                />
+              </div>
             </label>
           </FooterLeft>
           <FooterRight>
@@ -1038,19 +1184,41 @@ const Table = ({
               >
                 <Icon name="chevron-left" fitSize size="0.85rem" />
               </FooterButton>
-              <PagerSelect
-                value={pageIndex}
-                onChange={(e) => gotoPage(Number(e.target.value))}
-                aria-label="Current page"
-              >
-                {(pageOptions.length > 0 ? pageOptions : [0]).map(
-                  (idx: number): ReactElement<any> => (
-                    <option key={idx} value={idx}>
-                      Page {idx + 1}
-                    </option>
-                  ),
-                )}
-              </PagerSelect>
+              <div style={{ width: 108, minHeight: 32 }}>
+                <Select
+                  aria-label="Current page"
+                  styles={{
+                    ...selectCompactStyles,
+                    control: (style, state) => ({
+                      ...selectCompactStyles.control(style, state),
+                      border: 0,
+                      borderRadius: 0,
+                      minHeight: 32,
+                      height: 32,
+                      boxShadow: 'none',
+                    }),
+                  }}
+                  components={selectComponents}
+                  menuPortalTarget={selectMenuPortalTarget}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  options={(pageOptions.length > 0 ? pageOptions : [0]).map(
+                    (idx: number) => ({
+                      value: idx,
+                      label: `Page ${idx + 1}`,
+                    }),
+                  )}
+                  value={{
+                    value: pageIndex,
+                    label: `Page ${pageIndex + 1}`,
+                  }}
+                  onChange={(option) => {
+                    if (option) {
+                      gotoPage(option.value)
+                    }
+                  }}
+                />
+              </div>
               <FooterButton
                 type="button"
                 onClick={() => nextPage()}
@@ -1073,17 +1241,17 @@ const Table = ({
   )
 
   return (
-    <Styles>
+    <Styles $fill={fillParent}>
       {sheet ? (
         <>
           {toolbar}
-          <TableFrame $sheet>
+          <TableFrame $sheet $fill={fillParent}>
             {tableBody}
             {footer}
           </TableFrame>
         </>
       ) : (
-        <TableFrame>
+        <TableFrame $fill={fillParent}>
           {toolbar}
           {tableBody}
           {footer}

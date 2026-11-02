@@ -730,7 +730,7 @@ const EmailModal = ({
           className="input mb-5"
           style={{ maxWidth: '350px' }}
         ></Field>
-        <div>
+        <div className="buttons">
           <button onClick={confirmSubmission} className="button is-primary">
             Confirm
           </button>

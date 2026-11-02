@@ -21,15 +21,16 @@ import {
 } from '~/types'
 import { doApiRequest } from '~/utils'
 import {
+  selectCompactStyles,
   selectComponents,
   selectMenuPortalTarget,
   selectMenuStyles,
 } from '../../common/selectStyles'
+import { AdminGhost } from '../adminControls'
 
 import { GoogleFormImport } from '../Google'
 import {
   Muted,
-  Panel,
   questionsUrl,
   useConfirm,
   WorkspaceApplication,
@@ -65,8 +66,13 @@ const hasOptions = (type: ApplicationQuestionType) =>
   type === ApplicationQuestionType.MultipleChoice ||
   type === ApplicationQuestionType.Checkbox
 
-const Card = styled(Panel)`
+const Card = styled.div`
+  background: #f7f8fb;
+  border: 1px solid #ececec;
+  border-radius: 10px;
   border-left: 4px solid rgba(73, 84, 244, 0.2);
+  margin: 0 0 12px;
+  padding: 16px 18px;
   transition: border-color 0.15s;
 
   &:focus-within {
@@ -74,10 +80,13 @@ const Card = styled(Panel)`
   }
 `
 
-// the card that opens a section, like a section header in Google Forms
-const SectionCard = styled(Panel)`
+const SectionCard = styled.div`
+  background: #f7f8fb;
+  border: 1px solid #ececec;
+  border-radius: 10px;
   border-top: 3px solid rgba(73, 84, 244, 0.4);
-  margin-top: 40px;
+  margin: 24px 0 12px;
+  padding: 16px 18px;
 `
 
 // inputs that look like text until you click into them, like Google Forms
@@ -168,9 +177,10 @@ const IconButton = styled.button`
 // the questions, with a toolbar beside them like the one in Google Forms
 const Layout = styled.div`
   display: grid;
-  grid-template-columns: 1fr 76px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 16px;
   align-items: start;
+  min-width: 0;
 
   ${mediaMaxWidth(MD)} {
     grid-template-columns: 1fr;
@@ -179,7 +189,7 @@ const Layout = styled.div`
 
 const Toolbar = styled.div`
   position: sticky;
-  top: 90px;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -366,17 +376,34 @@ const DestinationSelect = ({
   allSections: ApplicationSection[]
   onChange: (value: string) => void
 }): ReactElement => (
-  <div className="select is-small">
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">Continue to next section</option>
-      {sections.map((section) => (
-        <option key={section.id} value={section.id}>
-          Go to {sectionName(allSections, section.id)}
-        </option>
-      ))}
-      <option value="end">Submit form</option>
-    </select>
-  </div>
+  <Select
+    styles={selectCompactStyles}
+    components={selectComponents}
+    menuPortalTarget={selectMenuPortalTarget}
+    menuPosition="fixed"
+    value={
+      [
+        { value: '', label: 'Continue to next section' },
+        ...sections.map((section) => ({
+          value: String(section.id),
+          label: `Go to ${sectionName(allSections, section.id)}`,
+        })),
+        { value: 'end', label: 'Submit form' },
+      ].find((option) => option.value === value) ?? {
+        value: '',
+        label: 'Continue to next section',
+      }
+    }
+    options={[
+      { value: '', label: 'Continue to next section' },
+      ...sections.map((section) => ({
+        value: String(section.id),
+        label: `Go to ${sectionName(allSections, section.id)}`,
+      })),
+      { value: 'end', label: 'Submit form' },
+    ]}
+    onChange={(option) => onChange(option?.value ?? '')}
+  />
 )
 
 const QuestionCard = ({
@@ -426,12 +453,23 @@ const QuestionCard = ({
           onBlur={() => prompt !== question.prompt && onSave({ prompt })}
         />
         {!isText && (
-          <div className="select">
-            <select
-              value={question.question_type}
-              onChange={(e) => {
-                const type = Number(e.target.value)
-                // a new choice question starts with one option to edit
+          <div style={{ minWidth: 180 }}>
+            <Select
+              styles={selectCompactStyles}
+              components={selectComponents}
+              menuPortalTarget={selectMenuPortalTarget}
+              menuPosition="fixed"
+              value={
+                QUESTION_TYPES.find(
+                  (type) => type.value === question.question_type,
+                ) ?? null
+              }
+              options={QUESTION_TYPES}
+              onChange={(option) => {
+                if (option == null) {
+                  return
+                }
+                const type = option.value
                 if (hasOptions(type) && options.length === 0) {
                   setOptions([{ value: 'Option 1' }])
                   onSave({
@@ -442,13 +480,7 @@ const QuestionCard = ({
                   onSave({ question_type: type })
                 }
               }}
-            >
-              {QUESTION_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         )}
       </Row>
@@ -543,8 +575,9 @@ const QuestionCard = ({
             </Row>
           ))}
         {hasOptions(question.question_type) && (
-          <button
-            className="button is-small is-text mt-1"
+          <AdminGhost
+            type="button"
+            className="mt-1"
             onClick={() =>
               saveOptions([
                 ...options,
@@ -553,7 +586,7 @@ const QuestionCard = ({
             }
           >
             Add option
-          </button>
+          </AdminGhost>
         )}
       </div>
 
@@ -953,12 +986,6 @@ export default function QuestionsTab({
   return (
     <Layout>
       <div style={{ minWidth: 0 }}>
-        <Muted as="p" className="mb-4">
-          {questions.length === 0
-            ? 'No questions yet. Add one with the toolbar.'
-            : `${questions.length} question${questions.length === 1 ? '' : 's'}, changes save automatically`}
-        </Muted>
-
         <div {...sectionArea(null)}>
           <SectionCard style={{ marginTop: 0 }}>
             {total > 1 && <Muted>Section 1 of {total}</Muted>}

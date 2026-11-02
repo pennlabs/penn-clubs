@@ -16,7 +16,8 @@ import FilesCard from '../components/ClubEditPage/FilesCard'
 import HomeCard from '../components/ClubEditPage/HomeCard'
 import MemberExperiencesCard from '../components/ClubEditPage/MemberExperiencesCard'
 import MembershipWorkspace from '../components/ClubEditPage/MembershipWorkspace'
-import QRCodeCard, { QRCodeType } from '../components/ClubEditPage/QRCodeCard'
+import ReachCards from '../components/ClubEditPage/ReachCards'
+import RecruitmentWorkspace from '../components/ClubEditPage/RecruitmentWorkspace'
 import {
   CLUB_EDIT_ROUTE,
   CLUB_RENEW_ROUTE,
@@ -57,12 +58,10 @@ import AnalyticsCard from './ClubEditPage/AnalyticsCard'
 import ClubEditTabView from './ClubEditPage/ClubEditTabView'
 import ClubFairCard from './ClubEditPage/ClubFairCard'
 import DeleteClubCard from './ClubEditPage/DeleteClubCard'
-import EnableSubscriptionCard from './ClubEditPage/EnableSubscriptionCard'
-import PotentialMemberCard from './ClubEditPage/PotentialMemberCard'
 import QuestionsCard from './ClubEditPage/QuestionsCard'
 import RenewCard from './ClubEditPage/RenewCard'
 import ClubMetadata from './ClubMetadata'
-import { Contact, Icon, Loading, Metadata, Text } from './common'
+import { Contact, Loading, Metadata, Text } from './common'
 import AuthPrompt from './common/AuthPrompt'
 
 type ClubFormProps = {
@@ -299,36 +298,7 @@ const ClubForm = ({
       {
         name: 'recruitment',
         label: OBJECT_TAB_RECRUITMENT_LABEL,
-        content: (
-          <>
-            {SHOW_APPLICATIONS && (
-              <div style={{ marginBottom: 32 }}>
-                <ApplicationWorkspace club={club} />
-              </div>
-            )}
-            <QRCodeCard id={club.code} type={QRCodeType.CLUB} />
-            <EnableSubscriptionCard
-              notify={notify}
-              club={club}
-              onUpdate={reloadClub}
-            />
-            {club.enables_subscription && (
-              <PotentialMemberCard
-                header={
-                  <p className="mb-5">
-                    The table below shows all the users that have subscribed (
-                    <Icon name="bell" />) to your {OBJECT_NAME_SINGULAR}. If
-                    users have elected to share their bookmarks (
-                    <Icon name="bookmark" />) with {OBJECT_NAME_SINGULAR}{' '}
-                    officers, they will also show up in the list below.
-                  </p>
-                }
-                club={club}
-                source="subscription"
-              />
-            )}
-          </>
-        ),
+        content: <RecruitmentWorkspace club={club} />,
       },
       {
         name: 'applications',
@@ -341,6 +311,7 @@ const ClubForm = ({
         label: 'Resources',
         content: (
           <>
+            <ReachCards club={club} notify={notify} onUpdate={reloadClub} />
             <MemberExperiencesCard club={club} />
             <FilesCard club={club} onUpdate={reloadClub} />
           </>

@@ -4,12 +4,13 @@ import Link from 'next/link'
 import { ReactElement, useRef, useState } from 'react'
 import styled from 'styled-components'
 
-import { LIGHT_GRAY } from '../../constants'
+import { CLUBS_NAVY, LIGHT_GRAY } from '../../constants'
 import { Club, ClubEvent, ClubEventType, EventShowing } from '../../types'
 import { stripTags } from '../../utils'
 import { FAIR_NAME, OBJECT_EVENT_TYPES } from '../../utils/branding'
 import { Device, Icon, Line, Text } from '../common'
 import EventModal from '../EventPage/EventModal'
+import EventsWeekCalendar from './EventsWeekCalendar'
 import {
   CheckboxField,
   DateTimeField,
@@ -395,6 +396,123 @@ const EventPreview = ({ event }: { event: ClubEvent }) => (
   </EventPreviewContainer>
 )
 
+const Shell = styled.div`
+  background: #ffffff;
+  border-radius: 10px;
+`
+
+const Board = styled.div`
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) 340px;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+const CalendarPane = styled.div`
+  background: #f3f3f3;
+  border-radius: 10px;
+  min-width: 0;
+  padding: 1rem 1rem 1.25rem;
+`
+
+const EditorPane = styled.div`
+  background: #f3f3f3;
+  border-radius: 10px;
+  padding: 1rem 1rem 1.25rem;
+`
+
+const EditorInner = styled.div`
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 0.85rem 0.9rem 1rem;
+`
+
+const TitleRow = styled.div`
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+`
+
+const PageTitle = styled.h2`
+  color: ${CLUBS_NAVY};
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 29px;
+  margin: 0;
+`
+
+const EditorTitle = styled.h3`
+  color: ${CLUBS_NAVY};
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+  margin: 0;
+`
+
+const PlusButton = styled.button`
+  align-items: center;
+  appearance: none;
+  background: #ffffff;
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+  color: ${CLUBS_NAVY};
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 22px;
+  height: 28px;
+  justify-content: center;
+  line-height: 1;
+  width: 28px;
+
+  &:hover {
+    background: #f8f8f8;
+  }
+`
+
+const FilterRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+`
+
+const FilterChip = styled.input`
+  background: #ffffff;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  color: ${CLUBS_NAVY};
+  font-size: 13px;
+  min-width: 8rem;
+  padding: 0.45rem 0.7rem;
+`
+
+const FieldBox = styled.div`
+  background: #f3f3f3;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  padding: 0.15rem 0.65rem 0.35rem;
+
+  .label,
+  label {
+    color: ${CLUBS_NAVY};
+    font-size: 13px;
+    font-weight: 400;
+  }
+`
+
+const DatesWrap = styled.div`
+  margin-top: 1.5rem;
+`
+
+const PreviewWrap = styled.div`
+  margin-top: 1.25rem;
+`
+
 export default function EventsCard({
   club,
 }: EventsCardProps): ReactElement<any> {
@@ -402,6 +520,11 @@ export default function EventsCard({
   const [formObject, setFormObject] = useState<
     Partial<ClubEvent> & { image?: File | string | null }
   >({})
+  const [events, setEvents] = useState<ClubEvent[]>([])
+  const [weekStart, setWeekStart] = useState(() =>
+    moment().startOf('week'),
+  )
+  const [editingKey, setEditingKey] = useState<number | string | null>(null)
 
   const [isEditing, setIsEditing] = useState<boolean>(false)
 
@@ -409,6 +532,7 @@ export default function EventsCard({
 
   const [isRecurring, setIsRecurring] = useState<boolean>(false)
   const [showPastEvents, setShowPastEvents] = useState<boolean>(false)
+  const [nameFilter, setNameFilter] = useState('')
 
   const eventFields = (
     <>
@@ -567,130 +691,181 @@ export default function EventsCard({
   // define earliest time for end time as a couple of days ago
   const earliestEndTime = moment().subtract(2, 'days').format('YYYY-MM-DD')
 
+  const startCreate = () => {
+    setEditingKey(null)
+    setSelectedEvent(null)
+    setIsEditing(false)
+    setFormObject({})
+  }
+
   return (
     <BaseCard title="Events">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
-        <Text style={{ marginBottom: 0 }}>
-          {club.approved || club.is_ghost
-            ? 'Manage events for this club. Events that have already passed are hidden by default.'
-            : 'Note: you must be an approved club to create publicly-viewable events.'}
-        </Text>
-        {(club.approved || club.is_ghost) && (
-          <Toggle
-            active={showPastEvents}
-            toggle={(_) => setShowPastEvents(!showPastEvents)}
-            club={club}
-            filterOffText="Current"
-            filterOnText="All (incl. Past)"
-          />
-        )}
-      </div>
-      <ModelForm
-        actions={(object) => (
-          <Link legacyBehavior href={{ pathname: `/events/${object.id}` }}>
-            <button className="button is-info is-small">
-              <Icon name="eye" /> Page
-            </button>
-          </Link>
-        )}
-        baseUrl={`/clubs/${club.code}/events/`}
-        defaultObject={{ location_visible_to_public: false }}
-        listParams={
-          showPastEvents ? '' : `&latest_start_time__gte=${earliestEndTime}`
-        }
-        keyField="id"
-        fields={eventFields}
-        fileFields={['image']}
-        tableFields={eventTableFields}
-        noun="Event"
-        currentTitle={(obj) => obj?.name ?? 'New Event'}
-        onEditPressed={() => {
-          setIsEditing(true)
-          eventDetailsRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        }}
-        onChange={(obj) => {
-          const eventObject = obj as ClubEvent | null
-          if (eventObject && eventObject.id) {
-            setSelectedEvent(eventObject)
-            setIsEditing(true)
-          } else {
-            setSelectedEvent(null)
-            setIsEditing(false)
-          }
-          setFormObject(
-            (eventObject ?? {}) as Partial<ClubEvent> & {
-              image?: File | string | null
-            },
-          )
-        }}
-      />
-      {selectedEvent && (
-        <div className="mt-5">
-          <h3 className="title is-4">Dates for {selectedEvent.name}</h3>
-          <Text className="mb-3">
-            Add or manage specific dates, times, and locations for this event.
-          </Text>
-          <ModelForm
-            key={selectedEvent.id}
-            baseUrl={`/events/${selectedEvent.id}/showings/`}
-            initialData={selectedEvent.showings || []}
-            defaultObject={{ location_visible_to_public: false }}
-            keyField="id"
-            fields={showingFields}
-            tableFields={showingTableFields}
-            allowDeletion={false}
-            noun="Date"
-            currentTitle={(obj) => {
-              if (!obj) return 'New Date'
-              const showing = obj as EventShowing
-              const start = moment(showing.start_time).format('MMM D, h:mma')
-              const end = moment(showing.end_time).format('h:mma')
-              return `${start} - ${end} ${showing.location ? `(${showing.location})` : ''}`
-            }}
-            onEditPressed={() => {
-              eventDetailsRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-              })
-            }}
-            actions={(showing: EventShowing) => (
-              <Link
-                href={`/events/${selectedEvent.id}/tickets/${showing.id}/?action=create`}
-                target="_blank"
-              >
-                <button className="button is-small is-primary">
-                  <Icon name="credit-card" />{' '}
-                  {showing.ticketed ? 'Manage Tickets' : 'Add Tickets'}
-                </button>
-              </Link>
-            )}
-            onUpdate={(updatedShowings) => {
-              setSelectedEvent((prev) =>
-                prev
-                  ? { ...prev, showings: updatedShowings as EventShowing[] }
-                  : null,
-              )
-            }}
-          />
-        </div>
-      )}
+      <Shell>
+        <Board>
+          <CalendarPane>
+            <TitleRow>
+              <PageTitle>Events</PageTitle>
+              {(club.approved || club.is_ghost) && (
+                <Toggle
+                  active={showPastEvents}
+                  toggle={(_) => setShowPastEvents(!showPastEvents)}
+                  club={club}
+                  filterOffText="Current"
+                  filterOnText="All (incl. Past)"
+                />
+              )}
+            </TitleRow>
+            <Text style={{ marginBottom: '0.75rem' }}>
+              {club.approved || club.is_ghost
+                ? 'Select an event on the calendar to edit it, or add a new one.'
+                : 'Note: you must be an approved club to create publicly-viewable events.'}
+            </Text>
+            <FilterRow>
+              <FilterChip
+                placeholder="Name"
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+              />
+            </FilterRow>
+            <EventsWeekCalendar
+              events={events.filter((event) =>
+                event.name.toLowerCase().includes(nameFilter.toLowerCase()),
+              )}
+              weekStart={weekStart}
+              onWeekChange={setWeekStart}
+              onSelectEvent={(event) => {
+                setEditingKey(event.id)
+                setSelectedEvent(event)
+                setIsEditing(true)
+                setFormObject(event)
+              }}
+            />
+          </CalendarPane>
+          <EditorPane>
+            <TitleRow>
+              <EditorTitle>
+                {isEditing ? 'Edit Event' : 'New Event'}
+              </EditorTitle>
+              <PlusButton type="button" aria-label="New event" onClick={startCreate}>
+                +
+              </PlusButton>
+            </TitleRow>
+            <EditorInner>
+              <FieldBox>
+                <ModelForm
+                  hideTable
+                  editingKey={editingKey}
+                  actions={(object) => (
+                    <Link legacyBehavior href={{ pathname: `/events/${object.id}` }}>
+                      <button className="button is-info is-small">
+                        <Icon name="eye" /> Page
+                      </button>
+                    </Link>
+                  )}
+                  baseUrl={`/clubs/${club.code}/events/`}
+                  defaultObject={{ location_visible_to_public: false }}
+                  listParams={
+                    showPastEvents
+                      ? ''
+                      : `&latest_start_time__gte=${earliestEndTime}`
+                  }
+                  keyField="id"
+                  fields={eventFields}
+                  fileFields={['image']}
+                  tableFields={eventTableFields}
+                  noun="Event"
+                  currentTitle={(obj) => obj?.name ?? 'New Event'}
+                  onEditPressed={() => {
+                    setIsEditing(true)
+                  }}
+                  onUpdate={(objects) => setEvents(objects as ClubEvent[])}
+                  onChange={(obj) => {
+                    const eventObject = obj as ClubEvent | null
+                    if (eventObject && eventObject.id) {
+                      setSelectedEvent(eventObject)
+                      setIsEditing(true)
+                      setEditingKey(eventObject.id)
+                    } else {
+                      setSelectedEvent(null)
+                      setIsEditing(false)
+                      setEditingKey(null)
+                    }
+                    setFormObject(
+                      (eventObject ?? {}) as Partial<ClubEvent> & {
+                        image?: File | string | null
+                      },
+                    )
+                  }}
+                />
+              </FieldBox>
+            </EditorInner>
+          </EditorPane>
+        </Board>
 
-      {(selectedEvent || Object.keys(formObject).length > 0) && (
-        <div ref={eventDetailsRef} className="mt-4">
-          <Line />
-          <EventPreview event={eventPreviewObject as ClubEvent} />
-        </div>
-      )}
+        {selectedEvent && (
+          <DatesWrap>
+            <h3 className="title is-5" style={{ color: CLUBS_NAVY }}>
+              Dates for {selectedEvent.name}
+            </h3>
+            <Text className="mb-3">
+              Add or manage specific dates, times, and locations for this event.
+            </Text>
+            <ModelForm
+              key={selectedEvent.id}
+              baseUrl={`/events/${selectedEvent.id}/showings/`}
+              initialData={selectedEvent.showings || []}
+              defaultObject={{ location_visible_to_public: false }}
+              keyField="id"
+              fields={showingFields}
+              tableFields={showingTableFields}
+              allowDeletion={false}
+              noun="Date"
+              currentTitle={(obj) => {
+                if (!obj) return 'New Date'
+                const showing = obj as EventShowing
+                const start = moment(showing.start_time).format('MMM D, h:mma')
+                const end = moment(showing.end_time).format('h:mma')
+                return `${start} - ${end} ${showing.location ? `(${showing.location})` : ''}`
+              }}
+              actions={(showing: EventShowing) => (
+                <Link
+                  href={`/events/${selectedEvent.id}/tickets/${showing.id}/?action=create`}
+                  target="_blank"
+                >
+                  <button className="button is-small is-primary">
+                    <Icon name="credit-card" />{' '}
+                    {showing.ticketed ? 'Manage Tickets' : 'Add Tickets'}
+                  </button>
+                </Link>
+              )}
+              onUpdate={(updatedShowings) => {
+                setSelectedEvent((prev) =>
+                  prev
+                    ? { ...prev, showings: updatedShowings as EventShowing[] }
+                    : null,
+                )
+                setEvents((prev) =>
+                  prev.map((event) =>
+                    event.id === selectedEvent.id
+                      ? {
+                          ...event,
+                          showings: updatedShowings as EventShowing[],
+                        }
+                      : event,
+                  ),
+                )
+              }}
+            />
+          </DatesWrap>
+        )}
+
+        {(selectedEvent || Object.keys(formObject).length > 0) && (
+          <PreviewWrap ref={eventDetailsRef}>
+            <Line />
+            <EventPreview event={eventPreviewObject as ClubEvent} />
+          </PreviewWrap>
+        )}
+      </Shell>
     </BaseCard>
   )
 }

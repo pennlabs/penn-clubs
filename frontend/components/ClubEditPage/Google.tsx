@@ -6,7 +6,7 @@ import { doApiRequest } from '~/utils'
 
 const ModalContainer = styled.div`
   text-align: left;
-  padding: 20px;
+  padding: 0;
 `
 
 // sends the user through Google sign-in, then back to the page they are on
@@ -123,6 +123,7 @@ export function GoogleFormImport({
         <div className="control">
           <button
             className={`button is-primary ${loading ? 'is-loading' : ''}`}
+            type="button"
             disabled={!link.trim() || loading}
             onClick={importForm}
           >

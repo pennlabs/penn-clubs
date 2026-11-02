@@ -27,11 +27,14 @@ const ModalWrapper = styled.div<{ $show?: boolean; $width?: string }>`
 `
 
 const ModalCard = styled.div<{ $width?: string; $overflow?: string }>`
-  border-radius: ${BORDER_RADIUS_LG};
+  border-radius: 12px;
   border: 0 !important;
-  box-shadow: none !important;
+  box-shadow: 0 12px 40px rgba(31, 32, 73, 0.16) !important;
   height: auto;
   overflow: ${({ $overflow }) => $overflow || 'auto'};
+  padding: 2rem 1.75rem 1.5rem;
+  position: relative;
+  text-align: left;
   width: ${({ $width }) => $width ?? '35%'};
 
   ${({ $width }) =>
@@ -50,13 +53,48 @@ const ModalCard = styled.div<{ $width?: string; $overflow?: string }>`
 
 export const ModalContentWrapper = styled.div<{ $marginBottom?: boolean }>`
   margin: auto;
+  padding: 0;
+  text-align: left;
   ${({ $marginBottom }) => ($marginBottom ? 'margin-bottom: 10%;' : '')}
+
+  h2,
+  h3,
+  .title {
+    margin-top: 0;
+  }
+
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 1.25rem;
+  }
+
+  .button {
+    border-radius: 8px;
+    font-size: 0.875rem;
+  }
+
+  .button.is-primary,
+  .button.is-link:not(.is-light) {
+    background-color: #4954f4;
+    border-color: transparent;
+    color: #fff;
+  }
+
+  .button.is-danger:not(.is-outlined) {
+    background-color: #c0392b;
+    border-color: transparent;
+    color: #fff;
+  }
 `
 
 const CloseModalIcon = styled(Icon)<{ onClick?: () => void }>`
   position: absolute;
-  right: 20px;
-  top: 20px;
+  right: 16px;
+  top: 16px;
   cursor: pointer;
   color: ${LIGHT_GRAY};
 `

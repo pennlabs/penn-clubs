@@ -2,12 +2,19 @@ import { Field, Form, Formik, useFormikContext } from 'formik'
 import moment from 'moment'
 import Link from 'next/link'
 import { ReactElement, useEffect, useState } from 'react'
+import Select from 'react-select'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
 
 import { Club, ClubEvent, ClubEventType, EventShowing } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { Icon, Modal, Text } from '../common'
+import {
+  selectCompactStyles,
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStylesWhite,
+} from '../common/selectStyles'
 import EventModal from '../EventPage/EventModal'
 import {
   CheckboxField,
@@ -17,8 +24,8 @@ import {
   SelectField,
   TextField,
 } from '../FormComponents'
-import { ADMIN_ACCENT, ADMIN_NAVY } from './adminTheme'
-import { PageHeading, PageTitle, ViewLink } from './ClubAdminShell'
+import { ADMIN_ACCENT, ADMIN_CANVAS, ADMIN_NAVY } from './adminTheme'
+import { PageTitle, ViewLink } from './ClubAdminShell'
 import { EVENT_TYPES } from './EventsCard'
 import EventsImportCard from './EventsImportCard'
 
@@ -57,15 +64,82 @@ type Block = {
   location: string | null
 }
 
-const Layout = styled.div`
+const Fill = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+`
+
+const FormFill = styled(Form)`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+`
+
+const Layout = styled.div<{ $panel?: boolean }>`
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.75fr);
+  grid-template-columns: ${({ $panel }) =>
+    $panel
+      ? 'minmax(0, 1.45fr) minmax(300px, 0.75fr)'
+      : 'minmax(0, 1fr)'};
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 
   @media (max-width: 1100px) {
     grid-template-columns: 1fr;
   }
+`
+
+const Column = styled.section`
+  background: ${ADMIN_CANVAS};
+  border: 0;
+  border-radius: 10px;
+  padding: 18px 16px 16px;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+`
+
+const HeadStack = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 12px;
+  justify-content: flex-start;
+  margin: 0 0 12px;
+`
+
+const ColumnHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+`
+
+const Widget = styled.div`
+  background: white;
+  border-radius: 10px;
+  padding: 22px 14px 14px;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 `
 
 const Toolbar = styled.div`
@@ -73,7 +147,7 @@ const Toolbar = styled.div`
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-bottom: 12px;
+  flex-shrink: 0;
 `
 
 const Toggle = styled.div`
@@ -162,10 +236,67 @@ const Menu = styled.div`
 const CalendarHead = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-bottom: 10px;
   color: ${ADMIN_NAVY};
-  font-weight: 600;
+`
+
+const MonthLabel = styled.span`
+  color: ${ADMIN_NAVY};
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 21px;
+`
+
+const NavButton = styled.button`
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 21px;
+  width: 21px;
+  padding: 0;
+  line-height: 0;
+
+  svg {
+    display: block;
+    stroke-width: 3.25;
+  }
+`
+
+const BackButton = styled.button`
+  appearance: none;
+  align-items: center;
+  background: white;
+  border: 0;
+  border-radius: 999px;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+
+  svg {
+    display: block;
+    stroke-width: 2.75;
+  }
+`
+
+const CalendarFill = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
 `
 
 const WeekGrid = styled.div`
@@ -174,7 +305,8 @@ const WeekGrid = styled.div`
   background: white;
   border-radius: 10px;
   overflow: auto;
-  max-height: 720px;
+  flex: 1;
+  min-height: 0;
   position: relative;
 `
 
@@ -255,22 +387,31 @@ const PopupActions = styled.div`
   }
 `
 
-const Panel = styled.aside`
-  background: white;
-  border-radius: 10px;
-  padding: 14px 14px 18px;
+const Panel = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+`
+
+const PanelBody = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 `
 
 const PanelHead = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  flex-shrink: 0;
 `
 
 const SaveRow = styled.div`
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
   margin-top: 8px;
 `
 
@@ -304,6 +445,9 @@ const MonthGrid = styled.div`
   background: white;
   border-radius: 10px;
   padding: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 `
 
 const MonthCell = styled.div`
@@ -318,6 +462,8 @@ const MonthCell = styled.div`
 const TableCard = styled.div`
   background: white;
   border-radius: 10px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 
   table {
@@ -463,6 +609,83 @@ function eventMatches(
   return true
 }
 
+function placeholderEvents(club: Club): ClubEvent[] {
+  const monday = moment().startOf('isoWeek')
+  const make = (
+    id: number,
+    name: string,
+    type: ClubEventType,
+    description: string,
+    day: number,
+    hour: number,
+    hours: number,
+    location: string,
+  ): ClubEvent => {
+    const start = monday.clone().add(day, 'day').hour(hour).minute(0).second(0)
+    const end = start.clone().add(hours, 'hours')
+    const showing: EventShowing = {
+      id: id * 10,
+      start_time: start.toISOString(),
+      end_time: end.toISOString(),
+      location,
+      location_visible_to_public: true,
+      ticket_order_limit: 0,
+      ticketed: false,
+    }
+    return {
+      affiliations: [],
+      club: club.code,
+      club_name: club.name,
+      description,
+      id,
+      image_url: null,
+      is_ics_event: false,
+      large_image_url: null,
+      name,
+      ticketed: false,
+      pinned: false,
+      type,
+      url: null,
+      showings: [showing],
+      earliest_start_time: showing.start_time,
+      latest_end_time: showing.end_time,
+    }
+  }
+
+  return [
+    make(
+      -1,
+      'Weekly GBM',
+      ClubEventType.GBM,
+      '<p>Placeholder general body meeting for this week.</p>',
+      1,
+      18,
+      1,
+      'Houston Hall 218',
+    ),
+    make(
+      -2,
+      'Coffee Chat',
+      ClubEventType.SOCIAL,
+      '<p>Placeholder coffee chat with members.</p>',
+      2,
+      16,
+      1,
+      'Huntsman Hall',
+    ),
+    make(
+      -3,
+      'Recruitment Info Session',
+      ClubEventType.RECRUITMENT,
+      '<p>Placeholder recruitment info session.</p>',
+      3,
+      19,
+      1,
+      'Towne 100',
+    ),
+  ]
+}
+
 export default function EventsWorkspace({
   club,
 }: {
@@ -488,8 +711,11 @@ export default function EventsWorkspace({
   const reload = () => {
     doApiRequest(`/clubs/${club.code}/events/?format=json`)
       .then((resp) => resp.json())
-      .then((data) => setEvents(Array.isArray(data) ? data : []))
-      .catch(() => setEvents([]))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : []
+        setEvents(list.length ? list : placeholderEvents(club))
+      })
+      .catch(() => setEvents(placeholderEvents(club)))
   }
 
   useEffect(() => {
@@ -517,6 +743,12 @@ export default function EventsWorkspace({
   )
 
   const save = async (values: EventDraft) => {
+    if (values.id != null && values.id < 0) {
+      toast.info(
+        'Sample events are placeholders. Use New Event to create a real one.',
+      )
+      return
+    }
     const base = `/clubs/${club.code}/events/`
     const image = values.image instanceof File ? values.image : null
     if (!values.id) {
@@ -634,6 +866,14 @@ export default function EventsWorkspace({
     if (!window.confirm(`Delete ${event.name}?`)) {
       return
     }
+    if (event.id < 0) {
+      setEvents((current) => current.filter((item) => item.id !== event.id))
+      toast.success('Sample event removed')
+      if (seed.id === event.id) {
+        openNew()
+      }
+      return
+    }
     const resp = await doApiRequest(
       `/clubs/${club.code}/events/${event.id}/?format=json`,
       { method: 'DELETE' },
@@ -677,10 +917,7 @@ export default function EventsWorkspace({
   }
 
   return (
-    <>
-      <PageHeading>
-        <PageTitle>Events</PageTitle>
-      </PageHeading>
+    <Fill>
       {!(club.approved || club.is_ghost) && (
         <Text>
           Note: you must be an approved club to create publicly-viewable events.
@@ -693,7 +930,13 @@ export default function EventsWorkspace({
         onSubmit={save}
       >
         {(formik) => (
-          <Form>
+          <FormFill>
+            <Layout $panel={panelOpen}>
+              <Column>
+            <HeadStack>
+            <ColumnHead>
+              <PageTitle>Events</PageTitle>
+            </ColumnHead>
             <Toolbar>
               <Toggle>
                 <ToggleButton
@@ -727,18 +970,26 @@ export default function EventsWorkspace({
                 {filterOpen && (
                   <Menu style={{ position: 'absolute', left: 0 }}>
                     <label>
-                      Type{' '}
-                      <select
-                        value={typeFilter}
-                        onChange={(event) => setTypeFilter(event.target.value)}
-                      >
-                        <option value="">All</option>
-                        {EVENT_TYPES.map((type) => (
-                          <option key={type.value} value={type.value}>
-                            {type.label}
-                          </option>
-                        ))}
-                      </select>
+                      Type
+                      <Select
+                        styles={selectCompactStyles}
+                        components={selectComponents}
+                        menuPortalTarget={selectMenuPortalTarget}
+                        menuPosition="fixed"
+                        isClearable
+                        placeholder="All"
+                        value={
+                          EVENT_TYPES.find(
+                            (type) => String(type.value) === typeFilter,
+                          ) ?? null
+                        }
+                        options={EVENT_TYPES}
+                        onChange={(option) =>
+                          setTypeFilter(
+                            option ? String(option.value) : '',
+                          )
+                        }
+                      />
                     </label>
                     <label style={{ display: 'block', marginTop: 8 }}>
                       <input
@@ -751,15 +1002,32 @@ export default function EventsWorkspace({
                   </Menu>
                 )}
               </div>
-              <select
-                aria-label="Calendar range"
-                value={range}
-                onChange={(event) => setRange(event.target.value as RangeMode)}
-                style={{ width: 'auto' }}
-              >
-                <option value="week">Week</option>
-                <option value="month">Month</option>
-              </select>
+              <div style={{ width: 132 }}>
+                <Select
+                  aria-label="Calendar range"
+                  styles={{
+                    ...selectMenuStylesWhite,
+                    container: (style) => ({ ...style, width: 132 }),
+                  }}
+                  components={selectComponents}
+                  menuPortalTarget={selectMenuPortalTarget}
+                  menuPosition="fixed"
+                  isSearchable={false}
+                  options={[
+                    { value: 'week' as const, label: 'Week' },
+                    { value: 'month' as const, label: 'Month' },
+                  ]}
+                  value={{
+                    value: range,
+                    label: range === 'week' ? 'Week' : 'Month',
+                  }}
+                  onChange={(option) => {
+                    if (option) {
+                      setRange(option.value)
+                    }
+                  }}
+                />
+              </div>
               <CreateWrap>
                 <CreateButton type="button" onClick={() => openNew(false)}>
                   + Create Event
@@ -812,8 +1080,8 @@ export default function EventsWorkspace({
                 )}
               </CreateWrap>
             </Toolbar>
-            <Layout>
-              <div>
+            </HeadStack>
+            <Widget>
                 {view === 'table' ? (
                   <EventsTable
                     events={visibleEvents}
@@ -837,8 +1105,10 @@ export default function EventsWorkspace({
                     onEdit={openEvent}
                   />
                 )}
-              </div>
+            </Widget>
+              </Column>
               {panelOpen && (
+                <Column>
                 <EventPanel
                   showExtra={showExtra}
                   setShowExtra={setShowExtra}
@@ -858,6 +1128,7 @@ export default function EventsWorkspace({
                   onAddShowing={() => addShowing(formik.values)}
                   saving={formik.isSubmitting}
                 />
+                </Column>
               )}
             </Layout>
             {preview && (
@@ -886,7 +1157,7 @@ export default function EventsWorkspace({
                 />
               </Modal>
             )}
-          </Form>
+          </FormFill>
         )}
       </Formik>
       {importOpen && (
@@ -899,7 +1170,7 @@ export default function EventsWorkspace({
           />
         </Modal>
       )}
-    </>
+    </Fill>
   )
 }
 
@@ -1006,21 +1277,23 @@ function WeekCalendar({
       : null
 
   return (
-    <div>
+    <CalendarFill>
       <CalendarHead>
-        <button
+        <NavButton
           type="button"
+          aria-label="Previous week"
           onClick={() => setAnchor(start.clone().subtract(1, 'week').toDate())}
         >
-          ‹
-        </button>
-        <button
+          <Icon name="chevron-left" alt="" size="21px" fitSize noMargin />
+        </NavButton>
+        <NavButton
           type="button"
+          aria-label="Next week"
           onClick={() => setAnchor(start.clone().add(1, 'week').toDate())}
         >
-          ›
-        </button>
-        <span>{start.format('MMMM YYYY')}</span>
+          <Icon name="chevron-right" alt="" size="21px" fitSize noMargin />
+        </NavButton>
+        <MonthLabel>{start.format('MMMM YYYY')}</MonthLabel>
       </CalendarHead>
       <WeekGrid>
         <DayHead />
@@ -1154,7 +1427,7 @@ function WeekCalendar({
           </DayCol>
         ))}
       </WeekGrid>
-    </div>
+    </CalendarFill>
   )
 }
 
@@ -1175,23 +1448,25 @@ function MonthCalendar({
   )
   const blocks = events.flatMap(blocksFor)
   return (
-    <div>
+    <CalendarFill>
       <CalendarHead>
-        <button
+        <NavButton
           type="button"
+          aria-label="Previous month"
           onClick={() =>
             setAnchor(moment(anchor).subtract(1, 'month').toDate())
           }
         >
-          ‹
-        </button>
-        <button
+          <Icon name="chevron-left" alt="" size="21px" fitSize noMargin />
+        </NavButton>
+        <NavButton
           type="button"
+          aria-label="Next month"
           onClick={() => setAnchor(moment(anchor).add(1, 'month').toDate())}
         >
-          ›
-        </button>
-        <span>{moment(anchor).format('MMMM YYYY')}</span>
+          <Icon name="chevron-right" alt="" size="21px" fitSize noMargin />
+        </NavButton>
+        <MonthLabel>{moment(anchor).format('MMMM YYYY')}</MonthLabel>
       </CalendarHead>
       <MonthGrid>
         {cells.map((day) => (
@@ -1220,7 +1495,7 @@ function MonthCalendar({
           </MonthCell>
         ))}
       </MonthGrid>
-    </div>
+    </CalendarFill>
   )
 }
 
@@ -1244,11 +1519,14 @@ function EventPanel({
   const { values } = useFormikContext<EventDraft>()
   return (
     <Panel>
+      <HeadStack>
       <PanelHead>
-        <button type="button" aria-label="Close editor" onClick={onClose}>
-          ‹
-        </button>
-        <strong>{values.id ? 'Edit Event' : 'New Event'}</strong>
+        <BackButton type="button" aria-label="Close editor" onClick={onClose}>
+          <Icon name="chevron-left" alt="" size="1.1rem" fitSize noMargin />
+        </BackButton>
+        <PageTitle as="h2" style={{ fontSize: 20 }}>
+          {values.id ? 'Edit Event' : 'New Event'}
+        </PageTitle>
         <ViewLink
           as="button"
           type="button"
@@ -1282,6 +1560,9 @@ function EventPanel({
           <Icon name="plus" alt="" />
         </button>
       </PanelHead>
+      </HeadStack>
+      <Widget>
+      <PanelBody>
       <Field name="name" as={TextField} label="Name" />
       <Field
         name="type"
@@ -1379,6 +1660,7 @@ function EventPanel({
           </Secondary>
         </div>
       )}
+      </PanelBody>
       <SaveRow>
         <Primary type="submit" disabled={saving}>
           {saving ? 'Saving...' : 'Save Event'}
@@ -1387,6 +1669,7 @@ function EventPanel({
           Save Draft
         </Secondary>
       </SaveRow>
+      </Widget>
     </Panel>
   )
 }

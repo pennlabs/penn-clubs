@@ -217,10 +217,14 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
             <OptionsContext.Provider value={this.props.options}>
               <AuthCheckContext.Provider value={this.checkAuth}>
                 <PermissionsContext.Provider value={this.props.permissions}>
-                  <RenderPageWrapper
+                    <RenderPageWrapper
                     style={
                       hideChrome
-                        ? { background: 'transparent', minHeight: '100vh' }
+                        ? {
+                            background: 'transparent',
+                            height: '100vh',
+                            overflow: 'hidden',
+                          }
                         : undefined
                     }
                   >
@@ -238,7 +242,12 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
                         hideChrome
                           ? {
                               background: 'white',
-                              minHeight: '100vh',
+                              display: 'flex',
+                              flex: 1,
+                              flexDirection: 'column',
+                              height: '100%',
+                              minHeight: 0,
+                              overflow: 'hidden',
                             }
                           : undefined
                       }

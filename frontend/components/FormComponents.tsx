@@ -48,7 +48,11 @@ interface BasicFormField {
   noLabel?: boolean
 }
 
-const HelpTip = styled.span`
+const HelpTip = styled.button<{ $open?: boolean }>`
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -58,13 +62,14 @@ const HelpTip = styled.span`
   flex-shrink: 0;
   color: #757575;
   cursor: help;
+  z-index: 8;
 
   .hint {
-    display: none;
+    display: ${({ $open }) => ($open ? 'block' : 'none')};
     position: absolute;
     left: 0;
-    top: calc(100% + 4px);
-    z-index: 40;
+    bottom: calc(100% + 6px);
+    z-index: 9;
     width: max-content;
     max-width: 280px;
     padding: 8px 10px;
@@ -74,6 +79,7 @@ const HelpTip = styled.span`
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 1.4;
+    text-align: left;
     white-space: normal;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
@@ -82,9 +88,10 @@ const HelpTip = styled.span`
     color: #c5ccff;
   }
 
-  &:hover .hint,
-  &:focus-within .hint {
-    display: block;
+  @media (hover: hover) {
+    &:hover .hint {
+      display: block;
+    }
   }
 `
 
@@ -94,12 +101,37 @@ export const FieldHelpTip = ({
 }: {
   label: string
   children: ReactNode
-}): ReactElement<any> => (
-  <HelpTip tabIndex={0} aria-label={`About ${label}`}>
-    <Icon name="info" alt="" size="1rem" />
-    <span className="hint">{children}</span>
-  </HelpTip>
-)
+}): ReactElement<any> => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const close = (event: PointerEvent) => {
+      if (!ref.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [open])
+
+  return (
+    <HelpTip
+      ref={ref}
+      type="button"
+      $open={open}
+      aria-expanded={open}
+      aria-label={`About ${label}`}
+      onClick={() => setOpen((current) => !current)}
+    >
+      <Icon name="info" alt="" size="1rem" />
+      <span className="hint">{children}</span>
+    </HelpTip>
+  )
+}
 
 /**
  * This interface allows for completely arbitrary props
