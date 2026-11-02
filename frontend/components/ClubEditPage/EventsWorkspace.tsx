@@ -463,6 +463,8 @@ const PanelBody = styled.div`
   flex: 1;
   min-height: 0;
   overflow: auto;
+  margin-right: -7px;
+  padding-right: 7px;
 `
 
 const PanelHead = styled.div`

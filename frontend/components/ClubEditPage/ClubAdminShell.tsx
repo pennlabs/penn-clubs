@@ -39,6 +39,7 @@ const Page = styled.div`
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  overscroll-behavior: none;
 `
 
 const Frame = styled.div`

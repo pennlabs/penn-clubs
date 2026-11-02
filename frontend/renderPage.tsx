@@ -220,10 +220,11 @@ function renderPage<T>(Page: PageComponent<T>): React.ComponentType & {
                     <RenderPageWrapper
                     style={
                       hideChrome
-                        ? {
+                          ? {
                             background: 'transparent',
                             height: '100vh',
                             overflow: 'hidden',
+                            overscrollBehavior: 'none',
                           }
                         : undefined
                     }
