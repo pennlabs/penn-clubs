@@ -2328,6 +2328,67 @@ class ClubViewSet(XLSXFormatterMixin, viewsets.ModelViewSet):
                 output.append(name)
         return Response({"output": "\n".join(output).strip()})
 
+    @action(detail=True, methods=["post"])
+    def send_message(self, request, *args, **kwargs):
+        """
+        Send a general email from a club to selected member emails.
+        """
+        club = self.get_object()
+        subject = (request.data.get("subject") or "").strip()
+        if not subject:
+            subject = f"Message from {club.name}"
+        content = (request.data.get("content") or "").strip()
+        tags = (request.data.get("tags") or "").strip()
+        emails = request.data.get("emails", [])
+        if isinstance(emails, str):
+            emails = [part.strip() for part in re.split(r"[\n,|]", emails) if part.strip()]
+        else:
+            emails = [str(email).strip() for email in emails if str(email).strip()]
+
+        if not content:
+            return Response(
+                {"detail": "Write an email body before sending.", "success": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        member_emails = set(
+            Membership.objects.filter(
+                club=club, person__email__in=emails
+            ).values_list("person__email", flat=True)
+        )
+        allowed = [email for email in emails if email in member_emails]
+        if not allowed:
+            return Response(
+                {
+                    "detail": "Select club members with email addresses.",
+                    "success": False,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        body = content
+        if tags:
+            body = f"{content}\n\nTags: {tags}"
+
+        send_mail_helper(
+            name="blast",
+            subject=subject,
+            emails=allowed,
+            context={
+                "sender": club.name,
+                "content": body,
+                "reply_emails": club.get_officer_emails(),
+            },
+            reply_to=club.get_officer_emails(),
+        )
+        return Response(
+            {
+                "detail": f"Sent message to {len(allowed)} member{'s' if len(allowed) != 1 else ''}.",
+                "success": True,
+                "sent": len(allowed),
+            }
+        )
+
     @action(detail=False, methods=["post"])
     def bulk(self, request, *args, **kwargs):
         """

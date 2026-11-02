@@ -238,16 +238,29 @@ const TableFrame = styled.div<{ $sheet?: boolean; $fill?: boolean }>`
 const ResizeHandle = styled.div`
   position: absolute;
   top: 0;
-  right: 0;
-  width: 8px;
+  right: -10px;
+  width: 20px;
   height: 100%;
   cursor: col-resize;
   user-select: none;
-  z-index: 3;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
 
-  &:hover,
-  &:active {
-    background: rgba(73, 84, 244, 0.18);
+  &::after {
+    content: '';
+    width: 4px;
+    height: 18px;
+    border-radius: 999px;
+    background: #c5c8d8;
+    pointer-events: none;
+  }
+
+  &:hover::after,
+  &:active::after {
+    background: #4954f4;
   }
 `
 
@@ -304,6 +317,7 @@ const TableScroll = styled.div<{
     color: #1f2049;
     font-size: 0.875rem;
     padding: ${({ $sheet }) => ($sheet ? '11px 16px' : '10px 14px')};
+    text-align: left;
     vertical-align: middle;
     white-space: nowrap;
     overflow: hidden;
@@ -316,10 +330,16 @@ const TableScroll = styled.div<{
       $sheet ? '0' : `1px solid ${TABLE_LINE}`} !important;
     color: ${({ $sheet }) => ($sheet ? '#1f2049' : '#57606a')};
     font-weight: 600;
+    overflow: visible;
     position: sticky;
     top: 0;
     user-select: none;
     z-index: 1;
+    text-align: left;
+  }
+
+  table.table thead:hover ${ResizeHandle} {
+    opacity: 1;
   }
 
   table.table thead th:first-child {
@@ -350,17 +370,13 @@ const TableScroll = styled.div<{
     background: ${SHEET_SELECTED};
   }
 
-  ${({ $sheet }) =>
-    $sheet &&
-    `
-    table.table th:first-child,
-    table.table td:first-child {
-      padding-left: 14px;
-      padding-right: 10px;
-      width: 36px;
-      text-align: center;
-    }
-  `}
+  table.table th[data-column='select'],
+  table.table td[data-column='select'] {
+    padding-left: 14px;
+    padding-right: 10px;
+    text-align: center;
+    width: 52px;
+  }
 `
 
 const EmptyCell = styled.td`
@@ -601,6 +617,7 @@ const Table = ({
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
   const columnsRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!resizable) {
@@ -670,6 +687,53 @@ const Table = ({
       }),
     [columns, hiddenColumns],
   )
+
+  const columnNames = visibleColumnDefs.map((column) => column.name).join('|')
+
+  useLayoutEffect(() => {
+    if (!resizable) {
+      return
+    }
+    const container = scrollRef.current?.clientWidth || 720
+    setColumnWidths((current) => {
+      const next = { ...current }
+      let changed = false
+      const hasSelect = visibleColumnDefs.some(
+        (column) => column.name === 'select',
+      )
+      if (hasSelect && next.select == null) {
+        next.select = 52
+        changed = true
+      }
+      const content = visibleColumnDefs.filter(
+        (column) => column.name !== 'select',
+      )
+      const selectW = hasSelect ? 52 : 0
+      const first = content[0]
+      if (first && next[first.name] == null) {
+        next[first.name] = Math.round((container - selectW) * 0.25)
+        changed = true
+      }
+      const rest = content.slice(1)
+      const restShare =
+        rest.length > 0
+          ? Math.max(
+              120,
+              Math.floor(
+                (container - selectW - (first ? next[first.name] : 0)) /
+                  rest.length,
+              ),
+            )
+          : 0
+      rest.forEach((column) => {
+        if (next[column.name] == null) {
+          next[column.name] = restShare
+          changed = true
+        }
+      })
+      return changed ? next : current
+    })
+  }, [resizable, columnNames])
 
   const memoColumns = useMemo(
     () =>
@@ -804,9 +868,29 @@ const Table = ({
     }))
   }
 
+  const tableWidth = visibleColumnDefs.reduce(
+    (sum, column) =>
+      sum +
+      (columnWidths[column.name] ||
+        (column.name === 'select' ? 52 : 140)),
+    0,
+  )
+
   const renderCells = (row: { original: Row; id: string }) =>
     visibleColumnDefs.map((column, i) => (
-      <td key={column.name ?? i}>
+      <td
+        key={column.name ?? i}
+        data-column={column.name}
+        style={{
+          width:
+            columnWidths[column.name] ||
+            (column.name === 'select' ? 52 : undefined),
+          minWidth:
+            columnWidths[column.name] ||
+            (column.name === 'select' ? 52 : 80),
+          textAlign: column.name === 'select' ? 'center' : 'left',
+        }}
+      >
         {column.render
           ? column.render(row.original.id, row.id)
           : row.original[column.name]}
@@ -961,24 +1045,18 @@ const Table = ({
   )
 
   const tableBody = (
-        <TableScroll $sheet={sheet} $fill={fillParent} $resizable={resizable}>
+        <TableScroll
+          ref={scrollRef}
+          $sheet={sheet}
+          $fill={fillParent}
+          $resizable={resizable}
+        >
           <table
             className={sheet ? 'table' : 'table is-fullwidth'}
             {...getTableProps()}
             style={
               resizable
-                ? {
-                    width: Math.max(
-                      720,
-                      visibleColumnDefs.reduce(
-                        (sum, column) =>
-                          sum +
-                          (columnWidths[column.name] ||
-                            (column.name === 'select' ? 52 : 140)),
-                        0,
-                      ),
-                    ),
-                  }
+                ? { width: tableWidth, minWidth: '100%' }
                 : undefined
             }
           >
@@ -996,14 +1074,18 @@ const Table = ({
                     return (
                       <th
                         {...headerProps}
+                        data-column={name}
                         data-sortable={sortable ? 'true' : 'false'}
                         style={{
                           ...(headerProps as { style?: object }).style,
                           position: 'sticky',
+                          textAlign: name === 'select' ? 'center' : 'left',
                           width:
                             columnWidths[name] ||
                             (name === 'select' ? 52 : undefined),
-                          minWidth: name === 'select' ? 52 : 80,
+                          minWidth:
+                            columnWidths[name] ||
+                            (name === 'select' ? 52 : 80),
                         }}
                         onClick={(event) => {
                           if (resizeDrag.current?.moved) {
@@ -1019,7 +1101,7 @@ const Table = ({
                             isSortedDesc={column.isSortedDesc}
                           />
                         )}
-                        {resizable && (
+                        {resizable && name !== 'select' && (
                           <ResizeHandle
                             onMouseDown={(event) => {
                               event.preventDefault()

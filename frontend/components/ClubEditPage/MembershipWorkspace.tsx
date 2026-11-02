@@ -30,7 +30,13 @@ import {
   AdminGhost,
   AdminPrimary,
 } from './adminControls'
-import { ADMIN_ACCENT, ADMIN_CANVAS, ADMIN_NAVY } from './adminTheme'
+import {
+  ADMIN_ACCENT,
+  ADMIN_CANVAS,
+  ADMIN_FONT,
+  ADMIN_NAVY,
+  ADMIN_PAD_FIELD,
+} from './adminTheme'
 import { PageTitle } from './ClubAdminShell'
 import { MEMBERSHIP_ROLES } from './MembersCard'
 
@@ -72,13 +78,25 @@ type Recipient = {
   kind: 'member' | 'invite' | 'request' | 'email' | 'submission'
 }
 
+type MessageType = 'invite' | 'application' | 'general'
+
 type Draft = {
   id: string
-  type: 'invite' | 'application'
+  type: MessageType
   subject: string
   body: string
   tags: string
   recipientIds: string[]
+}
+
+function messageTypeLabel(type: MessageType) {
+  if (type === 'application') {
+    return 'Application'
+  }
+  if (type === 'general') {
+    return 'General'
+  }
+  return 'Invite'
 }
 
 type ColumnKey =
@@ -296,53 +314,30 @@ const Tiny = styled.button`
 
 const Composer = styled(Widget)`
   overflow: auto;
+  color: ${ADMIN_NAVY};
+  font-size: ${ADMIN_FONT};
+
+  input,
+  textarea,
+  label,
+  button,
+  p,
+  span {
+    font-family: inherit;
+    font-size: inherit;
+  }
 
   > label:first-of-type {
     margin-top: 0;
   }
 `
 
-const DraftList = styled.ul`
-  margin: 0;
-  padding: 0;
-  list-style: none;
-
-  li + li {
-    border-top: 1px solid #ececec;
-  }
-
-  button {
-    appearance: none;
-    background: transparent;
-    border: 0;
-    color: ${ADMIN_NAVY};
-    cursor: pointer;
-    display: block;
-    padding: 12px 4px;
-    text-align: left;
-    width: 100%;
-  }
-
-  button:hover {
-    background: #f7f8fb;
-  }
-
-  .title {
-    display: block;
-    font-weight: 600;
-  }
-
-  .meta {
-    color: #6b7280;
-    font-size: 12px;
-  }
-`
-
 const InputLabel = styled.label`
   display: block;
-  font-size: 13px;
+  font-size: ${ADMIN_FONT};
+  font-weight: 400;
   color: ${ADMIN_NAVY};
-  margin: 10px 0 4px;
+  margin: ${ADMIN_PAD_FIELD} 0 4px;
 `
 
 const TextInput = styled.input`
@@ -353,6 +348,8 @@ const TextInput = styled.input`
   border-radius: 10px;
   padding: 8px 10px;
   color: ${ADMIN_NAVY};
+  font-family: inherit;
+  font-size: ${ADMIN_FONT};
 `
 
 const Area = styled.textarea`
@@ -364,6 +361,8 @@ const Area = styled.textarea`
   border-radius: 10px;
   padding: 8px 10px;
   color: ${ADMIN_NAVY};
+  font-family: inherit;
+  font-size: ${ADMIN_FONT};
   resize: vertical;
 
   &::placeholder {
@@ -385,7 +384,7 @@ const Chips = styled.div`
 
 const ChipPlaceholder = styled.span`
   color: #9aa0a6;
-  font-size: 13px;
+  font-size: ${ADMIN_FONT};
 `
 
 const Chip = styled.span`
@@ -397,14 +396,14 @@ const Chip = styled.span`
   color: ${ADMIN_ACCENT};
   border-radius: 999px;
   padding: 2px 8px;
-  font-size: 13px;
+  font-size: ${ADMIN_FONT};
 `
 
 const SendRow = styled.div`
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-top: 12px;
+  margin-top: ${ADMIN_PAD_FIELD};
 `
 
 const SendSplit = styled.div`
@@ -423,7 +422,7 @@ const SendMain = styled.button`
   color: #fff;
   cursor: pointer;
   display: inline-flex;
-  font-size: 14px;
+  font-size: ${ADMIN_FONT};
   font-weight: 600;
   gap: 8px;
   line-height: 1;
@@ -485,11 +484,13 @@ const GhostButton = styled.button`
   padding: 8px 12px;
   cursor: pointer;
   color: ${ADMIN_NAVY};
+  font-family: inherit;
+  font-size: ${ADMIN_FONT};
 `
 
 const Hint = styled.p`
   color: #42424f;
-  font-size: 12px;
+  font-size: ${ADMIN_FONT};
   margin: 8px 0 0;
 `
 
@@ -585,9 +586,7 @@ export default function MembershipWorkspace({
   const [invites, setInvites] = useState<Invite[]>([])
   const [requests, setRequests] = useState<RequestRow[]>([])
   const [recipients, setRecipients] = useState<Recipient[]>([])
-  const [messageType, setMessageType] = useState<'invite' | 'application'>(
-    'invite',
-  )
+  const [messageType, setMessageType] = useState<MessageType>('invite')
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
   const [tags, setTags] = useState('')
@@ -966,20 +965,34 @@ export default function MembershipWorkspace({
     (item) => item.kind === 'submission',
   )
 
+  const generalEmails = Array.from(
+    new Set(
+      recipients
+        .map((item) => item.email)
+        .filter((email): email is string => Boolean(email && email.trim())),
+    ),
+  )
+
   const sendDisabled =
     sending ||
     (messageType === 'invite'
       ? inviteTargets.length === 0
-      : !applicationId || submissionRecipients.length === 0)
+      : messageType === 'general'
+        ? generalEmails.length === 0 || !body.trim()
+        : !applicationId || submissionRecipients.length === 0)
 
   const sendHint =
     messageType === 'invite'
       ? inviteTargets.length === 0
         ? 'Active members cannot be emailed from here. Add an email address to invite someone new, or select a pending invite.'
         : `Invite uses ${SCHOOL_NAME} accounts when possible. People who are already members are skipped.`
-      : submissionRecipients.length === 0
-        ? 'Application emails go to applicants, not active members. Choose applicants below. Send uses the existing status-and-reason email flow.'
-        : 'Send notifies applicants who already have this status and a reason, the same as the applications page.'
+      : messageType === 'general'
+        ? generalEmails.length === 0
+          ? 'Select members in the table to email, then write a subject and body.'
+          : 'Sends this message to the selected club members.'
+        : submissionRecipients.length === 0
+          ? 'Application emails go to applicants, not active members. Choose applicants below. Send uses the existing status-and-reason email flow.'
+          : 'Send notifies applicants who already have this status and a reason, the same as the applications page.'
 
   const sendInvites = async () => {
     setSending(true)
@@ -1060,6 +1073,30 @@ export default function MembershipWorkspace({
     } finally {
       setSending(false)
       setSendMenu(false)
+    }
+  }
+
+  const sendGeneral = async () => {
+    setSending(true)
+    try {
+      const resp = await doApiRequest(
+        `/clubs/${club.code}/send_message/?format=json`,
+        {
+          method: 'POST',
+          body: {
+            subject,
+            content: body,
+            tags,
+            emails: generalEmails,
+          },
+        },
+      )
+      const payload = await resp.json()
+      toast[resp.ok ? 'success' : 'error'](
+        payload.detail || (resp.ok ? 'Message sent' : 'Could not send message'),
+      )
+    } finally {
+      setSending(false)
     }
   }
 
@@ -1158,46 +1195,50 @@ export default function MembershipWorkspace({
               <PageTitle>{draftsOpen ? 'Drafts' : 'Send Message'}</PageTitle>
             </HeadLeft>
             {draftsOpen && (
-              <GhostButton type="button" onClick={() => setDraftsOpen(false)}>
+              <AdminPrimary type="button" onClick={() => setDraftsOpen(false)}>
                 New message
-              </GhostButton>
+              </AdminPrimary>
             )}
           </ColumnHead>
           {draftsOpen ? (
             <Widget>
-              {drafts.length === 0 ? (
-                <ChipPlaceholder>No drafts yet.</ChipPlaceholder>
-              ) : (
-                <DraftList>
-                  {drafts.map((draft) => (
-                    <li key={draft.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMessageType(draft.type)
-                          setSubject(draft.subject)
-                          setBody(draft.body)
-                          setTags(draft.tags)
-                          setDraftsOpen(false)
-                        }}
-                      >
-                        <span className="title">
-                          {draft.subject ||
-                            (draft.type === 'application'
-                              ? 'Application email'
-                              : 'Invite')}
-                        </span>
-                        <span className="meta">
-                          {draft.type === 'application'
-                            ? 'Application'
-                            : 'Invite'}
-                          {draft.tags ? ` · ${draft.tags}` : ''}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </DraftList>
-              )}
+              <Table
+                variant="sheet"
+                fillParent
+                resizable
+                focusable
+                initialPageSize={50}
+                data={drafts.map((draft) => ({
+                  id: draft.id,
+                  name:
+                    draft.subject ||
+                    (draft.type === 'application'
+                      ? 'Application email'
+                      : draft.type === 'general'
+                        ? 'General email'
+                        : 'Invite'),
+                  type: messageTypeLabel(draft.type),
+                  tags: draft.tags || '',
+                  draft,
+                }))}
+                columns={[
+                  { name: 'name', label: 'Subject' },
+                  { name: 'type', label: 'Type' },
+                  { name: 'tags', label: 'Tags' },
+                ]}
+                searchableColumns={['name', 'type', 'tags']}
+                onClick={(row) => {
+                  const draft = row.original?.draft as Draft
+                  if (!draft) {
+                    return
+                  }
+                  setMessageType(draft.type)
+                  setSubject(draft.subject)
+                  setBody(draft.body)
+                  setTags(draft.tags)
+                  setDraftsOpen(false)
+                }}
+              />
             </Widget>
           ) : (
           <Composer>
@@ -1211,14 +1252,15 @@ export default function MembershipWorkspace({
             menuPosition="fixed"
             isSearchable={false}
             options={[
+              { value: 'general' as const, label: 'General' },
+              { value: 'invite' as const, label: 'Invite' },
               ...(SHOW_APPLICATIONS
                 ? [{ value: 'application' as const, label: 'Application' }]
                 : []),
-              { value: 'invite' as const, label: 'Invite' },
             ]}
             value={{
               value: messageType,
-              label: messageType === 'application' ? 'Application' : 'Invite',
+              label: messageTypeLabel(messageType),
             }}
             onChange={(option) => {
               if (option) {
@@ -1226,7 +1268,61 @@ export default function MembershipWorkspace({
               }
             }}
           />
-          {messageType === 'invite' ? (
+          {messageType === 'general' ? (
+            <>
+              <InputLabel>Recipients</InputLabel>
+              <Chips>
+                {recipients.length === 0 ? (
+                  <ChipPlaceholder>
+                    Selected members will appear here.
+                  </ChipPlaceholder>
+                ) : (
+                  recipients.map((recipient) => (
+                    <Chip key={recipient.id}>
+                      {recipient.label}
+                      <button
+                        type="button"
+                        aria-label={`Remove ${recipient.label}`}
+                        onClick={() =>
+                          setRecipients((current) =>
+                            current.filter((item) => item.id !== recipient.id),
+                          )
+                        }
+                        style={{
+                          border: 0,
+                          background: 'transparent',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </Chip>
+                  ))
+                )}
+              </Chips>
+              <InputLabel htmlFor="message-subject">Subject</InputLabel>
+              <TextInput
+                id="message-subject"
+                value={subject}
+                onChange={(event) => setSubject(event.target.value)}
+                placeholder="Subject"
+              />
+              <InputLabel htmlFor="message-tags">Tags</InputLabel>
+              <TextInput
+                id="message-tags"
+                value={tags}
+                onChange={(event) => setTags(event.target.value)}
+                placeholder="Optional tags"
+              />
+              <InputLabel htmlFor="message-body">Email body</InputLabel>
+              <Area
+                id="message-body"
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                placeholder="Write your message"
+              />
+            </>
+          ) : messageType === 'invite' ? (
             <>
               <InputLabel>Recipients</InputLabel>
               <Chips>
@@ -1386,12 +1482,14 @@ export default function MembershipWorkspace({
           )}
           <SendRow>
             <Menu>
-              {messageType === 'invite' ? (
+              {messageType === 'invite' || messageType === 'general' ? (
                 <SendMain
                   type="button"
                   disabled={sendDisabled}
                   data-testid="invite-emails-submit"
-                  onClick={() => sendInvites()}
+                  onClick={() =>
+                    messageType === 'general' ? sendGeneral() : sendInvites()
+                  }
                   style={{
                     background: ADMIN_ACCENT,
                     borderRadius: 8,

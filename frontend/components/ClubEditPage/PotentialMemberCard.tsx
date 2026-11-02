@@ -193,8 +193,10 @@ export default function PotentialMemberCard({
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
-        marginBottom: header || help ? 12 : 0,
+        marginBottom: header || help ? 16 : 0,
+        fontSize: '1.125rem',
         fontWeight: 600,
+        lineHeight: 1.3,
       }}
     >
       {title}

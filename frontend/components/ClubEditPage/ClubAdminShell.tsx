@@ -204,8 +204,12 @@ const Canvas = styled.main<{ $plain?: boolean }>`
   .card {
     box-shadow: none !important;
     border: none !important;
-    border-radius: ${ADMIN_RADIUS} !important;
+    border-radius: 10px !important;
     background: white;
+  }
+
+  .card:last-child {
+    margin-bottom: 0 !important;
   }
 
   .card-header,
@@ -242,10 +246,50 @@ const Canvas = styled.main<{ $plain?: boolean }>`
     margin: 0;
   }
 
-  .card-content .field,
-  .card-content .field:not(:last-child),
-  .card-content .field:last-child {
+  .card-content > .field,
+  .card-content > .field:not(:last-child) {
+    margin-bottom: 0 !important;
+  }
+
+  .card-content form .field:not(:last-child) {
+    margin-bottom: 16px;
+  }
+
+  #student-questions .card-content {
+    gap: 0.75rem;
+  }
+
+  #student-questions .card-content > div {
     margin-bottom: 0;
+  }
+
+  #student-questions .card-content form .field:not(:last-child) {
+    margin-bottom: 8px;
+  }
+
+  .card-content form .buttons {
+    margin: 0;
+  }
+
+  .textarea {
+    padding: 12px 14px;
+    min-height: 6.5rem;
+  }
+
+  .rdw-editor-main {
+    padding: 12px 14px !important;
+    min-height: 8rem;
+  }
+
+  .checkbox,
+  label.checkbox {
+    align-items: center;
+    display: inline-flex !important;
+    gap: 8px;
+  }
+
+  .checkbox input[type='checkbox'] {
+    margin: 0;
   }
 
   [data-icon] svg {

@@ -180,14 +180,23 @@ export default function FilesCard({
         onSubmit={submitForm}
       >
         {({ dirty, isSubmitting, status, values }) => (
-          <Form>
+          <Form
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: 16,
+            }}
+          >
             <Field name="file" as={FileField} />
-            <label className="checkbox is-block mb-3">
-              <Field type="checkbox" name="is_constitution" /> This file is the{' '}
-              {OBJECT_NAME_SINGULAR} constitution
+            <label className="checkbox">
+              <Field type="checkbox" name="is_constitution" />
+              This file is the {OBJECT_NAME_SINGULAR} constitution
             </label>
             {status?.file && (
-              <p className="help is-danger mb-3">{status.file}</p>
+              <p className="help is-danger" style={{ margin: 0 }}>
+                {status.file}
+              </p>
             )}
             <button
               type="submit"

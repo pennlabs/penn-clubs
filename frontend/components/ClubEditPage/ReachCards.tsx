@@ -16,16 +16,21 @@ const Box = styled.div`
   margin-bottom: 16px;
   min-width: 0;
   overflow: visible;
-  padding: 14px;
+  padding: 20px 24px 24px;
   position: relative;
   z-index: 2;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 `
 
 const Title = styled.h3`
   color: ${ADMIN_NAVY};
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  margin: 0 0 12px;
+  line-height: 1.3;
+  margin: 0 0 16px;
 `
 
 const QR = styled.img`

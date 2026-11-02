@@ -9,10 +9,10 @@ import Table from './common/Table'
 import { FormStyle } from './FormComponents'
 
 const ModelItem = styled.div`
-  padding: 15px;
+  padding: 16px;
   border: 1px solid #dbdbdb;
-  border-radius: 3px;
-  margin-bottom: 1em;
+  border-radius: 10px;
+  margin-bottom: 0.5em;
 `
 
 const ModelStatusWrapper = styled.span`
@@ -629,8 +629,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
             {({ isSubmitting }) => (
               <Form>
                 <FormStyle isHorizontal>
-                  {fields}
-                  <button
+                    {fields}
+                    <div className="buttons">
+                    <button
                     type="submit"
                     disabled={isSubmitting}
                     className="button is-primary"
@@ -640,7 +641,6 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
                   {allowDeletion && (
                     <span
                       className="button is-danger"
-                      style={{ marginLeft: '0.5em' }}
                       onClick={() => {
                         onDelete(object)
                       }}
@@ -649,6 +649,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
                     </span>
                   )}
                   <ModelStatus status={object._status} />
+                    </div>
                 </FormStyle>
               </Form>
             )}

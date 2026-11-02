@@ -1,7 +1,7 @@
 import { Field, Form, Formik, useFormikContext } from 'formik'
 import moment from 'moment'
 import Link from 'next/link'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect, useRef, useState } from 'react'
 import Select from 'react-select'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -9,6 +9,7 @@ import styled from 'styled-components'
 import { Club, ClubEvent, ClubEventType, EventShowing } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { Icon, Modal, Text } from '../common'
+import Table from '../common/Table'
 import {
   selectCompactStyles,
   selectComponents,
@@ -86,7 +87,7 @@ const Layout = styled.div<{ $panel?: boolean }>`
   display: grid;
   grid-template-columns: ${({ $panel }) =>
     $panel
-      ? 'minmax(0, 1.45fr) minmax(300px, 0.75fr)'
+      ? 'minmax(0, 1.5fr) minmax(280px, 0.8fr)'
       : 'minmax(0, 1fr)'};
   gap: 16px;
   align-items: stretch;
@@ -130,10 +131,20 @@ const ColumnHead = styled.div`
   flex-shrink: 0;
 `
 
+const GhostButton = styled.button`
+  background: white;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: ${ADMIN_NAVY};
+`
+
+
 const Widget = styled.div`
   background: white;
   border-radius: 10px;
-  padding: 22px 14px 14px;
+  padding: 12px 14px 14px;
   min-width: 0;
   min-height: 0;
   flex: 1;
@@ -152,18 +163,27 @@ const Toolbar = styled.div`
 
 const Toggle = styled.div`
   display: inline-flex;
+  align-items: center;
   background: white;
   border-radius: 999px;
   padding: 4px;
 `
 
 const ToggleButton = styled.button<{ $active?: boolean }>`
-  border: 0;
+  align-items: center;
   background: ${({ $active }) => ($active ? '#e7f6ee' : 'transparent')};
-  color: ${({ $active }) => ($active ? '#178a4a' : ADMIN_NAVY)};
+  border: 0;
   border-radius: 999px;
-  padding: 6px 12px;
+  color: ${({ $active }) => ($active ? '#178a4a' : ADMIN_NAVY)};
   cursor: pointer;
+  display: inline-flex;
+  gap: 6px;
+  line-height: 1;
+  padding: 6px 12px;
+
+  svg {
+    display: block;
+  }
 `
 
 const Search = styled.input`
@@ -185,29 +205,42 @@ const ToolButton = styled.button`
 `
 
 const CreateWrap = styled.div`
-  margin-left: auto;
   display: inline-flex;
+  align-items: stretch;
   position: relative;
+  background: ${ADMIN_ACCENT};
+  border-radius: 8px;
+  overflow: visible;
 `
 
 const CreateButton = styled.button`
-  background: ${ADMIN_ACCENT};
-  color: white;
+  appearance: none;
+  background: transparent;
+  color: #fff;
   border: 0;
-  border-radius: 6px 0 0 6px;
-  padding: 8px 12px;
+  padding: 9px 14px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
 `
 
 const CreateMore = styled.button`
-  background: ${ADMIN_ACCENT};
-  color: white;
+  appearance: none;
+  align-items: center;
+  background: transparent;
   border: 0;
   border-left: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 0 6px 6px 0;
-  padding: 8px 10px;
+  color: #fff;
   cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  padding: 0 10px;
+
+  svg {
+    color: #fff;
+    display: block;
+  }
 `
 
 const Menu = styled.div`
@@ -233,12 +266,16 @@ const Menu = styled.div`
   }
 `
 
+const HOUR_PX = 48
+const DAY_HOURS = 24
+const HOUR_TOP = 12
+
 const CalendarHead = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   color: ${ADMIN_NAVY};
 `
 
@@ -297,6 +334,7 @@ const CalendarFill = styled.div`
   flex-direction: column;
   min-height: 0;
   height: 100%;
+  padding-top: 8px;
 `
 
 const WeekGrid = styled.div`
@@ -316,28 +354,54 @@ const DayHead = styled.div`
   background: white;
   z-index: 2;
   text-align: center;
-  font-size: 12px;
   padding: 8px 2px;
-  border-bottom: 1px solid #eee;
   color: ${ADMIN_NAVY};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  .day-num {
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .day-name {
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+`
+
+const HourGutter = styled.div`
+  padding-top: ${HOUR_TOP}px;
 `
 
 const HourLabel = styled.div`
-  height: 48px;
+  height: ${HOUR_PX}px;
   font-size: 11px;
   color: #888;
   text-align: right;
-  padding-right: 6px;
+  padding: 0 6px 0 0;
+  line-height: 1;
+  border-top: 1px solid #f3f3f3;
+  transform: translateY(-6px);
 `
 
 const DayCol = styled.div`
   position: relative;
   border-left: 1px solid #f0f0f0;
-  min-height: ${48 * 16}px;
+  min-height: ${HOUR_TOP + HOUR_PX * DAY_HOURS}px;
+  padding-top: ${HOUR_TOP}px;
+  user-select: none;
+  box-sizing: border-box;
 `
 
 const HourLine = styled.div`
-  height: 48px;
+  height: ${HOUR_PX}px;
   border-top: 1px solid #f3f3f3;
 `
 
@@ -481,7 +545,44 @@ const TableCard = styled.div`
   }
 `
 
-const draftKey = (code: string) => `penn-clubs-event-draft:${code}`
+type StoredDraft = {
+  storageId: string
+  savedAt: number
+} & Omit<EventDraft, 'image'>
+
+const draftKey = (code: string) => `penn-clubs-event-drafts:${code}`
+const legacyDraftKey = (code: string) => `penn-clubs-event-draft:${code}`
+
+function loadDrafts(code: string): StoredDraft[] {
+  if (typeof window === 'undefined') {
+    return []
+  }
+  try {
+    const raw = window.sessionStorage.getItem(draftKey(code))
+    if (raw) {
+      return JSON.parse(raw) as StoredDraft[]
+    }
+    const legacy = window.sessionStorage.getItem(legacyDraftKey(code))
+    if (!legacy) {
+      return []
+    }
+    const parsed = JSON.parse(legacy) as Omit<EventDraft, 'image'>
+    const migrated: StoredDraft = {
+      ...parsed,
+      storageId: `${Date.now()}`,
+      savedAt: Date.now(),
+    }
+    window.sessionStorage.setItem(draftKey(code), JSON.stringify([migrated]))
+    window.sessionStorage.removeItem(legacyDraftKey(code))
+    return [migrated]
+  } catch {
+    return []
+  }
+}
+
+function saveDrafts(code: string, drafts: StoredDraft[]) {
+  window.sessionStorage.setItem(draftKey(code), JSON.stringify(drafts))
+}
 
 function emptyDraft(recurring = false): EventDraft {
   return {
@@ -706,7 +807,8 @@ export default function EventsWorkspace({
   const [seedKey, setSeedKey] = useState(0)
   const [panelOpen, setPanelOpen] = useState(true)
   const [showExtra, setShowExtra] = useState(false)
-  const [savedDraft, setSavedDraft] = useState(false)
+  const [draftsOpen, setDraftsOpen] = useState(false)
+  const [drafts, setDrafts] = useState<StoredDraft[]>([])
 
   const reload = () => {
     doApiRequest(`/clubs/${club.code}/events/?format=json`)
@@ -720,7 +822,7 @@ export default function EventsWorkspace({
 
   useEffect(() => {
     reload()
-    setSavedDraft(Boolean(window.sessionStorage.getItem(draftKey(club.code))))
+    setDrafts(loadDrafts(club.code))
   }, [club.code])
 
   const openNew = (recurring = false) => {
@@ -729,6 +831,7 @@ export default function EventsWorkspace({
     setPanelOpen(true)
     setShowExtra(false)
     setCreateMenu(false)
+    setDraftsOpen(false)
   }
 
   const openEvent = (event: ClubEvent, showing?: EventShowing | null) => {
@@ -736,6 +839,19 @@ export default function EventsWorkspace({
     setSeedKey((key) => key + 1)
     setPanelOpen(true)
     setShowExtra(false)
+    setDraftsOpen(false)
+  }
+
+  const openRange = (start: Date, end: Date) => {
+    setSeed({
+      ...emptyDraft(),
+      start_time: moment(start).toISOString(),
+      end_time: moment(end).toISOString(),
+    })
+    setSeedKey((key) => key + 1)
+    setPanelOpen(true)
+    setShowExtra(false)
+    setDraftsOpen(false)
   }
 
   const visibleEvents = events.filter((event) =>
@@ -931,11 +1047,45 @@ export default function EventsWorkspace({
       >
         {(formik) => (
           <FormFill>
-            <Layout $panel={panelOpen}>
+            <Layout $panel={panelOpen || draftsOpen}>
               <Column>
             <HeadStack>
             <ColumnHead>
               <PageTitle>Events</PageTitle>
+              <CreateWrap>
+                <CreateButton type="button" onClick={() => openNew(false)}>
+                  + Create Event
+                </CreateButton>
+                <CreateMore
+                  type="button"
+                  aria-label="More create options"
+                  onClick={() => setCreateMenu((open) => !open)}
+                >
+                  <Icon
+                    name="chevron-down"
+                    alt=""
+                    size="0.85rem"
+                    fitSize
+                    noMargin
+                  />
+                </CreateMore>
+                {createMenu && (
+                  <Menu>
+                    <button type="button" onClick={() => openNew(true)}>
+                      Make recurring
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImportOpen(true)
+                        setCreateMenu(false)
+                      }}
+                    >
+                      Import calendar
+                    </button>
+                  </Menu>
+                )}
+              </CreateWrap>
             </ColumnHead>
             <Toolbar>
               <Toggle>
@@ -1028,57 +1178,6 @@ export default function EventsWorkspace({
                   }}
                 />
               </div>
-              <CreateWrap>
-                <CreateButton type="button" onClick={() => openNew(false)}>
-                  + Create Event
-                </CreateButton>
-                <CreateMore
-                  type="button"
-                  aria-label="More create options"
-                  onClick={() => setCreateMenu((open) => !open)}
-                >
-                  ▾
-                </CreateMore>
-                {createMenu && (
-                  <Menu>
-                    <button type="button" onClick={() => openNew(true)}>
-                      Make recurring
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImportOpen(true)
-                        setCreateMenu(false)
-                      }}
-                    >
-                      Import calendar
-                    </button>
-                    {savedDraft && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const raw = window.sessionStorage.getItem(
-                            draftKey(club.code),
-                          )
-                          if (!raw) {
-                            return
-                          }
-                          setSeed({
-                            ...emptyDraft(),
-                            ...JSON.parse(raw),
-                            image: null,
-                          })
-                          setSeedKey((key) => key + 1)
-                          setPanelOpen(true)
-                          setCreateMenu(false)
-                        }}
-                      >
-                        Open saved draft
-                      </button>
-                    )}
-                  </Menu>
-                )}
-              </CreateWrap>
             </Toolbar>
             </HeadStack>
             <Widget>
@@ -1096,6 +1195,7 @@ export default function EventsWorkspace({
                     draft={formik.values}
                     onEdit={openEvent}
                     onDelete={removeEvent}
+                    onCreateRange={openRange}
                   />
                 ) : (
                   <MonthCalendar
@@ -1107,27 +1207,86 @@ export default function EventsWorkspace({
                 )}
             </Widget>
               </Column>
-              {panelOpen && (
+              {(panelOpen || draftsOpen) && (
                 <Column>
+                {draftsOpen ? (
+                  <>
+                    <ColumnHead>
+                      <PageTitle>Drafts</PageTitle>
+                      <GhostButton
+                        type="button"
+                        onClick={() => {
+                          setDraftsOpen(false)
+                          openNew(false)
+                        }}
+                      >
+                        New Event
+                      </GhostButton>
+                    </ColumnHead>
+                    <Widget>
+                      <Table
+                        variant="sheet"
+                        fillParent
+                        resizable
+                        focusable
+                        initialPageSize={50}
+                        data={drafts.map((draft) => ({
+                          id: draft.storageId,
+                          name: draft.name || 'Untitled event',
+                          type: draft.recurring ? 'Recurring' : 'Event',
+                          start: draft.start_time
+                            ? moment(draft.start_time).format('MMM D, h:mma')
+                            : '',
+                          draft,
+                        }))}
+                        columns={[
+                          { name: 'name', label: 'Name' },
+                          { name: 'type', label: 'Type' },
+                          { name: 'start', label: 'Start' },
+                        ]}
+                        searchableColumns={['name', 'type', 'start']}
+                        onClick={(row) => {
+                          const draft = row.original?.draft as StoredDraft
+                          if (!draft) {
+                            return
+                          }
+                          const { storageId: _id, savedAt: _at, ...fields } =
+                            draft
+                          setSeed({
+                            ...emptyDraft(),
+                            ...fields,
+                            image: null,
+                          })
+                          setSeedKey((key) => key + 1)
+                          setPanelOpen(true)
+                          setShowExtra(false)
+                          setDraftsOpen(false)
+                        }}
+                      />
+                    </Widget>
+                  </>
+                ) : (
                 <EventPanel
                   showExtra={showExtra}
                   setShowExtra={setShowExtra}
-                  onClose={() => setPanelOpen(false)}
+                  onClose={() => setDraftsOpen(true)}
                   onPreview={() => setPreview(true)}
                   onDraft={() => {
                     const { image, ...rest } = formik.values
-                    window.sessionStorage.setItem(
-                      draftKey(club.code),
-                      JSON.stringify(rest),
-                    )
-                    setSavedDraft(true)
-                    toast.success(
-                      'Draft saved on this device. It is not published.',
-                    )
+                    const draft: StoredDraft = {
+                      ...rest,
+                      storageId: `${Date.now()}`,
+                      savedAt: Date.now(),
+                    }
+                    const next = [draft, ...drafts].slice(0, 20)
+                    setDrafts(next)
+                    saveDrafts(club.code, next)
+                    toast.success('Draft saved in this browser tab')
                   }}
                   onAddShowing={() => addShowing(formik.values)}
                   saving={formik.isSubmitting}
                 />
+                )}
                 </Column>
               )}
             </Layout>
@@ -1226,6 +1385,10 @@ function EventsTable({
   )
 }
 
+function snapMinutes(value: number) {
+  return Math.round(value / 15) * 15
+}
+
 function WeekCalendar({
   anchor,
   setAnchor,
@@ -1233,6 +1396,7 @@ function WeekCalendar({
   draft,
   onEdit,
   onDelete,
+  onCreateRange,
 }: {
   anchor: Date
   setAnchor: (date: Date) => void
@@ -1240,8 +1404,17 @@ function WeekCalendar({
   draft: EventDraft
   onEdit: (event: ClubEvent, showing?: EventShowing | null) => void
   onDelete: (event: ClubEvent) => void
+  onCreateRange: (start: Date, end: Date) => void
 }) {
   const [hover, setHover] = useState<string | null>(null)
+  const [drag, setDrag] = useState<{
+    dayIndex: number
+    startMin: number
+    endMin: number
+  } | null>(null)
+  const dragRef = useRef(drag)
+  dragRef.current = drag
+  const colRefs = useRef<(HTMLDivElement | null)[]>([])
   const start = moment(anchor).startOf('isoWeek')
   const days = Array.from({ length: 7 }, (_, index) =>
     start.clone().add(index, 'days'),
@@ -1253,7 +1426,52 @@ function WeekCalendar({
       when.isBefore(start.clone().add(7, 'days'), 'day')
     )
   })
-  const hours = Array.from({ length: 16 }, (_, index) => index + 7)
+  const hours = Array.from({ length: DAY_HOURS }, (_, index) => index)
+
+  useEffect(() => {
+    if (!drag) {
+      return
+    }
+    const move = (event: MouseEvent) => {
+      const current = dragRef.current
+      if (!current) {
+        return
+      }
+      const el = colRefs.current[current.dayIndex]
+      if (!el) {
+        return
+      }
+      const y =
+        event.clientY - el.getBoundingClientRect().top - HOUR_TOP
+      const mins = snapMinutes(
+        Math.max(0, Math.min(DAY_HOURS * 60, (y / HOUR_PX) * 60)),
+      )
+      setDrag({ ...current, endMin: mins })
+    }
+    const up = () => {
+      const current = dragRef.current
+      setDrag(null)
+      if (!current) {
+        return
+      }
+      const from = Math.min(current.startMin, current.endMin)
+      const to = Math.max(current.startMin, current.endMin)
+      if (to - from < 15) {
+        return
+      }
+      const day = start.clone().add(current.dayIndex, 'days').startOf('day')
+      onCreateRange(
+        day.clone().add(from, 'minutes').toDate(),
+        day.clone().add(Math.max(to, from + 30), 'minutes').toDate(),
+      )
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+  }, [Boolean(drag)])
 
   const place = (startTime: string, endTime: string) => {
     const startMoment = moment(startTime)
@@ -1263,8 +1481,8 @@ function WeekCalendar({
       endMoment.hours() * 60 + endMoment.minutes(),
       startMinutes + 30,
     )
-    const top = Math.max(0, ((startMinutes - 7 * 60) / 60) * 48)
-    const height = Math.max(((endMinutes - startMinutes) / 60) * 48, 28)
+    const top = Math.max(0, HOUR_TOP + (startMinutes / 60) * HOUR_PX)
+    const height = Math.max(((endMinutes - startMinutes) / 60) * HOUR_PX, 28)
     return { top, height, dayIndex: startMoment.isoWeekday() - 1 }
   }
 
@@ -1299,19 +1517,37 @@ function WeekCalendar({
         <DayHead />
         {days.map((day) => (
           <DayHead key={day.toISOString()}>
-            <div>{day.format('D')}</div>
-            <div>{day.format('ddd').toUpperCase()}</div>
+            <div className="day-num">{day.format('D')}</div>
+            <div className="day-name">{day.format('ddd').toUpperCase()}</div>
           </DayHead>
         ))}
-        <div>
+        <HourGutter>
           {hours.map((hour) => (
             <HourLabel key={hour}>
               {moment().hour(hour).minute(0).format('h A')}
             </HourLabel>
           ))}
-        </div>
+        </HourGutter>
         {days.map((day, dayIndex) => (
-          <DayCol key={day.toISOString()}>
+          <DayCol
+            key={day.toISOString()}
+            ref={(el) => {
+              colRefs.current[dayIndex] = el
+            }}
+            onMouseDown={(event) => {
+              if (event.button !== 0) {
+                return
+              }
+              const y =
+                event.clientY -
+                event.currentTarget.getBoundingClientRect().top -
+                HOUR_TOP
+              const startMin = snapMinutes(
+                Math.max(0, Math.min(DAY_HOURS * 60, (y / HOUR_PX) * 60)),
+              )
+              setDrag({ dayIndex, startMin, endMin: startMin + 30 })
+            }}
+          >
             {hours.map((hour) => (
               <HourLine key={hour} />
             ))}
@@ -1327,6 +1563,7 @@ function WeekCalendar({
                     key={block.key}
                     style={{ top: position.top, height: position.height }}
                     $active={draft.id === event.id}
+                    onMouseDown={(click) => click.stopPropagation()}
                     onMouseEnter={() => setHover(block.key)}
                     onMouseLeave={() => setHover(null)}
                     onClick={() => onEdit(event, block.showing)}
@@ -1422,6 +1659,22 @@ function WeekCalendar({
                 style={{ top: draftBlock.top, height: draftBlock.height }}
               >
                 <strong>{draftBlock.name}</strong>
+              </BlockButton>
+            )}
+            {drag && drag.dayIndex === dayIndex && (
+              <BlockButton
+                $dashed
+                style={{
+                  top:
+                    HOUR_TOP +
+                    (Math.min(drag.startMin, drag.endMin) / 60) * HOUR_PX,
+                  height: Math.max(
+                    (Math.abs(drag.endMin - drag.startMin) / 60) * HOUR_PX,
+                    28,
+                  ),
+                }}
+              >
+                <strong>New Event</strong>
               </BlockButton>
             )}
           </DayCol>
@@ -1521,7 +1774,7 @@ function EventPanel({
     <Panel>
       <HeadStack>
       <PanelHead>
-        <BackButton type="button" aria-label="Close editor" onClick={onClose}>
+        <BackButton type="button" aria-label="View drafts" onClick={onClose}>
           <Icon name="chevron-left" alt="" size="1.1rem" fitSize noMargin />
         </BackButton>
         <PageTitle as="h2" style={{ fontSize: 20 }}>
