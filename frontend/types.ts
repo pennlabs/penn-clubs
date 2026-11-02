@@ -32,6 +32,10 @@ export interface Membership {
   image: string | null
   email: string
   username: string
+  description?: string
+  graduation_year?: number | null
+  major?: { id?: number; name: string }[]
+  created_at?: string
 }
 
 export interface Testimonial {
@@ -257,6 +261,7 @@ export interface Club {
    */
   membership_count: number
   name: string
+  phone?: string
   recruiting_cycle: ClubRecruitingCycle
   signature_events: string
   size: ClubSize
@@ -398,6 +403,9 @@ export type Application = {
   club: string
   club_image_url: string
   questions: ApplicationQuestion[]
+  sections?: ApplicationSection[]
+  cycle?: string
+  active?: boolean
 }
 
 export type ApplicationStatus = {
@@ -416,20 +424,38 @@ export enum ApplicationQuestionType {
   MultipleChoice = 2,
   ShortAnswer = 3,
   InfoText = 4,
+  Checkbox = 5,
+}
+
+export type ApplicationChoice = {
+  value: string
+  go_to_section?: number | null
+  ends_application?: boolean
 }
 
 export type ApplicationQuestion = {
   id: number
   question_type: ApplicationQuestionType
   prompt: string
+  description?: string
+  required?: boolean
+  section?: number | null
+  routes?: boolean
+  committee_routing?: boolean
   word_limit: number
   committees: Array<{ name: string }>
-  multiple_choice: [
-    {
-      value: string
-    },
-  ]
+  multiple_choice: ApplicationChoice[]
   committee_question: boolean
+  precedence?: number
+}
+
+export type ApplicationSection = {
+  id: number
+  title: string
+  description: string
+  precedence: number
+  next_section: number | null
+  ends_application: boolean
 }
 
 export enum ApplicationStatusType {
@@ -532,7 +558,8 @@ export type ApplicationResponse = {
   text: string | null
   multiple_choice: {
     value: string
-  }
+  } | null
+  selected_choices?: Array<{ value: string }>
   question_type: string
   question: ApplicationQuestion
 }

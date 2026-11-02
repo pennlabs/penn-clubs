@@ -9,10 +9,10 @@ import Table from './common/Table'
 import { FormStyle } from './FormComponents'
 
 const ModelItem = styled.div`
-  padding: 15px;
+  padding: 16px;
   border: 1px solid #dbdbdb;
-  border-radius: 3px;
-  margin-bottom: 1em;
+  border-radius: 10px;
+  margin-bottom: 0.5em;
 `
 
 const ModelStatusWrapper = styled.span`
@@ -86,6 +86,8 @@ type ModelFormProps = {
   confirmDeletion?: boolean
   actions?: (object: ModelObject) => ReactElement<any>
   draggable?: boolean
+  hideTable?: boolean
+  editingKey?: string | number | null
 }
 
 /**
@@ -277,6 +279,8 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
     onChange: parentComponentChange,
     onEditPressed = () => undefined,
     draggable = false,
+    hideTable = false,
+    editingKey,
   } = props
 
   /**
@@ -452,6 +456,13 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
       })
   }, [props.listParams])
 
+  useEffect(() => {
+    if (editingKey === undefined) {
+      return
+    }
+    changeCurrentlyEditing(editingKey)
+  }, [editingKey])
+
   if (!objects) {
     return <Loading />
   }
@@ -466,36 +477,40 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
 
     return (
       <>
-        <ModelTable
-          onEdit={(object): void => {
-            onEditPressed()
-            changeCurrentlyEditing(object[keyField])
-            onChange(object)
-          }}
-          onDelete={onDelete}
-          deleteVerb={deleteVerb}
-          noun={noun}
-          tableFields={tableFields}
-          filterOptions={filterOptions}
-          searchableColumns={searchableColumns}
-          objects={objects}
-          allowDeletion={allowDeletion}
-          confirmDeletion={confirmDeletion}
-          allowEditing={allowEditing}
-          actions={actions}
-          draggable={draggable}
-          onDragEnd={onDragEnd}
-        />
+        {!hideTable && (
+          <ModelTable
+            onEdit={(object): void => {
+              onEditPressed()
+              changeCurrentlyEditing(object[keyField])
+              onChange(object)
+            }}
+            onDelete={onDelete}
+            deleteVerb={deleteVerb}
+            noun={noun}
+            tableFields={tableFields}
+            filterOptions={filterOptions}
+            searchableColumns={searchableColumns}
+            objects={objects}
+            allowDeletion={allowDeletion}
+            confirmDeletion={confirmDeletion}
+            allowEditing={allowEditing}
+            actions={actions}
+            draggable={draggable}
+            onDragEnd={onDragEnd}
+          />
+        )}
         {(allowCreation || currentlyEditing !== null) && (
           <>
-            <Subtitle>
-              {currentlyEditing !== null ? 'Edit' : 'Create'} {noun}{' '}
-              {currentTitle && currentlyEditing !== null && (
-                <span style={{ color: '#888', fontSize: '0.8em' }}>
-                  {currentTitle(currentObject)}
-                </span>
-              )}
-            </Subtitle>
+            {!hideTable && (
+              <Subtitle>
+                {currentlyEditing !== null ? 'Edit' : 'Create'} {noun}{' '}
+                {currentTitle && currentlyEditing !== null && (
+                  <span style={{ color: '#888', fontSize: '0.8em' }}>
+                    {currentTitle(currentObject)}
+                  </span>
+                )}
+              </Subtitle>
+            )}
             <Formik
               validate={parentComponentChange}
               initialValues={doFormikInitialValueFixes(currentObject)}
@@ -614,8 +629,9 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
             {({ isSubmitting }) => (
               <Form>
                 <FormStyle isHorizontal>
-                  {fields}
-                  <button
+                    {fields}
+                    <div className="buttons">
+                    <button
                     type="submit"
                     disabled={isSubmitting}
                     className="button is-primary"
@@ -625,7 +641,6 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
                   {allowDeletion && (
                     <span
                       className="button is-danger"
-                      style={{ marginLeft: '0.5em' }}
                       onClick={() => {
                         onDelete(object)
                       }}
@@ -634,6 +649,7 @@ export const ModelForm = (props: ModelFormProps): ReactElement<any> => {
                     </span>
                   )}
                   <ModelStatus status={object._status} />
+                    </div>
                 </FormStyle>
               </Form>
             )}

@@ -5,6 +5,11 @@ import CreatableSelect from 'react-select/creatable'
 import usePlacesAutocomplete from 'use-places-autocomplete'
 
 import { BORDER, CLUBS_GREY, FOCUS_GRAY } from '../../constants/colors'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from '../common/selectStyles'
 
 const styles = {
   control: ({ background, ...base }) => {
@@ -62,7 +67,7 @@ const AddressTypeaheadField = ({
   }
 
   const components = {
-    IndicatorSeparator: () => null,
+    ...selectComponents,
     DropdownIndicator: () => null,
   }
 
@@ -70,7 +75,17 @@ const AddressTypeaheadField = ({
     <CreatableSelect
       isClearable
       components={components}
-      styles={styles}
+      menuPortalTarget={selectMenuPortalTarget}
+      menuPosition="fixed"
+      styles={{
+        ...selectMenuStyles,
+        ...styles,
+        control: (base, state) => ({
+          ...selectMenuStyles.control(base, state),
+          border: `1px solid #d8d8d8`,
+          boxShadow: 'none',
+        }),
+      }}
       inputValue={searchInput}
       onInputChange={handleSearchChange}
       value={addressValue ? { label: addressValue, value: addressValue } : null}

@@ -17,7 +17,9 @@ interface LinkProps {
 }
 
 export const ActionLink = styled.a<LinkProps>`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: ${DIAMETER};
   height: ${DIAMETER};
   border-radius: 3rem;
@@ -36,8 +38,9 @@ export const ActionLink = styled.a<LinkProps>`
   }
 
   & svg {
-    margin-top: 0.75rem;
+    margin: 0;
     color: white;
+    display: block;
   }
 `
 

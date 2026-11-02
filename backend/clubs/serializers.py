@@ -989,12 +989,31 @@ class AuthenticatedMembershipSerializer(MembershipSerializer):
     role = serializers.IntegerField(required=False)
     email = serializers.EmailField(source="person.email", read_only=True)
     username = serializers.CharField(source="person.username", read_only=True)
+    graduation_year = serializers.SerializerMethodField()
+    major = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
 
     def get_full_name(self, obj):
         return obj.person.get_full_name()
 
+    def get_graduation_year(self, obj):
+        profile = getattr(obj.person, "profile", None)
+        if profile is None:
+            return None
+        return profile.graduation_year
+
+    def get_major(self, obj):
+        profile = getattr(obj.person, "profile", None)
+        if profile is None:
+            return []
+        return MajorSerializer(profile.major.all(), many=True).data
+
     class Meta(MembershipSerializer.Meta):
-        pass
+        fields = MembershipSerializer.Meta.fields + [
+            "graduation_year",
+            "major",
+            "created_at",
+        ]
 
 
 class ClubMembershipSerializer(MembershipSerializer):
@@ -2333,6 +2352,7 @@ class ClubSerializer(ManyToManySaveMixin, ClubListSerializer):
             "linkedin",
             "listserv",
             "members",
+            "phone",
             "recruiting_cycle",
             "signature_events",
             "student_types",

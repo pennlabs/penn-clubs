@@ -17,7 +17,7 @@ export default function QuestionsCard({
 }: QuestionsCardProps): ReactElement<any> {
   return (
     <BaseCard title="Student Questions">
-      <p className="mb-3">
+      <p className="mb-4">
         You can see a list of questions that prospective {OBJECT_NAME_SINGULAR}{' '}
         members have asked below. Answering any of these questions will make
         them publicly available and show your name as the person who answered

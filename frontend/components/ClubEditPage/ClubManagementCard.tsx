@@ -12,6 +12,11 @@ import {
   Tag,
   Text,
 } from '~/components/common'
+import {
+  selectComponents,
+  selectMenuPortalTarget,
+  selectMenuStyles,
+} from '~/components/common/selectStyles'
 import { CLUB_ROUTE } from '~/constants'
 import { Affiliation, Club } from '~/types'
 import { doApiRequest } from '~/utils'
@@ -48,6 +53,10 @@ const ClubSearchField = ({ name }) => {
             <span className="has-text-grey">{opt.value}</span>
           </>
         )}
+        styles={selectMenuStyles}
+        components={selectComponents}
+        menuPortalTarget={selectMenuPortalTarget}
+        menuPosition="fixed"
       />
     </div>
   )
@@ -88,7 +97,11 @@ const ClubManagementCard = ({
   }, [activeAffiliation])
 
   return (
-    <>
+    <div
+      id="affiliations"
+      data-edit-section="Affiliations"
+      style={{ scrollMarginTop: '7.5rem' }}
+    >
       <Text>
         If {club.name} is an umbrella {OBJECT_NAME_SINGULAR}, you can use this
         page to assign affiliations to {OBJECT_NAME_PLURAL} that are associated
@@ -261,7 +274,7 @@ const ClubManagementCard = ({
       ) : (
         <Loading />
       )}
-    </>
+    </div>
   )
 }
 

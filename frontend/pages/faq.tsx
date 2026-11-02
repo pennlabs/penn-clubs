@@ -230,8 +230,11 @@ const GENERIC_TEMPLATE = (data): ReactElement<any> => (
       <Question
         title={`How are ${OBJECT_NAME_PLURAL} ordered on ${SITE_NAME}?`}
       >
-        Click <Link href="/rank">here</Link> for details about our{' '}
-        {OBJECT_NAME_SINGULAR} recommendation algorithm.
+        Clubs are ordered using a recommendation algorithm that rewards complete
+        pages: officers, useful tags, a public contact email, social links, a
+        logo and subtitle, a detailed mission, student testimonials, and a
+        recent update. Officers can review these factors on the Manage Club
+        page.
       </Question>
     )}
     <Question title="I have another question!">

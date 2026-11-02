@@ -366,6 +366,7 @@ class Club(models.Model):
     size = models.IntegerField(choices=SIZE_CHOICES, default=SIZE_SMALL)
     email = models.EmailField(blank=True, null=True)
     email_public = models.BooleanField(default=False)
+    phone = models.CharField(max_length=30, blank=True)
     visible_to_public = models.BooleanField(
         default=False,
         db_index=True,

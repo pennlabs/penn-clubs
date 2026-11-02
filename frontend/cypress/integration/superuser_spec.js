@@ -42,10 +42,10 @@ describe(
         .clear()
         .type('Penn Pre-Professional Juggling Organization - Edited')
         .blur()
-      cy.contains('Submit').click({ force: true })
+      cy.contains('Save').click({ force: true })
 
       // go back to club page, ensure edited title is shown
-      cy.contains('View Club').scrollIntoView().click({ force: true })
+      cy.contains('View Page').scrollIntoView().click({ force: true })
       cy.contains('Penn Pre-Professional Juggling Organization - Edited')
 
       // revert edits
@@ -57,10 +57,10 @@ describe(
         .clear()
         .type('Penn Pre-Professional Juggling Organization')
         .blur()
-      cy.contains('Submit').click()
+      cy.contains('Save').click()
 
       // go back to club page, ensure reverted title is shown
-      cy.contains('View Club').scrollIntoView().click({ force: true })
+      cy.contains('View Page').scrollIntoView().click({ force: true })
       cy.contains('Penn Pre-Professional Juggling Organization')
     })
 
@@ -78,11 +78,13 @@ describe(
       ]
 
       tabs.forEach((tab) => {
-        cy.get('.tabs').contains(tab).should('be.visible')
+        cy.get('nav[aria-label="Club admin"]')
+          .contains(tab)
+          .should('be.visible')
       })
 
       tabs.forEach((tab) => {
-        cy.get('.tabs').contains(tab).click()
+        cy.get('nav[aria-label="Club admin"]').contains(tab).click()
       })
     })
 

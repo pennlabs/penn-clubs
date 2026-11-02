@@ -1,6 +1,6 @@
 import { Field, Form, Formik } from 'formik'
 import Link from 'next/link'
-import React, { ReactElement, useEffect, useState } from 'react'
+import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import TimeAgo from 'react-timeago'
 
 import { CLUB_EDIT_ROUTE } from '../../constants'
@@ -12,8 +12,9 @@ import {
   UserMembership,
 } from '../../types'
 import { doApiRequest } from '../../utils'
-import { OBJECT_NAME_PLURAL, OBJECT_NAME_SINGULAR } from '../../utils/branding'
+import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
 import { Contact, Icon, Text } from '../common'
+import Table from '../common/Table'
 import { RichTextField, TextField } from '../FormComponents'
 import BaseCard from './BaseCard'
 
@@ -116,6 +117,41 @@ const ClubFairCard = ({
     ({ role }) => role <= MembershipRank.Officer,
   )
 
+  const fairClubData = useMemo(
+    () =>
+      availableClubs.map((item) => ({
+        id: item.club.code,
+        name: item.club.name,
+        code: item.club.code,
+      })),
+    [availableClubs],
+  )
+
+  const fairClubColumns = useMemo(
+    () => [
+      { name: 'name', label: 'Club' },
+      {
+        name: 'Actions',
+        render: (id) => {
+          const item = availableClubs.find((club) => club.club.code === id)
+          if (item == null) {
+            return null
+          }
+          return (
+            <Link
+              legacyBehavior
+              href={CLUB_EDIT_ROUTE()}
+              as={CLUB_EDIT_ROUTE(item.club.code) + '/settings'}
+            >
+              <a className="button is-small">Register</a>
+            </Link>
+          )
+        },
+      },
+    ],
+    [availableClubs],
+  )
+
   return (
     <BaseCard title="Activity Fairs">
       <Text>
@@ -214,41 +250,11 @@ const ClubFairCard = ({
                 </>
               ) : (
                 <>
-                  <table className="table is-fullwidth">
-                    <thead>
-                      <tr>
-                        <th>Club</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {availableClubs.length > 0 ? (
-                        availableClubs.map((item) => (
-                          <tr key={item.club.code}>
-                            <td>{item.club.name}</td>
-                            <td>
-                              <Link
-                                legacyBehavior
-                                href={CLUB_EDIT_ROUTE()}
-                                as={
-                                  CLUB_EDIT_ROUTE(item.club.code) + '/settings'
-                                }
-                              >
-                                <a className="button is-small">Register</a>
-                              </Link>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={2}>
-                            There are no {OBJECT_NAME_PLURAL} that you can
-                            register.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                  <Table
+                    data={fairClubData}
+                    columns={fairClubColumns}
+                    searchableColumns={['name']}
+                  />
                 </>
               )
             ) : (

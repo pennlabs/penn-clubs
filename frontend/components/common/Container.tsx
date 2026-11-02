@@ -83,10 +83,13 @@ export const WideWrapper = styled(Wrapper)`
 export const WideContainer = ({
   background = WHITE,
   fullHeight,
+  style,
   children,
 }: ContainerProps): ReactElement<any> => (
   <div style={{ background }}>
-    <WideWrapper $fullHeight={fullHeight}>{children}</WideWrapper>
+    <WideWrapper $fullHeight={fullHeight} style={style}>
+      {children}
+    </WideWrapper>
   </div>
 )
 

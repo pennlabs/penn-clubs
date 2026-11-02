@@ -1,11 +1,30 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth import get_user_model, login
+from django.http import Http404, HttpResponseRedirect
 from django.urls import include, path
+from django.views.decorators.http import require_GET
 from django.views.generic import TemplateView
 from rest_framework.schemas import get_schema_view
 
 from .doc_settings import CustomJSONOpenAPIRenderer
+
+
+@require_GET
+def dev_login(request):
+    """One-click local login. Only available when DEBUG is True."""
+    if not settings.DEBUG:
+        raise Http404()
+
+    username = request.GET.get("username", "bfranklin")
+    user = get_user_model().objects.get(username=username)
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+
+    next_url = request.GET.get("next", "/admin/")
+    if not next_url.startswith("/"):
+        next_url = "/admin/"
+    return HttpResponseRedirect(next_url)
 
 
 admin.site.site_header = "Clubs Backend Admin"
@@ -50,6 +69,8 @@ if settings.DEBUG:
         import debug_toolbar
     except ImportError:
         debug_toolbar = None
+
+    urlpatterns += [path("api/dev-login/", dev_login, name="dev-login")]
 
     if debug_toolbar is not None:
         urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]

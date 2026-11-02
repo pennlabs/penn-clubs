@@ -334,11 +334,12 @@ export function apiSetLikeStatus(
  * Convert underscores into spaces and capitalize the first letter of every word.
  */
 export function titleize(str: string): string {
-  if (!str) return str
+  if (!str || !str.trim()) return str ?? ''
   return str
     .replace(/_+/g, ' ')
     .split(' ')
-    .map((a) => a[0].toUpperCase() + a.substr(1).toLowerCase())
+    .filter(Boolean)
+    .map((a) => a[0].toUpperCase() + a.slice(1).toLowerCase())
     .join(' ')
 }
 

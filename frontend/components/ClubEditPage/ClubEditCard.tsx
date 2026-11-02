@@ -1,10 +1,19 @@
 import { Field, Form, Formik, useField, useFormikContext } from 'formik'
 import Link from 'next/link'
-import React, { ReactElement, useEffect, useRef, useState } from 'react'
+import React, {
+  ReactElement,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+import styled from 'styled-components'
 
 import { BLACK } from '~/constants'
 import { useRegistrationQueueSettings } from '~/hooks/useRegistrationQueueSettings'
 
+import { MD, mediaMaxWidth } from '../../constants/measurements'
+import { CLUB_ROUTE } from '../../constants/routes'
 import {
   Category,
   Classification,
@@ -52,11 +61,12 @@ import {
 } from '../../utils/branding'
 import { ModalContent } from '../ClubPage/Actions'
 import { LiveBanner, LiveSub, LiveTitle } from '../ClubPage/LiveEventsDialog'
-import { Checkbox, CheckboxLabel, Contact, Modal, Text } from '../common'
+import { Checkbox, CheckboxLabel, Contact, Icon, Modal, Text } from '../common'
 import {
   CheckboxField,
   CheckboxTextField,
   CreatableMultipleSelectField,
+  FieldHelpTip,
   FileField,
   FormikAddressField,
   FormStyle,
@@ -65,6 +75,15 @@ import {
   TextField,
 } from '../FormComponents'
 import { doFormikInitialValueFixes } from '../ModelForm'
+import AdvisorCard from './AdvisorCard'
+import { ADMIN_NAVY, ADMIN_PAD_FIELD } from './adminTheme'
+import { PageHeading, PageTitle, ViewLink } from './ClubAdminShell'
+import {
+  EDIT_SECTION_ATTR,
+  editSectionCardStyle,
+  editSectionHeaderStyle,
+  toSectionId,
+} from './editSection'
 
 // Group Activity Assessment Field Component
 const GroupActivityAssessmentField: React.FC<{
@@ -124,8 +143,13 @@ const GroupActivityAssessmentField: React.FC<{
   return (
     <div className="field" data-field-name={name}>
       <label className="label">
-        {label}
-        <span style={{ color: 'red' }}>*</span>
+        <span>
+          {label}
+          <span style={{ color: 'red' }}>*</span>
+        </span>
+        {helpText ? (
+          <FieldHelpTip label={label}>{helpText}</FieldHelpTip>
+        ) : null}
       </label>
       <div className="control">
         <div style={{ marginBottom: '1rem' }}>
@@ -152,7 +176,6 @@ const GroupActivityAssessmentField: React.FC<{
           ))}
         </div>
       </div>
-      {helpText && <p className="help">{helpText}</p>}
       {submitCount > 0 && meta.error && (
         <p className="help is-danger">{meta.error}</p>
       )}
@@ -283,6 +306,7 @@ type ClubEditCardProps = {
   userInfo?: UserInfo
   club: Partial<Club>
   isEdit: boolean
+  variant?: 'admin' | 'stacked'
 
   onSubmit?: (data: {
     message: ReactElement<any> | string | null
@@ -291,16 +315,382 @@ type ClubEditCardProps = {
   }) => Promise<void>
 }
 
+const AdminGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.9fr);
+  gap: 16px;
+  align-items: start;
+
+  ${mediaMaxWidth(MD)} {
+    grid-template-columns: 1fr;
+  }
+`
+
+const EditPageBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+
+  ${PageHeading} {
+    margin: 0;
+    min-width: 0;
+  }
+`
+
+const FieldPair = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${ADMIN_PAD_FIELD};
+
+  ${mediaMaxWidth(MD)} {
+    grid-template-columns: 1fr;
+  }
+
+  .field,
+  .field:not(:last-child) {
+    margin-bottom: 0;
+  }
+`
+
+const MediaRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${ADMIN_PAD_FIELD};
+  align-items: flex-start;
+
+  ${mediaMaxWidth(MD)} {
+    flex-direction: column;
+  }
+
+  .field,
+  .field:not(:last-child) {
+    flex: 0 0 auto;
+    width: auto;
+    margin-bottom: 0;
+  }
+`
+
+const MediaHelp = styled.div`
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #42424f;
+
+  p {
+    margin: 0 0 0.5rem;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+`
+
+const EmailRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+`
+
+const VisibilityButton = styled.button<{ $public?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background: #f3f3f3;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  white-space: nowrap;
+
+  &:hover {
+    background: #ececec;
+  }
+`
+
+const EmailPublicField = (props: {
+  name?: string
+  required?: boolean
+  label?: string
+  helpText?: string
+  help?: string
+}): ReactElement<any> => {
+  const [emailField, emailMeta] = useField('email')
+  const [publicField, , publicHelpers] = useField('email_public')
+  const { submitCount } = useFormikContext<any>()
+  const isPublic = Boolean(publicField.value)
+  const label = props.label ?? 'Email'
+  const helpText = props.helpText ?? props.help
+  const errorMessage =
+    submitCount > 0 && typeof emailMeta.error === 'string'
+      ? emailMeta.error
+      : undefined
+
+  return (
+    <div className="field" data-field-name="email">
+      <label className="label" htmlFor="club-email">
+        <span>
+          {label}
+          {props.required && <span style={{ color: 'red' }}>*</span>}
+        </span>
+        {helpText && <FieldHelpTip label={label}>{helpText}</FieldHelpTip>}
+      </label>
+      <div className="control">
+        <EmailRow>
+          <input
+            id="club-email"
+            type="email"
+            className={`input${errorMessage ? ' is-danger' : ''}`}
+            {...emailField}
+            value={emailField.value ?? ''}
+          />
+          <VisibilityButton
+            type="button"
+            $public={isPublic}
+            aria-pressed={isPublic}
+            aria-label={
+              isPublic ? 'Email is public. Make private.' : 'Email is private. Make public.'
+            }
+            title={
+              isPublic
+                ? 'Visible on the club page. Click to hide from the public.'
+                : 'Hidden from the public. Click to show on the club page.'
+            }
+            onClick={() => publicHelpers.setValue(!isPublic)}
+          >
+            <Icon name={isPublic ? 'globe' : 'lock'} alt="" size="1rem" fitSize />
+            {isPublic ? 'Public' : 'Private'}
+          </VisibilityButton>
+        </EmailRow>
+      </div>
+      {errorMessage && <p className="help is-danger">{errorMessage}</p>}
+    </div>
+  )
+}
+
+const SOCIAL_CONTACT_FIELDS = [
+  { name: 'facebook', label: 'Facebook' },
+  { name: 'instagram', label: 'Instagram' },
+  { name: 'twitter', label: 'Twitter' },
+  { name: 'linkedin', label: 'LinkedIn' },
+  { name: 'github', label: 'GitHub' },
+  { name: 'youtube', label: 'YouTube' },
+]
+
+const NUMBER_CONTACT_FIELDS = ['phone']
+const OTHER_CONTACT_FIELDS = ['listserv']
+
+const contactHasValue = (club: Club, name: string): boolean => {
+  const value = club[name as keyof Club]
+  return value != null && String(value).trim() !== ''
+}
+
+const AddContactMenu = ({
+  availableSocial,
+  canAddNumber,
+  canAddOther,
+  onAdd,
+}: {
+  availableSocial: Array<{ name: string; label: string }>
+  canAddNumber: boolean
+  canAddOther: boolean
+  onAdd: (names: string[]) => void
+}): ReactElement<any> | null => {
+  const [open, setOpen] = useState(false)
+  const [socialOpen, setSocialOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const close = (event: MouseEvent) => {
+      if (!ref.current?.contains(event.target as Node)) {
+        setOpen(false)
+        setSocialOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [open])
+
+  const hasAnything =
+    availableSocial.length > 0 || canAddNumber || canAddOther
+  if (!hasAnything) {
+    return null
+  }
+
+  return (
+    <AddContactWrap ref={ref}>
+      <AddContactButton
+        type="button"
+        aria-label="Add contact link"
+        aria-expanded={open}
+        onClick={() => {
+          setOpen((current) => !current)
+          setSocialOpen(false)
+        }}
+      >
+        <Icon name="plus" alt="" size="22px" fitSize />
+      </AddContactButton>
+      {open && (
+        <AddContactList>
+          {availableSocial.length > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setSocialOpen((current) => !current)}
+              >
+                Add Social Media
+              </button>
+              {socialOpen &&
+                availableSocial.map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    className="sub"
+                    onClick={() => {
+                      onAdd([item.name])
+                      setOpen(false)
+                      setSocialOpen(false)
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+            </>
+          )}
+          {canAddNumber && (
+            <button
+              type="button"
+              onClick={() => {
+                onAdd(NUMBER_CONTACT_FIELDS)
+                setOpen(false)
+              }}
+            >
+              Add Number
+            </button>
+          )}
+          {canAddOther && (
+            <button
+              type="button"
+              onClick={() => {
+                onAdd(OTHER_CONTACT_FIELDS)
+                setOpen(false)
+              }}
+            >
+              Add Other
+            </button>
+          )}
+        </AddContactList>
+      )}
+    </AddContactWrap>
+  )
+}
+
+const AddContactWrap = styled.div`
+  position: relative;
+  margin-right: 12px;
+`
+
+const AddContactButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: ${ADMIN_NAVY};
+  cursor: pointer;
+`
+
+const AddContactList = styled.div`
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 188px;
+  padding: 4px 0;
+  background: white;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: 0;
+    background: transparent;
+    color: ${ADMIN_NAVY};
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #f3f3f3;
+  }
+
+  button.sub {
+    padding-left: 22px;
+    color: #42424f;
+  }
+`
+
+const SaveButton = styled.button`
+  flex-shrink: 0;
+  background: #4f46e5;
+  color: white;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
 const Card = ({
   title,
   children,
+  action,
 }: React.PropsWithChildren<{
   title?: string | ReactElement<any>
+  action?: ReactNode
 }>): ReactElement<any> => {
+  const label = typeof title === 'string' ? title : undefined
+  const id = label ? toSectionId(label) : undefined
   return (
-    <div className="card mb-5">
-      <div className="card-header">
+    <div
+      className="card mb-5"
+      id={id}
+      {...(label ? { [EDIT_SECTION_ATTR]: label } : {})}
+      style={editSectionCardStyle}
+    >
+      <div
+        className="card-header"
+        style={{ ...editSectionHeaderStyle, alignItems: 'center' }}
+      >
         <div className="card-header-title">{title}</div>
+        {action}
       </div>
       <div className="card-content">{children}</div>
     </div>
@@ -340,7 +730,7 @@ const EmailModal = ({
           className="input mb-5"
           style={{ maxWidth: '350px' }}
         ></Field>
-        <div>
+        <div className="buttons">
           <button onClick={confirmSubmission} className="button is-primary">
             Confirm
           </button>
@@ -393,6 +783,7 @@ export default function ClubEditCard({
   club,
   isEdit,
   userInfo,
+  variant = 'stacked',
 
   onSubmit = () => Promise.resolve(undefined),
 }: ClubEditCardProps): ReactElement<any> {
@@ -408,6 +799,13 @@ export default function ClubEditCard({
     (isEdit && !isReapprovalOpen) || (!isEdit && !isNewApprovalOpen)
   const [isClient, setIsClient] = useState(false)
   const [showRankModal, setShowRankModal] = useState<boolean>(false)
+  const [addedContact, setAddedContact] = useState<string[]>(() =>
+    [
+      ...SOCIAL_CONTACT_FIELDS.map((item) => item.name),
+      ...NUMBER_CONTACT_FIELDS,
+      ...OTHER_CONTACT_FIELDS,
+    ].filter((name) => contactHasValue(club, name)),
+  )
   const [showTargetFields, setShowTargetFields] = useState<boolean>(
     !!(
       club.target_majors?.length ||
@@ -948,7 +1346,7 @@ export default function ClubEditCard({
         {
           name: 'email',
           required: true,
-          type: 'email',
+          type: 'emailPublic',
           help:
             SITE_ID === 'fyh'
               ? `This can be a specific or general email that will serve as the main point of contact for ${SITE_NAME} users. The email associated with the owner of this resource page will be used by ${SITE_NAME} administrators as a point of contact for resource management and renewal.`
@@ -959,12 +1357,18 @@ export default function ClubEditCard({
         {
           name: 'email_public',
           type: 'checkbox',
+          hidden: true,
           label: `Show this contact email to the public. If you do not check this box, your contact email will only be visible to internal ${OBJECT_NAME_SINGULAR} members.`,
         },
         {
           name: 'website',
           type: 'url',
           required: SITE_ID === 'fyh',
+        },
+        {
+          name: 'phone',
+          type: 'tel',
+          label: 'Phone number',
         },
         {
           name: 'facebook',
@@ -1021,8 +1425,8 @@ export default function ClubEditCard({
       description: SHOW_RANK_ALGORITHM ? (
         <Text>
           Some of these fields will be used to adjust {OBJECT_NAME_SINGULAR}{' '}
-          ordering on the home page. Click <Link href="/rank">here</Link> for
-          more details.
+          ordering on the home page. See the ranking details listed under the
+          page title for more information.
         </Text>
       ) : (
         <Text>
@@ -1361,6 +1765,298 @@ export default function ClubEditCard({
           .map((field: any) => field.name as string),
   )
 
+  const renderEditField = (
+    props: any,
+    key: React.Key,
+  ): ReactElement<any> | null => {
+    if (props == null || props.hidden) {
+      return null
+    }
+    const other = { ...props }
+    delete other.hidden
+    if (props.type === 'content') {
+      return <div key={key}>{props.content}</div>
+    }
+    if (other.help) {
+      other.helpText = other.help
+      delete other.help
+    }
+    if (props.type === 'select') {
+      other.isMulti = false
+    } else if (props.type === 'multiselect') {
+      other.isMulti = true
+    }
+    if (props.type === 'image') {
+      other.isImage = true
+      delete other.type
+    }
+    if (props.type === 'emailPublic') {
+      return <EmailPublicField key={key} {...other} />
+    }
+
+    return (
+      <Field
+        key={key}
+        as={
+          {
+            text: TextField,
+            checkbox: CheckboxField,
+            html: RichTextField,
+            multiselect: SelectField,
+            select: SelectField,
+            image: FileField,
+            file: FileField,
+            address: FormikAddressField,
+            location: FormikAddressField,
+            checkboxText: CheckboxTextField,
+            creatableMultiSelect: CreatableMultipleSelectField,
+            groupActivityAssessment: (fieldProps) => (
+              <GroupActivityAssessmentField
+                {...fieldProps}
+                options={groupActivityOptions || []}
+              />
+            ),
+          }[props.type] ?? TextField
+        }
+        {...other}
+      />
+    )
+  }
+
+  const renderAdminLayout = () => {
+    const groupByName = (name: string) =>
+      fields.find((group) => group.name === name)
+    const visibleFields = (group?: { hidden?: boolean; fields?: any[] }) =>
+      group?.hidden
+        ? []
+        : ((group?.fields ?? []) as any[]).filter((field) => !field.hidden)
+    const generalFields = visibleFields(groupByName('General'))
+    const contactFields = visibleFields(groupByName('Contact'))
+    const admissionFields = visibleFields(
+      groupByName(OBJECT_TAB_ADMISSION_LABEL),
+    )
+    const pick = (list: any[], name: string) =>
+      list.find((field) => field.name === name)
+    const relabel = (field: any, label: string) =>
+      field ? { ...field, label } : null
+    const primaryContact = ['address', 'email', 'website']
+    const extraContact = contactFields.filter(
+      (field) => field.name && !primaryContact.includes(field.name),
+    )
+    const visibleExtra = extraContact.filter(
+      (field) => field.name && addedContact.includes(field.name),
+    )
+    const availableSocial = SOCIAL_CONTACT_FIELDS.filter(
+      (item) =>
+        !addedContact.includes(item.name) &&
+        extraContact.some((field) => field.name === item.name),
+    )
+    const canAddNumber = NUMBER_CONTACT_FIELDS.some(
+      (name) =>
+        !addedContact.includes(name) &&
+        extraContact.some((field) => field.name === name),
+    )
+    const canAddOther = OTHER_CONTACT_FIELDS.some(
+      (name) =>
+        !addedContact.includes(name) &&
+        extraContact.some((field) => field.name === name),
+    )
+    const admissionPrimary = ['application_required', 'recruiting_cycle']
+    const sideNames = new Set(['image', 'constitution'])
+    const paired = new Set([
+      'category',
+      'classification',
+      'size',
+      'founded',
+      ...admissionPrimary,
+    ])
+
+    return {
+      main: (
+        <div>
+          <Card title="General">
+            {['approved', 'name', 'subtitle'].map((name) =>
+              renderEditField(pick(generalFields, name), name),
+            )}
+            <FieldPair>
+              <div>
+                {renderEditField(pick(generalFields, 'category'), 'category')}
+              </div>
+              <div>
+                {renderEditField(
+                  relabel(pick(generalFields, 'classification'), 'Open to'),
+                  'classification',
+                )}
+              </div>
+            </FieldPair>
+            {['tags', 'terms', 'description'].map((name) =>
+              renderEditField(pick(generalFields, name), name),
+            )}
+            <FieldPair>
+              <div>{renderEditField(pick(generalFields, 'size'), 'size')}</div>
+              <div>
+                {renderEditField(pick(generalFields, 'founded'), 'founded')}
+              </div>
+            </FieldPair>
+            {generalFields
+              .filter(
+                (field) =>
+                  field.name &&
+                  !sideNames.has(field.name) &&
+                  !paired.has(field.name) &&
+                  ![
+                    'approved',
+                    'name',
+                    'subtitle',
+                    'tags',
+                    'terms',
+                    'description',
+                  ].includes(field.name),
+              )
+              .map((field) => renderEditField(field, field.name))}
+          </Card>
+          <Card title="Admissions">
+            <FieldPair>
+              <div>
+                {renderEditField(
+                  relabel(
+                    pick(admissionFields, 'application_required'),
+                    'Admission Category',
+                  ),
+                  'application_required',
+                )}
+              </div>
+              <div>
+                {renderEditField(
+                  relabel(
+                    pick(admissionFields, 'recruiting_cycle'),
+                    'Recruitment Time Frame',
+                  ),
+                  'recruiting_cycle',
+                )}
+              </div>
+            </FieldPair>
+          </Card>
+          {admissionFields.some(
+            (field) => field.name && !admissionPrimary.includes(field.name),
+          ) && (
+            <Card title="Participation">
+              {admissionFields
+                .filter(
+                  (field) =>
+                    !field.name || !admissionPrimary.includes(field.name),
+                )
+                .map((field, index) =>
+                  renderEditField(field, field.name || `admission-${index}`),
+                )}
+            </Card>
+          )}
+          {fields
+            .filter(
+              (group) =>
+                !group.hidden &&
+                group.name !== 'General' &&
+                group.name !== 'Contact' &&
+                group.name !== OBJECT_TAB_ADMISSION_LABEL,
+            )
+            .map((group) => (
+              <Card title={group.name} key={group.name}>
+                {group.description}
+                {(group.fields as any[])
+                  .filter((field) => !field.hidden)
+                  .map((field, index) =>
+                    renderEditField(
+                      field,
+                      field.name || `${group.name}-${index}`,
+                    ),
+                  )}
+              </Card>
+            ))}
+        </div>
+      ),
+      side: (
+        <div>
+          <Card title={`${OBJECT_NAME_TITLE_SINGULAR} Logo`}>
+            <MediaRow>
+              {pick(generalFields, 'image')?.help && (
+                <MediaHelp>
+                  <p>{pick(generalFields, 'image').help}</p>
+                </MediaHelp>
+              )}
+              {pick(generalFields, 'image') &&
+                renderEditField(
+                  {
+                    ...pick(generalFields, 'image'),
+                    help: undefined,
+                    noLabel: true,
+                    dropzone: true,
+                  },
+                  'image',
+                )}
+            </MediaRow>
+          </Card>
+          <Card title={`${OBJECT_NAME_TITLE_SINGULAR} Constitution`}>
+            <MediaRow>
+              <MediaHelp>
+                <p>
+                  Upload a PDF, DOC, or DOCX file containing your club
+                  constitution.
+                </p>
+                {club.constitution_url && (
+                  <p>
+                    Current constitution:{' '}
+                    <a href={club.constitution_url} target="_blank">
+                      Download
+                    </a>
+                  </p>
+                )}
+              </MediaHelp>
+              {pick(generalFields, 'constitution') &&
+                renderEditField(
+                  {
+                    ...pick(generalFields, 'constitution'),
+                    help: undefined,
+                    noLabel: true,
+                    dropzone: true,
+                    dropIcon: 'book-open',
+                  },
+                  'constitution',
+                )}
+            </MediaRow>
+          </Card>
+          <Card
+            title="Contact"
+            action={
+              <AddContactMenu
+                availableSocial={availableSocial}
+                canAddNumber={canAddNumber}
+                canAddOther={canAddOther}
+                onAdd={(names) =>
+                  setAddedContact((current) => [
+                    ...current,
+                    ...names.filter((name) => !current.includes(name)),
+                  ])
+                }
+              />
+            }
+          >
+            {primaryContact.map((name) =>
+              renderEditField(pick(contactFields, name), name),
+            )}
+            {visibleExtra.map((field) =>
+              renderEditField(
+                field.name === 'listserv'
+                  ? { ...field, label: 'Other' }
+                  : field,
+                field.name,
+              ),
+            )}
+          </Card>
+        </div>
+      ),
+    }
+  }
+
   return (
     <Formik
       initialValues={initialValues}
@@ -1403,8 +2099,11 @@ export default function ClubEditCard({
       validateOnChange={false}
       validateOnBlur={false}
     >
-      {({ dirty, isSubmitting, setFieldValue, submitForm, values }) => (
-        <Form noValidate>
+      {({ dirty, isSubmitting, setFieldValue, submitForm, values }) => {
+        const adminLayout =
+          variant === 'admin' ? renderAdminLayout() : null
+        return (
+        <>
           <ScrollToFirstError fieldOrder={fieldOrder} />
           {emailModal && (
             <EmailModal
@@ -1477,83 +2176,86 @@ export default function ClubEditCard({
               </LiveSub>
             </LiveBanner>
           )}
-          <FormStyle isHorizontal>
-            {fields.map(({ name, description, fields, hidden }, i) => {
-              if (hidden) {
-                return null
-              }
-              return (
-                <Card title={name} key={i}>
-                  {description}
-                  {(fields as any[]).map(
-                    (props: any, i): ReactElement<any> | null => {
-                      const { hidden, ...other } = props
-                      if (hidden) {
-                        return null
-                      }
-                      if (props.type === 'content') {
-                        return <div key={i}>{props.content}</div>
-                      }
-                      if (other.help) {
-                        other.helpText = other.help
-                        delete other.help
-                      }
-                      if (props.type === 'select') {
-                        other.isMulti = false
-                      } else if (props.type === 'multiselect') {
-                        other.isMulti = true
-                      }
-                      if (props.type === 'image') {
-                        other.isImage = true
-                        delete other.type
-                      }
-
-                      return (
-                        <Field
-                          key={i}
-                          as={
-                            {
-                              text: TextField,
-                              checkbox: CheckboxField,
-                              html: RichTextField,
-                              multiselect: SelectField,
-                              select: SelectField,
-                              image: FileField,
-                              file: FileField,
-                              address: FormikAddressField,
-                              checkboxText: CheckboxTextField,
-                              creatableMultiSelect:
-                                CreatableMultipleSelectField,
-                              groupActivityAssessment: (props) => (
-                                <GroupActivityAssessmentField
-                                  {...props}
-                                  options={groupActivityOptions || []}
-                                />
-                              ),
-                            }[props.type] ?? TextField
-                          }
-                          {...other}
-                        />
-                      )
-                    },
+          {variant === 'admin' ? (
+            <FormStyle admin>
+              <EditPageBar>
+                <PageHeading>
+                  <PageTitle>
+                    Edit {OBJECT_NAME_TITLE_SINGULAR} Page
+                  </PageTitle>
+                  {isEdit && club.code && (
+                    <Link
+                      href={CLUB_ROUTE()}
+                      as={CLUB_ROUTE(club.code)}
+                      passHref
+                      legacyBehavior
+                    >
+                      <ViewLink>
+                        View Page
+                        <Icon name="external-link" alt="" size="0.95rem" />
+                      </ViewLink>
+                    </Link>
                   )}
-                </Card>
-              )
-            })}
-            <button
-              disabled={
-                !dirty ||
-                isSubmitting ||
-                (!isNewApprovalOpen && !isEdit && !hasQueueOverride)
-              }
-              type="submit"
-              className="button is-primary is-large"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
-            </button>
-          </FormStyle>
-        </Form>
-      )}
+                </PageHeading>
+                <SaveButton
+                  disabled={
+                    !dirty ||
+                    isSubmitting ||
+                    (!isNewApprovalOpen && !isEdit && !hasQueueOverride)
+                  }
+                  type="button"
+                  onClick={() => submitForm()}
+                >
+                  {isSubmitting
+                    ? 'Saving...'
+                    : isEdit
+                      ? 'Save Changes'
+                      : 'Submit'}
+                </SaveButton>
+              </EditPageBar>
+              <AdminGrid>
+                <Form noValidate>{adminLayout?.main}</Form>
+                <div>
+                  <Form noValidate>{adminLayout?.side}</Form>
+                  {isEdit && club.code && <AdvisorCard club={club} />}
+                </div>
+              </AdminGrid>
+            </FormStyle>
+          ) : (
+            <Form noValidate>
+            <FormStyle isHorizontal>
+              {fields.map(
+                ({ name, description, fields: groupFields, hidden }, i) => {
+                  if (hidden) {
+                    return null
+                  }
+                  return (
+                    <Card title={name} key={i}>
+                      {description}
+                      {(groupFields as any[]).map((props: any, index) =>
+                        renderEditField(props, props.name || index),
+                      )}
+                    </Card>
+                  )
+                },
+              )}
+              <button
+                disabled={
+                  !dirty ||
+                  isSubmitting ||
+                  (!isNewApprovalOpen && !isEdit && !hasQueueOverride)
+                }
+                type="submit"
+                className="button is-primary is-large"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+            </FormStyle>
+            </Form>
+          )}
+        </>
+        )
+      }}
     </Formik>
   )
 }

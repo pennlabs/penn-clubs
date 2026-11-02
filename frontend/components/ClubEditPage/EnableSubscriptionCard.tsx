@@ -3,18 +3,20 @@ import { ReactElement, useState } from 'react'
 import { Club } from '../../types'
 import { doApiRequest, formatResponse } from '../../utils'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
-import { Text } from '../common'
+import { FieldHelpTip } from '../FormComponents'
 import Toggle from '../Settings/Toggle'
 import BaseCard from './BaseCard'
 
 type Props = {
   club: Club
+  framed?: boolean
   notify?: (message: ReactElement<any> | string, type?: string) => void
   onUpdate?: () => void
 }
 
 export default function EnableSubscriptionCard({
   club,
+  framed = true,
   notify = () => undefined,
   onUpdate = () => undefined,
 }: Props): ReactElement<any> {
@@ -42,25 +44,44 @@ export default function EnableSubscriptionCard({
     })
     enable(!active)
   }
-  return (
-    <BaseCard title="Enable Subscription List">
-      <Text>
-        This feature allows you to enable or disable the subscription list. When
-        disabled, students will not be able to subscribe to your{' '}
-        {OBJECT_NAME_SINGULAR}, and you cannot view the subscription list.
-        Existing subscriptions, however, will be saved and can be retrieved when
-        the feature is enabled again.
-      </Text>
-      <div style={{ display: 'flex', flexDirection: 'row', width: '100' }}>
-        <span>Enable Subscription List</span>
-        <div style={{ marginLeft: 'auto' }}>
-          <Toggle
-            club={club}
-            active={active}
-            toggle={changeEnableSubscription}
-          />
-        </div>
+  const body = (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+      }}
+    >
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
+        Enable Subscription List
+        <FieldHelpTip label="Enable Subscription List">
+          This feature allows you to enable or disable the subscription list.
+          When disabled, students will not be able to subscribe to your{' '}
+          {OBJECT_NAME_SINGULAR}, and you cannot view the subscription list.
+          Existing subscriptions, however, will be saved and can be retrieved
+          when the feature is enabled again.
+        </FieldHelpTip>
+      </span>
+      <div style={{ marginLeft: 'auto' }}>
+        <Toggle
+          club={club}
+          active={active}
+          toggle={changeEnableSubscription}
+        />
       </div>
-    </BaseCard>
+    </div>
   )
+
+  if (!framed) {
+    return body
+  }
+
+  return <BaseCard title="Enable Subscription List">{body}</BaseCard>
 }

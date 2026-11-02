@@ -42,6 +42,7 @@ describe('Membership request tests', () => {
 
     // approve membership
     cy.visit('/club/pppjo/edit/member')
+    cy.contains('button', 'Requests').click()
     cy.contains('Membership Requests').should('be.visible')
 
     cy.contains('.button:visible', 'Accept').click()

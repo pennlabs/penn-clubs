@@ -1,0 +1,12 @@
+export const ADMIN_NAVY = '#1f2049'
+export const ADMIN_CANVAS = '#f3f3f3'
+export const ADMIN_LINE = '#dbdbdb'
+export const ADMIN_MUTED = '#757575'
+export const ADMIN_ACCENT = '#4954f4'
+export const ADMIN_GREEN = '#3eaa6d'
+export const ADMIN_RADIUS = '6px'
+export const ADMIN_PAD_FIELD = '1.5rem'
+export const ADMIN_PAD_SECTION = '32px'
+export const ADMIN_FONT = '0.875rem'
+export const ADMIN_GRADIENT =
+  'linear-gradient(208deg, #50a2c8 6%, #48598b 79%)'
