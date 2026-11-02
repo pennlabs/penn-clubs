@@ -70,7 +70,7 @@ const SummaryScroll = styled.div`
 const Split = styled.div<{ $listOpen?: boolean }>`
   display: grid;
   grid-template-columns: ${({ $listOpen }) =>
-    $listOpen ? '260px minmax(0, 1fr)' : 'minmax(0, 1fr)'};
+    $listOpen ? '300px minmax(0, 1fr)' : 'minmax(0, 1fr)'};
   gap: 16px;
   align-items: stretch;
   flex: 1;
@@ -166,11 +166,23 @@ const ApplicantList = styled.ul`
     min-width: 0;
   }
 
+  .line {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+  }
+
   .name {
-    display: block;
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .line > :last-child {
+    flex-shrink: 0;
   }
 `
 
@@ -392,10 +404,12 @@ const Individual = ({
                 onChange={() => toggle(submission.pk)}
               />
               <span className="who">
-                <span className="name">{fullName(submission)}</span>
-                <Pill $status={submission.status}>
-                  {STATUS_LABELS[submission.status]}
-                </Pill>{' '}
+                <span className="line">
+                  <span className="name">{fullName(submission)}</span>
+                  <Pill $status={submission.status}>
+                    {STATUS_LABELS[submission.status]}
+                  </Pill>
+                </span>
                 {submission.committee && (
                   <Muted>{submission.committee.name}</Muted>
                 )}
