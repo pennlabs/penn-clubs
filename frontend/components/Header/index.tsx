@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { ReactElement, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
+import { useStatusBannerHeight } from '~/hooks/useStatusBannerHeight'
 import { LOGIN_URL } from '~/utils'
 import { logEvent } from '~/utils/analytics'
 
@@ -17,6 +18,7 @@ import {
   mediaMaxWidth,
   NAV_HEIGHT,
   PHONE,
+  STATUS_BANNER_HEIGHT,
   TITLE_MARGIN,
   TITLE_SIZE,
   TITLE_SPACING,
@@ -44,6 +46,7 @@ const Nav = styled.nav`
   box-shadow: 0 1px 4px 0 ${BORDER};
   width: 100%;
   position: fixed;
+  top: ${STATUS_BANNER_HEIGHT};
   z-index: 1001;
   box-shadow: ${HEADER_SHADOW};
 
@@ -59,7 +62,7 @@ const ImageHead = styled.div`
   box-shadow: 0 1px 4px 0 ${BORDER};
   width: 100%;
   position: absolute;
-  top: ${NAV_HEIGHT};
+  top: calc(${NAV_HEIGHT} + ${STATUS_BANNER_HEIGHT});
   z-index: 999;
   background-size: cover;
   background-repeat: no-repeat;
@@ -74,7 +77,7 @@ const ImageHead = styled.div`
 const NavSpacer = styled.div`
   width: 100%;
   display: block;
-  height: ${FULL_NAV_HEIGHT};
+  height: calc(${FULL_NAV_HEIGHT} + ${STATUS_BANNER_HEIGHT});
 `
 
 const Logo = styled.img`
@@ -172,6 +175,8 @@ const Header = ({
 }: HeaderProps): ReactElement<any> => {
   const [show, setShow] = useState(false)
   const router = useRouter()
+
+  useStatusBannerHeight()
 
   const toggle = () => setShow(!show)
 
