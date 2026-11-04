@@ -9,7 +9,7 @@ import { CLUBS_BLUE, MD, mediaMaxWidth } from '~/constants'
 import { Club } from '~/types'
 import { doApiRequest } from '~/utils'
 
-import { ADMIN_NAVY } from '../adminTheme'
+import { ADMIN_CANVAS_GAP, ADMIN_CARD_PAD, ADMIN_NAVY } from '../adminTheme'
 import { AdminPrimary } from '../adminControls'
 import { ViewLink } from '../ClubAdminShell'
 import QuestionsTab from './QuestionsTab'
@@ -43,7 +43,7 @@ const Layout = styled.div<{ $listOpen?: boolean }>`
 
   ${mediaMaxWidth(MD)} {
     flex-direction: column;
-    gap: 16px;
+    gap: ${ADMIN_CANVAS_GAP};
     height: auto;
     ${({ $listOpen }) => !$listOpen && `> :first-child { display: none; }`}
   }
@@ -57,14 +57,15 @@ const Pane = styled.div<{ $flushList?: boolean }>`
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  padding: ${({ $flushList }) => ($flushList ? '16px 0 0' : '16px')};
+  padding: ${({ $flushList }) =>
+    $flushList ? `${ADMIN_CARD_PAD} 0 0` : ADMIN_CARD_PAD};
 `
 
 const Stack = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 16px;
+  gap: ${ADMIN_CANVAS_GAP};
   min-height: 0;
   min-width: 0;
   overflow: hidden;
@@ -75,7 +76,7 @@ const TopBar = styled.div`
   border-radius: 10px;
   flex-shrink: 0;
   min-width: 0;
-  padding: 16px;
+  padding: ${ADMIN_CARD_PAD};
 `
 
 const BodyBox = styled.div`
@@ -87,7 +88,7 @@ const BodyBox = styled.div`
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  padding: 16px;
+  padding: ${ADMIN_CARD_PAD};
 `
 
 const CloseButton = styled.button`
@@ -114,7 +115,7 @@ const SideHead = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 16px;
+  padding: 0 ${ADMIN_CARD_PAD};
 
   ${AdminPrimary} {
     flex: 1;
@@ -160,7 +161,7 @@ const Sidebar = styled.nav`
     border: none;
     background: none;
     border-radius: 0;
-    padding: 12px 48px 12px 16px;
+    padding: 12px 48px 12px ${ADMIN_CARD_PAD};
     cursor: pointer;
     color: ${ADMIN_NAVY};
     font-size: 13px;

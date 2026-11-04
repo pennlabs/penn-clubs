@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { Club } from '../../types'
 import { OBJECT_NAME_SINGULAR, SHOW_APPLICATIONS } from '../../utils/branding'
 import { Text } from '../common'
-import { ADMIN_CANVAS } from './adminTheme'
+import { ADMIN_CANVAS, ADMIN_CANVAS_PAD, ADMIN_CARD_PAD } from './adminTheme'
 import { AdminPrimary } from './adminControls'
 import ApplicationWorkspace from './ApplicationWorkspace'
 import { PageTitle } from './ClubAdminShell'
@@ -37,7 +37,7 @@ const Column = styled.section`
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  padding: 18px 16px 16px;
+  padding: ${ADMIN_CANVAS_PAD};
 `
 
 const ColumnHead = styled.div`
@@ -60,7 +60,7 @@ const Widget = styled.div`
   min-height: 0;
   min-width: 0;
   overflow: auto;
-  padding: 14px;
+  padding: ${ADMIN_CARD_PAD};
 `
 
 const AppsFill = styled.div`

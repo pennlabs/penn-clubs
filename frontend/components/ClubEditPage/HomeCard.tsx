@@ -5,14 +5,14 @@ import styled from 'styled-components'
 import { CLUB_EDIT_ROUTE } from '../../constants/routes'
 import { Club } from '../../types'
 import { OBJECT_NAME_SINGULAR } from '../../utils/branding'
-import { ADMIN_NAVY } from './adminTheme'
+import { ADMIN_CANVAS_GAP, ADMIN_CARD_PAD, ADMIN_NAVY } from './adminTheme'
 import { PageHeading, PageTitle } from './ClubAdminShell'
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: ${ADMIN_CANVAS_GAP};
+  margin-bottom: ${ADMIN_CANVAS_GAP};
 `
 
 const Stat = styled.button`
@@ -21,7 +21,7 @@ const Stat = styled.button`
   background: white;
   border: 0;
   border-radius: 10px;
-  padding: 16px;
+  padding: ${ADMIN_CARD_PAD};
   cursor: pointer;
   color: ${ADMIN_NAVY};
 

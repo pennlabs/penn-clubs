@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import { Modal } from '~/components/common'
 
 import { AdminDanger, AdminGhost, AdminActions } from '../adminControls'
+import { ADMIN_CANVAS_GAP } from '../adminTheme'
 import { CLUBS_BLUE, CLUBS_GREY, MD, MEDIUM_GRAY, mediaMaxWidth } from '~/constants'
 import {
   Application,
@@ -72,7 +73,7 @@ export const CollapsingSlot = styled.div<{ $open: boolean; $width?: string }>`
   min-width: 0;
   overflow: hidden;
   width: ${({ $open, $width }) => ($open ? ($width ?? '300px') : '0px')};
-  margin-right: ${({ $open }) => ($open ? '16px' : '0')};
+  margin-right: ${({ $open }) => ($open ? ADMIN_CANVAS_GAP : '0')};
   transition:
     width ${PANEL_MOTION},
     margin-right ${PANEL_MOTION};

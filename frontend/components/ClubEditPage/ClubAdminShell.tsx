@@ -18,6 +18,9 @@ import Feedback from '../Header/Feedback'
 import {
   ADMIN_ACCENT,
   ADMIN_CANVAS,
+  ADMIN_CANVAS_GAP,
+  ADMIN_CANVAS_PAD,
+  ADMIN_CARD_PAD,
   ADMIN_FONT,
   ADMIN_NAVY,
   ADMIN_PAD_FIELD,
@@ -112,10 +115,10 @@ const Body = styled.div`
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 0 16px 16px 0;
+  padding: 0 ${ADMIN_CANVAS_GAP} ${ADMIN_CANVAS_GAP} 0;
 
   ${mediaMaxWidth(MD)} {
-    padding: 0 16px 16px;
+    padding: 0 ${ADMIN_CANVAS_GAP} ${ADMIN_CANVAS_GAP};
   }
 `
 
@@ -192,14 +195,14 @@ const Canvas = styled.main<{ $plain?: boolean }>`
   background: ${({ $plain }) => ($plain ? 'white' : ADMIN_CANVAS)};
   border-radius: ${({ $plain }) => ($plain ? '0' : '10px')};
   margin: 0;
-  padding: ${({ $plain }) => ($plain ? '0' : '22px 22px 32px')};
+  padding: ${({ $plain }) => ($plain ? '0' : ADMIN_CANVAS_PAD)};
   overflow: ${({ $plain }) => ($plain ? 'hidden' : 'auto')};
   display: ${({ $plain }) => ($plain ? 'flex' : 'block')};
   flex-direction: column;
   font-size: ${ADMIN_FONT};
 
   ${mediaMaxWidth(MD)} {
-    padding: ${({ $plain }) => ($plain ? '0' : '16px')};
+    padding: ${({ $plain }) => ($plain ? '0' : ADMIN_CANVAS_PAD)};
   }
 
   .card {
@@ -228,7 +231,7 @@ const Canvas = styled.main<{ $plain?: boolean }>`
     font-size: 1.125rem;
     font-weight: 600;
     line-height: 1.3;
-    padding: 1.25rem 1.5rem 0.35rem;
+    padding: ${ADMIN_CARD_PAD} ${ADMIN_CARD_PAD} 0.35rem;
     align-items: center;
   }
 
@@ -236,7 +239,7 @@ const Canvas = styled.main<{ $plain?: boolean }>`
     display: flex;
     flex-direction: column;
     gap: ${ADMIN_PAD_FIELD};
-    padding: 0.75rem 1.5rem 1.5rem;
+    padding: 0.75rem ${ADMIN_CARD_PAD} ${ADMIN_CARD_PAD};
   }
 
   .card-content > * {
@@ -409,7 +412,7 @@ const Main = styled.div`
 const MobileNav = styled.div`
   display: none;
   flex-shrink: 0;
-  padding: 0 0 16px;
+  padding: 0 0 ${ADMIN_CANVAS_GAP};
   position: relative;
   z-index: 6;
 
@@ -423,7 +426,7 @@ export const PageHeading = styled.div`
   align-items: baseline;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 0 0 16px;
+  margin: 0 0 ${ADMIN_CANVAS_GAP};
 `
 
 export const PageTitle = styled.h1`

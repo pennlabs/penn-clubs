@@ -6,17 +6,17 @@ import { CLUB_FLYER_ROUTE } from '../../constants/routes'
 import { Club } from '../../types'
 import { getApiUrl } from '../../utils'
 import { Icon } from '../common'
-import { ADMIN_CANVAS, ADMIN_NAVY } from './adminTheme'
+import { ADMIN_CANVAS, ADMIN_CANVAS_GAP, ADMIN_CARD_PAD, ADMIN_NAVY } from './adminTheme'
 import EnableSubscriptionCard from './EnableSubscriptionCard'
 import PotentialMemberCard from './PotentialMemberCard'
 
 const Box = styled.div`
   background: white;
   border-radius: 10px;
-  margin-bottom: 16px;
+  margin-bottom: ${ADMIN_CANVAS_GAP};
   min-width: 0;
   overflow: visible;
-  padding: 20px 24px 24px;
+  padding: ${ADMIN_CARD_PAD};
   position: relative;
   z-index: 2;
 

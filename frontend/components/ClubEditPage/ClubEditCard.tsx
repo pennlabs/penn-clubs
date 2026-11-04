@@ -76,7 +76,7 @@ import {
 } from '../FormComponents'
 import { doFormikInitialValueFixes } from '../ModelForm'
 import AdvisorCard from './AdvisorCard'
-import { ADMIN_NAVY, ADMIN_PAD_FIELD } from './adminTheme'
+import { ADMIN_CANVAS_GAP, ADMIN_NAVY, ADMIN_PAD_FIELD } from './adminTheme'
 import { PageHeading, PageTitle, ViewLink } from './ClubAdminShell'
 import {
   EDIT_SECTION_ATTR,
@@ -318,7 +318,7 @@ type ClubEditCardProps = {
 const AdminGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.9fr);
-  gap: 16px;
+  gap: ${ADMIN_CANVAS_GAP};
   align-items: start;
 
   ${mediaMaxWidth(MD)} {
@@ -331,7 +331,7 @@ const EditPageBar = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 16px;
+  margin: 0 0 ${ADMIN_CANVAS_GAP};
 
   ${PageHeading} {
     margin: 0;

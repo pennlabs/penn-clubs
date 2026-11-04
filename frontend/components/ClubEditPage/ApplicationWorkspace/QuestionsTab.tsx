@@ -72,7 +72,7 @@ const Card = styled.div`
   border-radius: 10px;
   border-left: 4px solid rgba(73, 84, 244, 0.2);
   margin: 0 0 12px;
-  padding: 16px 18px;
+  padding: 16px;
   transition: border-color 0.15s;
 
   &:focus-within {
@@ -86,7 +86,7 @@ const SectionCard = styled.div`
   border-radius: 10px;
   border-top: 3px solid rgba(73, 84, 244, 0.4);
   margin: 24px 0 12px;
-  padding: 16px 18px;
+  padding: 16px;
 `
 
 // inputs that look like text until you click into them, like Google Forms

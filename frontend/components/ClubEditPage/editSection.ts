@@ -3,7 +3,7 @@ import { CSSProperties } from 'react'
 export const EDIT_SECTION_ATTR = 'data-edit-section'
 
 export const editSectionCardStyle: CSSProperties = {
-  marginBottom: 16,
+  marginBottom: 12,
   boxShadow: 'none',
   border: 'none',
   borderRadius: 10,

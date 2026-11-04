@@ -34,6 +34,9 @@ import {
 import {
   ADMIN_ACCENT,
   ADMIN_CANVAS,
+  ADMIN_CANVAS_GAP,
+  ADMIN_CANVAS_PAD,
+  ADMIN_CARD_PAD,
   ADMIN_FONT,
   ADMIN_NAVY,
   ADMIN_PAD_FIELD,
@@ -144,7 +147,7 @@ const Fill = styled.div`
 const Layout = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
-  gap: 16px;
+  gap: ${ADMIN_CANVAS_GAP};
   align-items: stretch;
   box-sizing: border-box;
   flex: 1;
@@ -162,7 +165,7 @@ const Column = styled.section`
   background: ${ADMIN_CANVAS};
   border: 0;
   border-radius: 10px;
-  padding: 18px 16px 16px;
+  padding: ${ADMIN_CANVAS_PAD};
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -210,7 +213,7 @@ const BackButton = styled.button`
 const Widget = styled.div`
   background: white;
   border-radius: 10px;
-  padding: 12px 14px 14px;
+  padding: ${ADMIN_CARD_PAD};
   min-width: 0;
   min-height: 0;
   flex: 1;

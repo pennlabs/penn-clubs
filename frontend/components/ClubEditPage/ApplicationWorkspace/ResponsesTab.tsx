@@ -21,7 +21,7 @@ import {
   selectMenuPortalTarget,
 } from '../../common/selectStyles'
 import { AdminGhost, AdminPrimary } from '../adminControls'
-import { ADMIN_NAVY } from '../adminTheme'
+import { ADMIN_CARD_PAD, ADMIN_NAVY } from '../adminTheme'
 import { exportToGoogleSheets } from '../Google'
 import {
   answerableQuestions,
@@ -188,7 +188,7 @@ const Surface = styled.div`
 
 const SummaryScroll = styled(Surface)`
   overflow: auto;
-  padding: 16px;
+  padding: ${ADMIN_CARD_PAD};
 `
 
 const Split = styled.div<{ $listOpen?: boolean }>`
@@ -215,7 +215,8 @@ const Column = styled.div<{ $inset?: 'list' | 'detail' }>`
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  padding: ${({ $inset }) => ($inset === 'list' ? '16px 0 0' : '16px')};
+  padding: ${({ $inset }) =>
+    $inset === 'list' ? `${ADMIN_CARD_PAD} 0 0` : ADMIN_CARD_PAD};
 `
 
 const ListHead = styled.div`
@@ -224,7 +225,7 @@ const ListHead = styled.div`
   gap: 8px;
   flex-shrink: 0;
   margin-bottom: 8px;
-  padding: 0 16px;
+  padding: 0 ${ADMIN_CARD_PAD};
 `
 
 const MinimizeButton = styled.button`
@@ -280,8 +281,8 @@ const ApplicantList = styled.ul`
     align-items: flex-start;
     gap: 8px;
     margin: 0;
-    padding: 12px 16px;
-    border-top: 1px solid ${ALLBIRDS_GRAY};
+    padding: 12px ${ADMIN_CARD_PAD};
+    border: 0;
     cursor: pointer;
   }
 
@@ -337,7 +338,7 @@ const Filters = styled.div`
   gap: 8px;
   flex-shrink: 0;
   margin-bottom: 8px;
-  padding: 0 16px;
+  padding: 0 ${ADMIN_CARD_PAD};
 `
 
 const DetailHeader = styled.div`
@@ -531,7 +532,9 @@ const Individual = ({
         </ListHead>
         {filters}
         {checked.length > 0 && (
-          <div style={{ flexShrink: 0, marginBottom: 8, padding: '0 16px' }}>
+          <div
+            style={{ flexShrink: 0, marginBottom: 8, padding: '0 24px' }}
+          >
             <StatusSelect
               placeholder="Set status…"
               onChange={(status) =>

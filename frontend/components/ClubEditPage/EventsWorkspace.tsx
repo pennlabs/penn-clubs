@@ -26,7 +26,14 @@ import {
   TextField,
 } from '../FormComponents'
 import { SlidingPills } from './adminControls'
-import { ADMIN_ACCENT, ADMIN_CANVAS, ADMIN_NAVY } from './adminTheme'
+import {
+  ADMIN_ACCENT,
+  ADMIN_CANVAS,
+  ADMIN_CANVAS_GAP,
+  ADMIN_CANVAS_PAD,
+  ADMIN_CARD_PAD,
+  ADMIN_NAVY,
+} from './adminTheme'
 import { PageTitle, ViewLink } from './ClubAdminShell'
 import { EVENT_TYPES } from './EventsCard'
 import EventsImportCard from './EventsImportCard'
@@ -90,7 +97,7 @@ const Layout = styled.div<{ $panel?: boolean }>`
     $panel
       ? 'minmax(0, 1.5fr) minmax(280px, 0.8fr)'
       : 'minmax(0, 1fr)'};
-  gap: 16px;
+  gap: ${ADMIN_CANVAS_GAP};
   align-items: stretch;
   box-sizing: border-box;
   flex: 1;
@@ -107,7 +114,7 @@ const Column = styled.section`
   background: ${ADMIN_CANVAS};
   border: 0;
   border-radius: 10px;
-  padding: 18px 16px 16px;
+  padding: ${ADMIN_CANVAS_PAD};
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -145,7 +152,7 @@ const GhostButton = styled.button`
 const Widget = styled.div`
   background: white;
   border-radius: 10px;
-  padding: 12px 14px 14px;
+  padding: ${ADMIN_CARD_PAD};
   min-width: 0;
   min-height: 0;
   flex: 1;
