@@ -1,5 +1,6 @@
 import moment from 'moment-timezone'
-import { ReactElement, ReactNode, useEffect, useState } from 'react'
+import { ReactElement, ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Select from 'react-select'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -28,9 +29,9 @@ import {
   Muted,
   Panel,
   Pill,
+  RESPONSE_TAB_ACTIONS_ID,
   STATUS_LABELS,
   Submission,
-  SegmentedControl,
   WorkspaceApplication,
 } from './shared'
 import SummaryView from './SummaryView'
@@ -38,18 +39,118 @@ import SummaryView from './SummaryView'
 const fullName = (submission: Submission) =>
   `${submission.first_name} ${submission.last_name}`.trim() || submission.email
 
+const SaveDropdown = ({
+  onCsv,
+  onSheets,
+}: {
+  onCsv: () => void
+  onSheets: () => void
+}): ReactElement => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+    const close = (event: MouseEvent) => {
+      if (!ref.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [open])
+
+  return (
+    <SaveWrap ref={ref}>
+      <AdminGhost
+        type="button"
+        title="Save"
+        aria-label="Save"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        <Icon name="download" alt="" />
+        Save
+        <Icon name="chevron-down" alt="" size="0.75rem" />
+      </AdminGhost>
+      {open && (
+        <SaveMenu role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onCsv()
+              setOpen(false)
+            }}
+          >
+            CSV
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onSheets()
+              setOpen(false)
+            }}
+          >
+            Google Sheets
+          </button>
+        </SaveMenu>
+      )}
+    </SaveWrap>
+  )
+}
+
 const Toolbar = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex: 1;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
   min-width: 0;
 
-  .actions {
+  .end {
     display: flex;
-    flex-wrap: wrap;
+    flex-shrink: 0;
     align-items: center;
     gap: 8px;
+    margin-left: auto;
+  }
+`
+
+const SaveWrap = styled.div`
+  position: relative;
+`
+
+const SaveMenu = styled.div`
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  min-width: 160px;
+  padding: 6px 0;
+  background: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+
+  button {
+    display: block;
+    width: 100%;
+    padding: 8px 14px;
+    border: none;
+    background: none;
+    color: ${ADMIN_NAVY};
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  button:hover {
+    background: #f5f6fa;
   }
 `
 
@@ -61,10 +162,20 @@ const Fill = styled.div`
   overflow: hidden;
 `
 
-const SummaryScroll = styled.div`
+const Surface = styled.div`
+  background: #fff;
+  border-radius: 10px;
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+`
+
+const SummaryScroll = styled(Surface)`
   overflow: auto;
+  padding: 16px;
 `
 
 const Split = styled.div<{ $listOpen?: boolean }>`
@@ -83,11 +194,15 @@ const Split = styled.div<{ $listOpen?: boolean }>`
   }
 `
 
-const Column = styled.div`
+const Column = styled.div<{ $inset?: 'list' | 'detail' }>`
+  background: #fff;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   min-height: 0;
   min-width: 0;
+  overflow: hidden;
+  padding: 16px;
 `
 
 const ListHead = styled.div`
@@ -141,14 +256,17 @@ const ApplicantList = styled.ul`
   min-height: 0;
   overflow-y: auto;
   list-style: none;
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   padding: 0;
+  font-size: 12.5px;
+  line-height: 1.3;
 
   li {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 4px;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 6px;
     border-top: 1px solid ${ALLBIRDS_GRAY};
     cursor: pointer;
   }
@@ -162,14 +280,17 @@ const ApplicantList = styled.ul`
   }
 
   .who {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    gap: 2px;
     min-width: 0;
   }
 
   .line {
     align-items: center;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
   }
 
@@ -183,6 +304,17 @@ const ApplicantList = styled.ul`
 
   .line > :last-child {
     flex-shrink: 0;
+  }
+
+  ${Muted} {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  ${Pill} {
+    font-size: 10.5px;
+    padding: 0 6px;
+    line-height: 1.5;
   }
 `
 
@@ -261,15 +393,18 @@ const DecisionBox = styled.div`
 `
 
 const Answer = styled.div`
-  padding: 12px 0;
+  padding: 18px 0 4px;
   border-top: 1px solid ${ALLBIRDS_GRAY};
 
   h5 {
     font-weight: 600;
-    margin-bottom: 4px;
+    margin: 0 0 2px;
+    line-height: 1.3;
   }
 
   p {
+    margin: 0;
+    line-height: 1.4;
     white-space: pre-wrap;
   }
 `
@@ -336,7 +471,7 @@ const Individual = ({
   if (submissions.length === 0) {
     return (
       <Split $listOpen>
-        <Column>
+        <Column $inset="list">
           {filters}
           <Muted>No applicants match.</Muted>
         </Column>
@@ -354,7 +489,7 @@ const Individual = ({
   return (
     <Split $listOpen={listOpen}>
       {listOpen && (
-      <Column>
+      <Column $inset="list">
         <ListHead>
           <SelectApplicants>
             <input
@@ -420,7 +555,7 @@ const Individual = ({
       </Column>
       )}
 
-      <Column>
+      <Column $inset="detail">
         <DetailHeader>
           <h3>{fullName(selected)}</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -595,20 +730,26 @@ const DecisionEmails = ({
 export default function ResponsesTab({
   clubCode,
   application,
-  chrome,
+  view,
+  onSubmissionCount,
 }: {
   clubCode: string
   application: WorkspaceApplication
-  chrome?: (toolbar: ReactNode) => ReactNode
+  view: 'summary' | 'individual'
+  onSubmissionCount?: (count: number) => void
 }): ReactElement {
   const url = `/clubs/${clubCode}/applications/${application.id}/`
   const [submissions, setSubmissions] = useState<Submission[] | null>(null)
   const [questions, setQuestions] = useState<ApplicationQuestion[]>([])
-  const [view, setView] = useState<'summary' | 'individual'>('summary')
   const [statusFilter, setStatusFilter] = useState<ApplicationStatusType>()
   const [search, setSearch] = useState('')
   const [showEmails, setShowEmails] = useState(false)
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null)
   const committees = (application.committees ?? []).map(({ name }) => name)
+
+  useLayoutEffect(() => {
+    setActionsSlot(document.getElementById(RESPONSE_TAB_ACTIONS_ID))
+  }, [])
 
   const load = () =>
     Promise.all(
@@ -618,6 +759,9 @@ export default function ResponsesTab({
     ).then(([submissions, questions]) => {
       setSubmissions(submissions)
       setQuestions(questions)
+      onSubmissionCount?.(
+        Array.isArray(submissions) ? submissions.length : 0,
+      )
     })
 
   useEffect(() => {
@@ -627,9 +771,10 @@ export default function ResponsesTab({
   if (submissions === null) {
     return (
       <>
-        {chrome?.(null)}
         <Fill>
-          <Loading />
+          <Surface>
+            <Loading />
+          </Surface>
         </Fill>
       </>
     )
@@ -761,34 +906,16 @@ export default function ResponsesTab({
   const toolbar =
     submissions.length === 0 ? null : (
       <Toolbar>
-        <SegmentedControl>
-          {(['summary', 'individual'] as const).map((option) => (
-            <button
-              key={option}
-              className={view === option ? 'is-active' : ''}
-              onClick={() => setView(option)}
-            >
-              {option === 'summary'
-                ? 'Summary'
-                : `Individual (${submissions.length})`}
-            </button>
-          ))}
-        </SegmentedControl>
-        <div className="actions">
-          <AdminGhost type="button" onClick={downloadCsv}>
-            <Icon name="download" alt="" /> CSV
-          </AdminGhost>
-          <AdminGhost
-            type="button"
-            onClick={() =>
+        <div className="end">
+          <SaveDropdown
+            onCsv={downloadCsv}
+            onSheets={() =>
               exportToGoogleSheets(
                 `${application.name} responses`,
                 exportRows(),
               )
             }
-          >
-            <Icon name="external-link" alt="" /> Google Sheets
-          </AdminGhost>
+          />
           <AdminPrimary type="button" onClick={() => setShowEmails(true)}>
             <Icon name="mail" alt="" /> Send decisions
           </AdminPrimary>
@@ -799,8 +926,8 @@ export default function ResponsesTab({
   if (submissions.length === 0) {
     return (
       <>
-        {chrome?.(null)}
         <Fill>
+          <Surface>
           <Panel className="has-text-centered py-6">
             <h3 className="title is-5">No responses yet</h3>
             <Muted>
@@ -808,6 +935,7 @@ export default function ResponsesTab({
               will show up here as students apply.
             </Muted>
           </Panel>
+          </Surface>
         </Fill>
       </>
     )
@@ -815,7 +943,7 @@ export default function ResponsesTab({
 
   return (
     <>
-      {chrome?.(toolbar)}
+      {actionsSlot && toolbar && createPortal(toolbar, actionsSlot)}
       <Fill>
         {view === 'summary' ? (
           <SummaryScroll>

@@ -45,6 +45,8 @@ const fadeIn = keyframes`
 
 // cards float in one after another, unless the reader prefers less motion
 const Card = styled(Panel)<{ $order: number }>`
+  margin-bottom: 28px;
+
   @media (prefers-reduced-motion: no-preference) {
     animation: ${rise} 0.45s ease both;
     animation-delay: ${({ $order }) => Math.min($order, 8) * 60}ms;
@@ -53,6 +55,14 @@ const Card = styled(Panel)<{ $order: number }>`
   h4 {
     font-weight: 600;
     color: ${CLUBS_GREY};
+    margin: 0 0 2px;
+    line-height: 1.3;
+  }
+
+  ${Muted} {
+    display: inline-block;
+    margin: 0 0 10px;
+    line-height: 1.3;
   }
 `
 
@@ -172,14 +182,22 @@ const DonutLayout = styled.div`
 const AnswerList = styled.ul`
   max-height: 260px;
   overflow-y: auto;
-  margin-top: 12px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.4;
 
   li {
     background: #f7f7f8;
     border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 6px;
+    padding: 6px 10px;
+    margin: 0 0 4px;
     white-space: pre-wrap;
+  }
+
+  li:last-child {
+    margin-bottom: 0;
   }
 `
 

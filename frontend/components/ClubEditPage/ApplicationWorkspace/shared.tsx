@@ -20,6 +20,8 @@ export type WorkspaceApplication = Application & {
   cycle?: string
 }
 
+export const RESPONSE_TAB_ACTIONS_ID = 'application-response-tab-actions'
+
 // a submission as the officer submissions endpoint returns it
 export type Submission = Omit<ApplicationSubmission, 'status' | 'committee'> & {
   status: ApplicationStatusType
