@@ -17,7 +17,9 @@ import ResponsesTab from './ResponsesTab'
 import SettingsTab from './SettingsTab'
 import {
   applicationState,
+  CollapsingSlot,
   Muted,
+  PANEL_MOTION,
   Pill,
   RESPONSE_TAB_ACTIONS_ID,
   useConfirm,
@@ -33,18 +35,17 @@ const TABS = [
 type Tab = (typeof TABS)[number]['name']
 
 const Layout = styled.div<{ $listOpen?: boolean }>`
-  display: grid;
-  grid-template-columns: ${({ $listOpen }) =>
-    $listOpen ? 'minmax(160px, 1fr) minmax(0, 4fr)' : 'minmax(0, 1fr)'};
-  gap: 16px;
+  display: flex;
   align-items: stretch;
   flex: 1;
   min-height: 0;
   height: 100%;
 
   ${mediaMaxWidth(MD)} {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    gap: 16px;
     height: auto;
+    ${({ $listOpen }) => !$listOpen && `> :first-child { display: none; }`}
   }
 `
 
@@ -159,7 +160,7 @@ const Sidebar = styled.nav`
     border: none;
     background: none;
     border-radius: 0;
-    padding: 12px 40px 12px 16px;
+    padding: 12px 48px 12px 16px;
     cursor: pointer;
     color: ${ADMIN_NAVY};
     font-size: 13px;
@@ -222,27 +223,31 @@ const StatusBlock = styled.div`
 const MoreButton = styled.button`
   appearance: none;
   align-items: center;
-  background: #fff;
-  border: 1px solid #e4e4e4;
-  border-radius: 8px;
-  color: ${ADMIN_NAVY};
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: inherit;
   cursor: pointer;
   display: inline-flex;
-  height: 24px;
+  height: 32px;
   justify-content: center;
   opacity: 0;
   padding: 0;
   position: absolute;
-  right: 10px;
-  top: 10px;
-  width: 24px;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
 
   svg {
+    fill: currentColor;
+    stroke: currentColor;
     transform: rotate(90deg);
   }
 
   &:hover {
-    background: #f7f8fb;
+    background: transparent;
+    color: inherit;
   }
 `
 
@@ -281,18 +286,20 @@ const ItemMenu = styled.div<{ $top: number; $left: number }>`
 
 const TabBar = styled.div`
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
   flex-shrink: 0;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 16px;
   min-width: 0;
 
   .response-actions {
     display: inline-flex;
-    flex: 1;
+    flex: 1 1 12rem;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
     min-width: 0;
   }
@@ -300,10 +307,12 @@ const TabBar = styled.div`
 
 const TabPill = styled.div`
   display: inline-flex;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  flex-shrink: 1;
+  max-width: 100%;
   overflow: hidden;
   border: 1px solid ${CLUBS_BLUE};
-  border-radius: 999px;
+  border-radius: 8px;
   background: #fff;
 
   > button:first-of-type {
@@ -311,45 +320,84 @@ const TabPill = styled.div`
   }
 `
 
-const TabButton = styled.button<{ $active?: boolean }>`
+const TabButton = styled.button<{ $active?: boolean; $reserve?: boolean }>`
   appearance: none;
+  align-items: center;
   background: ${({ $active }) => ($active ? CLUBS_BLUE : '#fff')};
   border: none;
   border-left: 1px solid ${CLUBS_BLUE};
+  box-sizing: border-box;
   color: ${({ $active }) => ($active ? '#fff' : CLUBS_BLUE)};
   cursor: pointer;
+  display: inline-flex;
   flex-shrink: 0;
-  font-size: 0.875rem;
-  padding: 6px 14px;
+  font-size: 14px;
+  justify-content: center;
+  line-height: 1;
+  min-width: ${({ $reserve }) => ($reserve ? '7.5rem' : undefined)};
+  padding: 9px 14px;
   white-space: nowrap;
+
+  @media (max-width: 700px) {
+    min-width: 0;
+    padding: 9px 10px;
+  }
 `
 
 const ResponseSplit = styled.div`
   display: flex;
+  align-items: stretch;
   min-width: 0;
 `
 
 const SplitPane = styled.div<{ $open: boolean }>`
-  display: flex;
-  max-width: ${({ $open }) => ($open ? '22rem' : '0')};
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: ${({ $open }) => ($open ? '16rem' : '0')};
   min-width: 0;
-  opacity: ${({ $open }) => ($open ? 1 : 0)};
   overflow: hidden;
   pointer-events: ${({ $open }) => ($open ? 'auto' : 'none')};
-  transform: ${({ $open }) => ($open ? 'scaleX(1)' : 'scaleX(0.84)')};
-  transform-origin: left center;
-  transition:
-    max-width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.22s ease,
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: max-width ${PANEL_MOTION};
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;
-    transform: none;
+  }
+
+  > * {
+    width: max-content;
+    max-width: 16rem;
   }
 
   ${TabButton} {
     border-left: 1px solid ${CLUBS_BLUE};
+  }
+`
+
+const Stage = styled.div`
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+`
+
+const MotionPanel = styled.div<{ $active: boolean }>`
+  display: flex;
+  flex-direction: column;
+  grid-area: 1 / 1;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  opacity: ${({ $active }) => ($active ? 1 : 0)};
+  pointer-events: ${({ $active }) => ($active ? 'auto' : 'none')};
+  transform: ${({ $active }) =>
+    $active ? 'translateX(0)' : 'translateX(-12px)'};
+  transition:
+    opacity ${PANEL_MOTION},
+    transform ${PANEL_MOTION};
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `
 
@@ -435,7 +483,7 @@ function ListItemMenu({
           setOpen(!open)
         }}
       >
-        <Icon name="more-horizontal" alt="" size="0.95rem" fitSize />
+        <Icon name="more-horizontal" alt="" size="1.25rem" fitSize noMargin />
       </MoreButton>
       {open &&
         createPortal(
@@ -610,7 +658,8 @@ export default function ApplicationWorkspace({
 
   const selected = applications.find(({ id }) => id === selectedId)
 
-  const sidebar = listOpen ? (
+  const sidebar = (
+    <CollapsingSlot $open={!!listOpen} $width="300px">
     <Pane $flushList>
       <Sidebar>
         <SideHead>
@@ -662,7 +711,8 @@ export default function ApplicationWorkspace({
         </ul>
       </Sidebar>
     </Pane>
-  ) : null
+    </CollapsingSlot>
+  )
 
   if (selected == null) {
     return (
@@ -706,20 +756,23 @@ export default function ApplicationWorkspace({
       <ResponseSplit>
         <TabButton
           type="button"
+          $reserve
           $active={responsesOpen && responseView === 'summary'}
           onClick={() => openResponses('summary')}
         >
           {responsesOpen ? 'Summary' : 'Responses'}
         </TabButton>
         <SplitPane $open={responsesOpen}>
-          <TabButton
-            type="button"
-            $active={responseView === 'individual'}
-            onClick={() => openResponses('individual')}
-          >
-            Individual
-            {responseCount != null ? ` (${responseCount})` : ''}
-          </TabButton>
+          <div>
+            <TabButton
+              type="button"
+              $active={responseView === 'individual'}
+              onClick={() => openResponses('individual')}
+            >
+              Individual
+              {responseCount != null ? ` (${responseCount})` : ''}
+            </TabButton>
+          </div>
         </SplitPane>
       </ResponseSplit>
       <TabButton
@@ -771,39 +824,41 @@ export default function ApplicationWorkspace({
           </TabBar>
         </TopBar>
 
-        {tab === 'questions' && (
-          <BodyBox>
-            <ScrollBody>
-              <QuestionsTab
-                key={selected.id}
-                clubCode={club.code}
-                application={selected}
-                onApplicationChanged={() => load()}
-              />
-            </ScrollBody>
-          </BodyBox>
-        )}
-        {tab === 'responses' && (
-          <ResponsesTab
-            key={selected.id}
-            clubCode={club.code}
-            application={selected}
-            view={responseView}
-            onSubmissionCount={setResponseCount}
-          />
-        )}
-        {tab === 'settings' && (
-          <BodyBox>
-            <ScrollBody>
-              <SettingsTab
-                key={selected.id}
-                club={club}
-                application={selected}
-                onSaved={() => load()}
-              />
-            </ScrollBody>
-          </BodyBox>
-        )}
+        <Stage>
+          <MotionPanel $active={tab === 'questions'}>
+            <BodyBox>
+              <ScrollBody>
+                <QuestionsTab
+                  key={selected.id}
+                  clubCode={club.code}
+                  application={selected}
+                  onApplicationChanged={() => load()}
+                />
+              </ScrollBody>
+            </BodyBox>
+          </MotionPanel>
+          <MotionPanel $active={tab === 'responses'}>
+            <ResponsesTab
+              key={selected.id}
+              clubCode={club.code}
+              application={selected}
+              view={responseView}
+              onSubmissionCount={setResponseCount}
+            />
+          </MotionPanel>
+          <MotionPanel $active={tab === 'settings'}>
+            <BodyBox>
+              <ScrollBody>
+                <SettingsTab
+                  key={selected.id}
+                  club={club}
+                  application={selected}
+                  onSaved={() => load()}
+                />
+              </ScrollBody>
+            </BodyBox>
+          </MotionPanel>
+        </Stage>
         {confirmDialog}
       </Stack>
     </Layout>

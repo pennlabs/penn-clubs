@@ -29,6 +29,7 @@ import {
   AdminActions,
   AdminGhost,
   AdminPrimary,
+  SlidingPills,
 } from './adminControls'
 import {
   ADMIN_ACCENT,
@@ -228,15 +229,6 @@ const ListToolbar = styled.div`
   margin: 0 0 12px;
 `
 
-const Segment = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: white;
-  border-radius: 999px;
-  padding: 4px;
-`
-
 const DownloadButton = styled.a`
   display: inline-flex;
   align-items: center;
@@ -249,7 +241,9 @@ const DownloadButton = styled.a`
   font-size: 14px;
   font-weight: 500;
   line-height: 1;
-  padding: 8px 14px;
+  box-sizing: border-box;
+  height: 38px;
+  padding: 0 16px;
   text-decoration: none;
   white-space: nowrap;
 
@@ -259,16 +253,6 @@ const DownloadButton = styled.a`
     color: ${ADMIN_NAVY};
     text-decoration: none;
   }
-`
-
-const SegmentButton = styled.button<{ $active?: boolean }>`
-  border: 0;
-  background: ${({ $active }) => ($active ? '#e7f6ee' : 'transparent')};
-  color: ${({ $active }) => ($active ? '#178a4a' : '#6b7280')};
-  border-radius: 999px;
-  padding: 6px 14px;
-  cursor: pointer;
-  font-size: 14px;
 `
 
 const Check = styled.input.attrs({ type: 'checkbox' })`
@@ -1123,31 +1107,20 @@ export default function MembershipWorkspace({
             <PageTitle>Members</PageTitle>
           </ColumnHead>
           <ListToolbar>
-            <Segment>
-              <SegmentButton
-                type="button"
-                $active={segment === 'active'}
-                onClick={() => setSegment('active')}
-              >
-                Active
-              </SegmentButton>
-              <SegmentButton
-                type="button"
-                $active={segment === 'pending'}
-                onClick={() => setSegment('pending')}
-              >
-                Pending
-              </SegmentButton>
-              {SHOW_MEMBERSHIP_REQUEST && (
-                <SegmentButton
-                  type="button"
-                  $active={segment === 'requests'}
-                  onClick={() => setSegment('requests')}
-                >
-                  Requests
-                </SegmentButton>
-              )}
-            </Segment>
+            <SlidingPills
+              value={segment}
+              muted
+              height={38}
+              ariaLabel="Member list"
+              onChange={setSegment}
+              options={[
+                { value: 'active' as const, label: 'Active' },
+                { value: 'pending' as const, label: 'Pending' },
+                ...(SHOW_MEMBERSHIP_REQUEST
+                  ? [{ value: 'requests' as const, label: 'Requests' }]
+                  : []),
+              ]}
+            />
             <DownloadButton
               href={getApiUrl(`/clubs/${club.code}/members/?format=xlsx`)}
             >

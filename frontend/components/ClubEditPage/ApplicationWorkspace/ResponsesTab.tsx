@@ -26,6 +26,7 @@ import { exportToGoogleSheets } from '../Google'
 import {
   answerableQuestions,
   answerText,
+  CollapsingSlot,
   Muted,
   Panel,
   Pill,
@@ -64,7 +65,7 @@ const SaveDropdown = ({
 
   return (
     <SaveWrap ref={ref}>
-      <AdminGhost
+      <SaveButton
         type="button"
         title="Save"
         aria-label="Save"
@@ -75,7 +76,7 @@ const SaveDropdown = ({
         <Icon name="download" alt="" />
         Save
         <Icon name="chevron-down" alt="" size="0.75rem" />
-      </AdminGhost>
+      </SaveButton>
       {open && (
         <SaveMenu role="menu">
           <button
@@ -106,16 +107,19 @@ const SaveDropdown = ({
 
 const Toolbar = styled.div`
   display: flex;
-  flex: 1;
-  flex-wrap: nowrap;
+  flex: 1 1 12rem;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   min-width: 0;
 
   .end {
     display: flex;
+    flex-wrap: wrap;
     flex-shrink: 0;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
     margin-left: auto;
   }
@@ -123,6 +127,13 @@ const Toolbar = styled.div`
 
 const SaveWrap = styled.div`
   position: relative;
+`
+
+const SaveButton = styled(AdminGhost)`
+  border-radius: 8px;
+  min-width: 6.5rem;
+  padding-left: 16px;
+  padding-right: 16px;
 `
 
 const SaveMenu = styled.div`
@@ -158,6 +169,7 @@ const Fill = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
 `
@@ -171,6 +183,7 @@ const Surface = styled.div`
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+
 `
 
 const SummaryScroll = styled(Surface)`
@@ -179,18 +192,17 @@ const SummaryScroll = styled(Surface)`
 `
 
 const Split = styled.div<{ $listOpen?: boolean }>`
-  display: grid;
-  grid-template-columns: ${({ $listOpen }) =>
-    $listOpen ? '300px minmax(0, 1fr)' : 'minmax(0, 1fr)'};
-  gap: 16px;
+  display: flex;
   align-items: stretch;
   flex: 1;
   min-height: 0;
   height: 100%;
 
   ${mediaMaxWidth(MD)} {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    gap: 16px;
     overflow: auto;
+    ${({ $listOpen }) => !$listOpen && `> :first-child { display: none; }`}
   }
 `
 
@@ -198,11 +210,12 @@ const Column = styled.div<{ $inset?: 'list' | 'detail' }>`
   background: #fff;
   border-radius: 10px;
   display: flex;
+  flex: 1;
   flex-direction: column;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  padding: 16px;
+  padding: ${({ $inset }) => ($inset === 'list' ? '16px 0 0' : '16px')};
 `
 
 const ListHead = styled.div`
@@ -211,6 +224,7 @@ const ListHead = styled.div`
   gap: 8px;
   flex-shrink: 0;
   margin-bottom: 8px;
+  padding: 0 16px;
 `
 
 const MinimizeButton = styled.button`
@@ -266,7 +280,7 @@ const ApplicantList = styled.ul`
     align-items: flex-start;
     gap: 8px;
     margin: 0;
-    padding: 12px 6px;
+    padding: 12px 16px;
     border-top: 1px solid ${ALLBIRDS_GRAY};
     cursor: pointer;
   }
@@ -323,6 +337,7 @@ const Filters = styled.div`
   gap: 8px;
   flex-shrink: 0;
   margin-bottom: 8px;
+  padding: 0 16px;
 `
 
 const DetailHeader = styled.div`
@@ -488,7 +503,7 @@ const Individual = ({
 
   return (
     <Split $listOpen={listOpen}>
-      {listOpen && (
+      <CollapsingSlot $open={listOpen} $width="300px">
       <Column $inset="list">
         <ListHead>
           <SelectApplicants>
@@ -516,7 +531,7 @@ const Individual = ({
         </ListHead>
         {filters}
         {checked.length > 0 && (
-          <div style={{ flexShrink: 0, marginBottom: 8 }}>
+          <div style={{ flexShrink: 0, marginBottom: 8, padding: '0 16px' }}>
             <StatusSelect
               placeholder="Set status…"
               onChange={(status) =>
@@ -553,7 +568,7 @@ const Individual = ({
           ))}
         </ApplicantList>
       </Column>
-      )}
+      </CollapsingSlot>
 
       <Column $inset="detail">
         <DetailHeader>

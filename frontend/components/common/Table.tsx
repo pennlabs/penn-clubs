@@ -144,7 +144,9 @@ const Input = styled.input<{ $sheet?: boolean }>`
   color: ${CLUBS_GREY};
   width: 100%;
   font-size: 0.875rem;
-  padding: ${({ $sheet }) => ($sheet ? '8px 34px 8px 14px' : '8px 10px')};
+  box-sizing: border-box;
+  height: ${({ $sheet }) => ($sheet ? '38px' : 'auto')};
+  padding: ${({ $sheet }) => ($sheet ? '0 34px 0 16px' : '8px 10px')};
   background: ${WHITE};
   border-radius: ${({ $sheet }) => ($sheet ? '999px' : '8px')};
   box-shadow: none;
@@ -178,7 +180,9 @@ const ColumnsButton = styled.button<{ $sheet?: boolean }>`
   font-family: ${BODY_FONT};
   font-size: 0.875rem;
   font-weight: 500;
-  padding: ${({ $sheet }) => ($sheet ? '8px 14px' : '0.45rem 0.7rem')};
+  box-sizing: border-box;
+  height: ${({ $sheet }) => ($sheet ? '38px' : 'auto')};
+  padding: ${({ $sheet }) => ($sheet ? '0 16px' : '0.45rem 0.7rem')};
 
   &:hover {
     background: ${HOVER_GRAY};
@@ -528,8 +532,8 @@ const sheetFilterStyles = {
   container: (style) => ({ ...style, width: 148 }),
   control: (style, state) => ({
     ...style,
-    minHeight: 36,
-    height: 36,
+    minHeight: 38,
+    height: 38,
     borderRadius: 999,
     borderColor: state.isFocused ? '#4954f4' : SHEET_PILL,
     boxShadow: 'none',
@@ -538,11 +542,16 @@ const sheetFilterStyles = {
   }),
   valueContainer: (style) => ({
     ...style,
-    padding: '0 8px',
+    padding: '0 12px',
+    height: 36,
+  }),
+  indicatorsContainer: (style) => ({
+    ...style,
+    height: 36,
   }),
   dropdownIndicator: (style) => ({
     ...style,
-    padding: '6px 10px',
+    padding: '0 12px',
     color: '#757575',
   }),
 }

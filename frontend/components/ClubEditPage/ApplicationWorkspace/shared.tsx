@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { Modal } from '~/components/common'
 
 import { AdminDanger, AdminGhost, AdminActions } from '../adminControls'
-import { CLUBS_BLUE, CLUBS_GREY, MEDIUM_GRAY } from '~/constants'
+import { CLUBS_BLUE, CLUBS_GREY, MD, MEDIUM_GRAY, mediaMaxWidth } from '~/constants'
 import {
   Application,
   ApplicationQuestion,
@@ -62,6 +62,45 @@ export const Panel = styled.div`
   border-radius: 0;
   padding: 0;
   margin-bottom: 16px;
+`
+
+export const PANEL_MOTION = '0.32s cubic-bezier(0.22, 1, 0.36, 1)'
+
+export const CollapsingSlot = styled.div<{ $open: boolean; $width?: string }>`
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  width: ${({ $open, $width }) => ($open ? ($width ?? '300px') : '0px')};
+  margin-right: ${({ $open }) => ($open ? '16px' : '0')};
+  transition:
+    width ${PANEL_MOTION},
+    margin-right ${PANEL_MOTION};
+
+  > * {
+    box-sizing: border-box;
+    height: 100%;
+    opacity: ${({ $open }) => ($open ? 1 : 0)};
+    width: ${({ $width }) => $width ?? '300px'};
+    transition: opacity ${PANEL_MOTION};
+  }
+
+  ${mediaMaxWidth(MD)} {
+    width: ${({ $open }) => ($open ? '100%' : '0')};
+    margin-right: 0;
+
+    > * {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    > * {
+      transition: none;
+    }
+  }
 `
 
 export const Muted = styled.span`

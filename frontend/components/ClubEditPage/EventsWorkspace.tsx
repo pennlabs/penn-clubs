@@ -25,6 +25,7 @@ import {
   SelectField,
   TextField,
 } from '../FormComponents'
+import { SlidingPills } from './adminControls'
 import { ADMIN_ACCENT, ADMIN_CANVAS, ADMIN_NAVY } from './adminTheme'
 import { PageTitle, ViewLink } from './ClubAdminShell'
 import { EVENT_TYPES } from './EventsCard'
@@ -161,37 +162,16 @@ const Toolbar = styled.div`
   flex-shrink: 0;
 `
 
-const Toggle = styled.div`
-  display: inline-flex;
-  align-items: center;
-  background: white;
-  border-radius: 999px;
-  padding: 4px;
-`
-
-const ToggleButton = styled.button<{ $active?: boolean }>`
-  align-items: center;
-  background: ${({ $active }) => ($active ? '#e7f6ee' : 'transparent')};
-  border: 0;
-  border-radius: 999px;
-  color: ${({ $active }) => ($active ? '#178a4a' : ADMIN_NAVY)};
-  cursor: pointer;
-  display: inline-flex;
-  gap: 6px;
-  line-height: 1;
-  padding: 6px 12px;
-
-  svg {
-    display: block;
-  }
-`
+const TOOL_H = 38
 
 const Search = styled.input`
   background: white;
   border: 1px solid #e4e4e4;
   border-radius: 999px;
-  padding: 8px 12px;
+  box-sizing: border-box;
+  height: ${TOOL_H}px;
   min-width: 160px;
+  padding: 0 16px;
   color: ${ADMIN_NAVY};
 `
 
@@ -199,9 +179,20 @@ const ToolButton = styled.button`
   border: 1px solid #e4e4e4;
   background: white;
   border-radius: 999px;
-  padding: 8px 12px;
+  box-sizing: border-box;
   cursor: pointer;
   color: ${ADMIN_NAVY};
+  height: ${TOOL_H}px;
+  padding: 0 16px;
+`
+
+const RangeSelect = styled.div`
+  width: 132px;
+
+  .range-select__control {
+    min-height: ${TOOL_H}px;
+    height: ${TOOL_H}px;
+  }
 `
 
 const CreateWrap = styled.div`
@@ -265,6 +256,60 @@ const Menu = styled.div`
     color: ${ADMIN_NAVY};
   }
 `
+
+const FilterMenu = styled.div`
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid #e4e4e4;
+  border-radius: 10px;
+  min-width: 220px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    color: ${ADMIN_NAVY};
+  }
+`
+
+const rangeSelectStyles = {
+  ...selectMenuStylesWhite,
+  container: (style) => ({ ...style, width: 132 }),
+  control: (style, state) => ({
+    ...selectMenuStylesWhite.control(style, state),
+    minHeight: TOOL_H,
+    height: TOOL_H,
+    borderRadius: 999,
+  }),
+  valueContainer: (style) => ({
+    ...style,
+    padding: '0 12px',
+    height: TOOL_H - 2,
+  }),
+  indicatorsContainer: (style) => ({
+    ...style,
+    height: TOOL_H - 2,
+  }),
+}
+
+const filterSelectStyles = {
+  ...selectCompactStyles,
+  control: (style, state) => ({
+    ...selectCompactStyles.control(style, state),
+    minHeight: 38,
+    height: 38,
+    borderRadius: 8,
+  }),
+}
 
 const HOUR_PX = 48
 const DAY_HOURS = 24
@@ -1090,22 +1135,30 @@ export default function EventsWorkspace({
               </CreateWrap>
             </ColumnHead>
             <Toolbar>
-              <Toggle>
-                <ToggleButton
-                  type="button"
-                  $active={view === 'table'}
-                  onClick={() => setView('table')}
-                >
-                  <Icon name="list" alt="" /> Table
-                </ToggleButton>
-                <ToggleButton
-                  type="button"
-                  $active={view === 'calendar'}
-                  onClick={() => setView('calendar')}
-                >
-                  <Icon name="calendar" alt="" /> Calendar
-                </ToggleButton>
-              </Toggle>
+              <SlidingPills
+                value={view}
+                height={TOOL_H}
+                ariaLabel="Events view"
+                onChange={setView}
+                options={[
+                  {
+                    value: 'table' as const,
+                    label: (
+                      <>
+                        <Icon name="list" alt="" /> Table
+                      </>
+                    ),
+                  },
+                  {
+                    value: 'calendar' as const,
+                    label: (
+                      <>
+                        <Icon name="calendar" alt="" /> Calendar
+                      </>
+                    ),
+                  },
+                ]}
+              />
               <Search
                 placeholder="Search..."
                 aria-label="Search events"
@@ -1120,47 +1173,41 @@ export default function EventsWorkspace({
                   Filter
                 </ToolButton>
                 {filterOpen && (
-                  <Menu style={{ position: 'absolute', left: 0 }}>
+                  <FilterMenu>
+                    <Select
+                      aria-label="Event type"
+                      styles={filterSelectStyles}
+                      components={selectComponents}
+                      menuPortalTarget={selectMenuPortalTarget}
+                      menuPosition="fixed"
+                      isClearable
+                      placeholder="All"
+                      value={
+                        EVENT_TYPES.find(
+                          (type) => String(type.value) === typeFilter,
+                        ) ?? null
+                      }
+                      options={EVENT_TYPES}
+                      onChange={(option) =>
+                        setTypeFilter(option ? String(option.value) : '')
+                      }
+                    />
                     <label>
-                      Type
-                      <Select
-                        styles={selectCompactStyles}
-                        components={selectComponents}
-                        menuPortalTarget={selectMenuPortalTarget}
-                        menuPosition="fixed"
-                        isClearable
-                        placeholder="All"
-                        value={
-                          EVENT_TYPES.find(
-                            (type) => String(type.value) === typeFilter,
-                          ) ?? null
-                        }
-                        options={EVENT_TYPES}
-                        onChange={(option) =>
-                          setTypeFilter(
-                            option ? String(option.value) : '',
-                          )
-                        }
-                      />
-                    </label>
-                    <label style={{ display: 'block', marginTop: 8 }}>
                       <input
                         type="checkbox"
                         checked={showPast}
                         onChange={(event) => setShowPast(event.target.checked)}
-                      />{' '}
+                      />
                       Include past events
                     </label>
-                  </Menu>
+                  </FilterMenu>
                 )}
               </div>
-              <div style={{ width: 132 }}>
+              <RangeSelect>
                 <Select
                   aria-label="Calendar range"
-                  styles={{
-                    ...selectMenuStylesWhite,
-                    container: (style) => ({ ...style, width: 132 }),
-                  }}
+                  classNamePrefix="range-select"
+                  styles={rangeSelectStyles}
                   components={selectComponents}
                   menuPortalTarget={selectMenuPortalTarget}
                   menuPosition="fixed"
@@ -1179,7 +1226,7 @@ export default function EventsWorkspace({
                     }
                   }}
                 />
-              </div>
+              </RangeSelect>
             </Toolbar>
             </HeadStack>
             <Widget>
