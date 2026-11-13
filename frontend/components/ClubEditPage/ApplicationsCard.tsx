@@ -277,6 +277,7 @@ export default function ApplicationsCard({ club }: Props): ReactElement<any> {
       <ModelForm
         allowCreation={!club.is_wharton}
         baseUrl={`/clubs/${club.code}/applications/`}
+        listParams="&ordering=-application_start_time,-created_at,-id"
         defaultObject={{ name: `${club.name} Application` }}
         onChange={(data) => {
           if (data.committees != null) {
