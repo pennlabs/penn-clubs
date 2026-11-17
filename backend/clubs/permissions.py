@@ -277,8 +277,8 @@ class EventShowingPermission(permissions.BasePermission):
                 return False
             membership = find_membership_helper(request.user, obj.event.club)
             return membership is not None and membership.role <= Membership.ROLE_OFFICER
-        # add_to_cart, remove_from_cart and cart are open to guests; the cart is
-        # tied to the anonymous session instead of a user.
+        # add_to_cart, remove_from_cart, cart, and validate_cart are open to
+        # guests; the cart is tied to the anonymous session instead of a user.
         return True
 
 

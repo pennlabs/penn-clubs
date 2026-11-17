@@ -2535,6 +2535,17 @@ class OrderItem(models.Model):
         super().save(*args, **kwargs)
 
 
+def showing_has_order_in_progress(showing) -> bool:
+    """
+    True when this showing still has an order in PENDING, PROCESSING, or
+    NEEDS_REVIEW. Those orders keep their ticket classes.
+    """
+    return Order.objects.filter(
+        showing=showing,
+        status__in=(Order.PENDING, Order.PROCESSING, Order.NEEDS_REVIEW),
+    ).exists()
+
+
 def release_expired(showing=None):
     """
     Return held ticket quantities for expired PENDING orders and mark those
