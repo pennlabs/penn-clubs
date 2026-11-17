@@ -29,6 +29,7 @@ from clubs.filters import DEFAULT_PAGE_SIZE
 from clubs.models import (
     Advisor,
     ApplicationCommittee,
+    ApplicationCycle,
     ApplicationExtension,
     ApplicationMultipleChoice,
     ApplicationQuestion,
@@ -3368,6 +3369,10 @@ class ClubTestCase(TestCase):
         self.assertIn(resp.status_code, [200, 201], resp.content)
 
     def test_send_invite_with_acceptance_email(self):
+        # sending application emails is an officer-only action
+        Membership.objects.create(
+            person=self.user1, club=self.club1, role=Membership.ROLE_OFFICER
+        )
         self.client.login(username=self.user1.username, password="test")
 
         # Create a club application
@@ -7829,3 +7834,261 @@ class CloneTestCase(TestCase):
         self.assertEqual(clone.extensions.count(), 0)
         for question in clone.questions.all():
             self.assertEqual(question.responses.count(), 0)
+
+
+class ApplicationNestedRouteScopingTestCase(TestCase):
+    """
+    Routes under /api/clubs/{club_code}/applications/{application_pk}/ check the
+    user's role in the club named by `club_code`. The application in the URL (and
+    any submission or question ids in the body) must belong to that club too.
+    Otherwise an officer of any club, including one they just created, can read
+    and change another club's applicants by id.
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.client = Client()
+        now = timezone.now()
+
+        self.attacker = get_user_model().objects.create_user(
+            username="attacker", password="test", email="attacker@example.com"
+        )
+        self.victim_officer = get_user_model().objects.create_user(
+            username="victimofficer", password="test", email="officer@example.com"
+        )
+        self.applicant = get_user_model().objects.create_user(
+            username="applicant", password="test", email="applicant@example.com"
+        )
+
+        self.club_a = Club.objects.create(code="club-a", name="Club A", active=True)
+        self.club_b = Club.objects.create(code="club-b", name="Club B", active=True)
+        Membership.objects.create(
+            person=self.attacker, club=self.club_a, role=Membership.ROLE_OWNER
+        )
+        Membership.objects.create(
+            person=self.victim_officer, club=self.club_b, role=Membership.ROLE_OFFICER
+        )
+
+        def make_app(club):
+            return ClubApplication.objects.create(
+                name=f"{club.name} App",
+                club=club,
+                application_start_time=now - datetime.timedelta(days=1),
+                application_end_time=now + datetime.timedelta(days=7),
+                result_release_time=now + datetime.timedelta(days=14),
+            )
+
+        self.app_a = make_app(self.club_a)
+        self.app_b = make_app(self.club_b)
+        self.submission_b = ApplicationSubmission.objects.create(
+            user=self.applicant, application=self.app_b, reason="original"
+        )
+        self.question_b1 = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Q1",
+            application=self.app_b,
+            precedence=0,
+        )
+        self.question_b2 = ApplicationQuestion.objects.create(
+            question_type=ApplicationQuestion.FREE_RESPONSE,
+            prompt="Q2",
+            application=self.app_b,
+            precedence=1,
+        )
+        ApplicationExtension.objects.create(
+            user=self.applicant,
+            application=self.app_b,
+            end_time=now + datetime.timedelta(days=10),
+        )
+
+    def cross_url(self, suffix):
+        """Attacker's club code paired with Club B's application id."""
+        return f"/api/clubs/club-a/applications/{self.app_b.id}/{suffix}"
+
+    def test_cross_club_submission_reads_return_404(self):
+        self.client.login(username="attacker", password="test")
+        for suffix in ("submissions/", "submissions/export/", "extensions/"):
+            with self.subTest(suffix=suffix):
+                resp = self.client.get(self.cross_url(suffix))
+                self.assertEqual(resp.status_code, 404, resp.content)
+                self.assertNotIn(b"applicant@example.com", resp.content)
+
+    def test_cross_club_submission_list_ignores_cached_data(self):
+        # Club B's officer loads the list first, which fills the cache
+        self.client.login(username="victimofficer", password="test")
+        resp = self.client.get(
+            f"/api/clubs/club-b/applications/{self.app_b.id}/submissions/"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(resp.json()), 1)
+
+        self.client.login(username="attacker", password="test")
+        resp = self.client.get(self.cross_url("submissions/"))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_cross_club_status_and_reason_writes_return_404(self):
+        self.client.login(username="attacker", password="test")
+        resp = self.client.post(
+            self.cross_url("submissions/status/"),
+            {"submissions": [self.submission_b.pk], "status": 4},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 404)
+        resp = self.client.post(
+            self.cross_url("submissions/reason/"),
+            {"submissions": [{"id": self.submission_b.pk, "reason": "pwned"}]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 404)
+
+        self.submission_b.refresh_from_db()
+        self.assertEqual(self.submission_b.status, ApplicationSubmission.PENDING)
+        self.assertEqual(self.submission_b.reason, "original")
+
+    def test_foreign_submission_pks_ignored_on_own_application(self):
+        """Body-supplied submission ids are scoped to the application in the URL."""
+        self.client.login(username="attacker", password="test")
+        own = f"/api/clubs/club-a/applications/{self.app_a.id}/submissions/"
+        self.client.post(
+            own + "status/",
+            {"submissions": [self.submission_b.pk], "status": 4},
+            content_type="application/json",
+        )
+        self.client.post(
+            own + "reason/",
+            {"submissions": [{"id": self.submission_b.pk, "reason": "pwned"}]},
+            content_type="application/json",
+        )
+        self.submission_b.refresh_from_db()
+        self.assertEqual(self.submission_b.status, ApplicationSubmission.PENDING)
+        self.assertEqual(self.submission_b.reason, "original")
+
+    def test_exportall_requires_wharton_council_officer(self):
+        self.client.login(username="attacker", password="test")
+        resp = self.client.get(
+            f"/api/clubs/club-a/applications/{self.app_a.id}/submissions/exportall/"
+        )
+        self.assertEqual(resp.status_code, 403)
+
+    def test_cross_club_question_writes_return_404(self):
+        self.client.login(username="attacker", password="test")
+        resp = self.client.patch(
+            self.cross_url(f"questions/{self.question_b1.id}/"),
+            {"prompt": "pwned"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 404)
+        resp = self.client.post(
+            self.cross_url("questions/precedence/"),
+            {"precedence": [self.question_b2.id, self.question_b1.id]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 404)
+
+        self.question_b1.refresh_from_db()
+        self.assertEqual(self.question_b1.prompt, "Q1")
+        self.assertEqual(self.question_b1.precedence, 0)
+
+    def test_precedence_requires_officer(self):
+        url = f"/api/clubs/club-b/applications/{self.app_b.id}/questions/precedence/"
+        body = {"precedence": [self.question_b2.id, self.question_b1.id]}
+        for username in (None, "attacker"):
+            with self.subTest(user=username):
+                self.client.logout()
+                if username:
+                    self.client.login(username=username, password="test")
+                resp = self.client.post(url, body, content_type="application/json")
+                self.assertIn(resp.status_code, (401, 403))
+        self.question_b1.refresh_from_db()
+        self.assertEqual(self.question_b1.precedence, 0)
+
+    def test_send_emails_requires_officer(self):
+        self.client.login(username="attacker", password="test")
+        resp = self.client.post(
+            f"/api/clubs/club-b/applications/{self.app_b.id}/send_emails/",
+            {"email_type": {"id": "acceptance"}, "dry_run": True},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 403)
+
+    def test_cached_application_not_served_under_another_club(self):
+        resp = self.client.get(f"/api/clubs/club-b/applications/{self.app_b.id}/")
+        self.assertEqual(resp.status_code, 200)
+        resp = self.client.get(f"/api/clubs/club-a/applications/{self.app_b.id}/")
+        self.assertEqual(resp.status_code, 404)
+
+    def test_owning_club_officer_still_has_access(self):
+        self.client.login(username="victimofficer", password="test")
+        base = f"/api/clubs/club-b/applications/{self.app_b.id}/"
+        resp = self.client.get(base + "submissions/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()[0]["email"], "applicant@example.com")
+
+        resp = self.client.post(
+            base + "submissions/status/",
+            {"submissions": [self.submission_b.pk], "status": 4},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        resp = self.client.post(
+            base + "submissions/reason/",
+            {"submissions": [{"id": self.submission_b.pk, "reason": "great fit"}]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        resp = self.client.post(
+            base + "questions/precedence/",
+            {"precedence": [self.question_b2.id, self.question_b1.id]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(len(self.client.get(base + "extensions/").json()), 1)
+
+        self.submission_b.refresh_from_db()
+        self.assertEqual(self.submission_b.status, ApplicationSubmission.ACCEPTED)
+        self.assertEqual(self.submission_b.reason, "great fit")
+        self.question_b1.refresh_from_db()
+        self.assertEqual(self.question_b1.precedence, 1)
+
+    def test_applicant_can_load_questions_logged_out(self):
+        """The public application form loads questions without logging in."""
+        resp = self.client.get(
+            f"/api/clubs/club-b/applications/{self.app_b.id}/questions/"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual([q["prompt"] for q in resp.json()], ["Q1", "Q2"])
+
+    def test_owning_club_officer_can_export_csv(self):
+        self.client.login(username="victimofficer", password="test")
+        resp = self.client.get(
+            f"/api/clubs/club-b/applications/{self.app_b.id}/submissions/export/"
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b"applicant@example.com", resp.content)
+
+    def test_wharton_council_officer_can_exportall(self):
+        cycle = ApplicationCycle.objects.create(name="Fall")
+        self.app_b.application_cycle = cycle
+        self.app_b.is_wharton_council = True
+        self.app_b.save()
+
+        council = Club.objects.create(
+            code="wharton-council", name="Wharton Council", active=True
+        )
+        wc_officer = get_user_model().objects.create_user(
+            username="wcofficer", password="test", email="wc@example.com"
+        )
+        Membership.objects.create(
+            person=wc_officer, club=council, role=Membership.ROLE_OFFICER
+        )
+
+        url = f"/api/clubs/club-b/applications/{self.app_b.id}/submissions/exportall/"
+        self.client.login(username="wcofficer", password="test")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        rows = json.loads(resp.json())
+        self.assertEqual([r["id"] for r in rows], [self.submission_b.id])
+
+        # an officer of the application's own club is not a council officer
+        self.client.login(username="victimofficer", password="test")
+        self.assertEqual(self.client.get(url).status_code, 403)

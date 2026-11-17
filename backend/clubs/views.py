@@ -60,7 +60,7 @@ from django.db.models import (
 )
 from django.db.models.functions import SHA1, Concat, Lower, Trunc
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
@@ -7868,7 +7868,9 @@ class ClubApplicationViewSet(viewsets.ModelViewSet):
         pk = self.kwargs["pk"]
         key = f"clubapplication:{pk}"
         cached = cache.get(key)
-        if cached:
+        # The cache is keyed by application id only, so make sure the cached
+        # application belongs to the club in the URL before serving it.
+        if cached and cached.get("club") == self.kwargs["club_code"]:
             return Response(cached)
         app = self.get_object()
         data = ClubApplicationSerializer(app).data
@@ -8693,7 +8695,30 @@ class WhartonApplicationStatusAPIView(generics.ListAPIView):
         )
 
 
-class ApplicationExtensionViewSet(viewsets.ModelViewSet):
+class ClubApplicationNestedMixin:
+    """
+    For viewsets nested under /clubs/{club_code}/applications/{application_pk}/.
+
+    The permission classes only check the user's role in the club named by
+    `club_code`. This mixin ties `application_pk` to that club, so a user cannot
+    pass the permission check with one club's code and then act on another club's
+    application. A mismatch returns 404 for every action. The check runs after
+    authentication and permission checks, so it does not reveal to users without
+    access which ids exist.
+    """
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        try:
+            self.application = ClubApplication.objects.get(
+                pk=int(self.kwargs["application_pk"]),
+                club__code=self.kwargs["club_code"],
+            )
+        except (ValueError, ClubApplication.DoesNotExist):
+            raise Http404
+
+
+class ApplicationExtensionViewSet(ClubApplicationNestedMixin, viewsets.ModelViewSet):
     permission_classes = [ClubSensitiveItemPermission | IsSuperuser]
     serializer_class = ApplicationExtensionSerializer
 
@@ -8703,7 +8728,7 @@ class ApplicationExtensionViewSet(viewsets.ModelViewSet):
         )
 
 
-class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
+class ApplicationSubmissionViewSet(ClubApplicationNestedMixin, viewsets.ModelViewSet):
     """
     list: List submissions for a given club application.
 
@@ -8781,21 +8806,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
                             type: string
         ---
         """
-        app_id = int(self.kwargs["application_pk"])
-        data = (
-            ApplicationSubmission.objects.filter(application=app_id)
-            .select_related("user__profile", "committee", "application__club")
-            .prefetch_related(
-                Prefetch(
-                    "responses",
-                    queryset=ApplicationQuestionResponse.objects.select_related(
-                        "multiple_choice", "question"
-                    ),
-                ),
-                "responses__question__committees",
-                "responses__question__multiple_choice",
-            )
-        )
+        data = self.get_queryset()
         df = pd.DataFrame(ApplicationSubmissionCSVSerializer(data, many=True).data)
         resp = HttpResponse(
             content_type="text/csv; charset=utf-8-sig",  # support special chars
@@ -8804,10 +8815,20 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         df.to_csv(index=True, path_or_buf=resp, encoding="utf-8-sig")
         return resp
 
-    @action(detail=False, methods=["get"])
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[
+            WhartonApplicationPermission
+            | DjangoPermission("clubs.manage_club")
+            | IsSuperuser
+        ],
+    )
     def exportall(self, *args, **kwargs):
         """
-        Export all application submissions for a particular cycle
+        Export all Wharton Council application submissions for a particular cycle.
+        This crosses clubs, so it is limited to Wharton Council officers and
+        site administrators.
         ---
         requestBody: {}
         responses:
@@ -8822,8 +8843,7 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         ---
         """
 
-        app_id = int(self.kwargs["application_pk"])
-        cycle = ClubApplication.objects.get(id=app_id).application_cycle
+        cycle = self.application.application_cycle
         data = (
             ApplicationSubmission.objects.filter(
                 application__is_wharton_council=True,
@@ -8882,12 +8902,12 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
             status in map(lambda x: x[0], ApplicationSubmission.STATUS_TYPES)
             and len(submission_pks) > 0
         ):
-            # Invalidate submission viewset cache
-            submissions = ApplicationSubmission.objects.filter(pk__in=submission_pks)
-            app_id = submissions.first().application.id if submissions.first() else None
-            if not app_id:
+            # Only touch submissions that belong to this club's application
+            submissions = self.get_queryset().filter(pk__in=submission_pks)
+            if not submissions.exists():
                 return Response({"detail": "No submissions found"})
-            key = f"applicationsubmissions:{app_id}"
+            # Invalidate submission viewset cache
+            key = f"applicationsubmissions:{self.application.id}"
             cache.delete(key)
 
             submissions.update(status=status)
@@ -8939,15 +8959,16 @@ class ApplicationSubmissionViewSet(viewsets.ModelViewSet):
         pks = list(map(lambda x: x["id"], submissions))
         reasons = list(map(lambda x: x["reason"], submissions))
 
-        submission_objs = ApplicationSubmission.objects.filter(pk__in=pks)
+        # Only touch submissions that belong to this club's application
+        # Not self.get_queryset(): its prefetches would run on every .first() below
+        submission_objs = ApplicationSubmission.objects.filter(
+            pk__in=pks, application=self.application
+        )
+        if not submission_objs.exists():
+            return Response({"detail": "No submissions found"})
 
         # Invalidate submission viewset cache
-        app_id = (
-            submission_objs.first().application.id if submission_objs.first() else None
-        )
-        if not app_id:
-            return Response({"detail": "No submissions found"})
-        key = f"applicationsubmissions:{app_id}"
+        key = f"applicationsubmissions:{self.application.id}"
         cache.delete(key)
 
         for idx, pk in enumerate(pks):
@@ -8996,7 +9017,7 @@ class ApplicationSubmissionUserViewSet(viewsets.ModelViewSet):
         return submissions
 
 
-class ApplicationQuestionViewSet(viewsets.ModelViewSet):
+class ApplicationQuestionViewSet(ClubApplicationNestedMixin, viewsets.ModelViewSet):
     """
     create: Create a question for a club application.
 
@@ -9080,8 +9101,9 @@ class ApplicationQuestionViewSet(viewsets.ModelViewSet):
         ---
         """
         precedence = self.request.data.get("precedence", [])
+        questions = self.get_queryset()
         for index, question_pk in enumerate(precedence):
-            question = ApplicationQuestion.objects.filter(pk=question_pk).first()
+            question = questions.filter(pk=question_pk).first()
             if question is not None:
                 question.precedence = index
                 question.save()
