@@ -1985,3 +1985,245 @@ class ReleaseExpiredOrderTests(TestCase):
         self.assertEqual(self.normal_class.remaining, starting_normal)
         self.assertEqual(held.status, Order.PENDING)
         self.assertEqual(self.unapproved_class.remaining, starting_other - 4)
+
+
+class CartValidityTests(TicketingTestMixin, TestCase):
+    """
+    validate_cart releases this showing's expired holds, then fixes the cart.
+    Reading the cart does not release holds. Replacing ticket classes and
+    deleting the showing stay allowed for carts, and stop for an order that
+    is still pending, processing, or needs review.
+    """
+
+    def setUp(self):
+        commonSetUp(self)
+        self.client.login(username=self.user1.username, password="test")
+
+    def hold(self, ticket_class, quantity, *, status=Order.PENDING, expired=True):
+        """
+        Insert an order and decrement remaining the way a hold would.
+        """
+        expires_at = timezone.now() + (
+            timedelta(minutes=-5) if expired else timedelta(minutes=15)
+        )
+        order = Order.objects.create(
+            showing=ticket_class.showing,
+            owner=self.user2,
+            status=status,
+            expires_at=expires_at,
+            total=ticket_class.price * quantity,
+            buyer_first_name=self.user2.first_name,
+            buyer_last_name=self.user2.last_name,
+            buyer_email=self.user2.email,
+        )
+        OrderItem.objects.bulk_create(
+            [
+                OrderItem(
+                    order=order,
+                    ticket_class=ticket_class,
+                    quantity=quantity,
+                    unit_price=ticket_class.price,
+                    line_total=ticket_class.price * quantity,
+                )
+            ]
+        )
+        ticket_class.remaining -= quantity
+        ticket_class.save(update_fields=["remaining"])
+        return order
+
+    def validate_cart(self, showing=None):
+        return self.client.post(
+            self.showing_url("validate-cart", showing), {}, format="json"
+        )
+
+    def make_order(self, status):
+        order = Order.objects.create(
+            showing=self.event_showing1,
+            owner=self.user2,
+            status=status,
+            total=Decimal("15.00"),
+            buyer_first_name=self.user2.first_name,
+            buyer_last_name=self.user2.last_name,
+            buyer_email=self.user2.email,
+        )
+        OrderItem.objects.bulk_create(
+            [
+                OrderItem(
+                    order=order,
+                    ticket_class=self.normal_class,
+                    quantity=1,
+                    unit_price=self.normal_class.price,
+                    line_total=self.normal_class.price,
+                )
+            ]
+        )
+        return order
+
+    def test_expired_hold_is_returned_before_the_cart_is_checked(self):
+        starting_normal = self.normal_class.remaining
+        starting_other = self.unapproved_class.remaining
+        resp = self.add_to_cart([(self.normal_class, 5)])
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # 18 held and already expired, so remaining is 2 until the hold returns.
+        # Checking the cart first would reduce the line from 5 to 2.
+        order = self.hold(self.normal_class, 18)
+        other = self.hold(self.unapproved_class, 4)
+
+        resp = self.validate_cart()
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertEqual(resp.json()["changes"], [])
+
+        order.refresh_from_db()
+        other.refresh_from_db()
+        self.normal_class.refresh_from_db()
+        self.unapproved_class.refresh_from_db()
+        cart = Cart.objects.get(owner=self.user1, showing=self.event_showing1)
+        self.assertEqual(order.status, Order.EXPIRED)
+        self.assertEqual(self.cart_quantity(cart, self.normal_class), 5)
+        self.assertEqual(self.normal_class.remaining, starting_normal)
+        self.assertEqual(other.status, Order.PENDING)
+        self.assertEqual(self.unapproved_class.remaining, starting_other - 4)
+
+    def test_reading_the_cart_does_not_release_expired_holds(self):
+        order = self.hold(self.normal_class, 4)
+        self.add_to_cart([(self.normal_class, 1)])
+        self.normal_class.refresh_from_db()
+        held_remaining = self.normal_class.remaining
+
+        for name in ("cart", "tickets", "detail"):
+            resp = self.client.get(self.showing_url(name))
+            self.assertEqual(resp.status_code, 200, resp.content)
+
+        order.refresh_from_db()
+        self.normal_class.refresh_from_db()
+        self.assertEqual(order.status, Order.PENDING)
+        self.assertEqual(self.normal_class.remaining, held_remaining)
+
+    def test_validate_cart_names_removed_and_reduced_lines(self):
+        missing = TicketClass.objects.create(
+            showing=self.event_showing1,
+            name="missing",
+            price=Decimal("10.00"),
+            quantity=5,
+            remaining=5,
+        )
+        sold_out = TicketClass.objects.create(
+            showing=self.event_showing1,
+            name="sold-out",
+            price=Decimal("10.00"),
+            quantity=5,
+            remaining=5,
+        )
+        resp = self.add_to_cart(
+            [
+                (missing, 1),
+                (self.premium_class, 1),
+                (self.normal_class, 5),
+                (sold_out, 1),
+            ]
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        # Deleting the class removes its cart line. The validity action never
+        # sees that line.
+        missing_id = missing.id
+        missing.delete()
+        self.premium_class.buyable = False
+        self.premium_class.save(update_fields=["buyable"])
+        self.normal_class.remaining = 2
+        self.normal_class.save(update_fields=["remaining"])
+        sold_out.remaining = 0
+        sold_out.save(update_fields=["remaining"])
+
+        resp = self.validate_cart()
+        self.assertEqual(resp.status_code, 200, resp.content)
+        changes = {change["name"]: change for change in resp.json()["changes"]}
+        self.assertEqual(
+            changes,
+            {
+                "premium": {
+                    "ticket_class_id": self.premium_class.id,
+                    "name": "premium",
+                    "change": "removed",
+                    "quantity": 0,
+                },
+                "normal": {
+                    "ticket_class_id": self.normal_class.id,
+                    "name": "normal",
+                    "change": "reduced",
+                    "quantity": 2,
+                },
+                "sold-out": {
+                    "ticket_class_id": sold_out.id,
+                    "name": "sold-out",
+                    "change": "removed",
+                    "quantity": 0,
+                },
+            },
+        )
+
+        cart = Cart.objects.get(owner=self.user1, showing=self.event_showing1)
+        self.assertFalse(CartItem.objects.filter(ticket_class_id=missing_id).exists())
+        self.assertFalse(cart.items.filter(ticket_class=self.premium_class).exists())
+        self.assertFalse(cart.items.filter(ticket_class=sold_out).exists())
+        self.assertEqual(self.cart_quantity(cart, self.normal_class), 2)
+
+    def test_replacing_ticket_classes_clears_cart_items_until_an_order_is_open(self):
+        resp = self.add_to_cart([(self.normal_class, 2)])
+        self.assertEqual(resp.status_code, 200, resp.content)
+        replacement = {
+            "ticket_types": [{"name": "replacement", "quantity": 4, "price": 1}]
+        }
+
+        for order_status in (Order.PENDING, Order.PROCESSING, Order.NEEDS_REVIEW):
+            with self.subTest(status=order_status):
+                order = self.make_order(order_status)
+                try:
+                    resp = self.client.put(
+                        self.showing_url("tickets"), replacement, format="json"
+                    )
+                    self.assertEqual(resp.status_code, 400, resp.content)
+                    self.assertTrue(
+                        TicketClass.objects.filter(pk=self.normal_class.pk).exists()
+                    )
+                    self.assertTrue(
+                        CartItem.objects.filter(
+                            cart__owner=self.user1, ticket_class=self.normal_class
+                        ).exists()
+                    )
+                finally:
+                    order.delete()
+
+        resp = self.client.put(self.showing_url("tickets"), replacement, format="json")
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertFalse(
+            CartItem.objects.filter(cart__showing=self.event_showing1).exists()
+        )
+        self.assertTrue(
+            TicketClass.objects.filter(
+                showing=self.event_showing1, name="replacement"
+            ).exists()
+        )
+        self.assertFalse(TicketClass.objects.filter(pk=self.normal_class.pk).exists())
+
+    def test_deleting_showing_is_rejected_while_an_order_is_open(self):
+        resp = self.add_to_cart([(self.normal_class, 2)])
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+        for order_status in (Order.PENDING, Order.PROCESSING, Order.NEEDS_REVIEW):
+            with self.subTest(status=order_status):
+                order = self.make_order(order_status)
+                try:
+                    resp = self.client.delete(self.showing_url("detail"))
+                    self.assertEqual(resp.status_code, 400, resp.content)
+                    self.assertTrue(
+                        EventShowing.objects.filter(pk=self.event_showing1.pk).exists()
+                    )
+                    self.assertTrue(
+                        Cart.objects.filter(
+                            owner=self.user1, showing=self.event_showing1
+                        ).exists()
+                    )
+                finally:
+                    order.delete()
