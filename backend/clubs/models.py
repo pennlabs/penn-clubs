@@ -19,7 +19,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import F, Sum
 from django.db.models.deletion import ProtectedError
 from django.dispatch import receiver
 from django.template.loader import render_to_string
@@ -2545,6 +2545,67 @@ class OrderItem(models.Model):
         if not self._state.adding:
             raise ValueError("Order items are inserted once and cannot be changed.")
         super().save(*args, **kwargs)
+
+
+def release_expired(showing=None):
+    """
+    Return held ticket quantities for expired PENDING orders and mark those
+    orders EXPIRED.
+
+    ``showing=None`` releases every showing. Passing a showing limits the
+    release to that showing. PROCESSING, PAID, CANCELLED, and NEEDS_REVIEW
+    orders are never selected.
+
+    Expired orders are locked with ``SELECT FOR UPDATE SKIP LOCKED`` in id
+    order, then their ticket classes are locked. Quantities are added back
+    only when this call changes that order from PENDING to EXPIRED, so a
+    second caller cannot return the same inventory. On SQLite, SKIP LOCKED
+    does not lock rows; the status update is what makes the return happen once.
+    """
+    with transaction.atomic():
+        candidates = Order.objects.filter(
+            status=Order.PENDING,
+            expires_at__lte=timezone.now(),
+        )
+        if showing is not None:
+            candidates = candidates.filter(showing=showing)
+
+        # Orders first. SKIP LOCKED skips rows another caller already holds.
+        locked_orders = list(
+            candidates.order_by("id").select_for_update(skip_locked=True)
+        )
+        released_ids = []
+        for order in locked_orders:
+            updated = Order.objects.update_where_status(
+                pk=order.pk,
+                expected=Order.PENDING,
+                status=Order.EXPIRED,
+            )
+            # Lost the race: someone else already left PENDING. Do not restock.
+            if updated:
+                released_ids.append(order.pk)
+
+        if not released_ids:
+            return 0
+
+        totals = {
+            row["ticket_class_id"]: row["held"]
+            for row in OrderItem.objects.filter(order_id__in=released_ids)
+            .values("ticket_class_id")
+            .annotate(held=Sum("quantity"))
+        }
+        # Ticket classes second, in id order.
+        locked_class_ids = list(
+            TicketClass.objects.select_for_update()
+            .filter(id__in=totals)
+            .order_by("id")
+            .values_list("id", flat=True)
+        )
+        for ticket_class_id in locked_class_ids:
+            TicketClass.objects.filter(pk=ticket_class_id).update(
+                remaining=F("remaining") + totals[ticket_class_id]
+            )
+        return len(released_ids)
 
 
 class TicketQuerySet(models.query.QuerySet):

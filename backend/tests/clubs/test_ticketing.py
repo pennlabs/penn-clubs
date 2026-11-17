@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
+from unittest import mock
 from uuid import uuid4
 
 import freezegun
@@ -9,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.db import IntegrityError, transaction
 from django.db.models.deletion import ProtectedError
+from django.db.models.query import QuerySet
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -21,10 +23,13 @@ from clubs.models import (
     Event,
     EventShowing,
     Membership,
+    Order,
+    OrderItem,
     Ticket,
     TicketClass,
     TicketTransactionRecord,
     TicketTransferRecord,
+    release_expired,
 )
 from clubs.views import generate_cybersource_signature
 
@@ -1831,3 +1836,152 @@ class TicketModelTestCase(TestCase):
         # Unsold classes can be removed freely
         self.premium_class.delete()
         self.assertFalse(TicketClass.objects.filter(name="premium").exists())
+
+
+class ReleaseExpiredOrderTests(TestCase):
+    """release_expired() returns held inventory for expired PENDING orders once."""
+
+    def setUp(self):
+        commonSetUp(self)
+
+    def hold(
+        self,
+        quantities,
+        *,
+        showing=None,
+        owner=None,
+        status=Order.PENDING,
+        expires_at=None,
+    ):
+        """
+        Insert an order and decrement ``remaining`` the way a hold would.
+        ``quantities`` is a list of ``(ticket_class, quantity)``.
+        """
+        showing = showing or self.event_showing1
+        owner = self.user1 if owner is None else owner
+        if expires_at is None:
+            expires_at = timezone.now() - timedelta(minutes=5)
+        total = sum(
+            (ticket_class.price * quantity for ticket_class, quantity in quantities),
+            Decimal("0.00"),
+        )
+        order = Order.objects.create(
+            showing=showing,
+            owner=owner,
+            status=status,
+            expires_at=expires_at,
+            total=total,
+            buyer_first_name=owner.first_name,
+            buyer_last_name=owner.last_name,
+            buyer_email=owner.email,
+        )
+        OrderItem.objects.bulk_create(
+            [
+                OrderItem(
+                    order=order,
+                    ticket_class=ticket_class,
+                    quantity=quantity,
+                    unit_price=ticket_class.price,
+                    line_total=ticket_class.price * quantity,
+                )
+                for ticket_class, quantity in quantities
+            ]
+        )
+        for ticket_class, quantity in quantities:
+            ticket_class.remaining -= quantity
+            ticket_class.save(update_fields=["remaining"])
+        return order
+
+    def test_expired_pending_order_returns_quantity_once(self):
+        starting_normal = self.normal_class.remaining
+        starting_premium = self.premium_class.remaining
+        order = self.hold([(self.normal_class, 2), (self.premium_class, 3)])
+
+        self.assertEqual(release_expired(), 1)
+
+        order.refresh_from_db()
+        self.normal_class.refresh_from_db()
+        self.premium_class.refresh_from_db()
+        self.assertEqual(order.status, Order.EXPIRED)
+        self.assertEqual(self.normal_class.remaining, starting_normal)
+        self.assertEqual(self.premium_class.remaining, starting_premium)
+
+    def test_second_call_does_not_return_quantity_again(self):
+        starting_normal = self.normal_class.remaining
+        self.hold([(self.normal_class, 2)])
+
+        self.assertEqual(release_expired(), 1)
+        self.assertEqual(release_expired(), 0)
+
+        self.normal_class.refresh_from_db()
+        self.assertEqual(self.normal_class.remaining, starting_normal)
+        self.assertEqual(Order.objects.filter(status=Order.EXPIRED).count(), 1)
+
+    def test_overlapping_calls_cannot_double_return(self):
+        """
+        Both callers can read the same PENDING order when row locks are absent.
+        Only the call whose PENDING -> EXPIRED update matches may restock.
+        """
+        starting_normal = self.normal_class.remaining
+        order = self.hold([(self.normal_class, 2)])
+        state = {"raced": False, "order_by": None}
+
+        real_fetch_all = QuerySet._fetch_all
+
+        def fetch_all(qs):
+            real_fetch_all(qs)
+            if state["raced"]:
+                return
+            query = qs.query
+            if (
+                qs.model is Order
+                and query.select_for_update
+                and query.select_for_update_skip_locked
+            ):
+                state["raced"] = True
+                state["order_by"] = tuple(query.order_by)
+                # The other caller finishes after this one has selected the
+                # order and before this one claims it.
+                release_expired()
+
+        with mock.patch.object(QuerySet, "_fetch_all", fetch_all):
+            release_expired()
+
+        self.assertTrue(state["raced"])
+        self.assertEqual(state["order_by"], ("id",))
+        order.refresh_from_db()
+        self.normal_class.refresh_from_db()
+        self.assertEqual(order.status, Order.EXPIRED)
+        self.assertEqual(self.normal_class.remaining, starting_normal)
+
+    def test_processing_order_past_expiry_is_left_alone(self):
+        starting_normal = self.normal_class.remaining
+        order = self.hold([(self.normal_class, 2)], status=Order.PROCESSING)
+
+        self.assertEqual(release_expired(), 0)
+
+        order.refresh_from_db()
+        self.normal_class.refresh_from_db()
+        self.assertEqual(order.status, Order.PROCESSING)
+        self.assertEqual(self.normal_class.remaining, starting_normal - 2)
+
+    def test_showing_argument_does_not_release_another_showing(self):
+        starting_normal = self.normal_class.remaining
+        starting_other = self.unapproved_class.remaining
+        released = self.hold([(self.normal_class, 2)])
+        held = self.hold(
+            [(self.unapproved_class, 4)],
+            showing=self.unapproved_event_showing,
+            owner=self.user2,
+        )
+
+        self.assertEqual(release_expired(showing=self.event_showing1), 1)
+
+        released.refresh_from_db()
+        held.refresh_from_db()
+        self.normal_class.refresh_from_db()
+        self.unapproved_class.refresh_from_db()
+        self.assertEqual(released.status, Order.EXPIRED)
+        self.assertEqual(self.normal_class.remaining, starting_normal)
+        self.assertEqual(held.status, Order.PENDING)
+        self.assertEqual(self.unapproved_class.remaining, starting_other - 4)
