@@ -327,6 +327,8 @@ class ClubItemPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in [
             "duplicate",
+            "send_emails",
+            "precedence",
             "create",
             "update",
             "partial_update",
