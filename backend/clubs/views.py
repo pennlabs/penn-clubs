@@ -141,7 +141,9 @@ from clubs.models import (
     Year,
     ZoomMeetingVisit,
     get_mail_type_annotation,
+    release_expired,
     send_mail_helper,
+    showing_has_order_in_progress,
 )
 from clubs.permissions import (
     AssetPermission,
@@ -3294,7 +3296,7 @@ class ClubEventViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """
         Do not let non-superusers delete events with the FAIR type through the API.
-        Check if there are bought or held tickets before deletion.
+        Check if there are bought tickets before deletion.
         """
         event = self.get_object()
 
@@ -3636,6 +3638,9 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
     cart:
     Get the current user's (or guest session's) cart for this showing.
 
+    validate_cart:
+    Release expired holds for this showing and fix the caller's cart.
+
     add_to_cart:
     Add tickets for this showing to cart.
 
@@ -3722,7 +3727,7 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         ):
             raise DRFValidationError(
                 detail="Ticket drop times cannot be edited "
-                "after tickets have been sold or held."
+                "after tickets have been sold."
             )
         return super().partial_update(request, *args, **kwargs)
 
@@ -3731,6 +3736,15 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
         Check if the showing has sold tickets
         """
         showing = self.get_object()
+
+        if showing_has_order_in_progress(showing):
+            raise DRFValidationError(
+                detail=(
+                    "This showing cannot be deleted while an order is pending, "
+                    "processing, or needs review."
+                )
+            )
+
         if Ticket.objects.filter(ticket_class__showing=showing).exists():
             raise DRFValidationError(
                 detail=(
@@ -3768,6 +3782,105 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                 {"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
             )
         return Response(CartSerializer(cart, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"])
+    @transaction.atomic
+    def validate_cart(self, request, *args, **kwargs):
+        """
+        Release expired holds for this showing, then fix the caller's cart.
+
+        A line whose ticket class is not buyable, or has nothing remaining, is
+        removed. A quantity above ``TicketClass.remaining`` is reduced to the
+        remaining count. The response lists each change by ticket class.
+        Reading the cart does not do this. A deleted class is already gone
+        from the cart.
+        ---
+        requestBody:
+            content:
+                application/json:
+                    schema:
+                        type: object
+        responses:
+            "200":
+                description: Cart checked, with one entry per changed ticket class
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                changes:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            ticket_class_id:
+                                                type: integer
+                                            name:
+                                                type: string
+                                            change:
+                                                type: string
+                                                description: removed or reduced
+                                            quantity:
+                                                type: integer
+                                                description: >
+                                                    Quantity left in the cart.
+                                                    Zero when the line was removed.
+            "404":
+                description: Cart not found
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                detail:
+                                    type: string
+        ---
+        """
+        showing = self.get_object()
+        # Return inventory before comparing the cart to remaining, so a stale
+        # hold does not make a line look oversold.
+        release_expired(showing=showing)
+        cart = get_request_cart(request, showing)
+        if cart is None:
+            return Response(
+                {"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        items = list(cart.items.order_by("ticket_class_id"))
+        classes = {
+            ticket_class.id: ticket_class
+            for ticket_class in TicketClass.objects.select_for_update()
+            .filter(id__in=[item.ticket_class_id for item in items])
+            .order_by("id")
+        }
+        changes = []
+        for item in items:
+            ticket_class = classes[item.ticket_class_id]
+            if not ticket_class.buyable or ticket_class.remaining <= 0:
+                changes.append(
+                    {
+                        "ticket_class_id": ticket_class.id,
+                        "name": ticket_class.name,
+                        "change": "removed",
+                        "quantity": 0,
+                    }
+                )
+                item.delete()
+                continue
+            if item.quantity > ticket_class.remaining:
+                item.quantity = ticket_class.remaining
+                item.save(update_fields=["quantity"])
+                changes.append(
+                    {
+                        "ticket_class_id": ticket_class.id,
+                        "name": ticket_class.name,
+                        "change": "reduced",
+                        "quantity": item.quantity,
+                    }
+                )
+        if changes:
+            cart.save(update_fields=["updated_at"])
+        return Response({"changes": changes})
 
     @staticmethod
     def _parse_cart_quantities(request):
@@ -4337,6 +4450,18 @@ class ClubEventShowingViewSet(viewsets.ModelViewSet):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+        # An in-progress order still points at these classes. Carts do not.
+        if showing_has_order_in_progress(showing):
+            return Response(
+                {
+                    "detail": (
+                        "Ticket classes cannot be replaced while an order is "
+                        "pending, processing, or needs review."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Replace existing ticket classes for this showing. Carts referencing the
         # old classes are emptied by the cascade.

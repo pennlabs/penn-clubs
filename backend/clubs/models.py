@@ -19,7 +19,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import F, Sum
 from django.db.models.deletion import ProtectedError
 from django.dispatch import receiver
 from django.template.loader import render_to_string
@@ -2386,6 +2386,239 @@ class CartItem(models.Model):
         return self.ticket_class.price_for_quantity(self.quantity)
 
 
+class OrderQuerySet(models.QuerySet):
+    """
+    ``status`` and ``decline_count`` change through ``update_where_status``.
+    Every other column is fixed at insert.
+    """
+
+    WRITABLE_FIELDS = frozenset({"status", "decline_count"})
+
+    def update_where_status(self, *, pk, expected, **fields):
+        """
+        Write ``status`` and ``decline_count`` when the row is still ``expected``.
+
+        Pass either field or both. Returns the number of rows updated. ``0``
+        means another writer already changed the status.
+        """
+        refused = set(fields) - self.WRITABLE_FIELDS
+        if not fields or refused:
+            raise ValueError(
+                "Pass status, decline_count, or both. "
+                f"Refusing {', '.join(sorted(refused)) or 'an empty update'}."
+            )
+        fields["updated_at"] = timezone.now()
+        return models.QuerySet.update(self.filter(pk=pk, status=expected), **fields)
+
+    def update(self, **kwargs):
+        raise ValueError(
+            "Existing orders cannot be updated. "
+            "Change status and decline_count with "
+            "Order.objects.update_where_status(...)."
+        )
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise ValueError(
+            "Existing orders cannot be updated. "
+            "Change status and decline_count with "
+            "Order.objects.update_where_status(...)."
+        )
+
+
+class Order(models.Model):
+    """
+    A checkout order for one event showing.
+
+    Like a cart, an order belongs to an authenticated ``owner`` or, for guest
+    checkout, to an anonymous ``session_key``. At most one PENDING or PROCESSING
+    order may exist for a (showing, owner), and, when ``owner`` is null, for a
+    (showing, session_key). NEEDS_REVIEW is not an open status and is not part
+    of that constraint.
+
+    ``save()`` inserts a row and raises after that. ``showing``, the buyer
+    fields, ``total``, and ``expires_at`` stay as inserted. ``status`` and
+    ``decline_count`` change through ``Order.objects.update_where_status(...)``.
+    """
+
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    PAID = "PAID"
+    EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"
+    NEEDS_REVIEW = "NEEDS_REVIEW"
+    STATUS_TYPES = (
+        (PENDING, "Pending"),
+        (PROCESSING, "Processing"),
+        (PAID, "Paid"),
+        (EXPIRED, "Expired"),
+        (CANCELLED, "Cancelled"),
+        (NEEDS_REVIEW, "Needs review"),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    showing = models.ForeignKey(
+        EventShowing, related_name="orders", on_delete=models.CASCADE
+    )
+    owner = models.ForeignKey(
+        get_user_model(),
+        related_name="orders",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+    session_key = models.CharField(max_length=40, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_TYPES, default=PENDING)
+    expires_at = models.DateTimeField(blank=True, null=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    buyer_first_name = models.CharField(max_length=100)
+    buyer_last_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField()
+    decline_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["showing", "owner"],
+                condition=models.Q(owner__isnull=False)
+                & models.Q(status__in=["PENDING", "PROCESSING"]),
+                name="unique_open_order_per_showing_owner",
+            ),
+            models.UniqueConstraint(
+                fields=["showing", "session_key"],
+                condition=models.Q(owner__isnull=True)
+                & models.Q(status__in=["PENDING", "PROCESSING"]),
+                name="unique_open_order_per_showing_session",
+            ),
+        ]
+
+    objects = OrderQuerySet.as_manager()
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValueError(
+                "Existing orders cannot be saved. "
+                "Change status and decline_count with "
+                "Order.objects.update_where_status(...)."
+            )
+        super().save(*args, **kwargs)
+
+
+class OrderItemQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise ValueError("Order items are inserted once and cannot be changed.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise ValueError("Order items are inserted once and cannot be changed.")
+
+    def bulk_create(self, objs, **kwargs):
+        if kwargs.get("update_conflicts") or kwargs.get("update_fields"):
+            raise ValueError("Order items are inserted once and cannot be changed.")
+        return super().bulk_create(objs, **kwargs)
+
+
+class OrderItem(models.Model):
+    """
+    One ticket class on an order.
+
+    Checkout inserts rows with ``bulk_create``. The ticket class, quantity, and
+    prices stay as inserted. ``save()`` raises once the row exists. A different
+    class or quantity cancels the pending order and inserts new items; the old
+    rows are not edited.
+    """
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    ticket_class = models.ForeignKey(
+        TicketClass, on_delete=models.PROTECT, related_name="order_items"
+    )
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    line_total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    objects = OrderItemQuerySet.as_manager()
+
+    class Meta:
+        unique_together = (("order", "ticket_class"),)
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValueError("Order items are inserted once and cannot be changed.")
+        super().save(*args, **kwargs)
+
+
+def showing_has_order_in_progress(showing) -> bool:
+    """
+    True when this showing still has an order in PENDING, PROCESSING, or
+    NEEDS_REVIEW. Those orders keep their ticket classes.
+    """
+    return Order.objects.filter(
+        showing=showing,
+        status__in=(Order.PENDING, Order.PROCESSING, Order.NEEDS_REVIEW),
+    ).exists()
+
+
+def release_expired(showing=None):
+    """
+    Return held ticket quantities for expired PENDING orders and mark those
+    orders EXPIRED.
+
+    ``showing=None`` releases every showing. Passing a showing limits the
+    release to that showing. PROCESSING, PAID, CANCELLED, and NEEDS_REVIEW
+    orders are never selected.
+
+    Expired orders are locked with ``SELECT FOR UPDATE SKIP LOCKED`` in id
+    order, then their ticket classes are locked. Quantities are added back
+    only when this call changes that order from PENDING to EXPIRED, so a
+    second caller cannot return the same inventory. On SQLite, SKIP LOCKED
+    does not lock rows; the status update is what makes the return happen once.
+    """
+    with transaction.atomic():
+        candidates = Order.objects.filter(
+            status=Order.PENDING,
+            expires_at__lte=timezone.now(),
+        )
+        if showing is not None:
+            candidates = candidates.filter(showing=showing)
+
+        # Orders first. SKIP LOCKED skips rows another caller already holds.
+        locked_orders = list(
+            candidates.order_by("id").select_for_update(skip_locked=True)
+        )
+        released_ids = []
+        for order in locked_orders:
+            updated = Order.objects.update_where_status(
+                pk=order.pk,
+                expected=Order.PENDING,
+                status=Order.EXPIRED,
+            )
+            # Lost the race: someone else already left PENDING. Do not restock.
+            if updated:
+                released_ids.append(order.pk)
+
+        if not released_ids:
+            return 0
+
+        totals = {
+            row["ticket_class_id"]: row["held"]
+            for row in OrderItem.objects.filter(order_id__in=released_ids)
+            .values("ticket_class_id")
+            .annotate(held=Sum("quantity"))
+        }
+        # Ticket classes second, in id order.
+        locked_class_ids = list(
+            TicketClass.objects.select_for_update()
+            .filter(id__in=totals)
+            .order_by("id")
+            .values_list("id", flat=True)
+        )
+        for ticket_class_id in locked_class_ids:
+            TicketClass.objects.filter(pk=ticket_class_id).update(
+                remaining=F("remaining") + totals[ticket_class_id]
+            )
+        return len(released_ids)
+
+
 class TicketQuerySet(models.query.QuerySet):
     def delete(self):
         if self.filter(transaction_record__isnull=False).exists():
@@ -2412,13 +2645,22 @@ class TicketTransactionRecord(models.Model):
     reason_code = models.CharField(max_length=10, null=True, blank=True)
 
     # Payment details
-    total_amount = models.DecimalField(max_digits=5, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
 
     # Buyer information
     buyer_first_name = models.CharField(max_length=100)
     buyer_last_name = models.CharField(max_length=100)
     buyer_email = models.EmailField(blank=True, null=True)
     buyer_phone = PhoneNumberField(null=True, blank=True)
+
+    # Checkout order this payment belongs to, when one was created.
+    order = models.OneToOneField(
+        "Order",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="transaction_record",
+    )
 
     # Timestamp
     created_at = models.DateTimeField(auto_now_add=True)
