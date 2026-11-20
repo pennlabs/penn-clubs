@@ -19,7 +19,7 @@ import {
   SNOW,
   WHITE,
 } from './constants/colors'
-import { NAV_HEIGHT } from './constants/measurements'
+import { NAV_HEIGHT, STATUS_BANNER_HEIGHT } from './constants/measurements'
 import { BODY_FONT } from './constants/styles'
 import {
   Affiliation,
@@ -86,7 +86,7 @@ export const ToastStyle = styled.div`
 `
 
 export const Wrapper = styled.div`
-  min-height: calc(100vh - ${NAV_HEIGHT});
+  min-height: calc(100vh - ${NAV_HEIGHT} - ${STATUS_BANNER_HEIGHT});
   background: ${SNOW};
 `
 

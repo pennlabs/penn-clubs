@@ -24,6 +24,7 @@ import {
   MD,
   mediaMaxWidth,
   NAV_HEIGHT,
+  STATUS_BANNER_HEIGHT,
 } from '../constants/measurements'
 import { BODY_FONT } from '../constants/styles'
 import { Icon } from './common'
@@ -43,12 +44,12 @@ export const SearchbarRightContainer = styled.div`
 `
 
 const Wrapper = styled.div`
-  height: 100vh;
+  height: calc(100vh - ${STATUS_BANNER_HEIGHT});
   width: 20vw;
   overflow-x: hidden;
   overflow-y: auto;
   position: fixed;
-  top: 0;
+  top: ${STATUS_BANNER_HEIGHT};
   padding-top: ${NAV_HEIGHT};
   color: ${H1_TEXT};
 
@@ -92,7 +93,7 @@ const Content = styled.div<{ $show?: boolean }>`
     z-index: 1000;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.075);
     background: ${WHITE};
-    top: ${NAV_HEIGHT};
+    top: calc(${NAV_HEIGHT} + ${STATUS_BANNER_HEIGHT});
 
     .mobile-only {
       display: block;
@@ -106,7 +107,7 @@ const MobileToggle = styled.button`
     z-index: 999;
     display: block;
     position: fixed;
-    top: ${NAV_HEIGHT};
+    top: calc(${NAV_HEIGHT} + ${STATUS_BANNER_HEIGHT});
     right: 16px;
     background-color: ${WHITE};
     padding: 5px 8px;

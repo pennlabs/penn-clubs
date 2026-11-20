@@ -7,6 +7,7 @@ import {
   MD,
   mediaMinWidth,
   NAV_HEIGHT,
+  STATUS_BANNER_HEIGHT,
   XL,
 } from '../../constants/measurements'
 
@@ -41,7 +42,7 @@ const Wrapper = styled.div<WrapperProps>`
   ${({ $fullHeight }) =>
     $fullHeight &&
     `
-    min-height: calc(100vh - ${NAV_HEIGHT});
+    min-height: calc(100vh - ${NAV_HEIGHT} - ${STATUS_BANNER_HEIGHT});
   `}
 `
 
